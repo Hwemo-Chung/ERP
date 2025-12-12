@@ -1,0 +1,354 @@
+/**
+ * Reports SignalStore
+ * Manages reports and KPI dashboard state per PRD FR-08, FR-11, FR-16
+ * 
+ * Features:
+ * - KPI Summary metrics
+ * - Branch/Installer progress tracking
+ * - Waste pickup aggregation
+ * - Customer history search
+ * - Export functionality (CSV, XLSX, PDF)
+ */
+
+import {
+  Injectable,
+  computed,
+  inject,
+} from '@angular/core';
+import {
+  signalStore,
+  withState,
+  withComputed,
+  withMethods,
+  patchState,
+} from '@ngrx/signals';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '@env/environment';
+import { firstValueFrom } from 'rxjs';
+
+import {
+  ReportsState,
+  KpiSummary,
+  StatusCount,
+  BranchProgress,
+  WasteSummaryItem,
+  CustomerHistoryItem,
+  ReleaseSummaryItem,
+  ReportsFilters,
+  ExportConfig,
+} from './reports.models';
+
+const initialState: ReportsState = {
+  summary: null,
+  statusCounts: [],
+  branchProgress: [],
+  wasteSummary: [],
+  customerHistory: [],
+  releaseSummary: [],
+  filters: {},
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
+};
+
+/**
+ * Reports SignalStore
+ */
+@Injectable({ providedIn: 'root' })
+export class ReportsStore extends signalStore(
+  withState<ReportsState>(initialState),
+
+  withComputed(({ summary, branchProgress, wasteSummary }) => ({
+    // Computed: total completion rate
+    totalCompletionRate: computed(() => {
+      const s = summary();
+      if (!s || s.total === 0) return 0;
+      return Math.round((s.completed / s.total) * 100);
+    }),
+
+    // Computed: top performing branches
+    topBranches: computed(() => {
+      return [...branchProgress()]
+        .sort((a, b) => b.completionRate - a.completionRate)
+        .slice(0, 5);
+    }),
+
+    // Computed: low performing branches (need attention)
+    lowPerformingBranches: computed(() => {
+      return [...branchProgress()]
+        .filter(b => b.completionRate < 70)
+        .sort((a, b) => a.completionRate - b.completionRate);
+    }),
+
+    // Computed: waste summary totals
+    wasteTotals: computed(() => {
+      const items = wasteSummary();
+      return {
+        totalItems: items.reduce((sum, w) => sum + w.quantity, 0),
+        totalOrders: items.reduce((sum, w) => sum + w.orderCount, 0),
+        uniqueCodes: items.length,
+      };
+    }),
+
+    // Computed: has data loaded
+    hasData: computed(() => summary() !== null),
+  })),
+
+  withMethods((store, http = inject(HttpClient)) => ({
+    /**
+     * Load KPI summary from API
+     */
+    async loadSummary(filters?: ReportsFilters): Promise<void> {
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        let params = new HttpParams();
+        if (filters?.level) params = params.set('level', filters.level);
+        if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
+        if (filters?.installerId) params = params.set('installerId', filters.installerId);
+        if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
+
+        const response = await firstValueFrom(
+          http.get<{
+            success: boolean;
+            data: {
+              summary: KpiSummary;
+              statusCounts: StatusCount[];
+              byBranch?: BranchProgress[];
+            };
+          }>(`${environment.apiUrl}/reports/summary`, { params })
+        );
+
+        patchState(store, {
+          summary: response.data.summary,
+          statusCounts: response.data.statusCounts || [],
+          branchProgress: response.data.byBranch || [],
+          filters: filters || {},
+          isLoading: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to load summary';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Load progress dashboard data
+     */
+    async loadProgress(filters?: ReportsFilters): Promise<void> {
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        let params = new HttpParams();
+        if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
+        if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
+
+        const response = await firstValueFrom(
+          http.get<{
+            success: boolean;
+            data: {
+              branches: BranchProgress[];
+            };
+          }>(`${environment.apiUrl}/reports/progress`, { params })
+        );
+
+        patchState(store, {
+          branchProgress: response.data.branches || [],
+          filters: filters || {},
+          isLoading: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to load progress';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Load waste summary data (FR-05, FR-16)
+     */
+    async loadWasteSummary(filters?: ReportsFilters): Promise<void> {
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        let params = new HttpParams();
+        params = params.set('type', 'waste');
+        if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
+        if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
+        if (filters?.wasteCode) params = params.set('wasteCode', filters.wasteCode);
+
+        const response = await firstValueFrom(
+          http.get<{
+            success: boolean;
+            data: WasteSummaryItem[];
+          }>(`${environment.apiUrl}/reports/raw`, { params })
+        );
+
+        patchState(store, {
+          wasteSummary: response.data || [],
+          filters: filters || {},
+          isLoading: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to load waste summary';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Search customer history (FR-07)
+     */
+    async searchCustomerHistory(filters: ReportsFilters): Promise<void> {
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        let params = new HttpParams();
+        params = params.set('type', 'history');
+        if (filters.customerQuery) params = params.set('customer', filters.customerQuery);
+        if (filters.vendorCode) params = params.set('vendorCode', filters.vendorCode);
+        if (filters.branchCode) params = params.set('branchCode', filters.branchCode);
+        if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+        if (filters.dateTo) params = params.set('dateTo', filters.dateTo);
+
+        const response = await firstValueFrom(
+          http.get<{
+            success: boolean;
+            data: CustomerHistoryItem[];
+          }>(`${environment.apiUrl}/reports/raw`, { params })
+        );
+
+        patchState(store, {
+          customerHistory: response.data || [],
+          filters,
+          isLoading: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to search customer history';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Load release summary by FDC (FR-16)
+     */
+    async loadReleaseSummary(filters?: ReportsFilters): Promise<void> {
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        let params = new HttpParams();
+        params = params.set('type', 'release');
+        if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
+        if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
+
+        const response = await firstValueFrom(
+          http.get<{
+            success: boolean;
+            data: ReleaseSummaryItem[];
+          }>(`${environment.apiUrl}/reports/raw`, { params })
+        );
+
+        patchState(store, {
+          releaseSummary: response.data || [],
+          filters: filters || {},
+          isLoading: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to load release summary';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Export data (FR-06 ECOAS, CSV, XLSX, PDF)
+     */
+    async exportData(config: ExportConfig): Promise<Blob> {
+      try {
+        let params = new HttpParams();
+        params = params.set('type', config.type);
+        params = params.set('format', config.format);
+        if (config.dateFrom) params = params.set('dateFrom', config.dateFrom);
+        if (config.dateTo) params = params.set('dateTo', config.dateTo);
+        if (config.branchCode) params = params.set('branchCode', config.branchCode);
+        if (config.status?.length) params = params.set('status', config.status.join(','));
+
+        const response = await firstValueFrom(
+          http.get(`${environment.apiUrl}/reports/export/${config.type}`, {
+            params,
+            responseType: 'blob',
+          })
+        );
+
+        return response;
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to export data';
+        patchState(store, { error: errorMessage });
+        throw error;
+      }
+    },
+
+    /**
+     * Download exported file
+     */
+    downloadFile(blob: Blob, filename: string): void {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    },
+
+    /**
+     * Update filters
+     */
+    setFilters(filters: ReportsFilters): void {
+      patchState(store, { filters });
+    },
+
+    /**
+     * Clear all data
+     */
+    reset(): void {
+      patchState(store, initialState);
+    },
+
+    /**
+     * Clear error
+     */
+    clearError(): void {
+      patchState(store, { error: null });
+    },
+  }))
+) {
+  constructor() {
+    super();
+  }
+}

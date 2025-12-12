@@ -1,0 +1,207 @@
+# ============================================
+# Logistics ERP - Comprehensive .gitignore
+# Last Updated: 2025-12-15
+# ============================================
+
+# ==========================================
+# 🔐 SECURITY-CRITICAL (DO NOT COMMIT!)
+# ==========================================
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.local
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+
+# Certificates & Keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+*.truststore
+
+# AWS & Cloud Credentials
+.aws/
+credentials
+credentials.json
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+
+# SSH Keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
+
+# ==========================================
+# 📦 DEPENDENCIES
+# ==========================================
+node_modules/
+.pnpm-store/
+jspm_packages/
+bower_components/
+vendor/
+
+# ==========================================
+# 🏗️ BUILD OUTPUTS
+# ==========================================
+dist/
+build/
+.next/
+out/
+www/
+**/www/
+apps/*/www/
+apps/mobile/www/
+apps/web/dist/
+*.tsbuildinfo
+*.tsbuildinfo.*
+
+# Angular Build Cache
+.angular/
+apps/**/.angular/
+**/.angular/cache/
+**/cache/
+
+# Turbo Cache
+.turbo/
+**/.turbo/
+
+# Coverage Reports
+coverage/
+**/coverage/
+*.lcov
+lcov.info
+
+# Source Maps (production)
+*.map
+
+# ==========================================
+# 🖥️ IDE & EDITORS
+# ==========================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# ==========================================
+# 💻 OS FILES
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Microsoft Office Temp Files
+~$*
+*.tmp
+
+# ==========================================
+# 📝 LOGS
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ==========================================
+# 🧪 TESTING & COVERAGE
+# ==========================================
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+htmlcov/
+test-results/
+test-reports/
+junit.xml
+
+# ==========================================
+# 🗄️ DATABASE
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Prisma
+prisma/migrations/*_migration.sql
+
+# ==========================================
+# 📱 MOBILE / CAPACITOR
+# ==========================================
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/.capacitor/
+*.ipa
+*.apk
+*.aab
+
+# ==========================================
+# 🤖 AI & CLAUDE TOOLS (LOCAL CONFIG)
+# ==========================================
+.claude/settings.local.json
+.serena/cache/
+.serena/memories/
+
+# ==========================================
+# 📄 TEMPORARY & EXTRACTED FILES
+# ==========================================
+tmp/
+temp/
+.cache/
+*.bak
+*.backup
+
+# PowerPoint/Document Extraction
+manual_extract/
+*.pptx
+!docs/**/*.pptx
+
+# ==========================================
+# 🔧 MISC
+# ==========================================
+.sass-cache/
+*.css.map
+*.js.map
+.grunt
+.lock-wscript
+.node_repl_history
+.yarn-integrity
+.npm
+.eslintcache
+.parcel-cache
+.fusebox/
+.dynamodb/
+.tern-port
+.vuepress/dist
+.serverless/
+.fusebox/

@@ -1,0 +1,373 @@
+// apps/web/src/app/features/reports/pages/progress-dashboard/progress-dashboard.page.ts
+// PRD FR-08, FR-11 - KPI Dashboard with branch/installer progress
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
+  IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
+  IonRefresher, IonRefresherContent, IonProgressBar, IonIcon, IonButton,
+  IonDatetime, IonModal, IonDatetimeButton,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { 
+  calendarOutline, filterOutline, refreshOutline, trendingUpOutline,
+  personOutline, businessOutline, statsChartOutline, checkmarkCircleOutline,
+  warningOutline, closeCircleOutline, timeOutline,
+} from 'ionicons/icons';
+import { ReportsStore } from '../../../../store/reports/reports.store';
+import { AuthService } from '../../../../core/services/auth.service';
+
+type ViewType = 'installer' | 'branch' | 'status';
+
+@Component({
+  selector: 'app-progress-dashboard',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule, FormsModule,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
+    IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
+    IonRefresher, IonRefresherContent, IonProgressBar, IonIcon, IonButton,
+    IonDatetime, IonModal, IonDatetimeButton,
+  ],
+  template: `
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/tabs/reports"></ion-back-button>
+        </ion-buttons>
+        <ion-title>진행현황 대시보드</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="loadData()">
+            <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+      <ion-toolbar class="filter-bar">
+        <div class="filter-row">
+          <ion-button fill="clear" size="small" id="open-date-modal">
+            <ion-icon slot="start" name="calendar-outline"></ion-icon>
+            {{ dateRangeLabel() }}
+          </ion-button>
+          <ion-segment [value]="viewType()" (ionChange)="onViewTypeChange($any($event).detail.value)" class="view-segment">
+            <ion-segment-button value="installer"><ion-icon name="person-outline"></ion-icon></ion-segment-button>
+            <ion-segment-button value="branch"><ion-icon name="business-outline"></ion-icon></ion-segment-button>
+            <ion-segment-button value="status"><ion-icon name="stats-chart-outline"></ion-icon></ion-segment-button>
+          </ion-segment>
+        </div>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+
+      @if (reportsStore.isLoading()) {
+        <div class="loading-container">
+          <ion-spinner name="crescent"></ion-spinner>
+          <p>데이터 로딩 중...</p>
+        </div>
+      } @else {
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="summary-card total">
+            <div class="card-icon"><ion-icon name="stats-chart-outline"></ion-icon></div>
+            <div class="card-content">
+              <span class="value">{{ reportsStore.summary()?.total || 0 }}</span>
+              <span class="label">총 주문</span>
+            </div>
+          </div>
+          <div class="summary-card completed">
+            <div class="card-icon"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
+            <div class="card-content">
+              <span class="value">{{ reportsStore.summary()?.completed || 0 }}</span>
+              <span class="label">완료</span>
+            </div>
+          </div>
+          <div class="summary-card pending">
+            <div class="card-icon"><ion-icon name="time-outline"></ion-icon></div>
+            <div class="card-content">
+              <span class="value">{{ reportsStore.summary()?.pending || 0 }}</span>
+              <span class="label">진행중</span>
+            </div>
+          </div>
+          <div class="summary-card cancelled">
+            <div class="card-icon"><ion-icon name="close-circle-outline"></ion-icon></div>
+            <div class="card-content">
+              <span class="value">{{ reportsStore.summary()?.cancelled || 0 }}</span>
+              <span class="label">취소</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Metrics -->
+        <div class="section">
+          <h3 class="section-title">
+            <ion-icon name="trending-up-outline"></ion-icon>
+            KPI 현황
+          </h3>
+          <div class="kpi-card">
+            <div class="kpi-item">
+              <div class="kpi-header">
+                <span class="kpi-label">완료율</span>
+                <span class="kpi-value">{{ reportsStore.totalCompletionRate() }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="reportsStore.totalCompletionRate()"></div>
+              </div>
+            </div>
+            <div class="kpi-item">
+              <div class="kpi-header">
+                <span class="kpi-label">폐가전 회수</span>
+                <span class="kpi-value">{{ reportsStore.wasteTotals().totalItems }}건</span>
+              </div>
+              <div class="progress-bar waste">
+                <div class="progress-fill" [style.width.%]="wasteProgress()"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress List -->
+        <div class="section">
+          <h3 class="section-title">
+            <ion-icon [name]="viewTypeIcon()"></ion-icon>
+            {{ viewTypeLabel() }} 현황
+          </h3>
+          @if (reportsStore.branchProgress().length > 0) {
+            <div class="progress-list">
+              @for (item of reportsStore.branchProgress(); track item.branchCode) {
+                <div class="progress-item">
+                  <div class="item-header">
+                    <span class="item-name">{{ item.branchName }}</span>
+                    <span class="item-stats">{{ item.completed }}/{{ item.total }}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" 
+                         [class.success]="item.completionRate >= 80"
+                         [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                         [class.danger]="item.completionRate < 50"
+                         [style.width.%]="item.completionRate"></div>
+                  </div>
+                  <div class="item-footer">
+                    <span class="rate-badge" 
+                          [class.success]="item.completionRate >= 80"
+                          [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                          [class.danger]="item.completionRate < 50">
+                      {{ item.completionRate | number:'1.0-0' }}%
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <ion-icon name="stats-chart-outline"></ion-icon>
+              <p>데이터가 없습니다</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Date Range Modal -->
+      <ion-modal trigger="open-date-modal" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
+        <ng-template>
+          <ion-header>
+            <ion-toolbar>
+              <ion-title>기간 선택</ion-title>
+              <ion-buttons slot="end">
+                <ion-button (click)="applyDateFilter()">적용</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+            <div class="date-inputs">
+              <div class="date-field">
+                <label>시작일</label>
+                <ion-datetime-button datetime="datetime-from"></ion-datetime-button>
+                <ion-modal [keepContentsMounted]="true">
+                  <ng-template>
+                    <ion-datetime id="datetime-from" [(ngModel)]="dateFrom" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                  </ng-template>
+                </ion-modal>
+              </div>
+              <div class="date-field">
+                <label>종료일</label>
+                <ion-datetime-button datetime="datetime-to"></ion-datetime-button>
+                <ion-modal [keepContentsMounted]="true">
+                  <ng-template>
+                    <ion-datetime id="datetime-to" [(ngModel)]="dateTo" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                  </ng-template>
+                </ion-modal>
+              </div>
+            </div>
+            <div class="quick-filters">
+              <ion-button fill="outline" size="small" (click)="setQuickDate('today')">오늘</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">이번 주</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">이번 달</ion-button>
+            </div>
+          </ion-content>
+        </ng-template>
+      </ion-modal>
+    </ion-content>
+  `,
+  styles: [`
+    .filter-bar { --background: var(--ion-color-light); }
+    .filter-row { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+    .view-segment { width: auto; min-width: 120px; }
+    .view-segment ion-segment-button { --padding-start: 8px; --padding-end: 8px; min-width: 40px; }
+    .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 24px; }
+    .loading-container p { margin-top: 16px; color: var(--ion-color-medium); }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
+    .summary-card { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .card-icon ion-icon { font-size: 24px; color: white; }
+    .summary-card.total .card-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .summary-card.completed .card-icon { background: linear-gradient(135deg, #10b981, #059669); }
+    .summary-card.pending .card-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .summary-card.cancelled .card-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .card-content { display: flex; flex-direction: column; }
+    .card-content .value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .card-content .label { font-size: 12px; color: #64748b; }
+    .section { padding: 0 16px 16px; }
+    .section-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: #0f172a; margin: 16px 0 12px; }
+    .section-title ion-icon { font-size: 20px; color: #3b82f6; }
+    .kpi-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .kpi-item { margin-bottom: 16px; }
+    .kpi-item:last-child { margin-bottom: 0; }
+    .kpi-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .kpi-label { font-size: 14px; color: #64748b; }
+    .kpi-value { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #2563eb); border-radius: 4px; transition: width 0.3s; }
+    .progress-fill.success { background: linear-gradient(90deg, #10b981, #059669); }
+    .progress-fill.warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .progress-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .progress-bar.waste .progress-fill { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+    .progress-list { display: flex; flex-direction: column; gap: 12px; }
+    .progress-item { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .item-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .item-name { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .item-stats { font-size: 13px; color: #64748b; }
+    .item-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .rate-badge { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+    .rate-badge.success { background: #dcfce7; color: #166534; }
+    .rate-badge.warning { background: #fef3c7; color: #92400e; }
+    .rate-badge.danger { background: #fee2e2; color: #991b1b; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px; color: #94a3b8; }
+    .empty-state ion-icon { font-size: 48px; margin-bottom: 12px; }
+    .date-inputs { display: flex; gap: 16px; margin-bottom: 16px; }
+    .date-field { flex: 1; }
+    .date-field label { display: block; font-size: 13px; color: #64748b; margin-bottom: 8px; }
+    .quick-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  `],
+})
+export class ProgressDashboardPage implements OnInit {
+  protected readonly reportsStore = inject(ReportsStore);
+  private readonly authService = inject(AuthService);
+
+  // Local UI state
+  protected readonly viewType = signal<ViewType>('branch');
+  dateFrom = new Date().toISOString();
+  dateTo = new Date().toISOString();
+
+  constructor() {
+    addIcons({
+      calendarOutline, filterOutline, refreshOutline, trendingUpOutline,
+      personOutline, businessOutline, statsChartOutline, checkmarkCircleOutline,
+      warningOutline, closeCircleOutline, timeOutline,
+    });
+  }
+
+  // Computed properties
+  protected readonly dateRangeLabel = computed(() => {
+    const from = new Date(this.dateFrom);
+    const to = new Date(this.dateTo);
+    const formatDate = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+    return `${formatDate(from)} - ${formatDate(to)}`;
+  });
+
+  protected readonly viewTypeLabel = computed(() => {
+    const labels: Record<ViewType, string> = {
+      installer: '설치기사별',
+      branch: '지점별',
+      status: '상태별',
+    };
+    return labels[this.viewType()];
+  });
+
+  protected readonly viewTypeIcon = computed(() => {
+    const icons: Record<ViewType, string> = {
+      installer: 'person-outline',
+      branch: 'business-outline',
+      status: 'stats-chart-outline',
+    };
+    return icons[this.viewType()];
+  });
+
+  protected readonly wasteProgress = computed(() => {
+    const totals = this.reportsStore.wasteTotals();
+    return totals.totalItems > 0 ? Math.min((totals.totalItems / 100) * 100, 100) : 0;
+  });
+
+  ngOnInit() {
+    // Set default date range to current month
+    const now = new Date();
+    this.dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    this.dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+    
+    this.loadData();
+  }
+
+  loadData() {
+    const branchCode = this.authService.user()?.branchCode;
+    const filters = {
+      dateFrom: this.dateFrom.split('T')[0],
+      dateTo: this.dateTo.split('T')[0],
+      branchCode,
+    };
+    
+    this.reportsStore.setFilters(filters);
+    this.reportsStore.loadSummary();
+    this.reportsStore.loadProgress(filters);
+  }
+
+  onViewTypeChange(type: ViewType) {
+    this.viewType.set(type);
+    // ViewType은 UI 표시용이므로 기존 filters를 사용
+    this.reportsStore.loadProgress();
+  }
+
+  async onRefresh(event: any) {
+    this.loadData();
+    setTimeout(() => event.target.complete(), 500);
+  }
+
+  applyDateFilter() {
+    this.loadData();
+  }
+
+  setQuickDate(period: 'today' | 'week' | 'month') {
+    const now = new Date();
+    switch (period) {
+      case 'today':
+        this.dateFrom = now.toISOString();
+        this.dateTo = now.toISOString();
+        break;
+      case 'week':
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        this.dateFrom = startOfWeek.toISOString();
+        this.dateTo = now.toISOString();
+        break;
+      case 'month':
+        this.dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        this.dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+        break;
+    }
+  }
+}
