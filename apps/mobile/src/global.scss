@@ -1,0 +1,179 @@
+/*
+ * Global SCSS
+ * Contains global styles shared across the application
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import '@ionic/angular/css/core.css';
+
+/* Basic CSS for apps built with Ionic */
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+
+/* Optional CSS utilities that can be commented out */
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
+
+/* Custom global styles */
+
+// Safe area padding
+.safe-area-top {
+  padding-top: var(--ion-safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--ion-safe-area-bottom);
+}
+
+// Status colors for orders
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.status-unassigned { background: var(--status-unassigned); color: #fff; }
+  &.status-assigned { background: var(--status-assigned); color: #fff; }
+  &.status-confirmed { background: var(--status-confirmed); color: #fff; }
+  &.status-released { background: var(--status-released); color: #fff; }
+  &.status-dispatched { background: var(--status-dispatched); color: #fff; }
+  &.status-completed { background: var(--status-completed); color: #fff; }
+  &.status-postponed { background: var(--status-postponed); color: #000; }
+  &.status-absent { background: var(--status-absent); color: #fff; }
+  &.status-request-cancel { background: var(--status-request-cancel); color: #fff; }
+  &.status-cancelled { background: var(--status-cancelled); color: #fff; }
+  &.status-collected { background: var(--status-collected); color: #fff; }
+  &.status-reverted { background: var(--status-reverted); color: #fff; }
+}
+
+// Offline indicator
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--ion-color-warning);
+  color: var(--ion-color-warning-contrast);
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10000;
+  padding-top: calc(8px + var(--ion-safe-area-top));
+}
+
+// Sync indicator
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+  font-size: 14px;
+
+  &.syncing {
+    background: var(--ion-color-primary-tint);
+    color: var(--ion-color-primary);
+  }
+
+  &.error {
+    background: var(--ion-color-danger-tint);
+    color: var(--ion-color-danger);
+  }
+}
+
+// Card styling
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+// Form styling
+.form-section {
+  padding: 16px;
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ion-color-medium);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+}
+
+// List item styling
+ion-item {
+  --inner-padding-end: 8px;
+}
+
+// Button with icon
+.btn-icon {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+// Pull to refresh
+ion-refresher {
+  ion-refresher-content {
+    --color: var(--ion-color-primary);
+  }
+}
+
+// Loading skeleton
+.skeleton-card {
+  padding: 16px;
+
+  .skeleton-line {
+    height: 16px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      var(--ion-color-light) 25%,
+      var(--ion-color-light-shade) 50%,
+      var(--ion-color-light) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 64px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    font-size: 14px;
+  }
+}

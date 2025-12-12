@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": ["jasmine"],
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@core/*": ["src/app/core/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@features/*": ["src/app/features/*"],
+      "@env/*": ["src/environments/*"],
+      "@testing/*": ["src/testing/*"],
+      "@capacitor/preferences": ["src/testing/capacitor-preferences.mock.ts"],
+      "@app/core/db/database": ["src/testing/dexie.mock.ts"]
+    }
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/testing/**/*.ts"]
+}

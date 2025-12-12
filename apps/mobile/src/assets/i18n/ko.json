@@ -1,0 +1,106 @@
+{
+  "COMMON": {
+    "OK": "확인",
+    "CANCEL": "취소",
+    "SAVE": "저장",
+    "DELETE": "삭제",
+    "EDIT": "편집",
+    "CLOSE": "닫기",
+    "LOADING": "로딩 중...",
+    "ERROR": "오류",
+    "SUCCESS": "성공",
+    "WARNING": "경고",
+    "INFO": "정보"
+  },
+  "PROFILE": {
+    "TITLE": "내 정보",
+    "USER_INFO": {
+      "TITLE": "사용자 정보",
+      "USERNAME": "사용자명",
+      "EMAIL": "이메일",
+      "PHONE": "전화번호",
+      "ROLE": "역할",
+      "BRANCH": "소속 지점",
+      "BRANCH_CODE": "지점 코드"
+    },
+    "SYNC": {
+      "TITLE": "동기화 상태",
+      "STATUS": "상태",
+      "NETWORK": "네트워크",
+      "ONLINE": "온라인",
+      "OFFLINE": "오프라인",
+      "PENDING_OPERATIONS": "대기 중인 작업",
+      "PENDING_COUNT": "{{count}}건",
+      "SYNC_NOW": "지금 동기화",
+      "SYNCING": "동기화 중...",
+      "LAST_SYNC": "마지막 동기화",
+      "SYNC_COMPLETED": "동기화 완료",
+      "SYNC_PENDING": "대기 중",
+      "CONFLICT_TITLE": "데이터 충돌",
+      "CONFLICT_MESSAGE": "동기화 중 충돌이 발생한 데이터가 있습니다. 수동 확인이 필요합니다.",
+      "RESOLVE_CONFLICTS": "충돌 해결하기"
+    },
+    "NOTIFICATIONS": {
+      "TITLE": "알림 설정",
+      "ENABLE_ALL": "모든 알림 활성화",
+      "CATEGORIES": {
+        "ORDER_ASSIGNED": "주문 배정",
+        "ORDER_ASSIGNED_DESC": "새로운 주문이 배정되면 알림",
+        "ORDER_COMPLETED": "주문 완료",
+        "ORDER_COMPLETED_DESC": "주문이 완료되면 알림",
+        "ORDER_CANCELLED": "주문 취소",
+        "ORDER_CANCELLED_DESC": "주문이 취소되면 알림",
+        "STATUS_CHANGED": "상태 변경",
+        "STATUS_CHANGED_DESC": "주문 상태가 변경되면 알림",
+        "SETTLEMENT_LOCKED": "정산 잠김",
+        "SETTLEMENT_LOCKED_DESC": "정산이 잠기면 알림",
+        "SYSTEM_ALERTS": "시스템 알림",
+        "SYSTEM_ALERTS_DESC": "중요한 시스템 알림 수신"
+      }
+    },
+    "SETTINGS": {
+      "TITLE": "설정",
+      "LANGUAGE": "언어",
+      "LANGUAGE_SELECT": "언어 선택",
+      "DARK_MODE": "다크 모드",
+      "NOTIFICATIONS": "푸시 알림",
+      "SOUND": "알림 소리",
+      "VIBRATION": "진동"
+    },
+    "APP_INFO": {
+      "TITLE": "앱 정보",
+      "VERSION": "버전",
+      "ENVIRONMENT": "환경",
+      "ENV_PRODUCTION": "운영",
+      "ENV_DEVELOPMENT": "개발",
+      "BUILD": "빌드",
+      "LAST_UPDATED": "마지막 업데이트"
+    },
+    "LOGOUT": {
+      "BUTTON": "로그아웃",
+      "CONFIRM_TITLE": "로그아웃",
+      "CONFIRM_MESSAGE": "로그아웃 하시겠습니까?",
+      "PENDING_WARNING": "동기화되지 않은 작업이 {{count}}건 있습니다. 로그아웃하면 해당 데이터가 손실될 수 있습니다. 계속하시겠습니까?"
+    }
+  },
+  "ROLES": {
+    "HQ_ADMIN": "본사 관리자",
+    "BRANCH_MANAGER": "지점장",
+    "PARTNER_COORDINATOR": "협력업체 관리자",
+    "INSTALLER": "설치기사",
+    "HQ_ADMIN_DESC": "전체 시스템 관리 및 정산 잠금 해제 권한",
+    "BRANCH_MANAGER_DESC": "지점 내 주문 관리 및 배정 권한",
+    "PARTNER_COORDINATOR_DESC": "협력업체 주문 완료 처리 권한",
+    "INSTALLER_DESC": "배정된 주문 설치 완료 권한"
+  },
+  "LANGUAGES": {
+    "KO": "한국어",
+    "EN": "English"
+  },
+  "APP": {
+    "OFFLINE_MODE": "오프라인 모드 - 온라인 복구 시 자동 동기화됩니다",
+    "UPDATE_AVAILABLE": "새 버전이 있습니다. 앱을 다시 로드하시겠습니까?",
+    "UPDATE_LATER": "나중에",
+    "UPDATE_NOW": "업데이트"
+  }
+}

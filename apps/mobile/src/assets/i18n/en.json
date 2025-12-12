@@ -1,0 +1,106 @@
+{
+  "COMMON": {
+    "OK": "OK",
+    "CANCEL": "Cancel",
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "CLOSE": "Close",
+    "LOADING": "Loading...",
+    "ERROR": "Error",
+    "SUCCESS": "Success",
+    "WARNING": "Warning",
+    "INFO": "Information"
+  },
+  "PROFILE": {
+    "TITLE": "Profile",
+    "USER_INFO": {
+      "TITLE": "User Information",
+      "USERNAME": "Username",
+      "EMAIL": "Email",
+      "PHONE": "Phone",
+      "ROLE": "Role",
+      "BRANCH": "Branch",
+      "BRANCH_CODE": "Branch Code"
+    },
+    "SYNC": {
+      "TITLE": "Sync Status",
+      "STATUS": "Status",
+      "NETWORK": "Network",
+      "ONLINE": "Online",
+      "OFFLINE": "Offline",
+      "PENDING_OPERATIONS": "Pending Operations",
+      "PENDING_COUNT": "{{count}} items",
+      "SYNC_NOW": "Sync Now",
+      "SYNCING": "Syncing...",
+      "LAST_SYNC": "Last Sync",
+      "SYNC_COMPLETED": "Sync Completed",
+      "SYNC_PENDING": "Pending",
+      "CONFLICT_TITLE": "Data Conflicts",
+      "CONFLICT_MESSAGE": "There are data conflicts that occurred during synchronization. Manual review is required.",
+      "RESOLVE_CONFLICTS": "Resolve Conflicts"
+    },
+    "NOTIFICATIONS": {
+      "TITLE": "Notification Settings",
+      "ENABLE_ALL": "Enable All Notifications",
+      "CATEGORIES": {
+        "ORDER_ASSIGNED": "Order Assigned",
+        "ORDER_ASSIGNED_DESC": "Notify when a new order is assigned",
+        "ORDER_COMPLETED": "Order Completed",
+        "ORDER_COMPLETED_DESC": "Notify when an order is completed",
+        "ORDER_CANCELLED": "Order Cancelled",
+        "ORDER_CANCELLED_DESC": "Notify when an order is cancelled",
+        "STATUS_CHANGED": "Status Changed",
+        "STATUS_CHANGED_DESC": "Notify when order status changes",
+        "SETTLEMENT_LOCKED": "Settlement Locked",
+        "SETTLEMENT_LOCKED_DESC": "Notify when settlement is locked",
+        "SYSTEM_ALERTS": "System Alerts",
+        "SYSTEM_ALERTS_DESC": "Receive important system notifications"
+      }
+    },
+    "SETTINGS": {
+      "TITLE": "Settings",
+      "LANGUAGE": "Language",
+      "LANGUAGE_SELECT": "Select Language",
+      "DARK_MODE": "Dark Mode",
+      "NOTIFICATIONS": "Push Notifications",
+      "SOUND": "Notification Sound",
+      "VIBRATION": "Vibration"
+    },
+    "APP_INFO": {
+      "TITLE": "App Information",
+      "VERSION": "Version",
+      "ENVIRONMENT": "Environment",
+      "ENV_PRODUCTION": "Production",
+      "ENV_DEVELOPMENT": "Development",
+      "BUILD": "Build",
+      "LAST_UPDATED": "Last Updated"
+    },
+    "LOGOUT": {
+      "BUTTON": "Logout",
+      "CONFIRM_TITLE": "Logout",
+      "CONFIRM_MESSAGE": "Are you sure you want to logout?",
+      "PENDING_WARNING": "You have {{count}} pending operations. Logging out may result in data loss. Do you want to continue?"
+    }
+  },
+  "ROLES": {
+    "HQ_ADMIN": "HQ Administrator",
+    "BRANCH_MANAGER": "Branch Manager",
+    "PARTNER_COORDINATOR": "Partner Coordinator",
+    "INSTALLER": "Installer",
+    "HQ_ADMIN_DESC": "Full system management and settlement unlock authority",
+    "BRANCH_MANAGER_DESC": "Branch order management and assignment authority",
+    "PARTNER_COORDINATOR_DESC": "Partner order completion authority",
+    "INSTALLER_DESC": "Assigned order installation completion authority"
+  },
+  "LANGUAGES": {
+    "KO": "한국어",
+    "EN": "English"
+  },
+  "APP": {
+    "OFFLINE_MODE": "Offline Mode - Will sync automatically when online",
+    "UPDATE_AVAILABLE": "A new version is available. Would you like to reload the app?",
+    "UPDATE_LATER": "Later",
+    "UPDATE_NOW": "Update"
+  }
+}
