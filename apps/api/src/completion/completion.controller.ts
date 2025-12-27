@@ -127,7 +127,7 @@ export class CompletionController {
    * GET /orders/{orderId}/completion
    * Get completion details including serials and waste
    */
-  @Get(':orderId/completion')
+  @Get('completion')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get completion details by order ID' })
   @ApiParam({ name: 'orderId', description: 'Order ID' })
