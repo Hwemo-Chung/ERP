@@ -56,6 +56,90 @@ export class ReportsController {
     return this.reportsService.getProgress({ groupBy, branchCode, dateFrom, dateTo });
   }
 
+  @Get('waste-summary')
+  @ApiOperation({
+    summary: 'Get waste pickup summary',
+    description: 'Returns aggregated waste pickup data by waste code'
+  })
+  @ApiQuery({ name: 'branchCode', required: false })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  @ApiQuery({ name: 'wasteCode', required: false })
+  getWasteSummary(
+    @Query('branchCode') branchCode?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('wasteCode') wasteCode?: string,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    const effectiveBranch = user?.roles.includes(Role.HQ_ADMIN)
+      ? branchCode
+      : user?.branchCode || branchCode;
+
+    return this.reportsService.getWasteSummary({
+      branchCode: effectiveBranch,
+      dateFrom,
+      dateTo,
+      wasteCode,
+    });
+  }
+
+  @Get('customer-history')
+  @ApiOperation({
+    summary: 'Search customer order history',
+    description: 'Search order history by customer name, phone, or vendor code'
+  })
+  @ApiQuery({ name: 'customer', required: false, description: 'Customer name or phone to search' })
+  @ApiQuery({ name: 'vendorCode', required: false })
+  @ApiQuery({ name: 'branchCode', required: false })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  getCustomerHistory(
+    @Query('customer') customer?: string,
+    @Query('vendorCode') vendorCode?: string,
+    @Query('branchCode') branchCode?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    const effectiveBranch = user?.roles.includes(Role.HQ_ADMIN)
+      ? branchCode
+      : user?.branchCode || branchCode;
+
+    return this.reportsService.getCustomerHistory({
+      customer,
+      vendorCode,
+      branchCode: effectiveBranch,
+      dateFrom,
+      dateTo,
+    });
+  }
+
+  @Get('release-summary')
+  @ApiOperation({
+    summary: 'Get release summary by FDC',
+    description: 'Returns release counts grouped by FDC/installer'
+  })
+  @ApiQuery({ name: 'branchCode', required: false })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  getReleaseSummary(
+    @Query('branchCode') branchCode?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    const effectiveBranch = user?.roles.includes(Role.HQ_ADMIN)
+      ? branchCode
+      : user?.branchCode || branchCode;
+
+    return this.reportsService.getReleaseSummary({
+      branchCode: effectiveBranch,
+      dateFrom,
+      dateTo,
+    });
+  }
+
   @Get('raw')
   @Roles(Role.HQ_ADMIN, Role.BRANCH_MANAGER)
   @ApiOperation({ summary: 'Generate raw data export' })

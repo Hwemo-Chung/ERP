@@ -189,7 +189,6 @@ export class ReportsStore extends signalStore(
 
       try {
         let params = new HttpParams();
-        params = params.set('type', 'waste');
         if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
@@ -197,7 +196,7 @@ export class ReportsStore extends signalStore(
 
         // Note: apiResponseInterceptor unwraps { success, data } -> data
         const data = await firstValueFrom(
-          http.get<WasteSummaryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
+          http.get<WasteSummaryItem[]>(`${environment.apiUrl}/reports/waste-summary`, { params })
         );
 
         patchState(store, {
@@ -224,7 +223,6 @@ export class ReportsStore extends signalStore(
 
       try {
         let params = new HttpParams();
-        params = params.set('type', 'history');
         if (filters.customerQuery) params = params.set('customer', filters.customerQuery);
         if (filters.vendorCode) params = params.set('vendorCode', filters.vendorCode);
         if (filters.branchCode) params = params.set('branchCode', filters.branchCode);
@@ -233,7 +231,7 @@ export class ReportsStore extends signalStore(
 
         // Note: apiResponseInterceptor unwraps { success, data } -> data
         const data = await firstValueFrom(
-          http.get<CustomerHistoryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
+          http.get<CustomerHistoryItem[]>(`${environment.apiUrl}/reports/customer-history`, { params })
         );
 
         patchState(store, {
@@ -260,14 +258,13 @@ export class ReportsStore extends signalStore(
 
       try {
         let params = new HttpParams();
-        params = params.set('type', 'release');
         if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
 
         // Note: apiResponseInterceptor unwraps { success, data } -> data
         const data = await firstValueFrom(
-          http.get<ReleaseSummaryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
+          http.get<ReleaseSummaryItem[]>(`${environment.apiUrl}/reports/release-summary`, { params })
         );
 
         patchState(store, {
