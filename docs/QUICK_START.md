@@ -38,7 +38,7 @@ pnpm mobile:dev
 ### 5. 로그인
 - URL: http://localhost:4200
 - ID: `admin`
-- PW: `admin123`
+- PW: `admin123!`
 
 ---
 
