@@ -149,6 +149,226 @@ export class ReportsService {
   }
 
   /**
+   * Get waste pickup summary (aggregated by waste code)
+   */
+  async getWasteSummary(filters: {
+    branchCode?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    wasteCode?: string;
+  }) {
+    const where: any = {};
+
+    // Branch filter through order relation
+    const orderWhere: any = { deletedAt: null };
+    if (filters.branchCode) {
+      orderWhere.branch = { code: filters.branchCode };
+    }
+
+    // Date filter
+    if (filters.dateFrom || filters.dateTo) {
+      where.collectedAt = {};
+      if (filters.dateFrom) where.collectedAt.gte = new Date(filters.dateFrom);
+      if (filters.dateTo) {
+        const endDate = new Date(filters.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        where.collectedAt.lte = endDate;
+      }
+    }
+
+    // Waste code filter
+    if (filters.wasteCode) {
+      where.code = filters.wasteCode;
+    }
+
+    // Get waste pickups
+    const wastePickups = await this.prisma.wastePickup.findMany({
+      where: {
+        ...where,
+        order: orderWhere,
+      },
+      include: {
+        order: true,
+      },
+    });
+
+    // Get waste codes for descriptions
+    const wasteCodes = await this.prisma.wasteCode.findMany({
+      where: { isActive: true },
+    });
+    const wasteCodeMap = new Map(wasteCodes.map(w => [w.code, w.descriptionKo]));
+
+    // Aggregate by waste code
+    const aggregateMap = new Map<string, {
+      wasteCode: string;
+      description: string;
+      quantity: number;
+      orderCount: number;
+      orderIds: Set<string>;
+    }>();
+
+    wastePickups.forEach((pickup) => {
+      const code = pickup.code;
+      const existing = aggregateMap.get(code) || {
+        wasteCode: code,
+        description: wasteCodeMap.get(code) || code,
+        quantity: 0,
+        orderCount: 0,
+        orderIds: new Set<string>(),
+      };
+      existing.quantity += pickup.quantity;
+      existing.orderIds.add(pickup.orderId);
+      existing.orderCount = existing.orderIds.size;
+      aggregateMap.set(code, existing);
+    });
+
+    const items = Array.from(aggregateMap.values()).map(({ orderIds, ...rest }) => rest);
+
+    return items.sort((a, b) => b.quantity - a.quantity);
+  }
+
+  /**
+   * Search customer order history
+   */
+  async getCustomerHistory(filters: {
+    customer?: string;
+    vendorCode?: string;
+    branchCode?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const where: any = { deletedAt: null };
+
+    // Customer search (name or phone)
+    if (filters.customer) {
+      where.OR = [
+        { customerName: { contains: filters.customer, mode: 'insensitive' } },
+        { customerPhone: { contains: filters.customer } },
+      ];
+    }
+
+    // Vendor code filter
+    if (filters.vendorCode) {
+      where.vendorCode = filters.vendorCode;
+    }
+
+    // Branch filter
+    if (filters.branchCode) {
+      where.branch = { code: filters.branchCode };
+    }
+
+    // Date filter
+    if (filters.dateFrom || filters.dateTo) {
+      where.createdAt = {};
+      if (filters.dateFrom) where.createdAt.gte = new Date(filters.dateFrom);
+      if (filters.dateTo) {
+        const endDate = new Date(filters.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = endDate;
+      }
+    }
+
+    const orders = await this.prisma.order.findMany({
+      where,
+      include: {
+        branch: { select: { code: true, name: true } },
+        installer: { select: { name: true } },
+        lines: {
+          take: 3,
+          select: { itemName: true, quantity: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return orders.map((order) => ({
+      orderId: order.id,
+      orderNo: order.orderNo,
+      customerId: order.id,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerAddress: typeof order.address === 'object' ?
+        (order.address as any)?.line1 || JSON.stringify(order.address) :
+        String(order.address || ''),
+      status: order.status,
+      appointmentDate: order.appointmentDate?.toISOString() || null,
+      createdAt: order.createdAt.toISOString(),
+      branchCode: order.branch?.code,
+      branchName: order.branch?.name,
+      installerName: order.installer?.name,
+      products: order.lines.map((l) => ({
+        name: l.itemName,
+        quantity: l.quantity,
+      })),
+    }));
+  }
+
+  /**
+   * Get release summary by FDC/installer
+   */
+  async getReleaseSummary(filters: {
+    branchCode?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const where: any = {
+      deletedAt: null,
+      status: OrderStatus.RELEASED,
+    };
+
+    // Branch filter
+    if (filters.branchCode) {
+      where.branch = { code: filters.branchCode };
+    }
+
+    // Date filter on release date (approximated by appointmentDate)
+    if (filters.dateFrom || filters.dateTo) {
+      where.appointmentDate = {};
+      if (filters.dateFrom) where.appointmentDate.gte = new Date(filters.dateFrom);
+      if (filters.dateTo) {
+        const endDate = new Date(filters.dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        where.appointmentDate.lte = endDate;
+      }
+    }
+
+    // Group by installer
+    const orders = await this.prisma.order.findMany({
+      where,
+      include: {
+        installer: true,
+        branch: true,
+      },
+    });
+
+    // Aggregate by installer
+    const installerMap = new Map<string, {
+      installerId: string;
+      installerName: string;
+      branchCode: string;
+      branchName: string;
+      releaseCount: number;
+    }>();
+
+    orders.forEach((order) => {
+      if (!order.installer) return;
+      const key = order.installer.id;
+      const existing = installerMap.get(key) || {
+        installerId: order.installer.id,
+        installerName: order.installer.name,
+        branchCode: order.branch?.code || '',
+        branchName: order.branch?.name || '',
+        releaseCount: 0,
+      };
+      existing.releaseCount++;
+      installerMap.set(key, existing);
+    });
+
+    return Array.from(installerMap.values()).sort((a, b) => b.releaseCount - a.releaseCount);
+  }
+
+  /**
    * Generate raw data export
    */
   async generateExport(
