@@ -45,6 +45,21 @@ export class MetadataController {
     });
   }
 
+  @Get('partners')
+  @ApiOperation({ summary: 'Get partners list' })
+  @ApiQuery({ name: 'branchCode', required: false })
+  @ApiQuery({ name: 'active', required: false, type: Boolean })
+  getPartners(
+    @Query('branchCode') branchCode?: string,
+    @Query('active') active?: string,
+  ) {
+    const isActive = active === 'true' ? true : active === 'false' ? false : undefined;
+    return this.metadataService.getPartners({
+      branchCode,
+      isActive,
+    });
+  }
+
   @Get('waste-types')
   @ApiOperation({ summary: 'Get waste types list' })
   getWasteTypes() {

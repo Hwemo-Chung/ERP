@@ -131,10 +131,7 @@ FR 구현:      ████████████████████ 100
 | **Settings** | SettingsMenuPage | /tabs/settings | ✅ |
 | | SettlementPage | /tabs/settings/settlement | ✅ |
 | | SplitOrderPage | /tabs/settings/split-order/:id | ✅ |
-| | Notific6 | PRD 기반 전체 페이지 스켈레톤 생성 (22개 페이지) | 100% |
-| 2025-12-16 | Assignment, Completion, Reports, Settings 모듈 추가 | 100% |
-| 2025-12-16 | 탭 네비게이션 5개 탭으로 업데이트 | 100% |
-| 2025-12-12 | CLI 스크립트로 자동 생성 | 100% |
+| | NotificationSettingsPage | /tabs/settings/notifications | ✅ |
 
 ---
 
@@ -149,7 +146,7 @@ FR 구현:      ████████████████████ 100
 - [ ] Store 연결 - Settings 모듈 기능 구현
 - [ ] 오프라인 지원 (IndexedDB + Sync Queue)
 - [ ] E2E 테스트 작성
-- [ ] i18n 다국어 지원ings/notifications | ✅ |
+- [ ] i18n 다국어 지원
 
 ### 탭 네비게이션 (5개 탭)
 | 탭 | 아이콘 | 라벨 | 경로 |

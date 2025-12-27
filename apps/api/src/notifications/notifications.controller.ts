@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -11,12 +12,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { SubscribeDto } from './dto/subscribe.dto';
+import { UpdatePreferencesDto, PreferencesResponseDto } from './dto/preferences.dto';
 import { NotificationStatus } from '@prisma/client';
 
 @ApiTags('Notifications')
@@ -64,5 +66,34 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Mark notification as read' })
   acknowledge(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.notificationsService.acknowledge(id, user.sub);
+  }
+
+  @Get('preferences')
+  @ApiOperation({
+    summary: 'Get notification preferences for a device',
+    description: 'Retrieves the notification preferences including enabled categories and quiet hours settings'
+  })
+  @ApiQuery({ name: 'deviceId', required: true, description: 'Device ID to get preferences for' })
+  @ApiResponse({ status: 200, description: 'Preferences retrieved successfully', type: PreferencesResponseDto })
+  @ApiResponse({ status: 404, description: 'Subscription not found for device' })
+  getPreferences(
+    @CurrentUser() user: JwtPayload,
+    @Query('deviceId') deviceId: string,
+  ) {
+    return this.notificationsService.getPreferences(user.sub, deviceId);
+  }
+
+  @Put('preferences')
+  @ApiOperation({
+    summary: 'Update notification preferences',
+    description: 'Update notification preferences for a specific device including enabled categories and quiet hours'
+  })
+  @ApiResponse({ status: 200, description: 'Preferences updated successfully', type: PreferencesResponseDto })
+  @ApiResponse({ status: 404, description: 'Subscription not found for device' })
+  updatePreferences(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdatePreferencesDto,
+  ) {
+    return this.notificationsService.updatePreferences(user.sub, dto);
   }
 }

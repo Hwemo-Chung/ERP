@@ -99,6 +99,46 @@ export class MetadataService implements OnModuleInit {
   }
 
   /**
+   * Get partners list with optional filtering
+   */
+  async getPartners(filters?: { branchCode?: string; isActive?: boolean }) {
+    const where: Record<string, unknown> = {};
+
+    if (filters?.isActive !== undefined) {
+      where.isActive = filters.isActive;
+    }
+
+    // If branchCode filter provided, find partners with installers in that branch
+    const partners = await this.prisma.partner.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        contactName: true,
+        phone: true,
+        email: true,
+        isActive: true,
+      },
+    });
+
+    // If branchCode filter provided, filter partners that have installers in the branch
+    if (filters?.branchCode) {
+      const installersInBranch = await this.prisma.installer.findMany({
+        where: {
+          branch: { code: filters.branchCode },
+        },
+        select: { partnerId: true },
+      });
+      const partnerIdsInBranch = new Set(installersInBranch.map(i => i.partnerId));
+      return partners.filter(p => partnerIdsInBranch.has(p.id));
+    }
+
+    return partners;
+  }
+
+  /**
    * Get waste codes list
    */
   async getWasteTypes() {

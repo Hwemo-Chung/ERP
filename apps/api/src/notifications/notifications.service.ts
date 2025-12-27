@@ -293,4 +293,83 @@ export class NotificationsService {
 
     return payload;
   }
+
+  /**
+   * Get notification preferences for a device
+   */
+  async getPreferences(userId: string, deviceId: string) {
+    const subscription = await this.prisma.notificationSubscription.findUnique({
+      where: {
+        userId_deviceId: { userId, deviceId },
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('error.subscription_not_found');
+    }
+
+    return {
+      deviceId: subscription.deviceId,
+      platform: subscription.platform,
+      categoriesEnabled: subscription.categoriesEnabled,
+      isActive: subscription.isActive,
+      // Note: quietHours would be stored in a JSON field if implemented
+      quietHours: null,
+    };
+  }
+
+  /**
+   * Update notification preferences for a device
+   */
+  async updatePreferences(
+    userId: string,
+    data: {
+      deviceId: string;
+      categoriesEnabled?: string[];
+      quietHours?: {
+        enabled: boolean;
+        start?: string;
+        end?: string;
+        timezone?: string;
+      };
+    },
+  ) {
+    const subscription = await this.prisma.notificationSubscription.findUnique({
+      where: {
+        userId_deviceId: { userId, deviceId: data.deviceId },
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('error.subscription_not_found');
+    }
+
+    const updateData: Record<string, unknown> = {};
+
+    if (data.categoriesEnabled !== undefined) {
+      updateData.categoriesEnabled = data.categoriesEnabled;
+    }
+
+    // Note: To fully implement quiet hours, add a JSON column to NotificationSubscription
+    // For now, we log the quiet hours but don't persist them
+    if (data.quietHours) {
+      this.logger.log(
+        `Quiet hours preference received for device ${data.deviceId}: ${JSON.stringify(data.quietHours)}`,
+      );
+      // TODO: Add quiet hours persistence when schema is updated
+    }
+
+    const updated = await this.prisma.notificationSubscription.update({
+      where: { id: subscription.id },
+      data: updateData,
+    });
+
+    return {
+      deviceId: updated.deviceId,
+      platform: updated.platform,
+      categoriesEnabled: updated.categoriesEnabled,
+      isActive: updated.isActive,
+      quietHours: data.quietHours || null,
+    };
+  }
 }
