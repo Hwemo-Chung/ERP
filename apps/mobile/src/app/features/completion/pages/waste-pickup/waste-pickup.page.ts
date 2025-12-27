@@ -18,13 +18,11 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
-  IonBadge,
   IonSpinner,
   IonCard,
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  IonCheckbox,
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -91,13 +89,11 @@ const WASTE_CODES: { code: string; name: string }[] = [
     IonInput,
     IonSelect,
     IonSelectOption,
-    IonBadge,
     IonSpinner,
     IonCard,
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
-    IonCheckbox,
   ],
   template: `
     <ion-header>

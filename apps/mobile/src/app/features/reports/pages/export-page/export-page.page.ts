@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem,
   IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
   IonDatetimeButton, IonModal, IonDatetime,
   ToastController,
@@ -23,7 +23,7 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem,
     IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
     IonDatetimeButton, IonModal, IonDatetime,
   ],

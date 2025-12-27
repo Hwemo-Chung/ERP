@@ -1,7 +1,11 @@
-// apps/web/src/app/features/assignment/pages/batch-assign/batch-assign.page.ts
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+/**
+ * Batch Assign Page
+ * Allows batch assignment of multiple orders to a single installer
+ */
+import { Component, signal, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -15,7 +19,6 @@ import {
   IonItem,
   IonLabel,
   IonCheckbox,
-  IonBadge,
   IonSpinner,
   IonSearchbar,
   IonSelect,
@@ -37,6 +40,11 @@ import {
   checkmarkCircleOutline,
 } from 'ionicons/icons';
 
+import { OrdersStore } from '../../../../store/orders/orders.store';
+import { InstallersStore } from '../../../../store/installers/installers.store';
+import { UIStore } from '../../../../store/ui/ui.store';
+import { Order, OrderStatus } from '../../../../store/orders/orders.models';
+
 interface UnassignedOrder {
   id: string;
   orderNumber: string;
@@ -44,13 +52,6 @@ interface UnassignedOrder {
   appointmentDate: string;
   productCount: number;
   selected: boolean;
-}
-
-interface Installer {
-  id: string;
-  name: string;
-  assignedCount: number;
-  capacity: number;
 }
 
 @Component({
@@ -72,7 +73,6 @@ interface Installer {
     IonItem,
     IonLabel,
     IonCheckbox,
-    IonBadge,
     IonSpinner,
     IonSearchbar,
     IonSelect,
@@ -119,7 +119,7 @@ interface Installer {
           >
             @for (installer of installers(); track installer.id) {
               <ion-select-option [value]="installer.id">
-                {{ installer.name }} ({{ installer.assignedCount }}/{{ installer.capacity }})
+                {{ installer.name }} ({{ installer.assignedOrderCount ?? 0 }}건 배정)
               </ion-select-option>
             }
           </ion-select>
@@ -257,54 +257,121 @@ interface Installer {
     }
   `],
 })
-export class BatchAssignPage {
+export class BatchAssignPage implements OnInit {
+  private readonly router = inject(Router);
+  private readonly alertCtrl = inject(AlertController);
+  private readonly toastCtrl = inject(ToastController);
+
+  readonly ordersStore = inject(OrdersStore);
+  readonly installersStore = inject(InstallersStore);
+  private readonly uiStore = inject(UIStore);
+
   protected readonly isLoading = signal(false);
   protected readonly orders = signal<UnassignedOrder[]>([]);
-  protected readonly installers = signal<Installer[]>([]);
   protected readonly selectedCount = signal(0);
+  private searchQuery = '';
+
+  // Use installers from store
+  protected readonly installers = this.installersStore.activeInstallers;
 
   selectedInstallerId: string | null = null;
   selectedDate: string = new Date().toISOString();
   minDate: string = new Date().toISOString();
   maxDate: string = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString();
 
-  constructor(
-    private alertCtrl: AlertController,
-    private toastCtrl: ToastController
-  ) {
+  constructor() {
     addIcons({
       peopleOutline,
       calendarOutline,
       checkmarkCircleOutline,
     });
+  }
 
+  ngOnInit(): void {
     this.loadData();
   }
 
-  loadData(): void {
+  /**
+   * Load unassigned orders and installers
+   */
+  async loadData(): Promise<void> {
     this.isLoading.set(true);
-    // TODO: Load unassigned orders and installers
-    setTimeout(() => {
+
+    try {
+      // Load orders and installers in parallel
+      await Promise.all([
+        this.ordersStore.loadOrders(),
+        this.installersStore.loadInstallers(),
+      ]);
+
+      // Filter unassigned orders and map to UI model
+      this.updateOrdersList();
+    } catch (error) {
+      this.uiStore.showToast('데이터 로드 실패', 'danger');
+    } finally {
       this.isLoading.set(false);
-    }, 500);
+    }
   }
 
+  /**
+   * Update orders list from store with filters
+   */
+  private updateOrdersList(): void {
+    const allOrders = this.ordersStore.orders();
+    const unassigned = allOrders.filter(o => o.status === OrderStatus.UNASSIGNED);
+
+    // Apply search filter
+    let filtered = unassigned;
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = unassigned.filter(o =>
+        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.customerName.toLowerCase().includes(query)
+      );
+    }
+
+    // Map to UI model
+    const uiOrders: UnassignedOrder[] = filtered.map(o => ({
+      id: o.id,
+      orderNumber: o.erpOrderNumber,
+      customerName: o.customerName,
+      appointmentDate: o.appointmentDate || '',
+      productCount: (o.lines || o.orderLines || []).length,
+      selected: this.orders().find(existing => existing.id === o.id)?.selected || false,
+    }));
+
+    this.orders.set(uiOrders);
+    this.updateSelectedCount();
+  }
+
+  /**
+   * Search handler
+   */
   onSearch(event: CustomEvent): void {
-    const query = event.detail.value || '';
-    console.log('Search:', query);
+    this.searchQuery = event.detail.value || '';
+    this.updateOrdersList();
   }
 
+  /**
+   * Check if all orders are selected
+   */
   isAllSelected(): boolean {
     const allOrders = this.orders();
     return allOrders.length > 0 && allOrders.every(o => o.selected);
   }
 
+  /**
+   * Check if selection is indeterminate
+   */
   isIndeterminate(): boolean {
     const allOrders = this.orders();
     const selectedOrders = allOrders.filter(o => o.selected);
     return selectedOrders.length > 0 && selectedOrders.length < allOrders.length;
   }
 
+  /**
+   * Toggle select all
+   */
   toggleSelectAll(event: CustomEvent): void {
     const checked = event.detail.checked;
     this.orders.update(orders =>
@@ -313,36 +380,88 @@ export class BatchAssignPage {
     this.updateSelectedCount();
   }
 
+  /**
+   * Handle selection change
+   */
   onSelectionChange(): void {
     this.updateSelectedCount();
   }
 
+  /**
+   * Update selected count
+   */
   updateSelectedCount(): void {
     this.selectedCount.set(
       this.orders().filter(o => o.selected).length
     );
   }
 
+  /**
+   * Batch assign selected orders to installer
+   */
   async batchAssign(): Promise<void> {
+    if (!this.selectedInstallerId) {
+      this.uiStore.showToast('설치기사를 선택해주세요', 'warning');
+      return;
+    }
+
+    const selectedOrders = this.orders().filter(o => o.selected);
+    if (selectedOrders.length === 0) {
+      this.uiStore.showToast('배정할 주문을 선택해주세요', 'warning');
+      return;
+    }
+
+    const installerName = this.installers().find(i => i.id === this.selectedInstallerId)?.name || '';
+    const appointmentDate = this.selectedDate.split('T')[0];
+
     const alert = await this.alertCtrl.create({
       header: '일괄 배정',
-      message: `${this.selectedCount()}건을 선택한 기사에게 배정하시겠습니까?`,
+      message: `${selectedOrders.length}건을 ${installerName}에게 배정하시겠습니까?`,
       buttons: [
         { text: '취소', role: 'cancel' },
         {
           text: '배정',
           handler: async () => {
-            // TODO: Implement batch assign API
-            const toast = await this.toastCtrl.create({
-              message: '배정이 완료되었습니다.',
-              duration: 2000,
-              color: 'success',
-            });
-            await toast.present();
+            await this.performBatchAssign(selectedOrders, appointmentDate);
           },
         },
       ],
     });
     await alert.present();
+  }
+
+  /**
+   * Perform the actual batch assignment
+   */
+  private async performBatchAssign(
+    selectedOrders: UnassignedOrder[],
+    appointmentDate: string
+  ): Promise<void> {
+    this.isLoading.set(true);
+
+    try {
+      // Assign each order
+      for (const order of selectedOrders) {
+        await this.ordersStore.assignOrder(
+          order.id,
+          this.selectedInstallerId!,
+          appointmentDate
+        );
+      }
+
+      const toast = await this.toastCtrl.create({
+        message: `${selectedOrders.length}건 배정 완료`,
+        duration: 2000,
+        color: 'success',
+      });
+      await toast.present();
+
+      // Navigate back to assignment list
+      this.router.navigate(['/tabs/assignment']);
+    } catch (error) {
+      this.uiStore.showToast('배정 실패', 'danger');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

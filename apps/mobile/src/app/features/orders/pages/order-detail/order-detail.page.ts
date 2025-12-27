@@ -19,7 +19,6 @@ import {
   IonLabel,
   IonBadge,
   IonSpinner,
-  IonActionSheet,
   ActionSheetController,
   AlertController,
 } from '@ionic/angular/standalone';
@@ -140,7 +139,6 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
     IonLabel,
     IonBadge,
     IonSpinner,
-    IonActionSheet,
   ],
   template: `
     <ion-header>
