@@ -7,7 +7,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  IonModal,
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -97,7 +96,6 @@ const CRITICAL_FIELDS = ['status', 'installerId', 'serialNumber'];
   standalone: true,
   imports: [
     CommonModule,
-    IonModal,
     IonHeader,
     IonToolbar,
     IonTitle,
