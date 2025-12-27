@@ -598,6 +598,97 @@ export class OrdersStore extends signalStore(
     },
 
     /**
+     * Split order into multiple child orders (FR-10)
+     * Only HQ_ADMIN and BRANCH_MANAGER can split orders
+     */
+    async splitOrder(
+      orderId: string,
+      splits: Array<{
+        lineId: string;
+        assignments: Array<{
+          installerId?: string;
+          installerName: string;
+          quantity: number;
+        }>;
+      }>
+    ): Promise<{ success: boolean; childOrders?: Order[] }> {
+      const order = store.orders().find((o) => o.id === orderId);
+      if (!order) {
+        return { success: false };
+      }
+
+      patchState(store, { isLoading: true, error: null });
+
+      try {
+        const payload = {
+          orderId,
+          splits,
+          version: order.version,
+        };
+
+        const response = await firstValueFrom(
+          http.post<{
+            success: boolean;
+            parentOrder: Order;
+            childOrders: Order[];
+          }>(`${environment.apiUrl}/orders/${orderId}/split`, payload)
+        );
+
+        if (response.success) {
+          // Update parent order and add child orders to store
+          const allOrders = [
+            ...store.orders().filter((o) => o.id !== orderId),
+            response.parentOrder,
+            ...response.childOrders,
+          ];
+
+          patchState(store, {
+            orders: allOrders,
+            isLoading: false,
+          });
+
+          // Save to IndexedDB
+          await db.orders.bulkPut([
+            { ...response.parentOrder, localUpdatedAt: Date.now(), syncedAt: Date.now() },
+            ...response.childOrders.map((o) => ({
+              ...o,
+              localUpdatedAt: Date.now(),
+              syncedAt: Date.now(),
+            })),
+          ]);
+
+          return { success: true, childOrders: response.childOrders };
+        }
+
+        patchState(store, { isLoading: false });
+        return { success: false };
+      } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to split order';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+
+        if (error?.status === 409) {
+          // Version conflict - reload order
+          try {
+            const fresh = await firstValueFrom(
+              http.get<Order>(`${environment.apiUrl}/orders/${orderId}`)
+            );
+            patchState(store, {
+              orders: store.orders().map((o) => (o.id === orderId ? fresh : o)),
+              error: 'Order was updated by another user. Please retry.',
+            });
+          } catch {
+            // Ignore reload error
+          }
+        }
+
+        return { success: false };
+      }
+    },
+
+    /**
      * Revert optimistic update (on conflict)
      */
     revertOrder(orderId: string): void {
