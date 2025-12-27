@@ -4,6 +4,7 @@
  */
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonHeader,
@@ -32,7 +33,7 @@ import { fingerPrintOutline, shieldCheckmarkOutline, lockClosedOutline } from 'i
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { BiometricService } from '../../../../core/services/biometric.service';
-import { AuthStore } from '../../../../store/auth/auth.store';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-biometric-settings',
@@ -40,6 +41,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    FormsModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -97,7 +99,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              <ion-icon name="fingerprint-outline"></ion-icon>
+              <ion-icon name="finger-print-outline"></ion-icon>
               {{ biometryTypeName() }}
             </ion-card-title>
           </ion-card-header>
@@ -112,14 +114,14 @@ import { AuthStore } from '../../../../store/auth/auth.store';
                   <p>다음 로그인부터 {{ biometryTypeName() }}로 간편하게 로그인할 수 있습니다</p>
                 </ion-label>
                 <ion-toggle
-                  [(ngModel)]="isEnabled"
+                  [checked]="isEnabled()"
                   (ionChange)="onToggleChange($event)"
                   [disabled]="isProcessing()"
                 ></ion-toggle>
               </ion-item>
             </ion-list>
 
-            @if (isEnabled && lastUsedAt()) {
+            @if (isEnabled() && lastUsedAt()) {
               <ion-note class="last-used">
                 마지막 사용: {{ formatLastUsed(lastUsedAt()!) }}
               </ion-note>
@@ -149,7 +151,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
                 </ion-label>
               </ion-item>
               <ion-item>
-                <ion-icon slot="start" name="fingerprint-outline" color="success"></ion-icon>
+                <ion-icon slot="start" name="finger-print-outline" color="success"></ion-icon>
                 <ion-label class="ion-text-wrap">
                   <h3>재인증 필요</h3>
                   <p>30일 이상 사용하지 않으면 비밀번호로 다시 로그인해야 합니다</p>
@@ -159,7 +161,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
           </ion-card-content>
         </ion-card>
 
-        @if (isEnabled) {
+        @if (isEnabled()) {
           <ion-button
             expand="block"
             fill="outline"
@@ -167,7 +169,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
             (click)="testBiometric()"
             [disabled]="isProcessing()"
           >
-            <ion-icon slot="start" name="fingerprint-outline"></ion-icon>
+            <ion-icon slot="start" name="finger-print-outline"></ion-icon>
             생체 인증 테스트
           </ion-button>
         }
@@ -212,7 +214,7 @@ import { AuthStore } from '../../../../store/auth/auth.store';
 })
 export class BiometricSettingsPage implements OnInit, OnDestroy {
   private readonly biometricService = inject(BiometricService);
-  private readonly authStore = inject(AuthStore);
+  private readonly authService = inject(AuthService);
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
   private readonly router = inject(Router);
@@ -291,7 +293,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
     this.isProcessing.set(true);
 
     try {
-      const user = this.authStore.user();
+      const user = this.authService.user();
       const refreshToken = localStorage.getItem('refresh_token');
 
       if (!user || !refreshToken) {

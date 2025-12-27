@@ -111,14 +111,14 @@ export class AuthService {
     this._state.update((s) => ({ ...s, isLoading: true, error: null }));
 
     try {
-      const response = await firstValueFrom(
-        this.http.post<{ success: boolean; data: { accessToken: string; refreshToken: string; user: User } }>(
+      // Note: apiResponseInterceptor unwraps { success, data } -> data
+      const data = await firstValueFrom(
+        this.http.post<{ accessToken: string; refreshToken: string; user: User }>(
           `${environment.apiUrl}/auth/login`,
           credentials
         )
       );
 
-      const { data } = response;
       const tokens: AuthTokens = {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
@@ -215,14 +215,14 @@ export class AuthService {
     this._state.update((s) => ({ ...s, isLoading: true, error: null }));
 
     try {
-      const response = await firstValueFrom(
-        this.http.post<{ success: boolean; data: { accessToken: string; refreshToken: string; user: User } }>(
+      // Note: apiResponseInterceptor unwraps { success, data } -> data
+      const data = await firstValueFrom(
+        this.http.post<{ accessToken: string; refreshToken: string; user: User }>(
           `${environment.apiUrl}/auth/refresh`,
           { refreshToken }
         )
       );
 
-      const { data } = response;
       const tokens: AuthTokens = {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,

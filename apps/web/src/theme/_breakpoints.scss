@@ -1,0 +1,75 @@
+/**
+ * Responsive Breakpoints
+ * 웹/모바일 분리 기준: 1080px
+ * - 1080px 이상: 웹 버전 (데스크탑/태블릿)
+ * - 1080px 미만: 모바일 버전
+ * 
+ * 웹 버전 최적화 해상도: 1920x1080
+ */
+
+// Breakpoint 변수
+$breakpoint-mobile: 1080px;  // 모바일/웹 분기점
+$breakpoint-tablet: 1280px;  // 태블릿 (1080-1280)
+$breakpoint-desktop: 1920px; // 데스크탑 최적화 해상도
+
+// Mixins for responsive design
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-mobile - 1px}) {
+    @content;
+  }
+}
+
+@mixin web-only {
+  @media (min-width: #{$breakpoint-mobile}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-mobile}) and (max-width: #{$breakpoint-tablet - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-tablet}) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: #{$breakpoint-desktop}) {
+    @content;
+  }
+}
+
+// Helper classes for visibility
+.mobile-only {
+  @include web-only {
+    display: none !important;
+  }
+}
+
+.web-only {
+  @include mobile-only {
+    display: none !important;
+  }
+}
+
+.tablet-only {
+  @include mobile-only {
+    display: none !important;
+  }
+  @include desktop {
+    display: none !important;
+  }
+}
+
+.desktop-only {
+  @include mobile-only {
+    display: none !important;
+  }
+  @include tablet {
+    display: none !important;
+  }
+}

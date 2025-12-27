@@ -9,6 +9,7 @@ import { RouteReuseStrategy } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
+import { apiResponseInterceptor } from './app/core/interceptors/api-response.interceptor';
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { offlineInterceptor } from './app/core/interceptors/offline.interceptor';
 
@@ -29,6 +30,7 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(
       withInterceptors([
         authInterceptor,
+        apiResponseInterceptor,
         errorInterceptor,
         offlineInterceptor,
       ])

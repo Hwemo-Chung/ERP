@@ -1,6 +1,11 @@
 /*
  * Global SCSS
  * Contains global styles shared across the application
+ * 
+ * Responsive Breakpoints:
+ * - 1080px 이상: 웹 버전 (데스크탑/태블릿)
+ * - 1080px 미만: 모바일 버전
+ * - 1920x1080 최적화
  */
 
 /* Core CSS required for Ionic components to work properly */
@@ -18,6 +23,19 @@
 @import '@ionic/angular/css/text-alignment.css';
 @import '@ionic/angular/css/text-transformation.css';
 @import '@ionic/angular/css/flex-utils.css';
+
+/* Responsive Layout System */
+@import './theme/breakpoints';
+@import './theme/web-layout';
+
+/* ============================================
+   Responsive Breakpoint Variables
+   ============================================ */
+:root {
+  --breakpoint-mobile: 1080px;
+  --breakpoint-tablet: 1280px;
+  --breakpoint-desktop: 1920px;
+}
 
 /* Custom global styles */
 

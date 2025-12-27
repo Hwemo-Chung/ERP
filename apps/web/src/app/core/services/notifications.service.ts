@@ -65,12 +65,13 @@ export class NotificationsService {
    */
   async loadNotifications(limit = 50): Promise<void> {
     try {
-      const response = await firstValueFrom(
-        this.http.get<{ data: Notification[] }>(`${this.baseUrl}`, {
+      // Note: apiResponseInterceptor unwraps { success, data } -> data
+      const notifications = await firstValueFrom(
+        this.http.get<Notification[]>(`${this.baseUrl}`, {
           params: { limit: String(limit) }
         })
       );
-      this._notifications.set(response.data || []);
+      this._notifications.set(notifications || []);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }

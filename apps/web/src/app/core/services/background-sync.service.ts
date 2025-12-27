@@ -15,6 +15,7 @@
 import { Injectable, inject, effect, signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 import { NetworkService } from './network.service';
+import { environment } from '@env/environment';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
 import { db, SyncQueueEntry } from '@app/core/db/database';
@@ -75,9 +76,17 @@ export class BackgroundSyncService {
   async initialize() {
     if (this.isInitialized) return;
 
+    // Skip Service Worker registration in development mode
+    if (!environment.production) {
+      console.log('Skipping Service Worker registration in development mode');
+      this.isInitialized = true;
+      return;
+    }
+
     try {
       if ('serviceWorker' in navigator) {
-        this.workerRegistration = await navigator.serviceWorker.register('/sw.js', {
+        // Use Angular's ngsw-worker.js instead of custom sw.js
+        this.workerRegistration = await navigator.serviceWorker.register('/ngsw-worker.js', {
           scope: '/',
         });
         console.log('Service Worker registered for background sync');

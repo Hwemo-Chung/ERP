@@ -472,7 +472,9 @@ export class CompletionListPage implements OnInit {
   }
 
   async loadData(): Promise<void> {
-    const branchCode = this.authService.user()?.branchCode;
+    const user = this.authService.user();
+    // HQ_ADMIN can see all branches, others see only their branch
+    const branchCode = user?.roles?.includes('HQ_ADMIN') ? 'ALL' : user?.branchCode;
     await this.ordersStore.loadOrders(branchCode);
   }
 

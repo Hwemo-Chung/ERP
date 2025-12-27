@@ -251,7 +251,7 @@ export class LoginPage implements OnInit {
   async ngOnInit(): Promise<void> {
     // Check if biometric is available and enabled
     const available = await this.biometricService.checkAvailability();
-    this.showBiometricButton.set(available && this.biometricService.config$.value.enabled);
+    this.showBiometricButton.set(available && this.biometricService.currentConfig.enabled);
   }
 
   protected togglePassword() { this.showPassword.update(v => !v); }
