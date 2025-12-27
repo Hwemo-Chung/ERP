@@ -193,8 +193,9 @@ docker exec -i erp-postgres psql -U postgres logistics_erp < backup.sql
 ### 4.1 접속 정보
 - **URL**: http://localhost:4200
 - **테스트 계정**:
-  - 관리자: `admin` / `admin123`
-  - 설치기사: `installer1` / `installer123`
+  - 관리자: `admin` / `admin123!`
+  - 지점관리자: `manager01` / `manager123!`
+  - 설치기사: `installer01` / `inst123!`
 
 ### 4.2 메인 탭 구조
 
@@ -434,9 +435,9 @@ pnpm lint
 ### 테스트 계정
 | 역할 | 아이디 | 비밀번호 |
 |------|--------|----------|
-| 본사 관리자 | admin | admin123 |
-| 지점 관리자 | branch1 | branch123 |
-| 설치기사 | installer1 | installer123 |
+| 본사 관리자 | admin | admin123! |
+| 지점 관리자 | manager01 | manager123! |
+| 설치기사 | installer01 | inst123! |
 
 ---
 

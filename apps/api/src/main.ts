@@ -12,6 +12,12 @@ import {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
+    cors: {
+      origin: ['http://localhost:4200', 'http://localhost:4300'],
+      credentials: true,
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-App-Version', 'X-Device-Id', 'X-Platform', 'X-Idempotency-Key', 'X-Correlation-Id'],
+    },
   });
 
   const configService = app.get(ConfigService);
@@ -44,22 +50,6 @@ async function bootstrap() {
     new LoggingInterceptor(),   // Request/Response logging
     new TransformInterceptor(), // Standardized response format
   );
-
-  // CORS for VPN access
-  app.enableCors({
-    origin: configService.get<string>('cors.origins')?.split(',') || ['http://localhost:4200'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-App-Version',
-      'X-Device-Id',
-      'X-Platform',
-      'X-Idempotency-Key',
-      'X-Correlation-Id',
-    ],
-  });
 
   // Swagger Documentation
   const swaggerConfig = new DocumentBuilder()
