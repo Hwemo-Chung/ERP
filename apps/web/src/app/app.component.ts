@@ -110,7 +110,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     // Listen to hardware back button
-    App.addListener('backButton', async ({ canGoBack }) => {
+    App.addListener('backButton', async ({ canGoBack }: { canGoBack: boolean }) => {
       const currentUrl = this.router.url;
 
       // Check if we're on a root tab (don't go back further)
@@ -127,11 +127,11 @@ export class AppComponent implements OnInit, OnDestroy {
           // Show toast or alert
           const alert = await this.alertCtrl.create({
             message: '뒤로 버튼을 한 번 더 누르면 앱이 종료됩니다.',
-            duration: 2000,
             cssClass: 'exit-warning-toast',
-            buttons: [],
+            buttons: ['확인'],
           });
           await alert.present();
+          setTimeout(() => alert.dismiss(), 2000);
         }
         return;
       }

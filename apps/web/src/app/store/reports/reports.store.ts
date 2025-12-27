@@ -68,14 +68,18 @@ export class ReportsStore extends signalStore(
 
     // Computed: top performing branches
     topBranches: computed(() => {
-      return [...branchProgress()]
+      const branches = branchProgress();
+      if (!Array.isArray(branches)) return [];
+      return [...branches]
         .sort((a, b) => b.completionRate - a.completionRate)
         .slice(0, 5);
     }),
 
     // Computed: low performing branches (need attention)
     lowPerformingBranches: computed(() => {
-      return [...branchProgress()]
+      const branches = branchProgress();
+      if (!Array.isArray(branches)) return [];
+      return [...branches]
         .filter(b => b.completionRate < 70)
         .sort((a, b) => a.completionRate - b.completionRate);
     }),
@@ -83,9 +87,13 @@ export class ReportsStore extends signalStore(
     // Computed: waste summary totals
     wasteTotals: computed(() => {
       const items = wasteSummary();
+      // Ensure items is an array before using reduce
+      if (!Array.isArray(items) || items.length === 0) {
+        return { totalItems: 0, totalOrders: 0, uniqueCodes: 0 };
+      }
       return {
-        totalItems: items.reduce((sum, w) => sum + w.quantity, 0),
-        totalOrders: items.reduce((sum, w) => sum + w.orderCount, 0),
+        totalItems: items.reduce((sum, w) => sum + (w.quantity || 0), 0),
+        totalOrders: items.reduce((sum, w) => sum + (w.orderCount || 0), 0),
         uniqueCodes: items.length,
       };
     }),
@@ -109,21 +117,19 @@ export class ReportsStore extends signalStore(
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
 
-        const response = await firstValueFrom(
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        const data = await firstValueFrom(
           http.get<{
-            success: boolean;
-            data: {
-              summary: KpiSummary;
-              statusCounts: StatusCount[];
-              byBranch?: BranchProgress[];
-            };
+            summary: KpiSummary;
+            statusCounts: StatusCount[];
+            byBranch?: BranchProgress[];
           }>(`${environment.apiUrl}/reports/summary`, { params })
         );
 
         patchState(store, {
-          summary: response.data.summary,
-          statusCounts: response.data.statusCounts || [],
-          branchProgress: response.data.byBranch || [],
+          summary: data.summary,
+          statusCounts: data.statusCounts || [],
+          branchProgress: data.byBranch || [],
           filters: filters || {},
           isLoading: false,
           lastUpdated: Date.now(),
@@ -146,21 +152,21 @@ export class ReportsStore extends signalStore(
 
       try {
         let params = new HttpParams();
+        // groupBy is required by the API - default to 'branch'
+        params = params.set('groupBy', filters?.groupBy || 'branch');
         if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
 
-        const response = await firstValueFrom(
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        const data = await firstValueFrom(
           http.get<{
-            success: boolean;
-            data: {
-              branches: BranchProgress[];
-            };
+            branches: BranchProgress[];
           }>(`${environment.apiUrl}/reports/progress`, { params })
         );
 
         patchState(store, {
-          branchProgress: response.data.branches || [],
+          branchProgress: data.branches || [],
           filters: filters || {},
           isLoading: false,
           lastUpdated: Date.now(),
@@ -189,15 +195,13 @@ export class ReportsStore extends signalStore(
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
         if (filters?.wasteCode) params = params.set('wasteCode', filters.wasteCode);
 
-        const response = await firstValueFrom(
-          http.get<{
-            success: boolean;
-            data: WasteSummaryItem[];
-          }>(`${environment.apiUrl}/reports/raw`, { params })
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        const data = await firstValueFrom(
+          http.get<WasteSummaryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
         );
 
         patchState(store, {
-          wasteSummary: response.data || [],
+          wasteSummary: data || [],
           filters: filters || {},
           isLoading: false,
           lastUpdated: Date.now(),
@@ -227,15 +231,13 @@ export class ReportsStore extends signalStore(
         if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters.dateTo) params = params.set('dateTo', filters.dateTo);
 
-        const response = await firstValueFrom(
-          http.get<{
-            success: boolean;
-            data: CustomerHistoryItem[];
-          }>(`${environment.apiUrl}/reports/raw`, { params })
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        const data = await firstValueFrom(
+          http.get<CustomerHistoryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
         );
 
         patchState(store, {
-          customerHistory: response.data || [],
+          customerHistory: data || [],
           filters,
           isLoading: false,
           lastUpdated: Date.now(),
@@ -263,15 +265,13 @@ export class ReportsStore extends signalStore(
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
 
-        const response = await firstValueFrom(
-          http.get<{
-            success: boolean;
-            data: ReleaseSummaryItem[];
-          }>(`${environment.apiUrl}/reports/raw`, { params })
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        const data = await firstValueFrom(
+          http.get<ReleaseSummaryItem[]>(`${environment.apiUrl}/reports/raw`, { params })
         );
 
         patchState(store, {
-          releaseSummary: response.data || [],
+          releaseSummary: data || [],
           filters: filters || {},
           isLoading: false,
           lastUpdated: Date.now(),

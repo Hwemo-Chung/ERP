@@ -78,6 +78,7 @@ export interface ExportConfig {
 
 export interface ReportsFilters {
   level?: 'nation' | 'branch' | 'installer';
+  groupBy?: 'branch' | 'installer' | 'status' | 'date';
   branchCode?: string;
   installerId?: string;
   dateFrom?: string;

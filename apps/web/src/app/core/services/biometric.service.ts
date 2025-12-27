@@ -5,11 +5,10 @@
  * After opt-in, biometric prompt unlocks session without password 
  * if refresh token valid; fallback path logged.
  */
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { BiometryType, NativeBiometric } from 'capacitor-native-biometric';
-import { AuthStore } from '../store/auth/auth.store';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 export interface BiometricConfig {
   enabled: boolean;
@@ -25,8 +24,6 @@ const BIOMETRIC_CREDENTIAL_SERVER = 'erp-logistics';
   providedIn: 'root',
 })
 export class BiometricService {
-  private readonly authStore = inject(AuthStore);
-  
   // Reactive state
   private readonly configSubject = new BehaviorSubject<BiometricConfig>({
     enabled: false,
@@ -36,6 +33,12 @@ export class BiometricService {
   });
 
   public readonly config$ = this.configSubject.asObservable();
+
+  /** Get current config value synchronously */
+  get currentConfig(): BiometricConfig {
+    return this.configSubject.value;
+  }
+
   public readonly isAvailable = signal<boolean>(false);
   public readonly biometryType = signal<BiometryType | null>(null);
 

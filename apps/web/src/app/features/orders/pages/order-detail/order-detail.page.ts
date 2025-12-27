@@ -288,7 +288,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                       <div class="attachment-details">
                         <h4>{{ attachment.fileName }}</h4>
                         <p class="file-size">{{ formatFileSize(attachment.fileSize ?? 0) }}</p>
-                        <p class="file-date">{{ formatDate(attachment.uploadedAt ?? new Date()) }}</p>
+                        <p class="file-date">{{ attachment.uploadedAt ? formatDate(attachment.uploadedAt) : '-' }}</p>
                       </div>
                     </div>
                     <div class="attachment-actions">

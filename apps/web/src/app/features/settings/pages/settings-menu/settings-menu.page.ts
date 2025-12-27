@@ -67,7 +67,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
           <a class="menu-card" routerLink="biometric">
             <div class="card-icon success">
-              <ion-icon name="fingerprint-outline"></ion-icon>
+              <ion-icon name="finger-print-outline"></ion-icon>
             </div>
             <div class="card-content">
               <h3>생체 인증</h3>

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Network } from '@capacitor/network';
+import { Network, ConnectionStatus } from '@capacitor/network';
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +14,7 @@ export class NetworkService {
     this._isOffline.set(!status.connected);
 
     // Listen for changes
-    Network.addListener('networkStatusChange', (status) => {
+    Network.addListener('networkStatusChange', (status: ConnectionStatus) => {
       this._isOffline.set(!status.connected);
       console.log(`Network status changed: ${status.connected ? 'online' : 'offline'}`);
     });

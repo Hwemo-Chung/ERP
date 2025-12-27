@@ -136,6 +136,7 @@ export class OrdersStore extends signalStore(
         params.append('page', String(page));
         params.append('limit', String(limit));
 
+        // Note: apiResponseInterceptor unwraps { success, data } -> data
         const response = await firstValueFrom(
           http.get<{
             data: Order[];
@@ -143,6 +144,7 @@ export class OrdersStore extends signalStore(
           }>(`${environment.apiUrl}/orders?${params}`)
         );
 
+        // After interceptor: response = { data: Order[], pagination: {...} }
         const orders = response.data;
         const pagination: PaginationInfo = {
           page,

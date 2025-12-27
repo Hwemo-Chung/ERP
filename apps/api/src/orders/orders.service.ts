@@ -36,9 +36,10 @@ export class OrdersService {
     };
 
     // Branch filter (RBAC: branch users can only see their orders)
-    if (dto.branchCode) {
+    // "ALL" is a special value meaning no branch filter (for HQ_ADMIN)
+    if (dto.branchCode && dto.branchCode !== 'ALL') {
       where.branch = { code: dto.branchCode };
-    } else if (branchCode) {
+    } else if (branchCode && branchCode !== 'ALL') {
       where.branch = { code: branchCode };
     }
 

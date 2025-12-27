@@ -6,39 +6,49 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // Create branches
-  const branches = await Promise.all([
-    prisma.branch.upsert({
-      where: { code: 'HQ' },
+  // Create 30 branches
+  const branchData = [
+    { code: 'HQ', name: 'Headquarters', region: 'Seoul' },
+    { code: 'SEL01', name: 'Seoul Branch 1', region: 'Seoul' },
+    { code: 'SEL02', name: 'Seoul Branch 2', region: 'Seoul' },
+    { code: 'SEL03', name: 'Seoul Branch 3', region: 'Seoul' },
+    { code: 'GGN01', name: 'Gyeonggi Branch 1', region: 'Gyeonggi' },
+    { code: 'GGN02', name: 'Gyeonggi Branch 2', region: 'Gyeonggi' },
+    { code: 'GGN03', name: 'Gyeonggi Branch 3', region: 'Gyeonggi' },
+    { code: 'ICN01', name: 'Incheon Branch 1', region: 'Incheon' },
+    { code: 'ICN02', name: 'Incheon Branch 2', region: 'Incheon' },
+    { code: 'BSN01', name: 'Busan Branch 1', region: 'Busan' },
+    { code: 'BSN02', name: 'Busan Branch 2', region: 'Busan' },
+    { code: 'BSN03', name: 'Busan Branch 3', region: 'Busan' },
+    { code: 'DGU01', name: 'Daegu Branch 1', region: 'Daegu' },
+    { code: 'DGU02', name: 'Daegu Branch 2', region: 'Daegu' },
+    { code: 'GWJ01', name: 'Gwangju Branch 1', region: 'Gwangju' },
+    { code: 'GWJ02', name: 'Gwangju Branch 2', region: 'Gwangju' },
+    { code: 'DJN01', name: 'Daejeon Branch 1', region: 'Daejeon' },
+    { code: 'DJN02', name: 'Daejeon Branch 2', region: 'Daejeon' },
+    { code: 'USN01', name: 'Ulsan Branch 1', region: 'Ulsan' },
+    { code: 'USN02', name: 'Ulsan Branch 2', region: 'Ulsan' },
+    { code: 'SWN01', name: 'Suwon Branch 1', region: 'Suwon' },
+    { code: 'SWN02', name: 'Suwon Branch 2', region: 'Suwon' },
+    { code: 'CHN01', name: 'Cheonan Branch 1', region: 'Cheonan' },
+    { code: 'CHN02', name: 'Cheonan Branch 2', region: 'Cheonan' },
+    { code: 'JJU01', name: 'Jeonju Branch 1', region: 'Jeonju' },
+    { code: 'JJU02', name: 'Jeonju Branch 2', region: 'Jeonju' },
+    { code: 'CJU01', name: 'Cheongju Branch 1', region: 'Cheongju' },
+    { code: 'CJU02', name: 'Cheongju Branch 2', region: 'Cheongju' },
+    { code: 'GNJ01', name: 'Gimhae Branch 1', region: 'Gimhae' },
+    { code: 'YSN01', name: 'Yeosu Branch 1', region: 'Yeosu' },
+  ];
+
+  const branches = [];
+  for (const b of branchData) {
+    const branch = await prisma.branch.upsert({
+      where: { code: b.code },
       update: {},
-      create: {
-        code: 'HQ',
-        name: 'Headquarters',
-        region: 'Seoul',
-        timezone: 'Asia/Seoul',
-      },
-    }),
-    prisma.branch.upsert({
-      where: { code: 'SEL01' },
-      update: {},
-      create: {
-        code: 'SEL01',
-        name: 'Seoul Branch 1',
-        region: 'Seoul',
-        timezone: 'Asia/Seoul',
-      },
-    }),
-    prisma.branch.upsert({
-      where: { code: 'GGN01' },
-      update: {},
-      create: {
-        code: 'GGN01',
-        name: 'Gyeonggi Branch 1',
-        region: 'Gyeonggi',
-        timezone: 'Asia/Seoul',
-      },
-    }),
-  ]);
+      create: { code: b.code, name: b.name, region: b.region, timezone: 'Asia/Seoul' },
+    });
+    branches.push(branch);
+  }
 
   console.log(`✅ Created ${branches.length} branches`);
 
@@ -163,7 +173,38 @@ async function main() {
 
   console.log(`✅ Created test user: ${testUser.username} (password: test)`);
 
-  // Create waste codes (P01-P21)
+  // Create additional users to reach 30 total
+  const additionalUserPassword = await argon2.hash('user123!');
+  const roles = [Role.BRANCH_MANAGER, Role.PARTNER_COORDINATOR, Role.INSTALLER];
+
+  for (let i = 1; i <= 25; i++) {
+    const branchIdx = i % (branches.length - 1) + 1; // Skip HQ
+    const roleIdx = i % roles.length;
+    const username = `user${String(i).padStart(2, '0')}`;
+
+    const user = await prisma.user.upsert({
+      where: { username },
+      update: {},
+      create: {
+        username,
+        passwordHash: additionalUserPassword,
+        fullName: `User ${String(i).padStart(2, '0')}`,
+        email: `user${i}@erp-logistics.com`,
+        locale: 'ko',
+        branchId: branches[branchIdx].id,
+        isActive: i % 10 !== 0, // 10% inactive
+      },
+    });
+
+    await prisma.userRole.upsert({
+      where: { userId_role: { userId: user.id, role: roles[roleIdx] } },
+      update: {},
+      create: { userId: user.id, role: roles[roleIdx] },
+    });
+  }
+  console.log('✅ Created 25 additional users (30 total)');
+
+  // Create 30 waste codes (P01-P30)
   const wasteCodes = [
     { code: 'P01', descriptionKo: '에어컨 실외기', descriptionEn: 'Air Conditioner Outdoor Unit' },
     { code: 'P02', descriptionKo: '에어컨 실내기', descriptionEn: 'Air Conditioner Indoor Unit' },
@@ -175,6 +216,26 @@ async function main() {
     { code: 'P08', descriptionKo: '프린터', descriptionEn: 'Printer' },
     { code: 'P09', descriptionKo: '모니터', descriptionEn: 'Monitor' },
     { code: 'P10', descriptionKo: '청소기', descriptionEn: 'Vacuum Cleaner' },
+    { code: 'P11', descriptionKo: '건조기', descriptionEn: 'Dryer' },
+    { code: 'P12', descriptionKo: '공기청정기', descriptionEn: 'Air Purifier' },
+    { code: 'P13', descriptionKo: '제습기', descriptionEn: 'Dehumidifier' },
+    { code: 'P14', descriptionKo: '가습기', descriptionEn: 'Humidifier' },
+    { code: 'P15', descriptionKo: '온풍기', descriptionEn: 'Heater' },
+    { code: 'P16', descriptionKo: '선풍기', descriptionEn: 'Fan' },
+    { code: 'P17', descriptionKo: '식기세척기', descriptionEn: 'Dishwasher' },
+    { code: 'P18', descriptionKo: '전기밥솥', descriptionEn: 'Rice Cooker' },
+    { code: 'P19', descriptionKo: '정수기', descriptionEn: 'Water Purifier' },
+    { code: 'P20', descriptionKo: '비데', descriptionEn: 'Bidet' },
+    { code: 'P21', descriptionKo: '오븐', descriptionEn: 'Oven' },
+    { code: 'P22', descriptionKo: '토스터', descriptionEn: 'Toaster' },
+    { code: 'P23', descriptionKo: '커피머신', descriptionEn: 'Coffee Machine' },
+    { code: 'P24', descriptionKo: '믹서기', descriptionEn: 'Blender' },
+    { code: 'P25', descriptionKo: '전기포트', descriptionEn: 'Electric Kettle' },
+    { code: 'P26', descriptionKo: '스팀다리미', descriptionEn: 'Steam Iron' },
+    { code: 'P27', descriptionKo: '로봇청소기', descriptionEn: 'Robot Vacuum' },
+    { code: 'P28', descriptionKo: '스마트워치', descriptionEn: 'Smart Watch' },
+    { code: 'P29', descriptionKo: '태블릿', descriptionEn: 'Tablet' },
+    { code: 'P30', descriptionKo: '스피커', descriptionEn: 'Speaker' },
   ];
 
   for (const wc of wasteCodes) {
@@ -192,18 +253,38 @@ async function main() {
 
   console.log(`✅ Created ${wasteCodes.length} waste codes`);
 
-  // Create reason codes (10 total)
+  // Create 30 reason codes
   const reasonCodes = [
     { type: 'CANCEL' as const, code: 'C01', descriptionKo: '고객 요청', descriptionEn: 'Customer Request' },
     { type: 'CANCEL' as const, code: 'C02', descriptionKo: '재고 부족', descriptionEn: 'Out of Stock' },
     { type: 'CANCEL' as const, code: 'C03', descriptionKo: '가격 이의', descriptionEn: 'Price Dispute' },
     { type: 'CANCEL' as const, code: 'C04', descriptionKo: '중복 주문', descriptionEn: 'Duplicate Order' },
+    { type: 'CANCEL' as const, code: 'C05', descriptionKo: '제품 불량', descriptionEn: 'Defective Product' },
+    { type: 'CANCEL' as const, code: 'C06', descriptionKo: '배송 오류', descriptionEn: 'Delivery Error' },
+    { type: 'CANCEL' as const, code: 'C07', descriptionKo: '고객 변심', descriptionEn: 'Customer Changed Mind' },
+    { type: 'CANCEL' as const, code: 'C08', descriptionKo: '결제 실패', descriptionEn: 'Payment Failed' },
+    { type: 'CANCEL' as const, code: 'C09', descriptionKo: '시스템 오류', descriptionEn: 'System Error' },
+    { type: 'CANCEL' as const, code: 'C10', descriptionKo: '기타 취소', descriptionEn: 'Other Cancellation' },
     { type: 'POSTPONE' as const, code: 'D01', descriptionKo: '고객 일정 변경', descriptionEn: 'Customer Schedule Change' },
     { type: 'POSTPONE' as const, code: 'D02', descriptionKo: '배송 지연', descriptionEn: 'Delivery Delay' },
     { type: 'POSTPONE' as const, code: 'D03', descriptionKo: '기상 악화', descriptionEn: 'Bad Weather' },
+    { type: 'POSTPONE' as const, code: 'D04', descriptionKo: '재고 입고 대기', descriptionEn: 'Waiting for Stock' },
+    { type: 'POSTPONE' as const, code: 'D05', descriptionKo: '설치 환경 미비', descriptionEn: 'Installation Not Ready' },
+    { type: 'POSTPONE' as const, code: 'D06', descriptionKo: '기사 사정', descriptionEn: 'Technician Unavailable' },
+    { type: 'POSTPONE' as const, code: 'D07', descriptionKo: '교통 상황', descriptionEn: 'Traffic Conditions' },
+    { type: 'POSTPONE' as const, code: 'D08', descriptionKo: '휴일 지정', descriptionEn: 'Holiday Designated' },
+    { type: 'POSTPONE' as const, code: 'D09', descriptionKo: '장비 고장', descriptionEn: 'Equipment Malfunction' },
+    { type: 'POSTPONE' as const, code: 'D10', descriptionKo: '기타 연기', descriptionEn: 'Other Postponement' },
     { type: 'ABSENCE' as const, code: 'A01', descriptionKo: '부재중', descriptionEn: 'Not at Home' },
     { type: 'ABSENCE' as const, code: 'A02', descriptionKo: '연락 불가', descriptionEn: 'Unreachable' },
     { type: 'ABSENCE' as const, code: 'A03', descriptionKo: '주소 오류', descriptionEn: 'Wrong Address' },
+    { type: 'ABSENCE' as const, code: 'A04', descriptionKo: '방문 거부', descriptionEn: 'Refused Entry' },
+    { type: 'ABSENCE' as const, code: 'A05', descriptionKo: '건물 출입 제한', descriptionEn: 'Building Access Denied' },
+    { type: 'ABSENCE' as const, code: 'A06', descriptionKo: '주차 불가', descriptionEn: 'No Parking Available' },
+    { type: 'ABSENCE' as const, code: 'A07', descriptionKo: '엘리베이터 고장', descriptionEn: 'Elevator Out of Order' },
+    { type: 'ABSENCE' as const, code: 'A08', descriptionKo: '호수 확인 불가', descriptionEn: 'Unit Number Unknown' },
+    { type: 'ABSENCE' as const, code: 'A09', descriptionKo: '보안 문제', descriptionEn: 'Security Issue' },
+    { type: 'ABSENCE' as const, code: 'A10', descriptionKo: '기타 부재', descriptionEn: 'Other Absence' },
   ];
 
   for (const rc of reasonCodes) {
@@ -226,46 +307,53 @@ async function main() {
   // COMPREHENSIVE TEST DATA
   // ============================================
 
-  // Create 10 Partners
+  // Create 30 Partners
   const partners = [];
-  for (let i = 1; i <= 10; i++) {
+  const partnerTypes = ['Electronics', 'Appliances', 'HVAC', 'Home Services', 'Installation'];
+  for (let i = 1; i <= 30; i++) {
     const partner = await prisma.partner.upsert({
       where: { code: `PTN${String(i).padStart(2, '0')}` },
       update: {},
       create: {
         code: `PTN${String(i).padStart(2, '0')}`,
-        name: `Partner Company ${i}`,
+        name: `${partnerTypes[i % 5]} Partner ${i}`,
         contactName: `Partner Manager ${i}`,
         phone: `010-${1000 + i}-${2000 + i}`,
         email: `partner${i}@example.com`,
-        isActive: true,
+        isActive: i % 10 !== 0, // 10% inactive
       },
     });
     partners.push(partner);
   }
   console.log(`✅ Created ${partners.length} partners`);
 
-  // Create 5 Installers per partner (25 total)
+  // Create 30 Installers (distributed across partners)
   const installers = [];
-  for (let p = 0; p < partners.length; p++) {
-    for (let i = 1; i <= 5; i++) {
-      const installerNum = p * 5 + i;
-      const inst = await prisma.installer.upsert({
-        where: { id: `installer-${installerNum}` },
-        update: {},
-        create: {
-          id: `installer-${installerNum}`,
-          partnerId: partners[p].id,
-          branchId: branches[1].id, // SEL01
-          name: `Installer ${String(installerNum).padStart(2, '0')}`,
-          phone: `010-3${String(installerNum).padStart(3, '0')}-${4000 + installerNum}`,
-          skillTags: ['AC', 'Refrigerator', 'WashingMachine'].slice(0, (installerNum % 3) + 1),
-          capacityPerDay: 8 + (installerNum % 5),
-          isActive: true,
-        },
-      });
-      installers.push(inst);
-    }
+  const skillSets = [
+    ['AC', 'Refrigerator'],
+    ['WashingMachine', 'Dryer'],
+    ['AC', 'WashingMachine', 'Refrigerator'],
+    ['TV', 'Computer', 'Monitor'],
+    ['All'],
+  ];
+  for (let i = 1; i <= 30; i++) {
+    const partnerIdx = (i - 1) % partners.length;
+    const branchIdx = (i % (branches.length - 1)) + 1; // Exclude HQ
+    const inst = await prisma.installer.upsert({
+      where: { id: `installer-${i}` },
+      update: {},
+      create: {
+        id: `installer-${i}`,
+        partnerId: partners[partnerIdx].id,
+        branchId: branches[branchIdx].id,
+        name: `Installer ${String(i).padStart(2, '0')}`,
+        phone: `010-3${String(i).padStart(3, '0')}-${4000 + i}`,
+        skillTags: skillSets[i % skillSets.length],
+        capacityPerDay: 6 + (i % 6),
+        isActive: i % 15 !== 0, // ~7% inactive
+      },
+    });
+    installers.push(inst);
   }
   console.log(`✅ Created ${installers.length} installers`);
 

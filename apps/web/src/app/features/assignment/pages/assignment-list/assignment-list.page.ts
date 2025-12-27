@@ -412,7 +412,7 @@ export class AssignmentListPage implements OnInit {
       appointmentDate: o.appointmentDate || '-',
       status: o.status,
       installerName: o.installerName,
-      productSummary: o.lines?.map(l => l.productName).join(', ') || '-',
+      productSummary: o.lines?.map(l => l.productName).filter(Boolean).join(', ') || '-',
     }));
   });
 
@@ -433,7 +433,9 @@ export class AssignmentListPage implements OnInit {
   }
 
   async loadData(): Promise<void> {
-    const branchCode = this.authService.user()?.branchCode;
+    const user = this.authService.user();
+    // HQ_ADMIN can see all branches, others see only their branch
+    const branchCode = user?.roles?.includes('HQ_ADMIN') ? 'ALL' : user?.branchCode;
     await this.ordersStore.loadOrders(branchCode);
   }
 
