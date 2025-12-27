@@ -499,6 +499,57 @@ export class OrdersStore extends signalStore(
     },
 
     /**
+     * Update order completion data (photos, notes)
+     */
+    async updateOrderCompletion(
+      orderId: string,
+      completionData: {
+        photos?: string[];
+        notes?: string[];
+        completedAt?: string;
+      }
+    ): Promise<void> {
+      const order = store.orders().find((o) => o.id === orderId);
+      if (!order) return;
+
+      // Optimistic update
+      const updatedOrder: Order = {
+        ...order,
+        completion: {
+          ...order.completion,
+          photos: completionData.photos || order.completion?.photos,
+          notes: completionData.notes?.join('\n') || order.completion?.notes,
+          completedAt: completionData.completedAt
+            ? new Date(completionData.completedAt).getTime()
+            : order.completion?.completedAt,
+        },
+        version: order.version + 1,
+        updatedAt: Date.now(),
+      };
+
+      patchState(store, {
+        orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+      });
+
+      // Queue for sync
+      await syncQueue.enqueue({
+        method: 'PATCH',
+        url: `/orders/${orderId}/completion`,
+        body: {
+          photos: completionData.photos,
+          notes: completionData.notes,
+          version: order.version,
+        },
+      });
+
+      // Save to cache
+      await db.orders.put({
+        ...updatedOrder,
+        localUpdatedAt: Date.now(),
+      });
+    },
+
+    /**
      * Issue installation certificate
      */
     async issueCertificate(

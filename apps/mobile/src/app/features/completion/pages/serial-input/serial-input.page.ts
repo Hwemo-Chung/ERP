@@ -1,5 +1,8 @@
-// apps/web/src/app/features/completion/pages/serial-input/serial-input.page.ts
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+/**
+ * Serial Input Page
+ * PRD FR-04: Serial number capture via barcode scanning or manual input
+ */
+import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,7 +17,6 @@ import {
   IonIcon,
   IonList,
   IonItem,
-  IonLabel,
   IonInput,
   IonBadge,
   IonSpinner,
@@ -33,6 +35,8 @@ import {
 } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
+import { BarcodeScannerService } from '../../../../core/services/barcode-scanner.service';
+import { UIStore } from '../../../../store/ui/ui.store';
 
 interface ProductSerial {
   lineId: string;
@@ -60,7 +64,6 @@ interface ProductSerial {
     IonIcon,
     IonList,
     IonItem,
-    IonLabel,
     IonInput,
     IonBadge,
     IonSpinner,
@@ -211,15 +214,19 @@ interface ProductSerial {
     }
   `],
 })
-export class SerialInputPage implements OnInit {
+export class SerialInputPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
   protected readonly ordersStore = inject(OrdersStore);
+  private readonly barcodeScanner = inject(BarcodeScannerService);
+  private readonly uiStore = inject(UIStore);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
   protected readonly products = signal<ProductSerial[]>([]);
+  protected readonly isScanning = this.barcodeScanner.isScanning;
+  private currentScanIndex = -1;
 
   protected readonly order = computed(() => {
     const id = this.orderId();
@@ -241,6 +248,11 @@ export class SerialInputPage implements OnInit {
     this.loadProducts();
   }
 
+  ngOnDestroy(): void {
+    // Stop any active scanning when leaving the page
+    this.barcodeScanner.stopScan();
+  }
+
   loadProducts(): void {
     const order = this.order();
     const lines = order?.lines || order?.orderLines;
@@ -256,39 +268,118 @@ export class SerialInputPage implements OnInit {
     }
   }
 
-  openScanner(): void {
-    // TODO: Open barcode scanner via Capacitor
-    console.log('Open scanner');
+  /**
+   * Open scanner to scan all products sequentially
+   */
+  async openScanner(): Promise<void> {
+    const prods = this.products();
+    const unscannedIndex = prods.findIndex(p => !p.isValid);
+
+    if (unscannedIndex === -1) {
+      this.uiStore.showToast('모든 시리얼 번호가 이미 입력되었습니다', 'success');
+      return;
+    }
+
+    // Start scanning from the first unscanned product
+    await this.scanSerial(unscannedIndex);
   }
 
-  scanSerial(index: number): void {
-    // TODO: Scan individual serial via Capacitor
-    console.log('Scan serial for product:', index);
+  /**
+   * Scan serial for a specific product
+   */
+  async scanSerial(index: number): Promise<void> {
+    if (this.isScanning()) {
+      return;
+    }
+
+    this.currentScanIndex = index;
+    const product = this.products()[index];
+
+    if (!product) {
+      return;
+    }
+
+    try {
+      const result = await this.barcodeScanner.scan();
+
+      if (result.hasContent) {
+        // Update the serial number
+        this.products.update(products => {
+          const updated = [...products];
+          updated[index].serialNumber = result.content.toUpperCase();
+          updated[index].isValid = /^[A-Za-z0-9]{10,20}$/.test(result.content);
+          return updated;
+        });
+
+        if (this.products()[index].isValid) {
+          // Auto-advance to next unscanned product
+          const nextIndex = this.products().findIndex((p, i) => i > index && !p.isValid);
+          if (nextIndex !== -1) {
+            // Small delay before scanning next
+            setTimeout(() => this.scanSerial(nextIndex), 500);
+          } else {
+            this.uiStore.showToast('모든 시리얼 번호가 입력되었습니다', 'success');
+          }
+        } else {
+          this.uiStore.showToast('시리얼 번호 형식이 올바르지 않습니다 (영문/숫자 10-20자)', 'warning');
+        }
+      }
+    } catch (error) {
+      console.error('Scan error:', error);
+      this.uiStore.showToast('스캔 중 오류가 발생했습니다', 'danger');
+    } finally {
+      this.currentScanIndex = -1;
+    }
   }
 
+  /**
+   * Handle manual serial input
+   */
   onSerialInput(index: number): void {
     this.products.update(products => {
       const updated = [...products];
-      const serial = updated[index].serialNumber;
+      const serial = updated[index].serialNumber.toUpperCase();
+      updated[index].serialNumber = serial;
       // Validate: alphanumeric, 10-20 chars
       updated[index].isValid = /^[A-Za-z0-9]{10,20}$/.test(serial);
       return updated;
     });
   }
 
+  /**
+   * Check if all products have valid serial numbers
+   */
   allValid(): boolean {
     const prods = this.products();
     return prods.length > 0 && prods.every(p => p.isValid);
   }
 
+  /**
+   * Get progress percentage
+   */
+  getProgress(): number {
+    const prods = this.products();
+    if (prods.length === 0) return 0;
+    const valid = prods.filter(p => p.isValid).length;
+    return Math.round((valid / prods.length) * 100);
+  }
+
+  /**
+   * Save all serial numbers
+   */
   async saveSerials(): Promise<void> {
+    if (!this.allValid()) {
+      this.uiStore.showToast('모든 시리얼 번호를 입력해주세요', 'warning');
+      return;
+    }
+
     try {
       const serialUpdates = this.products().map(p => ({
         lineId: p.lineId,
         serialNumber: p.serialNumber,
       }));
       await this.ordersStore.updateOrderSerials(this.orderId(), serialUpdates);
-      
+
       const toast = await this.toastCtrl.create({
         message: '시리얼 번호가 저장되었습니다.',
         duration: 2000,

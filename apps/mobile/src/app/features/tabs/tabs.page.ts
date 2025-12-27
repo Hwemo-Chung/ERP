@@ -5,7 +5,6 @@ import {
   IonTabButton,
   IonIcon,
   IonLabel,
-  IonBadge,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { listOutline, gridOutline, personOutline, clipboardOutline, checkmarkDoneOutline, statsChartOutline, settingsOutline } from 'ionicons/icons';
@@ -14,7 +13,7 @@ import { SyncQueueService } from '@core/services/sync-queue.service';
 @Component({
   selector: 'app-tabs',
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
   template: `
     <ion-tabs>
       <ion-tab-bar slot="bottom">

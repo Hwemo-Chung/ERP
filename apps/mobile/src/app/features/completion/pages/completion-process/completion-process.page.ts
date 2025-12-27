@@ -1,5 +1,8 @@
-// apps/web/src/app/features/completion/pages/completion-process/completion-process.page.ts
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+/**
+ * Completion Process Page
+ * PRD FR-06: Order completion workflow with serial input, waste pickup, photos, and certificate
+ */
+import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -20,8 +23,6 @@ import {
   IonLabel,
   IonBadge,
   IonSpinner,
-  IonNote,
-  IonCheckbox,
   AlertController,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -32,9 +33,12 @@ import {
   documentTextOutline,
   checkmarkCircleOutline,
   cameraOutline,
+  closeCircleOutline,
 } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.models';
+import { CameraService } from '../../../../core/services/camera.service';
+import { UIStore } from '../../../../store/ui/ui.store';
 
 @Component({
   selector: 'app-completion-process',
@@ -60,8 +64,6 @@ import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.m
     IonLabel,
     IonBadge,
     IonSpinner,
-    IonNote,
-    IonCheckbox,
   ],
   template: `
     <ion-header>
@@ -133,7 +135,7 @@ import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.m
                   <h2>사진 첨부</h2>
                   <p>설치 완료 사진 (선택)</p>
                 </ion-label>
-                <ion-badge slot="end" color="medium">{{ photoCount() }}장</ion-badge>
+                <ion-badge slot="end" [color]="photoCount() > 0 ? 'success' : 'medium'">{{ photoCount() }}장</ion-badge>
               </ion-item>
 
               <!-- Step 4: Certificate -->
@@ -152,6 +154,33 @@ import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.m
             </ion-list>
           </ion-card-content>
         </ion-card>
+
+        <!-- Photo Gallery Card -->
+        @if (photos().length > 0) {
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>첨부 사진</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="photo-grid">
+                @for (photo of photos(); track $index) {
+                  <div class="photo-item">
+                    <img [src]="photo" alt="설치 사진 {{ $index + 1 }}" />
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      class="remove-btn"
+                      (click)="removePhoto($index); $event.stopPropagation()"
+                    >
+                      <ion-icon name="close-circle-outline"></ion-icon>
+                    </ion-button>
+                  </div>
+                }
+              </div>
+            </ion-card-content>
+          </ion-card>
+        }
 
         <!-- Notes -->
         <ion-card>
@@ -200,20 +229,52 @@ import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.m
       }
     }
 
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .photo-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        --padding-start: 4px;
+        --padding-end: 4px;
+        margin: 0;
+      }
+    }
+
     .action-buttons {
       margin-top: 24px;
     }
   `],
 })
-export class CompletionProcessPage implements OnInit {
+export class CompletionProcessPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
   protected readonly ordersStore = inject(OrdersStore);
+  private readonly cameraService = inject(CameraService);
+  private readonly uiStore = inject(UIStore);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
+  protected readonly photos = this.cameraService.photos;
+  protected readonly notes = signal<string[]>([]);
 
   protected readonly order = computed(() => {
     const id = this.orderId();
@@ -233,8 +294,7 @@ export class CompletionProcessPage implements OnInit {
   });
 
   protected readonly photoCount = computed(() => {
-    const order = this.order();
-    return order?.completion?.photos?.length || 0;
+    return this.photos().length;
   });
 
   protected readonly certificateIssued = computed(() => {
@@ -249,28 +309,100 @@ export class CompletionProcessPage implements OnInit {
       documentTextOutline,
       checkmarkCircleOutline,
       cameraOutline,
+      closeCircleOutline,
     });
   }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') || '';
     this.orderId.set(id);
+
+    // Load existing photos if any
+    const order = this.order();
+    if (order?.completion?.photos?.length) {
+      this.cameraService.setPhotos(order.completion.photos);
+    }
   }
 
+  ngOnDestroy(): void {
+    // Clear photos when leaving
+    this.cameraService.clearPhotos();
+  }
+
+  /**
+   * Check if order can be completed
+   */
   canComplete(): boolean {
     return this.serialCompleted();
   }
 
-  uploadPhoto(): void {
-    // TODO: Implement photo upload via Capacitor Camera
-    console.log('Upload photo');
+  /**
+   * Upload a photo using camera service
+   */
+  async uploadPhoto(): Promise<void> {
+    try {
+      const result = await this.cameraService.takePhoto({
+        quality: 80,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      });
+
+      if (result.success) {
+        this.uiStore.showToast('사진이 추가되었습니다', 'success');
+      } else if (result.error && result.error !== 'Cancelled') {
+        this.uiStore.showToast('사진 촬영에 실패했습니다', 'danger');
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      this.uiStore.showToast('사진 촬영 중 오류가 발생했습니다', 'danger');
+    }
   }
 
-  addNote(): void {
-    // TODO: Open note modal
-    console.log('Add note');
+  /**
+   * Remove a photo by index
+   */
+  removePhoto(index: number): void {
+    this.cameraService.removePhoto(index);
+    this.uiStore.showToast('사진이 삭제되었습니다', 'info');
   }
 
+  /**
+   * Add a note to the order
+   */
+  async addNote(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: '특이사항 추가',
+      inputs: [
+        {
+          name: 'note',
+          type: 'textarea',
+          placeholder: '특이사항을 입력하세요...',
+          attributes: {
+            maxlength: 500,
+            rows: 4,
+          },
+        },
+      ],
+      buttons: [
+        { text: '취소', role: 'cancel' },
+        {
+          text: '추가',
+          handler: async (data) => {
+            const note = data.note?.trim();
+            if (note) {
+              this.notes.update(notes => [...notes, note]);
+              this.uiStore.showToast('특이사항이 추가되었습니다', 'success');
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  /**
+   * Complete the order
+   */
   async completeOrder(): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: '완료 처리',
@@ -280,27 +412,47 @@ export class CompletionProcessPage implements OnInit {
         {
           text: '완료',
           handler: async () => {
-            try {
-              await this.ordersStore.updateOrderStatus(this.orderId(), OrderStatus.COMPLETED);
-              const toast = await this.toastCtrl.create({
-                message: '완료 처리되었습니다.',
-                duration: 2000,
-                color: 'success',
-              });
-              await toast.present();
-              this.router.navigate(['/tabs/completion']);
-            } catch (error) {
-              const toast = await this.toastCtrl.create({
-                message: '처리 중 오류가 발생했습니다.',
-                duration: 2000,
-                color: 'danger',
-              });
-              await toast.present();
-            }
+            await this.performComplete();
           },
         },
       ],
     });
     await alert.present();
+  }
+
+  /**
+   * Perform the actual order completion
+   */
+  private async performComplete(): Promise<void> {
+    try {
+      // Save photos and notes to order completion data
+      const completionData = {
+        photos: this.photos(),
+        notes: this.notes(),
+        completedAt: new Date().toISOString(),
+      };
+
+      // Update order with completion data and status
+      await this.ordersStore.updateOrderCompletion(this.orderId(), completionData);
+      await this.ordersStore.updateOrderStatus(this.orderId(), OrderStatus.COMPLETED);
+
+      const toast = await this.toastCtrl.create({
+        message: '완료 처리되었습니다.',
+        duration: 2000,
+        color: 'success',
+      });
+      await toast.present();
+
+      // Clear camera photos and navigate
+      this.cameraService.clearPhotos();
+      this.router.navigate(['/tabs/completion']);
+    } catch (error) {
+      const toast = await this.toastCtrl.create({
+        message: '처리 중 오류가 발생했습니다.',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+    }
   }
 }
