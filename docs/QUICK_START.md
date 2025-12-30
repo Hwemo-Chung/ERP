@@ -66,16 +66,16 @@ pnpm db:studio
 
 ### psql (CLI)
 ```bash
-docker exec -it erp-postgres psql -U postgres -d logistics_erp
+docker exec -it erp_postgres psql -U erp_user -d erp_logistics
 
 # 테이블 목록
 \dt
 
 # 사용자 조회
-SELECT id, username, role FROM "User";
+SELECT id, username FROM users;
 
 # 주문 조회
-SELECT id, "erpOrderNumber", status FROM "Order" LIMIT 10;
+SELECT id, erp_order_number, status FROM orders LIMIT 10;
 
 # 종료
 \q

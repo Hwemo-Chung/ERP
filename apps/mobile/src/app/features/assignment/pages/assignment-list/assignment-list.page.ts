@@ -27,7 +27,9 @@ import {
   IonChip,
   RefresherCustomEvent,
   InfiniteScrollCustomEvent,
+  ModalController,
 } from '@ionic/angular/standalone';
+import { OrderFilterModal, FilterContext } from '../../../../shared/components/order-filter/order-filter.modal';
 import { addIcons } from 'ionicons';
 import {
   filterOutline,
@@ -249,6 +251,7 @@ export class AssignmentListPage implements OnInit {
   readonly ordersStore = inject(OrdersStore);
   private readonly authService = inject(AuthService);
   private readonly uiStore = inject(UIStore);
+  private readonly modalController = inject(ModalController);
 
   protected readonly currentFilter = signal<AssignmentFilter>('all');
 
@@ -337,9 +340,24 @@ export class AssignmentListPage implements OnInit {
     event.target.complete();
   }
 
-  openFilter(): void {
-    // TODO: Open filter modal
-    console.log('Open filter');
+  async openFilter(): Promise<void> {
+    const modal = await this.modalController.create({
+      component: OrderFilterModal,
+      componentProps: {
+        context: 'assignment' as FilterContext,
+        currentFilters: this.ordersStore.filters(),
+        installers: [], // Can be populated from metadata store if available
+        branches: [],   // Can be populated from metadata store for HQ_ADMIN
+      },
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'apply' && data) {
+      this.ordersStore.setFilters(data);
+      await this.loadData();
+    }
   }
 
   getStatusColor(status: string): string {
