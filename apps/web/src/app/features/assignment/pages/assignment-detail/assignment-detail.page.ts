@@ -43,8 +43,9 @@ import {
   swapHorizontalOutline,
   printOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
-import { Order, OrderStatus, ORDER_STATUS_LABELS } from '../../../../store/orders/orders.models';
+import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 import { ReportsStore } from '../../../../store/reports/reports.store';
 
 @Component({
@@ -75,14 +76,16 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
     IonGrid,
     IonRow,
     IonCol,
+    TranslateModule,
   ],
   template: `
+    <!-- 배정 상세 헤더 -->
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/assignment"></ion-back-button>
         </ion-buttons>
-        <ion-title>배정 상세</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.DETAIL.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openActions()">
             <ion-icon name="create-outline"></ion-icon>
@@ -96,9 +99,10 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
 
     <ion-content class="ion-padding">
       @if (isLoading()) {
+        <!-- 로딩 상태 -->
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'ASSIGNMENT.DETAIL.LOADING' | translate }}</p>
         </div>
       } @else if (assignment()) {
         <!-- Status Card -->
@@ -118,7 +122,7 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                   <div class="info-item">
                     <ion-icon name="calendar-outline"></ion-icon>
                     <div>
-                      <ion-note>약속일시</ion-note>
+                      <ion-note>{{ 'ASSIGNMENT.DETAIL.APPOINTMENT_DATE' | translate }}</ion-note>
                       <p>{{ assignment()!.appointmentDate || '-' }}</p>
                     </div>
                   </div>
@@ -127,8 +131,8 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                   <div class="info-item">
                     <ion-icon name="person-outline"></ion-icon>
                     <div>
-                      <ion-note>설치기사</ion-note>
-                      <p>{{ assignment()!.installerName || '미배정' }}</p>
+                      <ion-note>{{ 'ASSIGNMENT.DETAIL.INSTALLER' | translate }}</ion-note>
+                      <p>{{ assignment()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
                     </div>
                   </div>
                 </ion-col>
@@ -137,34 +141,34 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
           </ion-card-content>
         </ion-card>
 
-        <!-- Customer Info Card -->
+        <!-- 고객 정보 카드 -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>고객 정보</ion-card-title>
+            <ion-card-title>{{ 'ASSIGNMENT.DETAIL.CUSTOMER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
               <ion-item>
                 <ion-icon name="person-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>고객명</ion-note>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.CUSTOMER_NAME' | translate }}</ion-note>
                   <p>{{ assignment()!.customerName }}</p>
                 </ion-label>
               </ion-item>
               <ion-item>
                 <ion-icon name="call-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>연락처</ion-note>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.CONTACT' | translate }}</ion-note>
                   <p>{{ assignment()!.customerPhone }}</p>
                 </ion-label>
                 <ion-button slot="end" fill="clear" (click)="callCustomer()">
-                  전화
+                  {{ 'ASSIGNMENT.DETAIL.CALL' | translate }}
                 </ion-button>
               </ion-item>
               <ion-item>
                 <ion-icon name="location-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>주소</ion-note>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.ADDRESS' | translate }}</ion-note>
                   <p>{{ assignment()!.customerAddress }}</p>
                 </ion-label>
               </ion-item>
@@ -172,10 +176,10 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
           </ion-card-content>
         </ion-card>
 
-        <!-- Products Card -->
+        <!-- 제품 목록 카드 -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>제품 목록</ion-card-title>
+            <ion-card-title>{{ 'ASSIGNMENT.DETAIL.PRODUCT_LIST' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list>
@@ -195,11 +199,11 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
           </ion-card-content>
         </ion-card>
 
-        <!-- Notes Card -->
+        <!-- 특이사항 카드 -->
         @if (assignment()!.completion?.notes) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>특이사항</ion-card-title>
+              <ion-card-title>{{ 'ASSIGNMENT.DETAIL.SPECIAL_NOTES' | translate }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               <p>{{ assignment()!.completion!.notes }}</p>
@@ -207,42 +211,43 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
           </ion-card>
         }
 
-        <!-- Action Buttons -->
+        <!-- 액션 버튼 -->
         <div class="action-buttons">
           @if (assignment()!.status === OrderStatus.UNASSIGNED) {
             <ion-button expand="block" (click)="assignInstaller()">
               <ion-icon name="person-outline" slot="start"></ion-icon>
-              설치기사 배정
+              {{ 'ASSIGNMENT.DETAIL.ASSIGN_INSTALLER' | translate }}
             </ion-button>
           }
           @if (assignment()!.status === OrderStatus.ASSIGNED) {
             <ion-button expand="block" color="success" (click)="confirmAssignment()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              배정 확정
+              {{ 'ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT' | translate }}
             </ion-button>
             <ion-button expand="block" color="warning" (click)="changeInstaller()">
               <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
-              기사 변경
+              {{ 'ASSIGNMENT.DETAIL.CHANGE_INSTALLER' | translate }}
             </ion-button>
           }
           @if (assignment()!.status === OrderStatus.CONFIRMED) {
             <ion-button expand="block" color="primary" (click)="confirmRelease()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              출고 확정
+              {{ 'ASSIGNMENT.DETAIL.CONFIRM_RELEASE' | translate }}
             </ion-button>
           }
           <ion-button expand="block" color="medium" (click)="changeAppointment()">
             <ion-icon name="calendar-outline" slot="start"></ion-icon>
-            약속일 변경
+            {{ 'ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT' | translate }}
           </ion-button>
           <ion-button expand="block" color="danger" fill="outline" (click)="cancelAssignment()">
             <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-            취소
+            {{ 'ASSIGNMENT.DETAIL.CANCEL' | translate }}
           </ion-button>
         </div>
       } @else {
+        <!-- 배정 정보 없음 상태 -->
         <div class="empty-state">
-          <p>배정 정보를 찾을 수 없습니다.</p>
+          <p>{{ 'ASSIGNMENT.DETAIL.NOT_FOUND' | translate }}</p>
         </div>
       }
     </ion-content>
@@ -309,13 +314,22 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
   `],
 })
 export class AssignmentDetailPage implements OnInit {
+  /** @description 라우트 정보 접근 */
   private readonly route = inject(ActivatedRoute);
+  /** @description 라우터 네비게이션 */
   private readonly router = inject(Router);
+  /** @description 액션 시트 컨트롤러 */
   private readonly actionSheetCtrl = inject(ActionSheetController);
+  /** @description 알림창 컨트롤러 */
   private readonly alertCtrl = inject(AlertController);
+  /** @description 토스트 컨트롤러 */
   private readonly toastCtrl = inject(ToastController);
+  /** @description 주문 스토어 */
   private readonly ordersStore = inject(OrdersStore);
+  /** @description 리포트 스토어 */
   private readonly reportsStore = inject(ReportsStore);
+  /** @description 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
   // Expose OrderStatus to template
   protected readonly OrderStatus = OrderStatus;
@@ -377,54 +391,92 @@ export class AssignmentDetailPage implements OnInit {
     return colors[status] || 'medium';
   }
 
+  /**
+   * @description 주문 상태에 따른 i18n 라벨 반환
+   * @param status 주문 상태
+   * @returns 번역된 상태 라벨
+   */
   getStatusLabel(status: OrderStatus | string): string {
-    return ORDER_STATUS_LABELS[status as OrderStatus] || status;
+    const statusKey = `ORDERS.STATUS.${status}`;
+    const translated = this.translateService.instant(statusKey);
+    return translated !== statusKey ? translated : status;
   }
 
+  /**
+   * @description 작업 선택 액션 시트 열기
+   */
   async openActions(): Promise<void> {
     const order = this.assignment();
     if (!order) return;
 
     const buttons: any[] = [];
 
-    // Actions based on current status
+    // 상태에 따른 액션 버튼 구성
     if (order.status === OrderStatus.UNASSIGNED) {
-      buttons.push({ text: '설치기사 배정', handler: () => this.assignInstaller() });
+      buttons.push({ 
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN_INSTALLER'), 
+        handler: () => this.assignInstaller() 
+      });
     }
     if (order.status === OrderStatus.ASSIGNED) {
-      buttons.push({ text: '배정 확정', handler: () => this.confirmAssignment() });
-      buttons.push({ text: '기사 변경', handler: () => this.changeInstaller() });
+      buttons.push({ 
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT'), 
+        handler: () => this.confirmAssignment() 
+      });
+      buttons.push({ 
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_INSTALLER'), 
+        handler: () => this.changeInstaller() 
+      });
     }
     if (order.status === OrderStatus.CONFIRMED) {
-      buttons.push({ text: '출고 확정', handler: () => this.confirmRelease() });
+      buttons.push({ 
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE'), 
+        handler: () => this.confirmRelease() 
+      });
     }
 
-    buttons.push({ text: '약속일 변경', handler: () => this.changeAppointment() });
-    buttons.push({ text: '특이사항 추가', handler: () => this.addNote() });
+    buttons.push({ 
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT'), 
+      handler: () => this.changeAppointment() 
+    });
+    buttons.push({ 
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.ADD_NOTE'), 
+      handler: () => this.addNote() 
+    });
     
     if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.CANCELLED) {
-      buttons.push({ text: '취소 요청', role: 'destructive', handler: () => this.cancelAssignment() });
+      buttons.push({ 
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REQUEST'), 
+        role: 'destructive', 
+        handler: () => this.cancelAssignment() 
+      });
     }
 
-    buttons.push({ text: '닫기', role: 'cancel' });
+    buttons.push({ 
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.CLOSE'), 
+      role: 'cancel' 
+    });
 
     const actionSheet = await this.actionSheetCtrl.create({
-      header: '작업 선택',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.ACTION_HEADER'),
       buttons,
     });
     await actionSheet.present();
   }
 
+  /**
+   * @description 문서 인쇄 (PDF 다운로드)
+   */
   async printDocument(): Promise<void> {
     try {
       const blob = await this.reportsStore.exportData({
         type: 'release',
         format: 'pdf',
       });
-      this.reportsStore.downloadFile(blob, `배정서_${this.assignment()?.erpOrderNumber || this.orderId}.pdf`);
+      this.reportsStore.downloadFile(blob, `${this.translateService.instant('ASSIGNMENT.DETAIL.TITLE')}_${this.assignment()?.erpOrderNumber || this.orderId}.pdf`);
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '인쇄 파일 생성에 실패했습니다.',
+        message: this.translateService.instant('ASSIGNMENT.DETAIL.PRINT_FAILED'),
         duration: 2000,
         color: 'danger',
       });
@@ -432,6 +484,9 @@ export class AssignmentDetailPage implements OnInit {
     }
   }
 
+  /**
+   * @description 고객에게 전화 걸기
+   */
   callCustomer(): void {
     const phone = this.assignment()?.customerPhone;
     if (phone) {
@@ -439,26 +494,34 @@ export class AssignmentDetailPage implements OnInit {
     }
   }
 
+  /**
+   * @description 설치기사 배정 알림창
+   */
   async assignInstaller(): Promise<void> {
+    const installerAssignedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_ASSIGNED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const orderId = this.orderId;
+    
     const alert = await this.alertCtrl.create({
-      header: '설치기사 배정',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN_INSTALLER'),
       inputs: [
-        { name: 'installerName', type: 'text', placeholder: '설치기사명' },
-        { name: 'appointmentDate', type: 'date', placeholder: '약속일' },
+        { name: 'installerName', type: 'text', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_NAME') },
+        { name: 'appointmentDate', type: 'date', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_DATE_INPUT') },
       ],
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '배정',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN'),
           handler: async (data) => {
             if (data.installerName && data.appointmentDate) {
-              await this.ordersStore.assignOrder(
-                this.orderId,
+              await ordersStore.assignOrder(
+                orderId,
                 '', // installerId - would come from installer selection
                 data.appointmentDate
               );
-              const toast = await this.toastCtrl.create({
-                message: '설치기사가 배정되었습니다.',
+              const toast = await toastController.create({
+                message: installerAssignedMsg,
                 duration: 2000,
                 color: 'success',
               });
@@ -471,18 +534,26 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 배정 확정 알림창
+   */
   async confirmAssignment(): Promise<void> {
+    const assignmentConfirmedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGNMENT_CONFIRMED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const orderId = this.orderId;
+    
     const alert = await this.alertCtrl.create({
-      header: '배정 확정',
-      message: '이 배정을 확정하시겠습니까?',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT'),
+      message: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT_MSG'),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '확정',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM'),
           handler: async () => {
-            await this.ordersStore.updateOrderStatus(this.orderId, OrderStatus.CONFIRMED);
-            const toast = await this.toastCtrl.create({
-              message: '배정이 확정되었습니다.',
+            await ordersStore.updateOrderStatus(orderId, OrderStatus.CONFIRMED);
+            const toast = await toastController.create({
+              message: assignmentConfirmedMsg,
               duration: 2000,
               color: 'success',
             });
@@ -494,27 +565,36 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 설치기사 변경 알림창
+   */
   async changeInstaller(): Promise<void> {
+    const installerChangedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_CHANGED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const orderId = this.orderId;
+    const assignment = this.assignment;
+    
     const alert = await this.alertCtrl.create({
-      header: '기사 변경',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_INSTALLER'),
       inputs: [
-        { name: 'installerName', type: 'text', placeholder: '새 설치기사명' },
+        { name: 'installerName', type: 'text', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_INSTALLER_NAME') },
       ],
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '변경',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE'),
           handler: async (data) => {
             if (data.installerName) {
-              const order = this.assignment();
+              const order = assignment();
               if (order) {
-                await this.ordersStore.assignOrder(
-                  this.orderId,
+                await ordersStore.assignOrder(
+                  orderId,
                   '', // new installerId
                   order.appointmentDate || ''
                 );
-                const toast = await this.toastCtrl.create({
-                  message: '설치기사가 변경되었습니다.',
+                const toast = await toastController.create({
+                  message: installerChangedMsg,
                   duration: 2000,
                   color: 'success',
                 });
@@ -528,18 +608,26 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 출고 확정 알림창
+   */
   async confirmRelease(): Promise<void> {
+    const releaseConfirmedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.RELEASE_CONFIRMED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const orderId = this.orderId;
+    
     const alert = await this.alertCtrl.create({
-      header: '출고 확정',
-      message: '이 주문을 출고 확정하시겠습니까?',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE'),
+      message: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE_MSG'),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '확정',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM'),
           handler: async () => {
-            await this.ordersStore.updateOrderStatus(this.orderId, OrderStatus.RELEASED);
-            const toast = await this.toastCtrl.create({
-              message: '출고가 확정되었습니다.',
+            await ordersStore.updateOrderStatus(orderId, OrderStatus.RELEASED);
+            const toast = await toastController.create({
+              message: releaseConfirmedMsg,
               duration: 2000,
               color: 'success',
             });
@@ -551,22 +639,31 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 약속일 변경 알림창
+   */
   async changeAppointment(): Promise<void> {
     const order = this.assignment();
+    const appointmentDateLimitMsg = this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_DATE_LIMIT');
+    const appointmentChangedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_CHANGED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const orderId = this.orderId;
+    
     const alert = await this.alertCtrl.create({
-      header: '약속일 변경',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT'),
       inputs: [
         { 
           name: 'appointmentDate', 
           type: 'date', 
           value: order?.appointmentDate || '',
-          placeholder: '새 약속일' 
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_APPOINTMENT')
         },
       ],
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '변경',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE'),
           handler: async (data) => {
             if (data.appointmentDate && order) {
               // Validate max +15 days per PRD FR-02
@@ -575,8 +672,8 @@ export class AssignmentDetailPage implements OnInit {
               const maxDate = new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000);
               
               if (newDate > maxDate) {
-                const toast = await this.toastCtrl.create({
-                  message: '약속일은 오늘로부터 15일 이내여야 합니다.',
+                const toast = await toastController.create({
+                  message: appointmentDateLimitMsg,
                   duration: 2000,
                   color: 'warning',
                 });
@@ -584,13 +681,13 @@ export class AssignmentDetailPage implements OnInit {
                 return;
               }
 
-              await this.ordersStore.assignOrder(
-                this.orderId,
+              await ordersStore.assignOrder(
+                orderId,
                 order.installerId || '',
                 data.appointmentDate
               );
-              const toast = await this.toastCtrl.create({
-                message: '약속일이 변경되었습니다.',
+              const toast = await toastController.create({
+                message: appointmentChangedMsg,
                 duration: 2000,
                 color: 'success',
               });
@@ -603,21 +700,27 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 특이사항 추가 알림창
+   */
   async addNote(): Promise<void> {
+    const noteAddedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.NOTE_ADDED');
+    const toastController = this.toastCtrl;
+    
     const alert = await this.alertCtrl.create({
-      header: '특이사항 추가',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.ADD_NOTE'),
       inputs: [
-        { name: 'note', type: 'textarea', placeholder: '특이사항을 입력하세요' },
+        { name: 'note', type: 'textarea', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NOTE_PLACEHOLDER') },
       ],
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '저장',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.SAVE'),
           handler: async (data) => {
             if (data.note) {
               // Would call API to add note
-              const toast = await this.toastCtrl.create({
-                message: '특이사항이 추가되었습니다.',
+              const toast = await toastController.create({
+                message: noteAddedMsg,
                 duration: 2000,
                 color: 'success',
               });
@@ -630,27 +733,36 @@ export class AssignmentDetailPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 배정 취소 요청 알림창
+   */
   async cancelAssignment(): Promise<void> {
+    const cancelRequestedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REQUESTED');
+    const ordersStore = this.ordersStore;
+    const toastController = this.toastCtrl;
+    const router = this.router;
+    const orderId = this.orderId;
+    
     const alert = await this.alertCtrl.create({
-      header: '취소 확인',
-      message: '정말로 이 배정을 취소 요청하시겠습니까?',
+      header: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_CONFIRM_HEADER'),
+      message: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_CONFIRM_MSG'),
       inputs: [
-        { name: 'reason', type: 'textarea', placeholder: '취소 사유' },
+        { name: 'reason', type: 'textarea', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REASON') },
       ],
       buttons: [
-        { text: '아니오', role: 'cancel' },
+        { text: this.translateService.instant('ASSIGNMENT.DETAIL.NO'), role: 'cancel' },
         {
-          text: '예, 취소합니다',
+          text: this.translateService.instant('ASSIGNMENT.DETAIL.YES_CANCEL'),
           role: 'destructive',
-          handler: async (data) => {
-            await this.ordersStore.updateOrderStatus(this.orderId, OrderStatus.REQUEST_CANCEL);
-            const toast = await this.toastCtrl.create({
-              message: '취소 요청이 접수되었습니다. HQ 승인 후 처리됩니다.',
+          handler: async () => {
+            await ordersStore.updateOrderStatus(orderId, OrderStatus.REQUEST_CANCEL);
+            const toast = await toastController.create({
+              message: cancelRequestedMsg,
               duration: 3000,
               color: 'warning',
             });
             await toast.present();
-            this.router.navigate(['/tabs/assignment']);
+            router.navigate(['/tabs/assignment']);
           },
         },
       ],

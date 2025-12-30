@@ -10,6 +10,7 @@ import {
   IonRefresher, IonRefresherContent, IonProgressBar, IonIcon, IonButton,
   IonDatetime, IonModal, IonDatetimeButton,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { 
   calendarOutline, filterOutline, refreshOutline, trendingUpOutline,
@@ -26,7 +27,7 @@ type ViewType = 'installer' | 'branch' | 'status';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, TranslateModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
     IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
@@ -39,7 +40,8 @@ type ViewType = 'installer' | 'branch' | 'status';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/reports"></ion-back-button>
         </ion-buttons>
-        <ion-title>진행현황 대시보드</ion-title>
+        <!-- 진행현황 대시보드 타이틀 -->
+        <ion-title>{{ 'REPORTS.PROGRESS.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="loadData()">
             <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
@@ -48,10 +50,12 @@ type ViewType = 'installer' | 'branch' | 'status';
       </ion-toolbar>
       <ion-toolbar class="filter-bar">
         <div class="filter-row">
+          <!-- 날짜 범위 선택 버튼 -->
           <ion-button fill="clear" size="small" id="open-date-modal">
             <ion-icon slot="start" name="calendar-outline"></ion-icon>
             {{ dateRangeLabel() }}
           </ion-button>
+          <!-- 뷰 타입 세그먼트 (설치기사별/지점별/상태별) -->
           <ion-segment [value]="viewType()" (ionChange)="onViewTypeChange($any($event).detail.value)" class="view-segment">
             <ion-segment-button value="installer"><ion-icon name="person-outline"></ion-icon></ion-segment-button>
             <ion-segment-button value="branch"><ion-icon name="business-outline"></ion-icon></ion-segment-button>
@@ -69,51 +73,51 @@ type ViewType = 'installer' | 'branch' | 'status';
       @if (reportsStore.isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'REPORTS.PROGRESS.LOADING' | translate }}</p>
         </div>
       } @else {
-        <!-- Summary Cards -->
+        <!-- Summary Cards - 요약 카드들 -->
         <div class="summary-grid">
           <div class="summary-card total">
             <div class="card-icon"><ion-icon name="stats-chart-outline"></ion-icon></div>
             <div class="card-content">
               <span class="value">{{ reportsStore.summary()?.total || 0 }}</span>
-              <span class="label">총 주문</span>
+              <span class="label">{{ 'REPORTS.PROGRESS.TOTAL_ORDERS' | translate }}</span>
             </div>
           </div>
           <div class="summary-card completed">
             <div class="card-icon"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
             <div class="card-content">
               <span class="value">{{ reportsStore.summary()?.completed || 0 }}</span>
-              <span class="label">완료</span>
+              <span class="label">{{ 'REPORTS.PROGRESS.COMPLETED' | translate }}</span>
             </div>
           </div>
           <div class="summary-card pending">
             <div class="card-icon"><ion-icon name="time-outline"></ion-icon></div>
             <div class="card-content">
               <span class="value">{{ reportsStore.summary()?.pending || 0 }}</span>
-              <span class="label">진행중</span>
+              <span class="label">{{ 'REPORTS.PROGRESS.IN_PROGRESS' | translate }}</span>
             </div>
           </div>
           <div class="summary-card cancelled">
             <div class="card-icon"><ion-icon name="close-circle-outline"></ion-icon></div>
             <div class="card-content">
               <span class="value">{{ reportsStore.summary()?.cancelled || 0 }}</span>
-              <span class="label">취소</span>
+              <span class="label">{{ 'REPORTS.PROGRESS.CANCELLED' | translate }}</span>
             </div>
           </div>
         </div>
 
-        <!-- KPI Metrics -->
+        <!-- KPI Metrics - KPI 지표 섹션 -->
         <div class="section">
           <h3 class="section-title">
             <ion-icon name="trending-up-outline"></ion-icon>
-            KPI 현황
+            {{ 'REPORTS.PROGRESS.KPI_TITLE' | translate }}
           </h3>
           <div class="kpi-card">
             <div class="kpi-item">
               <div class="kpi-header">
-                <span class="kpi-label">완료율</span>
+                <span class="kpi-label">{{ 'REPORTS.PROGRESS.COMPLETION_RATE' | translate }}</span>
                 <span class="kpi-value">{{ reportsStore.totalCompletionRate() }}%</span>
               </div>
               <div class="progress-bar">
@@ -122,8 +126,8 @@ type ViewType = 'installer' | 'branch' | 'status';
             </div>
             <div class="kpi-item">
               <div class="kpi-header">
-                <span class="kpi-label">폐가전 회수</span>
-                <span class="kpi-value">{{ reportsStore.wasteTotals().totalItems }}건</span>
+                <span class="kpi-label">{{ 'REPORTS.PROGRESS.WASTE_PICKUP' | translate }}</span>
+                <span class="kpi-value">{{ reportsStore.wasteTotals().totalItems }}{{ 'REPORTS.PROGRESS.ITEMS_SUFFIX' | translate }}</span>
               </div>
               <div class="progress-bar waste">
                 <div class="progress-fill" [style.width.%]="wasteProgress()"></div>
@@ -132,11 +136,11 @@ type ViewType = 'installer' | 'branch' | 'status';
           </div>
         </div>
 
-        <!-- Progress List -->
+        <!-- Progress List - 진행 현황 리스트 -->
         <div class="section">
           <h3 class="section-title">
             <ion-icon [name]="viewTypeIcon()"></ion-icon>
-            {{ viewTypeLabel() }} 현황
+            {{ viewTypeLabel() }}
           </h3>
           @if (reportsStore.branchProgress().length > 0) {
             <div class="progress-list">
@@ -167,27 +171,27 @@ type ViewType = 'installer' | 'branch' | 'status';
           } @else {
             <div class="empty-state">
               <ion-icon name="stats-chart-outline"></ion-icon>
-              <p>데이터가 없습니다</p>
+              <p>{{ 'REPORTS.PROGRESS.NO_DATA' | translate }}</p>
             </div>
           }
         </div>
       }
 
-      <!-- Date Range Modal -->
+      <!-- Date Range Modal - 기간 선택 모달 -->
       <ion-modal trigger="open-date-modal" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
         <ng-template>
           <ion-header>
             <ion-toolbar>
-              <ion-title>기간 선택</ion-title>
+              <ion-title>{{ 'REPORTS.PROGRESS.DATE_SELECT' | translate }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="applyDateFilter()">적용</ion-button>
+                <ion-button (click)="applyDateFilter()">{{ 'REPORTS.PROGRESS.APPLY' | translate }}</ion-button>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
           <ion-content class="ion-padding">
             <div class="date-inputs">
               <div class="date-field">
-                <label>시작일</label>
+                <label>{{ 'REPORTS.PROGRESS.START_DATE' | translate }}</label>
                 <ion-datetime-button datetime="datetime-from"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
@@ -196,7 +200,7 @@ type ViewType = 'installer' | 'branch' | 'status';
                 </ion-modal>
               </div>
               <div class="date-field">
-                <label>종료일</label>
+                <label>{{ 'REPORTS.PROGRESS.END_DATE' | translate }}</label>
                 <ion-datetime-button datetime="datetime-to"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
@@ -205,10 +209,11 @@ type ViewType = 'installer' | 'branch' | 'status';
                 </ion-modal>
               </div>
             </div>
+            <!-- 빠른 필터 버튼들 -->
             <div class="quick-filters">
-              <ion-button fill="outline" size="small" (click)="setQuickDate('today')">오늘</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">이번 주</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">이번 달</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('today')">{{ 'REPORTS.PROGRESS.TODAY' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{ 'REPORTS.PROGRESS.THIS_WEEK' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{ 'REPORTS.PROGRESS.THIS_MONTH' | translate }}</ion-button>
             </div>
           </ion-content>
         </ng-template>
@@ -269,6 +274,7 @@ type ViewType = 'installer' | 'branch' | 'status';
 export class ProgressDashboardPage implements OnInit {
   protected readonly reportsStore = inject(ReportsStore);
   private readonly authService = inject(AuthService);
+  private readonly translate = inject(TranslateService);
 
   // Local UI state
   protected readonly viewType = signal<ViewType>('branch');
@@ -283,7 +289,7 @@ export class ProgressDashboardPage implements OnInit {
     });
   }
 
-  // Computed properties
+  // Computed properties - 날짜 범위 라벨 (computed signal)
   protected readonly dateRangeLabel = computed(() => {
     const from = new Date(this.dateFrom);
     const to = new Date(this.dateTo);
@@ -291,11 +297,12 @@ export class ProgressDashboardPage implements OnInit {
     return `${formatDate(from)} - ${formatDate(to)}`;
   });
 
+  // 뷰 타입 라벨 (i18n 적용)
   protected readonly viewTypeLabel = computed(() => {
     const labels: Record<ViewType, string> = {
-      installer: '설치기사별',
-      branch: '지점별',
-      status: '상태별',
+      installer: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_INSTALLER'),
+      branch: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_BRANCH'),
+      status: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_STATUS'),
     };
     return labels[this.viewType()];
   });

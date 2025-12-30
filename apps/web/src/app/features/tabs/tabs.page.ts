@@ -5,38 +5,43 @@ import {
   listOutline, gridOutline, clipboardOutline, checkmarkDoneOutline, 
   statsChartOutline, settingsOutline, homeOutline 
 } from 'ionicons/icons';
+import { TranslateModule } from '@ngx-translate/core';
 import { SyncQueueService } from '@core/services/sync-queue.service';
 
+/**
+ * 탭 네비게이션 컴포넌트
+ * 앱의 하단 탭 바를 구성하여 주요 기능 간 이동을 제공
+ */
 @Component({
   selector: 'app-tabs',
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge, TranslateModule],
   template: `
     <ion-tabs>
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="orders">
           <ion-icon name="list-outline"></ion-icon>
-          <ion-label>주문</ion-label>
+          <ion-label>{{ 'NAV.ORDERS' | translate }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="assignment">
           <ion-icon name="clipboard-outline"></ion-icon>
-          <ion-label>배정</ion-label>
+          <ion-label>{{ 'NAV.ASSIGNMENT' | translate }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="completion">
           <ion-icon name="checkmark-done-outline"></ion-icon>
-          <ion-label>완료처리</ion-label>
+          <ion-label>{{ 'NAV.COMPLETION' | translate }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="reports">
           <ion-icon name="stats-chart-outline"></ion-icon>
-          <ion-label>리포트</ion-label>
+          <ion-label>{{ 'NAV.REPORTS' | translate }}</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="settings">
           <ion-icon name="settings-outline"></ion-icon>
-          <ion-label>설정</ion-label>
+          <ion-label>{{ 'NAV.SETTINGS' | translate }}</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>

@@ -39,12 +39,13 @@ const USER_ROLE_DESC_I18N_KEYS: Record<UserRole, string> = {
 /**
  * Korean labels for user roles (fallback when TranslationService is not available)
  * Used in Profile page and user management UI
+ * @deprecated Use USER_ROLE_I18N_KEYS with TranslateService instead
  */
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  [UserRole.HQ_ADMIN]: '본사 관리자',
-  [UserRole.BRANCH_MANAGER]: '지점장',
-  [UserRole.PARTNER_COORDINATOR]: '협력업체 관리자',
-  [UserRole.INSTALLER]: '설치기사',
+  [UserRole.HQ_ADMIN]: 'ROLES.HQ_ADMIN',
+  [UserRole.BRANCH_MANAGER]: 'ROLES.BRANCH_MANAGER',
+  [UserRole.PARTNER_COORDINATOR]: 'ROLES.PARTNER_COORDINATOR',
+  [UserRole.INSTALLER]: 'ROLES.INSTALLER',
 };
 
 /**

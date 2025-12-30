@@ -9,6 +9,7 @@
  */
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   IonModal,
   IonHeader,
@@ -57,6 +58,7 @@ export interface BulkOperationResult {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonModal,
     IonHeader,
     IonToolbar,
@@ -79,7 +81,7 @@ export interface BulkOperationResult {
       <ng-template>
         <ion-header>
           <ion-toolbar>
-            <ion-title>{{ result()?.operation || '일괄 작업' }} 결과</ion-title>
+            <ion-title>{{ result()?.operation || ('BULK.DEFAULT_OPERATION' | translate) }} {{ 'BULK.RESULT' | translate }}</ion-title>
             <ion-buttons slot="end">
               <ion-button (click)="onClose()">
                 <ion-icon name="close-outline"></ion-icon>
@@ -97,12 +99,12 @@ export interface BulkOperationResult {
                   <div class="stat success">
                     <ion-icon name="checkmark-circle-outline"></ion-icon>
                     <span class="count">{{ r.successCount }}</span>
-                    <span class="label">성공</span>
+                    <span class="label">{{ 'BULK.SUCCESS' | translate }}</span>
                   </div>
                   <div class="stat failed">
                     <ion-icon name="close-circle-outline"></ion-icon>
                     <span class="count">{{ r.failedCount }}</span>
-                    <span class="label">실패</span>
+                    <span class="label">{{ 'BULK.FAILED' | translate }}</span>
                   </div>
                 </div>
                 <ion-progress-bar 
@@ -110,7 +112,7 @@ export interface BulkOperationResult {
                   [color]="r.failedCount > 0 ? 'warning' : 'success'">
                 </ion-progress-bar>
                 <p class="summary-text">
-                  전체 {{ r.totalCount }}건 중 {{ r.successCount }}건 처리 완료
+                  {{ 'BULK.SUMMARY' | translate: { total: r.totalCount, success: r.successCount } }}
                 </p>
               </ion-card-content>
             </ion-card>
@@ -120,7 +122,7 @@ export interface BulkOperationResult {
               <div class="failed-section">
                 <h3>
                   <ion-icon name="alert-circle-outline" color="danger"></ion-icon>
-                  실패 항목 ({{ failedItems().length }})
+                  {{ 'BULK.FAILED_ITEMS' | translate: { count: failedItems().length } }}
                 </h3>
                 <ion-list>
                   @for (item of failedItems(); track item.id) {
@@ -128,7 +130,7 @@ export interface BulkOperationResult {
                       <ion-icon name="close-circle-outline" color="danger" slot="start"></ion-icon>
                       <ion-label>
                         <h3>{{ item.label }}</h3>
-                        <p>{{ item.error || '알 수 없는 오류' }}</p>
+                        <p>{{ item.error || ('BULK.UNKNOWN_ERROR' | translate) }}</p>
                       </ion-label>
                     </ion-item>
                   }
@@ -141,7 +143,7 @@ export interface BulkOperationResult {
               <div class="success-section">
                 <h3>
                   <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-                  성공 항목 ({{ successItems().length }})
+                  {{ 'BULK.SUCCESS_ITEMS' | translate: { count: successItems().length } }}
                 </h3>
                 <ion-list>
                   @for (item of successItems(); track item.id) {
@@ -159,11 +161,11 @@ export interface BulkOperationResult {
               @if (r.failedCount > 0) {
                 <ion-button expand="block" color="primary" (click)="retryFailed()">
                   <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                  실패 항목 재시도 ({{ r.failedCount }}건)
+                  {{ 'BULK.RETRY_FAILED' | translate: { count: r.failedCount } }}
                 </ion-button>
               }
               <ion-button expand="block" fill="outline" (click)="onClose()">
-                닫기
+                {{ 'COMMON.CLOSE' | translate }}
               </ion-button>
             </div>
           }

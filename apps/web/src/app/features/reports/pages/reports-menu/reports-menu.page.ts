@@ -1,67 +1,75 @@
+// apps/web/src/app/features/reports/pages/reports-menu/reports-menu.page.ts
+// Reports menu page - Navigation hub for all report features
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-reports-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon],
+  imports: [CommonModule, RouterLink, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>리포트</ion-title>
+        <!-- 리포트 메뉴 타이틀 -->
+        <ion-title>{{ 'REPORTS.MENU.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
       <div class="page-header">
-        <h1>리포트</h1>
-        <p>진행 현황 및 데이터 분석</p>
+        <h1>{{ 'REPORTS.MENU.TITLE' | translate }}</h1>
+        <p>{{ 'REPORTS.MENU.SUBTITLE' | translate }}</p>
       </div>
 
       <div class="menu-cards">
+        <!-- 진행현황 대시보드 메뉴 -->
         <a class="menu-card" routerLink="progress">
           <div class="card-icon primary">
             <ion-icon name="stats-chart-outline"></ion-icon>
           </div>
           <div class="card-content">
-            <h3>진행현황 대시보드</h3>
-            <p>설치기사별/지점별 진행 현황</p>
+            <h3>{{ 'REPORTS.MENU.PROGRESS_DASHBOARD' | translate }}</h3>
+            <p>{{ 'REPORTS.MENU.PROGRESS_DASHBOARD_DESC' | translate }}</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
         </a>
 
+        <!-- 고객 이력 조회 메뉴 -->
         <a class="menu-card" routerLink="customer-history">
           <div class="card-icon success">
             <ion-icon name="people-outline"></ion-icon>
           </div>
           <div class="card-content">
-            <h3>고객 이력 조회</h3>
-            <p>고객별 주문/설치 이력 검색</p>
+            <h3>{{ 'REPORTS.MENU.CUSTOMER_HISTORY' | translate }}</h3>
+            <p>{{ 'REPORTS.MENU.CUSTOMER_HISTORY_DESC' | translate }}</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
         </a>
 
+        <!-- 폐가전 집계 메뉴 -->
         <a class="menu-card" routerLink="waste-summary">
           <div class="card-icon warning">
             <ion-icon name="trash-outline"></ion-icon>
           </div>
           <div class="card-content">
-            <h3>폐가전 집계</h3>
-            <p>폐가전 회수 현황 및 통계</p>
+            <h3>{{ 'REPORTS.MENU.WASTE_SUMMARY' | translate }}</h3>
+            <p>{{ 'REPORTS.MENU.WASTE_SUMMARY_DESC' | translate }}</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
         </a>
 
+        <!-- 데이터 내보내기 메뉴 -->
         <a class="menu-card" routerLink="export">
           <div class="card-icon secondary">
             <ion-icon name="download-outline"></ion-icon>
           </div>
           <div class="card-content">
-            <h3>데이터 내보내기</h3>
-            <p>ECOAS, CSV, PDF 출력</p>
+            <h3>{{ 'REPORTS.MENU.EXPORT' | translate }}</h3>
+            <p>{{ 'REPORTS.MENU.EXPORT_DESC' | translate }}</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
         </a>

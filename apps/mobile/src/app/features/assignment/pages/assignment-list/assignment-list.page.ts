@@ -29,6 +29,7 @@ import {
   InfiniteScrollCustomEvent,
   ModalController,
 } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 import { OrderFilterModal, FilterContext } from '../../../../shared/components/order-filter/order-filter.modal';
 import { addIcons } from 'ionicons';
 import {
@@ -53,6 +54,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
   imports: [
     CommonModule,
     RouterLink,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -153,7 +155,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
                 </p>
                 <p>
                   <ion-icon name="person-outline"></ion-icon>
-                  {{ order.installerName || '미배정' }}
+                  {{ order.installerName || ('ASSIGNMENT.UNASSIGNED' | translate) }}
                 </p>
                 <p class="product-summary">{{ order.customerAddress }}</p>
               </ion-label>
@@ -371,9 +373,9 @@ export class AssignmentListPage implements OnInit {
 
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
-      [OrderStatus.UNASSIGNED]: '미배정',
-      [OrderStatus.ASSIGNED]: '배정',
-      [OrderStatus.CONFIRMED]: '확정',
+      [OrderStatus.UNASSIGNED]: 'ASSIGNMENT.STATUS.UNASSIGNED',
+      [OrderStatus.ASSIGNED]: 'ASSIGNMENT.STATUS.ASSIGNED',
+      [OrderStatus.CONFIRMED]: 'ASSIGNMENT.STATUS.CONFIRMED',
     };
     return labels[status] || status;
   }

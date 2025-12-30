@@ -19,6 +19,7 @@ import {
   ActionSheetController,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { 
   cameraOutline, 
@@ -52,6 +53,7 @@ const MAX_FILES = 10;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonButton,
     IonIcon,
     IonSpinner,
@@ -62,7 +64,7 @@ const MAX_FILES = 10;
     <div class="file-attachment-container">
       <!-- 헤더 -->
       <div class="header">
-        <span class="title">첨부 파일</span>
+        <span class="title">{{ 'FILE_ATTACHMENT.TITLE' | translate }}</span>
         <ion-badge [color]="attachments().length >= maxFiles ? 'danger' : 'primary'">
           {{ attachments().length }} / {{ maxFiles }}
         </ion-badge>
@@ -113,7 +115,7 @@ const MAX_FILES = 10;
               <ion-spinner name="crescent"></ion-spinner>
             } @else {
               <ion-icon name="add-outline"></ion-icon>
-              <span>파일 추가</span>
+              <span>{{ 'FILE_ATTACHMENT.ADD_FILE' | translate }}</span>
             }
           </div>
         }
@@ -121,7 +123,7 @@ const MAX_FILES = 10;
 
       <!-- 안내 메시지 -->
       <p class="help-text">
-        최대 {{ maxFiles }}개, 각 {{ formatSize(maxFileSize) }}까지 업로드 가능합니다.
+        {{ 'FILE_ATTACHMENT.HELP_TEXT' | translate: { maxFiles: maxFiles, maxSize: formatSize(maxFileSize) } }}
       </p>
 
       <!-- Hidden file input -->
@@ -293,6 +295,7 @@ const MAX_FILES = 10;
 export class FileAttachmentComponent {
   private actionSheetCtrl = inject(ActionSheetController);
   private toastCtrl = inject(ToastController);
+  private translate = inject(TranslateService);
 
   // Inputs
   attachments = input<FileAttachment[]>([]);
@@ -334,20 +337,20 @@ export class FileAttachmentComponent {
 
   async openFilePicker() {
     const actionSheet = await this.actionSheetCtrl.create({
-      header: '파일 추가',
+      header: this.translate.instant('FILE_ATTACHMENT.ADD_FILE'),
       buttons: [
         {
-          text: '카메라',
+          text: this.translate.instant('FILE_ATTACHMENT.CAMERA'),
           icon: 'camera-outline',
           handler: () => this.openCamera(),
         },
         {
-          text: '갤러리',
+          text: this.translate.instant('FILE_ATTACHMENT.GALLERY'),
           icon: 'image-outline',
           handler: () => this.selectFromGallery(),
         },
         {
-          text: '취소',
+          text: this.translate.instant('COMMON.BUTTON.CANCEL'),
           role: 'cancel',
         },
       ],
@@ -373,11 +376,13 @@ export class FileAttachmentComponent {
     const validFiles: File[] = [];
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        this.showToast(`${file.name}이(가) 5MB를 초과합니다.`, 'warning');
+        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.SIZE_EXCEEDED', { fileName: file.name });
+        this.showToast(msg, 'warning');
         continue;
       }
       if (this.attachments().length + validFiles.length >= MAX_FILES) {
-        this.showToast('최대 10개까지만 첨부할 수 있습니다.', 'warning');
+        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', { maxFiles: MAX_FILES });
+        this.showToast(msg, 'warning');
         break;
       }
       validFiles.push(file);

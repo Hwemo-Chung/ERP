@@ -6,6 +6,7 @@
  */
 import { Injectable, inject, signal } from '@angular/core';
 import { Platform, AlertController } from '@ionic/angular/standalone';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface ScanResult {
   hasContent: boolean;
@@ -17,6 +18,7 @@ export interface ScanResult {
 export class BarcodeScannerService {
   private readonly platform = inject(Platform);
   private readonly alertCtrl = inject(AlertController);
+  private readonly translate = inject(TranslateService);
 
   private readonly _isScanning = signal(false);
   readonly isScanning = this._isScanning.asReadonly();
@@ -68,15 +70,15 @@ export class BarcodeScannerService {
   private async showManualInputDialog(): Promise<ScanResult> {
     return new Promise<ScanResult>(async (resolve) => {
       const alert = await this.alertCtrl.create({
-        header: '시리얼 번호 입력',
+        header: this.translate.instant('BARCODE.INPUT_HEADER'),
         message: this.isNativePlatform() 
-          ? '시리얼 번호를 입력하세요.'
-          : '바코드 스캐너는 모바일 앱에서 사용 가능합니다.\n직접 입력해 주세요.',
+          ? this.translate.instant('BARCODE.INPUT_MESSAGE_NATIVE')
+          : this.translate.instant('BARCODE.INPUT_MESSAGE_WEB'),
         inputs: [
           {
             name: 'serial',
             type: 'text',
-            placeholder: '시리얼 번호 (10-20자)',
+            placeholder: this.translate.instant('BARCODE.PLACEHOLDER'),
             attributes: {
               maxlength: 20,
               minlength: 10,
@@ -85,12 +87,12 @@ export class BarcodeScannerService {
         ],
         buttons: [
           {
-            text: '취소',
+            text: this.translate.instant('COMMON.CANCEL'),
             role: 'cancel',
             handler: () => resolve({ hasContent: false, content: '' }),
           },
           {
-            text: '확인',
+            text: this.translate.instant('COMMON.OK'),
             handler: (data) => {
               const serial = data.serial?.trim() || '';
               resolve({

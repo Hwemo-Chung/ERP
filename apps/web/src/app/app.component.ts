@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@
 import { Router, NavigationEnd } from '@angular/router';
 import { Location } from '@angular/common';
 import { IonApp, IonRouterOutlet, IonIcon, AlertController, Platform } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { cloudOfflineOutline, timeOutline } from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
@@ -16,18 +17,18 @@ import { Subject, filter, takeUntil } from 'rxjs';
   selector: 'app-root',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonApp, IonRouterOutlet, IonIcon, CommonModule],
+  imports: [IonApp, IonRouterOutlet, IonIcon, CommonModule, TranslateModule],
   template: `
     @if (networkService.isOffline()) {
       <div class="offline-banner">
         <ion-icon name="cloud-offline-outline"></ion-icon>
-        오프라인 모드 - 온라인 복구 시 자동 동기화됩니다
+        {{ 'APP.OFFLINE_MODE' | translate }}
       </div>
     }
     @if (sessionManager.showWarning()) {
       <div class="session-warning-banner">
         <ion-icon name="time-outline"></ion-icon>
-        세션이 {{ formatRemainingTime() }} 후 만료됩니다
+        {{ 'APP.SESSION_EXPIRING' | translate: { time: formatRemainingTime() } }}
       </div>
     }
     <ion-app>
@@ -72,6 +73,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly location = inject(Location);
   private readonly alertCtrl = inject(AlertController);
   private readonly platform = inject(Platform);
+  private readonly translate = inject(TranslateService);
   
   private readonly destroy$ = new Subject<void>();
   private lastBackPress = 0;
@@ -126,9 +128,9 @@ export class AppComponent implements OnInit, OnDestroy {
           this.lastBackPress = now;
           // Show toast or alert
           const alert = await this.alertCtrl.create({
-            message: '뒤로 버튼을 한 번 더 누르면 앱이 종료됩니다.',
+            message: this.translate.instant('APP.BACK_TO_EXIT'),
             cssClass: 'exit-warning-toast',
-            buttons: ['확인'],
+            buttons: [this.translate.instant('COMMON.BUTTON.CONFIRM')],
           });
           await alert.present();
           setTimeout(() => alert.dismiss(), 2000);
@@ -140,15 +142,15 @@ export class AppComponent implements OnInit, OnDestroy {
       const hasUnsavedData = this.checkUnsavedData();
       if (hasUnsavedData) {
         const alert = await this.alertCtrl.create({
-          header: '저장하지 않은 변경사항',
-          message: '저장하지 않은 변경사항이 있습니다. 나가시겠습니까?',
+          header: this.translate.instant('APP.UNSAVED_CHANGES.TITLE'),
+          message: this.translate.instant('APP.UNSAVED_CHANGES.MESSAGE'),
           buttons: [
             {
-              text: '취소',
+              text: this.translate.instant('COMMON.BUTTON.CANCEL'),
               role: 'cancel',
             },
             {
-              text: '나가기',
+              text: this.translate.instant('APP.UNSAVED_CHANGES.LEAVE'),
               role: 'confirm',
               handler: () => {
                 if (canGoBack) {

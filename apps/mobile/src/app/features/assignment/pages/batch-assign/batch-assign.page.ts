@@ -33,6 +33,7 @@ import {
   AlertController,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   peopleOutline,
@@ -61,6 +62,7 @@ interface UnassignedOrder {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -261,6 +263,7 @@ export class BatchAssignPage implements OnInit {
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
+  protected readonly translate = inject(TranslateService);
 
   readonly ordersStore = inject(OrdersStore);
   readonly installersStore = inject(InstallersStore);
@@ -414,13 +417,16 @@ export class BatchAssignPage implements OnInit {
     const installerName = this.installers().find(i => i.id === this.selectedInstallerId)?.name || '';
     const appointmentDate = this.selectedDate.split('T')[0];
 
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const assignBtn = await this.translate.get('COMMON.BUTTONS.ASSIGN').toPromise();
+
     const alert = await this.alertCtrl.create({
       header: '일괄 배정',
       message: `${selectedOrders.length}건을 ${installerName}에게 배정하시겠습니까?`,
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: cancelBtn, role: 'cancel' },
         {
-          text: '배정',
+          text: assignBtn,
           handler: async () => {
             await this.performBatchAssign(selectedOrders, appointmentDate);
           },

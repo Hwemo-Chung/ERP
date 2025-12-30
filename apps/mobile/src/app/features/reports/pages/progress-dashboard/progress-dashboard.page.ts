@@ -155,9 +155,9 @@ export class ProgressDashboardPage implements OnInit {
 
   protected readonly viewTypeLabel = computed(() => {
     const labels: Record<ViewType, string> = {
-      installer: '설치기사별',
-      branch: '지점별',
-      status: '상태별',
+      installer: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.INSTALLER',
+      branch: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.BRANCH',
+      status: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.STATUS',
     };
     return labels[this.viewType()];
   });

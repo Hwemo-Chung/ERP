@@ -1,4 +1,5 @@
 // apps/web/src/app/features/settings/pages/split-order/split-order.page.ts
+// i18n 적용됨 - 번역 키: ORDERS.SPLIT.*
 import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +12,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { gitBranchOutline, addOutline, removeOutline, saveOutline, personOutline } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 
@@ -36,12 +38,13 @@ interface SplitItem {
     CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
     IonLabel, IonInput, IonButton, IonIcon, IonSpinner, IonSelect, IonSelectOption,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/assignment"></ion-back-button></ion-buttons>
-        <ion-title>분할 주문</ion-title>
+        <ion-title>{{ 'ORDERS.SPLIT.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -49,17 +52,17 @@ interface SplitItem {
       <!-- Order Info -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title><ion-icon name="git-branch-outline"></ion-icon> 주문 분할</ion-card-title>
+          <ion-card-title><ion-icon name="git-branch-outline"></ion-icon> {{ 'ORDERS.SPLIT.CARD_TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           @if (order()) {
-            <p><strong>주문번호:</strong> {{ order()!.erpOrderNumber }}</p>
-            <p><strong>고객명:</strong> {{ order()!.customerName }}</p>
-            <p><strong>예약일:</strong> {{ order()!.appointmentDate || '-' }}</p>
+            <p><strong>{{ 'ORDERS.SPLIT.ORDER_NUMBER' | translate }}</strong> {{ order()!.erpOrderNumber }}</p>
+            <p><strong>{{ 'ORDERS.SPLIT.CUSTOMER_NAME' | translate }}</strong> {{ order()!.customerName }}</p>
+            <p><strong>{{ 'ORDERS.SPLIT.APPOINTMENT_DATE' | translate }}</strong> {{ order()!.appointmentDate || '-' }}</p>
           } @else {
-            <p>주문번호: {{ orderId }}</p>
+            <p>{{ 'ORDERS.SPLIT.ORDER_NUMBER' | translate }} {{ orderId }}</p>
           }
-          <p class="sub">다중 제품 주문을 여러 설치기사에게 분할 배정합니다.</p>
+          <p class="sub">{{ 'ORDERS.SPLIT.DESCRIPTION' | translate }}</p>
         </ion-card-content>
       </ion-card>
 
@@ -72,10 +75,10 @@ interface SplitItem {
               <ion-card-title>{{ item.productName }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              <p><strong>제품코드:</strong> {{ item.productCode }}</p>
-              <p><strong>총 수량:</strong> {{ item.totalQty }}개</p>
+              <p><strong>{{ 'ORDERS.SPLIT.PRODUCT_CODE' | translate }}</strong> {{ item.productCode }}</p>
+              <p><strong>{{ 'ORDERS.SPLIT.TOTAL_QTY' | translate }}</strong> {{ item.totalQty }}{{ 'ORDERS.SPLIT.QTY_SUFFIX' | translate }}</p>
               <p class="remaining" [class.error]="getRemainingQty(item) < 0">
-                <strong>남은 수량:</strong> {{ getRemainingQty(item) }}개
+                <strong>{{ 'ORDERS.SPLIT.REMAINING_QTY' | translate }}</strong> {{ getRemainingQty(item) }}{{ 'ORDERS.SPLIT.QTY_SUFFIX' | translate }}
               </p>
               
               <ion-list>
@@ -84,13 +87,13 @@ interface SplitItem {
                     <ion-icon name="person-outline" slot="start"></ion-icon>
                     <ion-input 
                       type="text" 
-                      placeholder="설치기사명"
+                      [placeholder]="'ORDERS.SPLIT.INSTALLER_PLACEHOLDER' | translate"
                       [(ngModel)]="split.installerName"
                       style="flex:2"
                     ></ion-input>
                     <ion-input 
                       type="number" 
-                      placeholder="수량"
+                      [placeholder]="'ORDERS.SPLIT.QTY_PLACEHOLDER' | translate"
                       [(ngModel)]="split.qty" 
                       min="0" 
                       [max]="item.totalQty"
@@ -104,12 +107,12 @@ interface SplitItem {
               </ion-list>
               
               <ion-button fill="clear" size="small" (click)="addSplit(item)">
-                <ion-icon name="add-outline" slot="start"></ion-icon>분할 추가
+                <ion-icon name="add-outline" slot="start"></ion-icon>{{ 'ORDERS.SPLIT.ADD_SPLIT' | translate }}
               </ion-button>
             </ion-card-content>
           </ion-card>
         } @empty {
-          <div class="empty">분할 가능한 제품이 없습니다</div>
+          <div class="empty">{{ 'ORDERS.SPLIT.EMPTY' | translate }}</div>
         }
 
         @if (items().length > 0) {
@@ -119,7 +122,7 @@ interface SplitItem {
             (click)="saveSplit()"
           >
             <ion-icon name="save-outline" slot="start"></ion-icon>
-            분할 저장
+            {{ 'ORDERS.SPLIT.SAVE' | translate }}
           </ion-button>
         }
       }
@@ -140,6 +143,7 @@ export class SplitOrderPage implements OnInit {
   private readonly toastCtrl = inject(ToastController);
   private readonly alertCtrl = inject(AlertController);
   private readonly ordersStore = inject(OrdersStore);
+  private readonly translate = inject(TranslateService);
 
   protected readonly orderId = this.route.snapshot.paramMap.get('id') || '';
   protected readonly isLoading = signal(false);
@@ -193,9 +197,15 @@ export class SplitOrderPage implements OnInit {
   }
 
   async saveSplit() {
+    // 비동기 핸들러를 위한 변수 캡처
+    const translateService = this.translate;
+    const toastCtrl = this.toastCtrl;
+    const router = this.router;
+    const ordersStore = this.ordersStore;
+
     if (!this.isValid()) {
       const toast = await this.toastCtrl.create({
-        message: '모든 수량이 배정되어야 합니다.',
+        message: translateService.instant('ORDERS.SPLIT.TOAST.QTY_WARNING'),
         duration: 2000,
         color: 'warning',
       });
@@ -204,12 +214,12 @@ export class SplitOrderPage implements OnInit {
     }
 
     const alert = await this.alertCtrl.create({
-      header: '분할 저장',
-      message: '주문을 분할하시겠습니까? 이 작업은 취소할 수 없습니다.',
+      header: translateService.instant('ORDERS.SPLIT.CONFIRM.TITLE'),
+      message: translateService.instant('ORDERS.SPLIT.CONFIRM.MESSAGE'),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: translateService.instant('ORDERS.SPLIT.CONFIRM.CANCEL'), role: 'cancel' },
         {
-          text: '저장',
+          text: translateService.instant('ORDERS.SPLIT.CONFIRM.SAVE'),
           handler: async () => {
             try {
               // Call API to split order
@@ -222,27 +232,27 @@ export class SplitOrderPage implements OnInit {
                 })),
               }));
 
-              const success = await this.ordersStore.splitOrder(this.orderId, splits);
+              const success = await ordersStore.splitOrder(this.orderId, splits);
               
               if (success) {
-                const toast = await this.toastCtrl.create({
-                  message: '분할이 저장되었습니다.',
+                const toast = await toastCtrl.create({
+                  message: translateService.instant('ORDERS.SPLIT.TOAST.SUCCESS'),
                   duration: 2000,
                   color: 'success',
                 });
                 await toast.present();
-                this.router.navigate(['/tabs/assignment']);
+                router.navigate(['/tabs/assignment']);
               } else {
-                const toast = await this.toastCtrl.create({
-                  message: this.ordersStore.error() || '분할 저장에 실패했습니다.',
+                const toast = await toastCtrl.create({
+                  message: ordersStore.error() || translateService.instant('ORDERS.SPLIT.TOAST.ERROR'),
                   duration: 2000,
                   color: 'danger',
                 });
                 await toast.present();
               }
             } catch (error) {
-              const toast = await this.toastCtrl.create({
-                message: '저장 중 오류가 발생했습니다.',
+              const toast = await toastCtrl.create({
+                message: translateService.instant('ORDERS.SPLIT.TOAST.SAVE_ERROR'),
                 duration: 2000,
                 color: 'danger',
               });

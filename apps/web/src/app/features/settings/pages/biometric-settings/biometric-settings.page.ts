@@ -28,6 +28,7 @@ import {
   AlertController,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { fingerPrintOutline, shieldCheckmarkOutline, lockClosedOutline } from 'ionicons/icons';
 import { Subject } from 'rxjs';
@@ -42,6 +43,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -67,7 +69,8 @@ import { AuthService } from '../../../../core/services/auth.service';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/settings"></ion-back-button>
         </ion-buttons>
-        <ion-title>생체 인증 설정</ion-title>
+        <!-- 생체 인증 설정 타이틀 -->
+        <ion-title>{{ 'SETTINGS.BIOMETRIC.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -77,25 +80,25 @@ import { AuthService } from '../../../../core/services/auth.service';
           <ion-spinner name="crescent"></ion-spinner>
         </div>
       } @else if (!isAvailable()) {
-        <!-- Not available -->
+        <!-- Not available - 생체 인증 사용 불가 -->
         <ion-card>
           <ion-card-header>
             <ion-card-title>
               <ion-icon name="lock-closed-outline"></ion-icon>
-              생체 인증 사용 불가
+              {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_TITLE' | translate }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p>이 기기에서는 생체 인증을 사용할 수 없습니다.</p>
+            <p>{{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE' | translate }}</p>
             <ion-note>
-              • 웹 브라우저에서는 지원되지 않습니다<br>
-              • 네이티브 앱(Android/iOS)에서만 사용 가능합니다<br>
-              • 기기에 생체 인증이 등록되어 있어야 합니다
+              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.WEB_BROWSER' | translate }}<br>
+              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.NATIVE_ONLY' | translate }}<br>
+              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.MUST_REGISTER' | translate }}
             </ion-note>
           </ion-card-content>
         </ion-card>
       } @else {
-        <!-- Available -->
+        <!-- Available - 생체 인증 가능 -->
         <ion-card>
           <ion-card-header>
             <ion-card-title>
@@ -104,14 +107,14 @@ import { AuthService } from '../../../../core/services/auth.service';
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p>빠르고 안전한 로그인을 위해 생체 인증을 사용하세요.</p>
+            <p>{{ 'SETTINGS.BIOMETRIC.QUICK_SECURE' | translate }}</p>
             
             <ion-list lines="none">
               <ion-item>
                 <ion-icon slot="start" name="shield-checkmark-outline" color="primary"></ion-icon>
                 <ion-label>
-                  <h3>생체 인증 활성화</h3>
-                  <p>다음 로그인부터 {{ biometryTypeName() }}로 간편하게 로그인할 수 있습니다</p>
+                  <h3>{{ 'SETTINGS.BIOMETRIC.ENABLE_LABEL' | translate }}</h3>
+                  <p>{{ 'SETTINGS.BIOMETRIC.ENABLE_NEXT_LOGIN' | translate:{ type: biometryTypeName() } }}</p>
                 </ion-label>
                 <ion-toggle
                   [checked]="isEnabled()"
@@ -123,38 +126,38 @@ import { AuthService } from '../../../../core/services/auth.service';
 
             @if (isEnabled() && lastUsedAt()) {
               <ion-note class="last-used">
-                마지막 사용: {{ formatLastUsed(lastUsedAt()!) }}
+                {{ 'SETTINGS.BIOMETRIC.LAST_USED' | translate }}: {{ formatLastUsed(lastUsedAt()!) }}
               </ion-note>
             }
           </ion-card-content>
         </ion-card>
 
-        <!-- Security Info -->
+        <!-- Security Info - 보안 정보 -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>보안 정보</ion-card-title>
+            <ion-card-title>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.TITLE' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
               <ion-item>
                 <ion-icon slot="start" name="shield-checkmark-outline" color="success"></ion-icon>
                 <ion-label class="ion-text-wrap">
-                  <h3>안전한 저장</h3>
-                  <p>인증 정보는 기기의 보안 저장소에 암호화되어 저장됩니다</p>
+                  <h3>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.SAFE_STORAGE' | translate }}</h3>
+                  <p>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.SAFE_STORAGE_DESC' | translate }}</p>
                 </ion-label>
               </ion-item>
               <ion-item>
                 <ion-icon slot="start" name="lock-closed-outline" color="success"></ion-icon>
                 <ion-label class="ion-text-wrap">
-                  <h3>기기 전용</h3>
-                  <p>생체 인증은 이 기기에서만 작동하며 다른 기기와 공유되지 않습니다</p>
+                  <h3>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.DEVICE_ONLY' | translate }}</h3>
+                  <p>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.DEVICE_ONLY_DESC' | translate }}</p>
                 </ion-label>
               </ion-item>
               <ion-item>
                 <ion-icon slot="start" name="finger-print-outline" color="success"></ion-icon>
                 <ion-label class="ion-text-wrap">
-                  <h3>재인증 필요</h3>
-                  <p>30일 이상 사용하지 않으면 비밀번호로 다시 로그인해야 합니다</p>
+                  <h3>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.REAUTH_REQUIRED' | translate }}</h3>
+                  <p>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.REAUTH_REQUIRED_DESC' | translate }}</p>
                 </ion-label>
               </ion-item>
             </ion-list>
@@ -170,7 +173,7 @@ import { AuthService } from '../../../../core/services/auth.service';
             [disabled]="isProcessing()"
           >
             <ion-icon slot="start" name="finger-print-outline"></ion-icon>
-            생체 인증 테스트
+            {{ 'SETTINGS.BIOMETRIC.TEST_BUTTON' | translate }}
           </ion-button>
         }
       }
@@ -218,6 +221,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly isLoading = signal(true);
@@ -301,9 +305,12 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
       }
 
       await this.biometricService.enableBiometric(user.id, refreshToken);
+      
+      // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
+      const translateService = this.translate;
 
       const toast = await this.toastCtrl.create({
-        message: '생체 인증이 활성화되었습니다',
+        message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.ENABLE_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
@@ -313,9 +320,11 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
 
       // Revert toggle
       this.isEnabled.set(false);
+      
+      const translateService = this.translate;
 
       const toast = await this.toastCtrl.create({
-        message: error.message || '생체 인증 활성화에 실패했습니다',
+        message: error.message || translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),
         duration: 3000,
         color: 'danger',
       });
@@ -326,22 +335,26 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * 생체 인증 비활성화
    * Disable biometric authentication
    */
   private async disableBiometric(): Promise<void> {
+    // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
+    const translateService = this.translate;
+    
     const alert = await this.alertCtrl.create({
-      header: '생체 인증 비활성화',
-      message: '생체 인증을 비활성화하시겠습니까? 다음 로그인부터 비밀번호를 입력해야 합니다.',
+      header: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.TITLE'),
+      message: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.MESSAGE'),
       buttons: [
         {
-          text: '취소',
+          text: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.CANCEL'),
           role: 'cancel',
           handler: () => {
             this.isEnabled.set(true);
           },
         },
         {
-          text: '비활성화',
+          text: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.CONFIRM'),
           role: 'destructive',
           handler: async () => {
             this.isProcessing.set(true);
@@ -350,7 +363,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
               await this.biometricService.disableBiometric();
 
               const toast = await this.toastCtrl.create({
-                message: '생체 인증이 비활성화되었습니다',
+                message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.DISABLE_SUCCESS'),
                 duration: 2000,
                 color: 'success',
               });
@@ -362,7 +375,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
               this.isEnabled.set(true);
 
               const toast = await this.toastCtrl.create({
-                message: '생체 인증 비활성화에 실패했습니다',
+                message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),
                 duration: 3000,
                 color: 'danger',
               });
@@ -379,17 +392,20 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * 생체 인증 테스트
    * Test biometric authentication
    */
   async testBiometric(): Promise<void> {
     this.isProcessing.set(true);
+    // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
+    const translateService = this.translate;
 
     try {
       const result = await this.biometricService.authenticate();
 
       if (result) {
         const toast = await this.toastCtrl.create({
-          message: '생체 인증에 성공했습니다',
+          message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.TEST_SUCCESS'),
           duration: 2000,
           color: 'success',
         });
@@ -401,7 +417,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
       console.error('Biometric test failed:', error);
 
       const toast = await this.toastCtrl.create({
-        message: '생체 인증에 실패했습니다',
+        message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),
         duration: 3000,
         color: 'danger',
       });
@@ -412,6 +428,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * 마지막 사용 시간 포맷
    * Format last used timestamp
    */
   protected formatLastUsed(timestamp: number): string {
@@ -422,11 +439,13 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return '방금 전';
-    if (diffMins < 60) return `${diffMins}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
-    if (diffDays < 7) return `${diffDays}일 전`;
+    if (diffMins < 1) return this.translate.instant('COMMON.TIME_AGO.JUST_NOW');
+    if (diffMins < 60) return this.translate.instant('COMMON.TIME_AGO.MINUTES_AGO', { count: diffMins });
+    if (diffHours < 24) return this.translate.instant('COMMON.TIME_AGO.HOURS_AGO', { count: diffHours });
+    if (diffDays < 7) return this.translate.instant('COMMON.TIME_AGO.DAYS_AGO', { count: diffDays });
     
-    return date.toLocaleDateString('ko-KR');
+    // 7일 이상이면 locale에 맞게 날짜 표시
+    const lang = this.translate.currentLang || 'ko';
+    return date.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US');
   }
 }

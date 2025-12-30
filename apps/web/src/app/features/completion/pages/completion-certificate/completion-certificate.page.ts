@@ -1,3 +1,9 @@
+/**
+ * 설치 확인서 페이지 컴포넌트
+ * 설치 완료 후 확인서 발행 및 서명 처리
+ * - 주문 정보, 설치 제품 목록, 서명란 표시
+ * - 고객/설치기사 서명 후 확인서 발행
+ */
 import { Component, signal, computed, ChangeDetectionStrategy, inject, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,6 +31,7 @@ import {
   createOutline,
   checkmarkCircleOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -36,6 +43,7 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -58,7 +66,7 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
         <ion-buttons slot="start">
           <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
         </ion-buttons>
-        <ion-title>설치 확인서</ion-title>
+        <ion-title>{{ 'COMPLETION.CERTIFICATE.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="printCertificate()">
             <ion-icon name="print-outline"></ion-icon>
@@ -77,37 +85,37 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
         <ion-card class="certificate-card">
           <ion-card-content>
             <div class="certificate" #certificateContent>
-              <h1>설치 확인서</h1>
+              <h1>{{ 'COMPLETION.CERTIFICATE.DOCUMENT_TITLE' | translate }}</h1>
               <div class="cert-section">
-                <h3>주문 정보</h3>
+                <h3>{{ 'COMPLETION.CERTIFICATE.ORDER_INFO' | translate }}</h3>
                 <table>
                   <tr>
-                    <td>주문번호</td>
+                    <td>{{ 'COMPLETION.CERTIFICATE.ORDER_NUMBER' | translate }}</td>
                     <td>{{ orderInfo().orderNumber }}</td>
                   </tr>
                   <tr>
-                    <td>설치일</td>
+                    <td>{{ 'COMPLETION.CERTIFICATE.INSTALL_DATE' | translate }}</td>
                     <td>{{ orderInfo().installDate }}</td>
                   </tr>
                   <tr>
-                    <td>고객명</td>
+                    <td>{{ 'COMPLETION.CERTIFICATE.CUSTOMER_NAME' | translate }}</td>
                     <td>{{ orderInfo().customerName }}</td>
                   </tr>
                   <tr>
-                    <td>설치주소</td>
+                    <td>{{ 'COMPLETION.CERTIFICATE.INSTALL_ADDRESS' | translate }}</td>
                     <td>{{ orderInfo().address }}</td>
                   </tr>
                 </table>
               </div>
 
               <div class="cert-section">
-                <h3>설치 제품</h3>
+                <h3>{{ 'COMPLETION.CERTIFICATE.PRODUCTS_TITLE' | translate }}</h3>
                 <table>
                   <thead>
                     <tr>
-                      <th>제품명</th>
-                      <th>수량</th>
-                      <th>시리얼번호</th>
+                      <th>{{ 'COMPLETION.CERTIFICATE.PRODUCT_NAME' | translate }}</th>
+                      <th>{{ 'COMPLETION.CERTIFICATE.QUANTITY' | translate }}</th>
+                      <th>{{ 'COMPLETION.CERTIFICATE.SERIAL_NUMBER' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -123,35 +131,35 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
               </div>
 
               <div class="cert-section">
-                <h3>설치 기사</h3>
+                <h3>{{ 'COMPLETION.CERTIFICATE.INSTALLER_TITLE' | translate }}</h3>
                 <p>{{ installerInfo().name }} ({{ installerInfo().company }})</p>
               </div>
 
               <div class="signature-section">
                 <div class="signature-box">
-                  <p>고객 서명</p>
+                  <p>{{ 'COMPLETION.SIGNATURE.CUSTOMER_SIGNATURE' | translate }}</p>
                   <div class="signature-area" (click)="openSignaturePad('customer')">
                     @if (customerSignature()) {
-                      <img [src]="customerSignature()" alt="고객 서명" />
+                      <img [src]="customerSignature()" [alt]="'COMPLETION.CERTIFICATE.CUSTOMER_SIGNATURE_ALT' | translate" />
                     } @else {
-                      <p class="placeholder">터치하여 서명</p>
+                      <p class="placeholder">{{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}</p>
                     }
                   </div>
                 </div>
                 <div class="signature-box">
-                  <p>설치기사 서명</p>
+                  <p>{{ 'COMPLETION.SIGNATURE.INSTALLER_SIGNATURE' | translate }}</p>
                   <div class="signature-area" (click)="openSignaturePad('installer')">
                     @if (installerSignature()) {
-                      <img [src]="installerSignature()" alt="설치기사 서명" />
+                      <img [src]="installerSignature()" [alt]="'COMPLETION.CERTIFICATE.INSTALLER_SIGNATURE_ALT' | translate" />
                     } @else {
-                      <p class="placeholder">터치하여 서명</p>
+                      <p class="placeholder">{{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}</p>
                     }
                   </div>
                 </div>
               </div>
 
               <div class="cert-footer">
-                <p>위와 같이 설치가 완료되었음을 확인합니다.</p>
+                <p>{{ 'COMPLETION.CERTIFICATE.CONFIRMATION_TEXT' | translate }}</p>
                 <p class="date">{{ todayDate }}</p>
               </div>
             </div>
@@ -162,7 +170,7 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
         <div class="action-buttons">
           <ion-button expand="block" fill="outline" (click)="printCertificate()">
             <ion-icon name="print-outline" slot="start"></ion-icon>
-            인쇄
+            {{ 'COMPLETION.CERTIFICATE.PRINT_BTN' | translate }}
           </ion-button>
           <ion-button 
             expand="block" 
@@ -170,7 +178,7 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
             (click)="issueCertificate()"
           >
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            확인서 발행
+            {{ 'COMPLETION.CERTIFICATE.ISSUE_BTN' | translate }}
           </ion-button>
         </div>
       }
@@ -306,6 +314,7 @@ export class CompletionCertificatePage implements OnInit {
   private readonly toastCtrl = inject(ToastController);
   protected readonly ordersStore = inject(OrdersStore);
   private readonly authService = inject(AuthService);
+  private readonly translateService = inject(TranslateService);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
@@ -399,10 +408,17 @@ export class CompletionCertificatePage implements OnInit {
     return !!this.customerSignature() && !!this.installerSignature();
   }
 
+  /**
+   * 확인서 인쇄 (브라우저 인쇄 기능 사용)
+   */
   printCertificate(): void {
     window.print();
   }
 
+  /**
+   * 확인서 발행 처리
+   * 고객 및 설치기사 서명 저장 후 발행 완료 처리
+   */
   async issueCertificate(): Promise<void> {
     try {
       await this.ordersStore.issueCertificate(this.orderId(), {
@@ -411,7 +427,7 @@ export class CompletionCertificatePage implements OnInit {
       });
       
       const toast = await this.toastCtrl.create({
-        message: '확인서가 발행되었습니다.',
+        message: this.translateService.instant('COMPLETION.CERTIFICATE.ISSUED_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
@@ -419,7 +435,7 @@ export class CompletionCertificatePage implements OnInit {
       this.router.navigate(['/tabs/completion/process', this.orderId()]);
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '발행 중 오류가 발생했습니다.',
+        message: this.translateService.instant('COMPLETION.CERTIFICATE.ISSUE_ERROR'),
         duration: 2000,
         color: 'danger',
       });

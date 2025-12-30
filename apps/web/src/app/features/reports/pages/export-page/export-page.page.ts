@@ -1,4 +1,5 @@
 // apps/web/src/app/features/reports/pages/export-page/export-page.page.ts
+// Data export feature page - ECOAS, CSV, PDF export
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +10,7 @@ import {
   IonDatetimeButton, IonModal, IonDatetime,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { downloadOutline, documentOutline, gridOutline, calendarOutline } from 'ionicons/icons';
 import { ReportsService, ExportRequest, ExportResult } from '../../../../core/services/reports.service';
@@ -22,7 +24,8 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    CommonModule, FormsModule, TranslateModule,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
     IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
     IonDatetimeButton, IonModal, IonDatetime,
@@ -31,14 +34,15 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
-        <ion-title>데이터 내보내기</ion-title>
+        <!-- 데이터 내보내기 타이틀 -->
+        <ion-title>{{ 'REPORTS.EXPORT.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Date Range -->
+      <!-- Date Range - 기간 선택 -->
       <ion-card>
-        <ion-card-header><ion-card-title>기간 선택</ion-card-title></ion-card-header>
+        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.DATE_SELECT' | translate }}</ion-card-title></ion-card-header>
         <ion-card-content>
           <div class="date-range">
             <ion-datetime-button datetime="exportStartDate"></ion-datetime-button>
@@ -58,38 +62,38 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
         </ion-card-content>
       </ion-card>
 
-      <!-- Export Type -->
+      <!-- Export Type - 내보내기 유형 -->
       <ion-card>
-        <ion-card-header><ion-card-title>내보내기 유형</ion-card-title></ion-card-header>
+        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.TYPE_SELECT' | translate }}</ion-card-title></ion-card-header>
         <ion-card-content>
           <ion-radio-group [value]="selectedType()" (ionChange)="selectedType.set($any($event).detail.value)">
             <ion-item>
               <ion-radio value="ecoas" slot="start"></ion-radio>
-              <ion-label><h3>ECOAS 포맷</h3><p>레거시 시스템 호환 형식</p></ion-label>
+              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_ECOAS' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_ECOAS_DESC' | translate }}</p></ion-label>
             </ion-item>
             <ion-item>
               <ion-radio value="completed" slot="start"></ion-radio>
-              <ion-label><h3>설치완료 리스트</h3><p>완료된 주문 목록</p></ion-label>
+              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_COMPLETED' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_COMPLETED_DESC' | translate }}</p></ion-label>
             </ion-item>
             <ion-item>
               <ion-radio value="pending" slot="start"></ion-radio>
-              <ion-label><h3>미완료 리스트</h3><p>진행중/대기 주문</p></ion-label>
+              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_PENDING' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_PENDING_DESC' | translate }}</p></ion-label>
             </ion-item>
             <ion-item>
               <ion-radio value="waste" slot="start"></ion-radio>
-              <ion-label><h3>폐가전 회수 집계</h3><p>회수 현황 통계</p></ion-label>
+              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_WASTE' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_WASTE_DESC' | translate }}</p></ion-label>
             </ion-item>
             <ion-item>
               <ion-radio value="raw" slot="start"></ion-radio>
-              <ion-label><h3>Raw 데이터</h3><p>전체 데이터 내보내기</p></ion-label>
+              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_RAW' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_RAW_DESC' | translate }}</p></ion-label>
             </ion-item>
           </ion-radio-group>
         </ion-card-content>
       </ion-card>
 
-      <!-- File Format -->
+      <!-- File Format - 파일 형식 -->
       <ion-card>
-        <ion-card-header><ion-card-title>파일 형식</ion-card-title></ion-card-header>
+        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.FORMAT_SELECT' | translate }}</ion-card-title></ion-card-header>
         <ion-card-content>
           <ion-radio-group [value]="fileFormat()" (ionChange)="fileFormat.set($any($event).detail.value)">
             <ion-item>
@@ -108,34 +112,34 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
         </ion-card-content>
       </ion-card>
 
-      <!-- Export Button -->
+      <!-- Export Button - 내보내기 버튼 -->
       <ion-button expand="block" [disabled]="isExporting()" (click)="exportData()">
         @if (isExporting()) {
           <ion-spinner name="crescent" slot="start"></ion-spinner>
-          처리중...
+          {{ 'REPORTS.EXPORT.PROCESSING' | translate }}
         } @else {
           <ion-icon name="download-outline" slot="start"></ion-icon>
-          내보내기
+          {{ 'REPORTS.EXPORT.EXPORT_BTN' | translate }}
         }
       </ion-button>
 
-      <!-- Export Status -->
+      <!-- Export Status - 내보내기 상태 -->
       @if (exportResult()) {
         <ion-card [color]="exportResult()!.status === 'completed' ? 'success' : exportResult()!.status === 'error' ? 'danger' : 'warning'">
           <ion-card-content>
             @switch (exportResult()!.status) {
-              @case ('pending') { <p>⏳ 내보내기 준비 중...</p> }
-              @case ('processing') { <p>🔄 파일 생성 중...</p> }
+              @case ('pending') { <p>⏳ {{ 'REPORTS.EXPORT.STATUS_PENDING' | translate }}</p> }
+              @case ('processing') { <p>🔄 {{ 'REPORTS.EXPORT.STATUS_PROCESSING' | translate }}</p> }
               @case ('completed') {
-                <p>✅ 내보내기 완료!</p>
+                <p>✅ {{ 'REPORTS.EXPORT.STATUS_COMPLETED' | translate }}</p>
                 @if (exportResult()!.downloadUrl) {
                   <ion-button expand="block" fill="outline" (click)="downloadFile()">
                     <ion-icon name="download-outline" slot="start"></ion-icon>
-                    {{ exportResult()!.fileName || '다운로드' }}
+                    {{ exportResult()!.fileName || ('REPORTS.EXPORT.DOWNLOAD' | translate) }}
                   </ion-button>
                 }
               }
-              @case ('error') { <p>❌ 오류: {{ exportResult()!.error }}</p> }
+              @case ('error') { <p>❌ {{ 'REPORTS.EXPORT.STATUS_ERROR' | translate }}: {{ exportResult()!.error }}</p> }
             }
           </ion-card-content>
         </ion-card>
@@ -151,6 +155,7 @@ export class ExportPagePage {
   private readonly reportsService = inject(ReportsService);
   private readonly authService = inject(AuthService);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly selectedType = signal<ExportType>('ecoas');
   protected readonly fileFormat = signal<FileFormat>('csv');
@@ -169,9 +174,14 @@ export class ExportPagePage {
     return d.toISOString();
   }
 
+  // 데이터 내보내기 실행
   async exportData() {
     this.isExporting.set(true);
     this.exportResult.set(null);
+
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
 
     const request: ExportRequest = {
       type: this.selectedType(),
@@ -189,8 +199,8 @@ export class ExportPagePage {
       if (result.status === 'pending' || result.status === 'processing') {
         this.pollExportStatus(result.id);
       } else if (result.status === 'completed') {
-        const toast = await this.toastCtrl.create({
-          message: '내보내기 완료!',
+        const toast = await toastController.create({
+          message: translateService.instant('REPORTS.EXPORT.SUCCESS'),
           duration: 2000,
           color: 'success',
         });
@@ -200,10 +210,10 @@ export class ExportPagePage {
       this.exportResult.set({
         id: '',
         status: 'error',
-        error: '내보내기 요청 실패',
+        error: translateService.instant('REPORTS.EXPORT.REQUEST_FAILED'),
       });
-      const toast = await this.toastCtrl.create({
-        message: '내보내기 실패',
+      const toast = await toastController.create({
+        message: translateService.instant('REPORTS.EXPORT.FAILED'),
         duration: 2000,
         color: 'danger',
       });
@@ -213,7 +223,11 @@ export class ExportPagePage {
     }
   }
 
+  // 내보내기 상태 폴링
   private pollExportStatus(exportId: string) {
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+
     const poll = () => {
       this.reportsService.getExportStatus(exportId).subscribe({
         next: async (result) => {
@@ -221,8 +235,8 @@ export class ExportPagePage {
           if (result.status === 'pending' || result.status === 'processing') {
             setTimeout(poll, 2000);
           } else if (result.status === 'completed') {
-            const toast = await this.toastCtrl.create({
-              message: '내보내기 완료!',
+            const toast = await toastController.create({
+              message: translateService.instant('REPORTS.EXPORT.SUCCESS'),
               duration: 2000,
               color: 'success',
             });
@@ -233,7 +247,7 @@ export class ExportPagePage {
           this.exportResult.set({
             id: exportId,
             status: 'error',
-            error: '상태 확인 실패',
+            error: translateService.instant('REPORTS.EXPORT.STATUS_CHECK_FAILED'),
           });
         },
       });
@@ -241,6 +255,7 @@ export class ExportPagePage {
     setTimeout(poll, 2000);
   }
 
+  // 파일 다운로드
   downloadFile() {
     const result = this.exportResult();
     if (result?.downloadUrl) {

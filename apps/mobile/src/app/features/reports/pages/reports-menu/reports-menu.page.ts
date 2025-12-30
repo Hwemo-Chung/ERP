@@ -4,34 +4,35 @@ import { RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, returnDownBackOutline } from 'ionicons/icons';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-reports-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon],
+  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, TranslateModule],
   template: `
-    <ion-header><ion-toolbar><ion-title>리포트</ion-title></ion-toolbar></ion-header>
+    <ion-header><ion-toolbar><ion-title>{{ 'REPORTS.TITLE' | translate }}</ion-title></ion-toolbar></ion-header>
     <ion-content class="ion-padding">
       <ion-list>
         <ion-item routerLink="progress" detail>
           <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
-          <ion-label><h2>진행현황 대시보드</h2><p>설치기사별/지점별 진행 현황</p></ion-label>
+          <ion-label><h2>{{ 'REPORTS.MENU.PROGRESS' | translate }}</h2><p>{{ 'REPORTS.MENU.PROGRESS_DESC' | translate }}</p></ion-label>
         </ion-item>
         <ion-item routerLink="customer-history" detail>
           <ion-icon name="people-outline" slot="start"></ion-icon>
-          <ion-label><h2>고객 이력 조회</h2><p>고객별 주문/설치 이력 검색</p></ion-label>
+          <ion-label><h2>{{ 'REPORTS.MENU.CUSTOMER_HISTORY' | translate }}</h2><p>{{ 'REPORTS.MENU.CUSTOMER_HISTORY_DESC' | translate }}</p></ion-label>
         </ion-item>
         <ion-item routerLink="waste-summary" detail>
           <ion-icon name="trash-outline" slot="start"></ion-icon>
-          <ion-label><h2>폐가전 집계</h2><p>폐가전 회수 현황 및 통계</p></ion-label>
+          <ion-label><h2>{{ 'REPORTS.MENU.WASTE_SUMMARY' | translate }}</h2><p>{{ 'REPORTS.MENU.WASTE_SUMMARY_DESC' | translate }}</p></ion-label>
         </ion-item>
         <ion-item routerLink="unreturned-items" detail>
           <ion-icon name="return-down-back-outline" slot="start"></ion-icon>
-          <ion-label><h2>미환입 현황</h2><p>취소건 환입 대상 및 미환입 현황</p></ion-label>
+          <ion-label><h2>{{ 'REPORTS.MENU.UNRETURNED' | translate }}</h2><p>{{ 'REPORTS.MENU.UNRETURNED_DESC' | translate }}</p></ion-label>
         </ion-item>
         <ion-item routerLink="export" detail>
           <ion-icon name="download-outline" slot="start"></ion-icon>
-          <ion-label><h2>데이터 내보내기</h2><p>ECOAS, CSV, PDF 출력</p></ion-label>
+          <ion-label><h2>{{ 'REPORTS.MENU.EXPORT' | translate }}</h2><p>{{ 'REPORTS.MENU.EXPORT_DESC' | translate }}</p></ion-label>
         </ion-item>
       </ion-list>
     </ion-content>

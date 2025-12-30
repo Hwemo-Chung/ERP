@@ -1,3 +1,5 @@
+// apps/web/src/app/features/reports/pages/release-summary/release-summary.page.ts
+// Release summary report - Aggregate release request data by FDC
 import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -28,6 +30,7 @@ import {
   IonModal,
   IonDatetimeButton,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { printOutline, downloadOutline, calendarOutline, filterOutline, chevronBackOutline, searchOutline } from 'ionicons/icons';
 
@@ -50,6 +53,7 @@ interface FdcOption {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -82,7 +86,8 @@ interface FdcOption {
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/reports" text=""></ion-back-button>
         </ion-buttons>
-        <ion-title>출고요청집계표</ion-title>
+        <!-- 출고요청집계표 타이틀 -->
+        <ion-title>{{ 'REPORTS.RELEASE_SUMMARY.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="printReport()" [disabled]="isLoading()">
             <ion-icon slot="icon-only" name="print-outline"></ion-icon>
@@ -96,7 +101,7 @@ interface FdcOption {
 
     <ion-content class="ion-padding">
       <div class="release-summary-container">
-        <!-- Filter Section -->
+        <!-- Filter Section - 필터 섹션 -->
         <div class="filter-section">
           <ion-card class="filter-card">
             <ion-card-content>
@@ -106,7 +111,7 @@ interface FdcOption {
                     <div class="filter-group">
                       <ion-label class="filter-label">
                         <ion-icon name="calendar-outline"></ion-icon>
-                        시작일
+                        {{ 'REPORTS.RELEASE_SUMMARY.START_DATE' | translate }}
                       </ion-label>
                       <ion-datetime-button datetime="startDate"></ion-datetime-button>
                       <ion-modal [keepContentsMounted]="true">
@@ -126,7 +131,7 @@ interface FdcOption {
                     <div class="filter-group">
                       <ion-label class="filter-label">
                         <ion-icon name="calendar-outline"></ion-icon>
-                        종료일
+                        {{ 'REPORTS.RELEASE_SUMMARY.END_DATE' | translate }}
                       </ion-label>
                       <ion-datetime-button datetime="endDate"></ion-datetime-button>
                       <ion-modal [keepContentsMounted]="true">
@@ -146,16 +151,16 @@ interface FdcOption {
                     <div class="filter-group">
                       <ion-label class="filter-label">
                         <ion-icon name="filter-outline"></ion-icon>
-                        FDC 선택
+                        {{ 'REPORTS.RELEASE_SUMMARY.FDC_SELECT' | translate }}
                       </ion-label>
                       <ion-select
                         [value]="selectedFdc()"
                         (ionChange)="onFdcChange($event)"
-                        placeholder="전체"
+                        [placeholder]="'REPORTS.RELEASE_SUMMARY.ALL' | translate"
                         interface="popover"
                         class="fdc-select"
                       >
-                        <ion-select-option value="">전체</ion-select-option>
+                        <ion-select-option value="">{{ 'REPORTS.RELEASE_SUMMARY.ALL' | translate }}</ion-select-option>
                         @for (fdc of fdcOptions(); track fdc.code) {
                           <ion-select-option [value]="fdc.code">{{ fdc.name }}</ion-select-option>
                         }
@@ -168,7 +173,7 @@ interface FdcOption {
                     <ion-searchbar
                       [value]="searchQuery()"
                       (ionInput)="onSearchChange($event)"
-                      placeholder="모델코드 또는 모델명 검색..."
+                      [placeholder]="'REPORTS.RELEASE_SUMMARY.SEARCH_PLACEHOLDER' | translate"
                       debounce="300"
                       class="search-bar"
                     ></ion-searchbar>
@@ -179,7 +184,7 @@ interface FdcOption {
           </ion-card>
         </div>
 
-        <!-- Summary Statistics Cards -->
+        <!-- Summary Statistics Cards - 요약 통계 카드 -->
         <div class="stats-section">
           <ion-grid>
             <ion-row>
@@ -188,7 +193,7 @@ interface FdcOption {
                   <div class="stat-icon">📦</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ totalOrders() }}</div>
-                    <div class="stat-label">총 주문</div>
+                    <div class="stat-label">{{ 'REPORTS.RELEASE_SUMMARY.TOTAL_ORDERS' | translate }}</div>
                   </div>
                 </div>
               </ion-col>
@@ -197,7 +202,7 @@ interface FdcOption {
                   <div class="stat-icon">📊</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ totalQuantity() | number }}</div>
-                    <div class="stat-label">총 수량</div>
+                    <div class="stat-label">{{ 'REPORTS.RELEASE_SUMMARY.TOTAL_QUANTITY' | translate }}</div>
                   </div>
                 </div>
               </ion-col>
@@ -206,7 +211,7 @@ interface FdcOption {
                   <div class="stat-icon">🏢</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ fdcCount() }}</div>
-                    <div class="stat-label">FDC 수</div>
+                    <div class="stat-label">{{ 'REPORTS.RELEASE_SUMMARY.TOTAL_MODELS' | translate }}</div>
                   </div>
                 </div>
               </ion-col>
@@ -214,12 +219,12 @@ interface FdcOption {
           </ion-grid>
         </div>
 
-        <!-- Data Table Section -->
+        <!-- Data Table Section - 데이터 테이블 -->
         <div class="table-section">
           <ion-card class="table-card">
             <ion-card-header>
               <ion-card-title class="table-title">
-                출고요청 집계 내역
+                {{ 'REPORTS.RELEASE_SUMMARY.TITLE' | translate }}
                 <span class="record-count">({{ filteredData().length }}건)</span>
               </ion-card-title>
             </ion-card-header>
@@ -227,22 +232,22 @@ interface FdcOption {
               @if (isLoading()) {
                 <div class="loading-container">
                   <ion-spinner name="crescent"></ion-spinner>
-                  <p>데이터를 불러오는 중...</p>
+                  <p>{{ 'REPORTS.PROGRESS.LOADING' | translate }}</p>
                 </div>
               } @else if (filteredData().length === 0) {
                 <div class="empty-state">
                   <div class="empty-icon">📋</div>
-                  <p>조회된 데이터가 없습니다.</p>
+                  <p>{{ 'REPORTS.PROGRESS.NO_DATA' | translate }}</p>
                 </div>
               } @else {
                 <div class="table-wrapper">
                   <table class="data-table" id="release-summary-table">
                     <thead>
                       <tr>
-                        <th class="th-fdc">FDC명</th>
-                        <th class="th-model-code">모델코드</th>
-                        <th class="th-model-name">모델명</th>
-                        <th class="th-quantity">수량</th>
+                        <th class="th-fdc">{{ 'REPORTS.RELEASE_SUMMARY.FDC_NAME' | translate }}</th>
+                        <th class="th-model-code">{{ 'REPORTS.RELEASE_SUMMARY.MODEL_CODE' | translate }}</th>
+                        <th class="th-model-name">{{ 'REPORTS.RELEASE_SUMMARY.MODEL_NAME' | translate }}</th>
+                        <th class="th-quantity">{{ 'REPORTS.RELEASE_SUMMARY.QUANTITY' | translate }}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -257,7 +262,7 @@ interface FdcOption {
                     </tbody>
                     <tfoot>
                       <tr class="total-row">
-                        <td colspan="3" class="total-label">합계</td>
+                        <td colspan="3" class="total-label">{{ 'REPORTS.RELEASE_SUMMARY.TOTAL' | translate }}</td>
                         <td class="total-value">{{ totalQuantity() | number }}</td>
                       </tr>
                     </tfoot>
@@ -271,22 +276,22 @@ interface FdcOption {
         <!-- Print Content (Hidden) -->
         <div class="print-content" id="print-area">
           <div class="print-header">
-            <h1>출고요청집계표</h1>
-            <p class="print-date">조회기간: {{ startDate() }} ~ {{ endDate() }}</p>
-            <p class="print-info">출력일시: {{ printDateTime }}</p>
+            <h1>{{ 'REPORTS.RELEASE_SUMMARY.TITLE' | translate }}</h1>
+            <p class="print-date">{{ 'REPORTS.RELEASE_SUMMARY.PERIOD' | translate }}: {{ startDate() }} ~ {{ endDate() }}</p>
+            <p class="print-info">{{ 'REPORTS.RELEASE_SUMMARY.PRINT_DATE' | translate }}: {{ printDateTime }}</p>
           </div>
           <div class="print-summary">
-            <span>총 주문: {{ totalOrders() }}건</span>
-            <span>총 수량: {{ totalQuantity() | number }}개</span>
-            <span>FDC 수: {{ fdcCount() }}개</span>
+            <span>{{ 'REPORTS.RELEASE_SUMMARY.TOTAL_ORDERS' | translate }}: {{ totalOrders() }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</span>
+            <span>{{ 'REPORTS.RELEASE_SUMMARY.TOTAL_QUANTITY' | translate }}: {{ totalQuantity() | number }}{{ 'REPORTS.RELEASE_SUMMARY.UNIT' | translate }}</span>
+            <span>{{ 'REPORTS.RELEASE_SUMMARY.FDC_COUNT' | translate }}: {{ fdcCount() }}{{ 'REPORTS.RELEASE_SUMMARY.UNIT' | translate }}</span>
           </div>
           <table class="print-table">
             <thead>
               <tr>
-                <th>FDC명</th>
-                <th>모델코드</th>
-                <th>모델명</th>
-                <th>수량</th>
+                <th>{{ 'REPORTS.RELEASE_SUMMARY.FDC_NAME' | translate }}</th>
+                <th>{{ 'REPORTS.RELEASE_SUMMARY.MODEL_CODE' | translate }}</th>
+                <th>{{ 'REPORTS.RELEASE_SUMMARY.MODEL_NAME' | translate }}</th>
+                <th>{{ 'REPORTS.RELEASE_SUMMARY.QUANTITY' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -301,7 +306,7 @@ interface FdcOption {
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3"><strong>합계</strong></td>
+                <td colspan="3"><strong>{{ 'REPORTS.RELEASE_SUMMARY.TOTAL' | translate }}</strong></td>
                 <td><strong>{{ totalQuantity() | number }}</strong></td>
               </tr>
             </tfoot>
@@ -676,6 +681,7 @@ interface FdcOption {
 })
 export class ReleaseSummaryPage implements OnInit {
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   // Date range
   today = new Date().toISOString().split('T')[0];
@@ -835,7 +841,7 @@ export class ReleaseSummaryPage implements OnInit {
           <!DOCTYPE html>
           <html>
           <head>
-            <title>출고요청집계표</title>
+            <title>${this.translate.instant('REPORTS.RELEASE_SUMMARY.TITLE')}</title>
             <meta charset="UTF-8">
             <style>
               * {

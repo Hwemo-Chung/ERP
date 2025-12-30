@@ -9,6 +9,7 @@ import {
   IonDatetimeButton, IonModal, IonDatetime,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { downloadOutline, documentOutline, gridOutline, calendarOutline } from 'ionicons/icons';
 import { ReportsService, ExportRequest, ExportResult } from '../../../../core/services/reports.service';
@@ -22,7 +23,7 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    CommonModule, FormsModule, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem,
     IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
     IonDatetimeButton, IonModal, IonDatetime,
@@ -131,7 +132,7 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
                 @if (exportResult()!.downloadUrl) {
                   <ion-button expand="block" fill="outline" (click)="downloadFile()">
                     <ion-icon name="download-outline" slot="start"></ion-icon>
-                    {{ exportResult()!.fileName || '다운로드' }}
+                    {{ exportResult()!.fileName || ('PLACEHOLDERS.DOWNLOAD' | translate) }}
                   </ion-button>
                 }
               }

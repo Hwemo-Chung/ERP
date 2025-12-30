@@ -1,3 +1,14 @@
+/**
+ * @fileoverview 대시보드 페이지 컴포넌트
+ * @description 주문 현황 요약, KPI 지표, 상태별 분석을 제공하는 메인 대시보드입니다.
+ * 
+ * 주요 기능:
+ * - 실시간 주문 통계 표시
+ * - 상태별 주문 현황 분석
+ * - KPI 성과 지표 (완료율, 취소율)
+ * - 반응형 레이아웃 (웹/모바일)
+ * - 다국어(i18n) 지원
+ */
 import { Component, inject, OnInit, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -36,9 +47,14 @@ import {
   arrowForwardOutline,
   refreshOutline
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
+import { BREAKPOINTS } from '@shared/constants';
 
+/**
+ * 대시보드 요약 데이터 인터페이스
+ */
 interface DashboardSummary {
   summary: {
     total: number;
@@ -73,11 +89,12 @@ interface DashboardSummary {
     IonIcon,
     IonButton,
     IonBadge,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>대시보드</ion-title>
+        <ion-title>{{ 'DASHBOARD.TITLE' | translate }}</ion-title>
         <ion-button slot="end" fill="clear" (click)="loadData()">
           <ion-icon name="refresh-outline"></ion-icon>
         </ion-button>
@@ -92,7 +109,7 @@ interface DashboardSummary {
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터를 불러오는 중...</p>
+          <p>{{ 'DASHBOARD.LOADING_DATA' | translate }}</p>
         </div>
       } @else if (data()) {
         <!-- 웹 버전: 1080px 이상 -->
@@ -105,14 +122,14 @@ interface DashboardSummary {
                   <ion-icon name="cube-outline"></ion-icon>
                 </div>
                 <div class="stat-value">{{ data()!.summary.total }}</div>
-                <div class="stat-label">전체 주문</div>
+                <div class="stat-label">{{ 'DASHBOARD.STATS.TOTAL_ORDERS' | translate }}</div>
               </div>
               <div class="web-stat-card">
                 <div class="stat-icon success">
                   <ion-icon name="checkmark-circle-outline"></ion-icon>
                 </div>
                 <div class="stat-value">{{ data()!.summary.completed }}</div>
-                <div class="stat-label">완료</div>
+                <div class="stat-label">{{ 'DASHBOARD.STATS.COMPLETED' | translate }}</div>
                 <div class="stat-trend up">
                   <ion-icon name="trending-up-outline"></ion-icon>
                   {{ data()!.summary.completionRate }}%
@@ -123,14 +140,14 @@ interface DashboardSummary {
                   <ion-icon name="time-outline"></ion-icon>
                 </div>
                 <div class="stat-value">{{ data()!.summary.pending }}</div>
-                <div class="stat-label">대기중</div>
+                <div class="stat-label">{{ 'DASHBOARD.STATS.PENDING' | translate }}</div>
               </div>
               <div class="web-stat-card">
                 <div class="stat-icon danger">
                   <ion-icon name="close-circle-outline"></ion-icon>
                 </div>
                 <div class="stat-value">{{ data()!.summary.cancelled }}</div>
-                <div class="stat-label">취소</div>
+                <div class="stat-label">{{ 'DASHBOARD.STATS.CANCELLED' | translate }}</div>
                 <div class="stat-trend down">
                   <ion-icon name="trending-down-outline"></ion-icon>
                   {{ data()!.summary.cancellationRate }}%
@@ -143,18 +160,18 @@ interface DashboardSummary {
               <!-- 상태별 현황 테이블 -->
               <div class="web-card wide">
                 <div class="card-header">
-                  <div class="card-title">상태별 현황</div>
+                  <div class="card-title">{{ 'DASHBOARD.STATUS_BREAKDOWN.TITLE' | translate }}</div>
                   <ion-button fill="clear" size="small">
-                    자세히 <ion-icon name="arrow-forward-outline"></ion-icon>
+                    {{ 'DASHBOARD.STATUS_BREAKDOWN.VIEW_DETAILS' | translate }} <ion-icon name="arrow-forward-outline"></ion-icon>
                   </ion-button>
                 </div>
                 <div class="card-body">
                   <div class="status-table">
                     <div class="status-table-header">
-                      <div class="col-status">상태</div>
-                      <div class="col-count">건수</div>
-                      <div class="col-percent">비율</div>
-                      <div class="col-bar">분포</div>
+                      <div class="col-status">{{ 'DASHBOARD.STATUS_BREAKDOWN.HEADER.STATUS' | translate }}</div>
+                      <div class="col-count">{{ 'DASHBOARD.STATUS_BREAKDOWN.HEADER.COUNT' | translate }}</div>
+                      <div class="col-percent">{{ 'DASHBOARD.STATUS_BREAKDOWN.HEADER.PERCENT' | translate }}</div>
+                      <div class="col-bar">{{ 'DASHBOARD.STATUS_BREAKDOWN.HEADER.DISTRIBUTION' | translate }}</div>
                     </div>
                     @for (status of statusEntries(); track status[0]) {
                       <div class="status-table-row">
@@ -163,7 +180,7 @@ interface DashboardSummary {
                             {{ getStatusLabel(status[0]) }}
                           </span>
                         </div>
-                        <div class="col-count">{{ status[1] }}건</div>
+                        <div class="col-count">{{ status[1] }}{{ 'COMMON.ITEMS_COUNT' | translate:{ count: '' } }}</div>
                         <div class="col-percent">{{ getPercentage(status[1]) }}%</div>
                         <div class="col-bar">
                           <div class="progress-bar">
@@ -183,13 +200,13 @@ interface DashboardSummary {
               <!-- KPI 성과 카드 -->
               <div class="web-card">
                 <div class="card-header">
-                  <div class="card-title">성과 지표</div>
+                  <div class="card-title">{{ 'DASHBOARD.KPI.TITLE' | translate }}</div>
                 </div>
                 <div class="card-body">
                   <div class="kpi-list">
                     <div class="kpi-item">
                       <div class="kpi-header">
-                        <span class="kpi-label">완료율</span>
+                        <span class="kpi-label">{{ 'DASHBOARD.KPI.COMPLETION_RATE' | translate }}</span>
                         <span class="kpi-value success">{{ data()!.summary.completionRate }}%</span>
                       </div>
                       <div class="kpi-progress">
@@ -200,11 +217,11 @@ interface DashboardSummary {
                           </div>
                         </div>
                       </div>
-                      <div class="kpi-target">목표: 95%</div>
+                      <div class="kpi-target">{{ 'DASHBOARD.KPI.TARGET' | translate:{ value: 95 } }}</div>
                     </div>
                     <div class="kpi-item">
                       <div class="kpi-header">
-                        <span class="kpi-label">취소율</span>
+                        <span class="kpi-label">{{ 'DASHBOARD.KPI.CANCELLATION_RATE' | translate }}</span>
                         <span class="kpi-value danger">{{ data()!.summary.cancellationRate }}%</span>
                       </div>
                       <div class="kpi-progress">
@@ -215,7 +232,7 @@ interface DashboardSummary {
                           </div>
                         </div>
                       </div>
-                      <div class="kpi-target">목표: 5% 미만</div>
+                      <div class="kpi-target">{{ 'DASHBOARD.KPI.TARGET_LESS_THAN' | translate:{ value: 5 } }}</div>
                     </div>
                   </div>
                 </div>
@@ -226,7 +243,7 @@ interface DashboardSummary {
                 <div class="card-header">
                   <div class="card-title">
                     <ion-icon name="calendar-outline"></ion-icon>
-                    오늘의 요약
+                    {{ 'DASHBOARD.TODAY_SUMMARY.TITLE' | translate }}
                   </div>
                 </div>
                 <div class="card-body">
@@ -234,22 +251,22 @@ interface DashboardSummary {
                     <div class="summary-item">
                       <ion-icon name="cube-outline" color="primary"></ion-icon>
                       <div class="summary-content">
-                        <div class="summary-label">신규 주문</div>
-                        <div class="summary-value">{{ data()!.summary.total }}건</div>
+                        <div class="summary-label">{{ 'DASHBOARD.TODAY_SUMMARY.NEW_ORDERS' | translate }}</div>
+                        <div class="summary-value">{{ data()!.summary.total }}{{ 'COMMON.ITEMS_SUFFIX' | translate }}</div>
                       </div>
                     </div>
                     <div class="summary-item">
                       <ion-icon name="people-outline" color="secondary"></ion-icon>
                       <div class="summary-content">
-                        <div class="summary-label">배정 대기</div>
-                        <div class="summary-value">{{ data()!.summary.pending }}건</div>
+                        <div class="summary-label">{{ 'DASHBOARD.TODAY_SUMMARY.PENDING_ASSIGNMENT' | translate }}</div>
+                        <div class="summary-value">{{ data()!.summary.pending }}{{ 'COMMON.ITEMS_SUFFIX' | translate }}</div>
                       </div>
                     </div>
                     <div class="summary-item">
                       <ion-icon name="car-outline" color="tertiary"></ion-icon>
                       <div class="summary-content">
-                        <div class="summary-label">배송중</div>
-                        <div class="summary-value">{{ getDispatchedCount() }}건</div>
+                        <div class="summary-label">{{ 'DASHBOARD.TODAY_SUMMARY.IN_DELIVERY' | translate }}</div>
+                        <div class="summary-value">{{ getDispatchedCount() }}{{ 'COMMON.ITEMS_SUFFIX' | translate }}</div>
                       </div>
                     </div>
                   </div>
@@ -270,7 +287,7 @@ interface DashboardSummary {
                         <ion-icon name="cube-outline"></ion-icon>
                       </div>
                       <div class="stat-value">{{ data()!.summary.total }}</div>
-                      <div class="stat-label">전체</div>
+                      <div class="stat-label">{{ 'COMMON.ALL' | translate }}</div>
                     </ion-card-content>
                   </ion-card>
                 </ion-col>
@@ -281,7 +298,7 @@ interface DashboardSummary {
                         <ion-icon name="checkmark-circle-outline"></ion-icon>
                       </div>
                       <div class="stat-value">{{ data()!.summary.completed }}</div>
-                      <div class="stat-label">완료</div>
+                      <div class="stat-label">{{ 'DASHBOARD.STATS.COMPLETED' | translate }}</div>
                     </ion-card-content>
                   </ion-card>
                 </ion-col>
@@ -294,7 +311,7 @@ interface DashboardSummary {
                         <ion-icon name="time-outline"></ion-icon>
                       </div>
                       <div class="stat-value">{{ data()!.summary.pending }}</div>
-                      <div class="stat-label">대기</div>
+                      <div class="stat-label">{{ 'DASHBOARD.STATS.PENDING' | translate }}</div>
                     </ion-card-content>
                   </ion-card>
                 </ion-col>
@@ -305,7 +322,7 @@ interface DashboardSummary {
                         <ion-icon name="close-circle-outline"></ion-icon>
                       </div>
                       <div class="stat-value">{{ data()!.summary.cancelled }}</div>
-                      <div class="stat-label">취소</div>
+                      <div class="stat-label">{{ 'DASHBOARD.STATS.CANCELLED' | translate }}</div>
                     </ion-card-content>
                   </ion-card>
                 </ion-col>
@@ -315,15 +332,15 @@ interface DashboardSummary {
             <!-- KPI Card -->
             <ion-card>
               <ion-card-header>
-                <ion-card-title>성과</ion-card-title>
+                <ion-card-title>{{ 'DASHBOARD.KPI.TITLE' | translate }}</ion-card-title>
               </ion-card-header>
               <ion-card-content>
                 <div class="kpi-row">
-                  <span>완료율</span>
+                  <span>{{ 'DASHBOARD.KPI.COMPLETION_RATE' | translate }}</span>
                   <span class="kpi-value success">{{ data()!.summary.completionRate }}%</span>
                 </div>
                 <div class="kpi-row">
-                  <span>취소율</span>
+                  <span>{{ 'DASHBOARD.KPI.CANCELLATION_RATE' | translate }}</span>
                   <span class="kpi-value danger">{{ data()!.summary.cancellationRate }}%</span>
                 </div>
               </ion-card-content>
@@ -332,7 +349,7 @@ interface DashboardSummary {
             <!-- Status Breakdown -->
             <ion-card>
               <ion-card-header>
-                <ion-card-title>상태별 현황</ion-card-title>
+                <ion-card-title>{{ 'DASHBOARD.STATUS_BREAKDOWN.TITLE' | translate }}</ion-card-title>
               </ion-card-header>
               <ion-card-content>
                 @for (status of statusEntries(); track status[0]) {
@@ -340,7 +357,7 @@ interface DashboardSummary {
                     <span [class]="'status-label status-' + status[0].toLowerCase()">
                       {{ getStatusLabel(status[0]) }}
                     </span>
-                    <span class="status-count">{{ status[1] }}건</span>
+                    <span class="status-count">{{ status[1] }}{{ 'COMMON.ITEMS_SUFFIX' | translate }}</span>
                   </div>
                 }
               </ion-card-content>
@@ -779,25 +796,30 @@ interface DashboardSummary {
 })
 export class DashboardPage implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly translateService = inject(TranslateService);
 
   protected readonly data = signal<DashboardSummary | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly statusEntries = signal<[string, number][]>([]);
-  protected readonly isWebView = signal(window.innerWidth >= 1080);
+  protected readonly isWebView = signal(window.innerWidth >= BREAKPOINTS.WEB_VIEW);
 
-  private readonly STATUS_LABELS: Record<string, string> = {
-    'UNASSIGNED': '미배정',
-    'ASSIGNED': '배정완료',
-    'CONFIRMED': '확정',
-    'RELEASED': '출고',
-    'DISPATCHED': '배송중',
-    'COMPLETED': '완료',
-    'POSTPONED': '연기',
-    'ABSENT': '부재',
-    'REQUEST_CANCEL': '취소요청',
-    'CANCELLED': '취소',
-    'COLLECTED': '수거완료',
-    'REVERTED': '반품',
+  /**
+   * 상태 코드와 i18n 키 매핑
+   * @description 주문 상태 코드를 번역 키로 변환하기 위한 매핑 테이블
+   */
+  private readonly STATUS_I18N_KEYS: Record<string, string> = {
+    'UNASSIGNED': 'ORDERS.STATUS.UNASSIGNED',
+    'ASSIGNED': 'ORDERS.STATUS.ASSIGNED',
+    'CONFIRMED': 'ORDERS.STATUS.CONFIRMED',
+    'RELEASED': 'ORDERS.STATUS.RELEASED',
+    'DISPATCHED': 'ORDERS.STATUS.DISPATCHED',
+    'COMPLETED': 'ORDERS.STATUS.COMPLETED',
+    'POSTPONED': 'ORDERS.STATUS.POSTPONED',
+    'ABSENT': 'ORDERS.STATUS.ABSENT',
+    'REQUEST_CANCEL': 'ORDERS.STATUS.REQUEST_CANCEL',
+    'CANCELLED': 'ORDERS.STATUS.CANCELLED',
+    'COLLECTED': 'ORDERS.STATUS.COLLECTED',
+    'REVERTED': 'ORDERS.STATUS.REVERTED',
   };
 
   constructor() {
@@ -818,8 +840,8 @@ export class DashboardPage implements OnInit {
   }
 
   @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.isWebView.set(window.innerWidth >= 1080);
+  onResize(): void {
+    this.isWebView.set(window.innerWidth >= BREAKPOINTS.WEB_VIEW);
   }
 
   ngOnInit(): void {
@@ -831,6 +853,10 @@ export class DashboardPage implements OnInit {
     event.target.complete();
   }
 
+  /**
+   * 대시보드 데이터 로드
+   * @description API에서 오늘의 주문 요약 데이터를 가져옵니다.
+   */
   protected async loadData(): Promise<void> {
     this.isLoading.set(true);
 
@@ -846,21 +872,36 @@ export class DashboardPage implements OnInit {
       this.data.set(result);
       this.statusEntries.set(Object.entries(result.statusBreakdown));
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('[DashboardPage] 대시보드 데이터 로드 실패:', error);
     } finally {
       this.isLoading.set(false);
     }
   }
 
+  /**
+   * 상태 코드를 번역된 라벨로 변환
+   * @param status - 상태 코드
+   * @returns 번역된 상태 라벨
+   */
   protected getStatusLabel(status: string): string {
-    return this.STATUS_LABELS[status] || status;
+    const key = this.STATUS_I18N_KEYS[status];
+    return key ? this.translateService.instant(key) : status;
   }
 
+  /**
+   * 전체 대비 비율 계산
+   * @param count - 개별 건수
+   * @returns 백분율 (정수)
+   */
   protected getPercentage(count: number): number {
     const total = this.data()?.summary.total || 1;
     return Math.round((count / total) * 100);
   }
 
+  /**
+   * 배송중 주문 건수 조회
+   * @returns 배송중 상태 주문 수
+   */
   protected getDispatchedCount(): number {
     const entries = this.statusEntries();
     const dispatched = entries.find(e => e[0] === 'DISPATCHED');

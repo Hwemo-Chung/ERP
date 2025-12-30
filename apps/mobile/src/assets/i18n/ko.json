@@ -10,7 +10,21 @@
     "ERROR": "오류",
     "SUCCESS": "성공",
     "WARNING": "경고",
-    "INFO": "정보"
+    "INFO": "정보",
+    "BUTTONS": {
+      "OK": "확인",
+      "CANCEL": "취소",
+      "ADD": "추가",
+      "CLOSE": "마감",
+      "MARK_RETURN": "환입처리",
+      "ASSIGN": "배정"
+    },
+    "COUNT_SUFFIX": "건"
+  },
+  "PLACEHOLDERS": {
+    "QUANTITY": "수량",
+    "ALL": "전체",
+    "DOWNLOAD": "다운로드"
   },
   "PROFILE": {
     "TITLE": "내 정보",
@@ -102,5 +116,213 @@
     "UPDATE_AVAILABLE": "새 버전이 있습니다. 앱을 다시 로드하시겠습니까?",
     "UPDATE_LATER": "나중에",
     "UPDATE_NOW": "업데이트"
+  },
+  "ORDER_STATUS": {
+    "UNASSIGNED": "미배정",
+    "ASSIGNED": "배정",
+    "CONFIRMED": "배정확정",
+    "RELEASED": "출고확정",
+    "DISPATCHED": "출문",
+    "POSTPONED": "연기",
+    "ABSENT": "부재",
+    "COMPLETED": "인수",
+    "PARTIAL": "부분인수",
+    "COLLECTED": "회수",
+    "CANCELLED": "취소",
+    "REQUEST_CANCEL": "의뢰취소"
+  },
+  "COMPLETION": {
+    "STATUS": {
+      "COMPLETED": "완료",
+      "NOT_COMPLETED": "미완료",
+      "OPTIONAL": "선택",
+      "ISSUED": "발행완료",
+      "NOT_ISSUED": "미발행",
+      "WAITING": "대기",
+      "IN_PROGRESS": "진행중",
+      "VALID": "유효"
+    },
+    "FIELDS": {
+      "SPECIAL_NOTES": "특이사항",
+      "ORDER_NUMBER": "주문번호",
+      "INSTALL_DATE": "설치일",
+      "CUSTOMER_NAME": "고객명",
+      "INSTALL_ADDRESS": "설치주소",
+      "PRODUCT_NAME": "제품명",
+      "QUANTITY": "수량",
+      "SERIAL_NUMBER": "시리얼번호"
+    },
+    "FILTER": {
+      "ALL": "전체",
+      "WAITING": "대기",
+      "COMPLETED": "완료"
+    }
+  },
+  "REPORTS": {
+    "TITLE": "리포트",
+    "RELEASE_SUMMARY": {
+      "TITLE": "출고요청집계표"
+    }
+  },
+  "FILTER": {
+    "ALL": "전체"
+  },
+  "FIELD_LABELS": {
+    "STATUS": "상태",
+    "INSTALLER_ID": "설치기사",
+    "INSTALLER_NAME": "설치기사명",
+    "APPOINTMENT_DATE": "방문예정일",
+    "APPOINTMENT_SLOT": "방문시간대",
+    "NOTES": "특기사항",
+    "CUSTOMER_NAME": "고객명",
+    "CUSTOMER_PHONE": "고객연락처",
+    "CUSTOMER_ADDRESS": "고객주소",
+    "SERIAL_NUMBER": "시리얼번호",
+    "WASTE_CODE": "폐기코드",
+    "QUANTITY": "수량"
+  },
+  "USER_ROLES": {
+    "BRANCH_MANAGER": "지점장",
+    "INSTALLER": "설치기사"
+  },
+  "WASTE": {
+    "CATEGORIES": {
+      "REFRIGERATOR": "냉장고류",
+      "WASHER": "세탁기류",
+      "AIR_CONDITIONER": "에어컨류",
+      "TV": "TV류",
+      "SMALL_APPLIANCE": "소형가전",
+      "OTHER": "기타"
+    },
+    "ITEMS": {
+      "P03": "김치냉장고",
+      "P04": "냉동고",
+      "P07": "건조기",
+      "P13": "모니터",
+      "P14": "전자레인지",
+      "P15": "식기세척기",
+      "P16": "공기청정기",
+      "P17": "제습기",
+      "P18": "청소기",
+      "P19": "음식물처리기",
+      "P20": "정수기"
+    },
+    "EXPORT": {
+      "HEADERS": {
+        "CODE": "코드",
+        "ITEM": "품목",
+        "QUANTITY": "수량"
+      }
+    }
+  },
+  "SYNC": {
+    "OPERATION": {
+      "COMPLETION": "완료",
+      "STATUS_CHANGE": "상태변경",
+      "WASTE": "폐기기기",
+      "ATTACHMENT": "첨부파일",
+      "NOTE": "메모"
+    }
+  },
+  "SETTLEMENT": {
+    "STATUS": {
+      "LABEL": "상태",
+      "OPEN": "진행중",
+      "CLOSED": "마감"
+    },
+    "ACTIONS": {
+      "CANCEL": "취소",
+      "CLOSE": "마감",
+      "UNLOCK": "해제"
+    }
+  },
+  "REPORTS": {
+    "TITLE": "리포트",
+    "MENU": {
+      "PROGRESS": "진행현황 대시보드",
+      "PROGRESS_DESC": "설치기사별/지점별 진행 현황",
+      "CUSTOMER_HISTORY": "고객 이력 조회",
+      "CUSTOMER_HISTORY_DESC": "고객별 주문/설치 이력 검색",
+      "WASTE_SUMMARY": "폐가전 집계",
+      "WASTE_SUMMARY_DESC": "폐가전 회수 현황 및 통계",
+      "UNRETURNED": "미환입 현황",
+      "UNRETURNED_DESC": "취소건 환입 대상 및 미환입 현황",
+      "EXPORT": "데이터 내보내기",
+      "EXPORT_DESC": "ECOAS, CSV, PDF 출력"
+    },
+    "COMPLETION": {
+      "TITLE": "설치 완료 처리",
+      "STEPS": {
+        "SERIAL_INPUT": "시리얼 번호 입력",
+        "SERIAL_INPUT_DESC": "제품별 제조번호 입력",
+        "WASTE_PICKUP": "폐가전 회수",
+        "WASTE_PICKUP_DESC": "폐가전 회수 정보 입력",
+        "PHOTO_UPLOAD": "사진 첨부",
+        "PHOTO_UPLOAD_DESC": "설치 완료 사진 (선택)",
+        "CERTIFICATE": "설치 확인서",
+        "CERTIFICATE_DESC": "확인서 발행 및 서명"
+      },
+      "STATUS": {
+        "COMPLETED": "완료",
+        "NOT_COMPLETED": "미완료",
+        "OPTIONAL": "선택",
+        "ISSUED": "발행완료",
+        "NOT_ISSUED": "미발행",
+        "VALID": "유효"
+      },
+      "FIELDS": {
+        "ATTACHED_PHOTO": "첨부 사진",
+        "SPECIAL_NOTES": "특이사항",
+        "ADD_NOTES": "+ 특이사항 추가",
+        "ORDER_NUMBER": "주문번호",
+        "INSTALL_DATE": "설치일",
+        "CUSTOMER_NAME": "고객명",
+        "INSTALL_ADDRESS": "설치주소",
+        "PRODUCT_NAME": "제품명",
+        "QUANTITY": "수량",
+        "SERIAL_NUMBER": "시리얼번호",
+        "PHOTOS": "{{count}}장"
+      },
+      "FILTER": {
+        "ALL": "전체",
+        "WAITING": "대기",
+        "COMPLETED": "완료"
+      }
+    },
+    "CUSTOMER_HISTORY": {
+      "TITLE": "고객 이력 조회",
+      "EXPORT_HEADERS": ["이름", "연락처", "주문수", "최근주문"]
+    },
+    "PROGRESS_DASHBOARD": {
+      "TITLE": "진행현황 대시보드",
+      "GROUPBY": {
+        "INSTALLER": "설치기사별",
+        "BRANCH": "지점별",
+        "STATUS": "상태별"
+      }
+    },
+    "UNRETURNED_ITEMS": {
+      "TITLE": "미환입 현황",
+      "RETURN_STATUS": "환입상태",
+      "RETURNED": "환입완료",
+      "NOT_RETURNED": "미환입",
+      "MARK_RETURN": "환입처리",
+      "ACTIONS": ["확인"],
+      "EXPORT_HEADERS": ["주문번호", "고객명", "품목", "취소일", "취소사유", "환입상태", "환입일"]
+    },
+    "RELEASE_SUMMARY": {
+      "TITLE": "출고요청집계표"
+    }
+  },
+  "ASSIGNMENT": {
+    "UNASSIGNED": "미배정",
+    "STATUS": {
+      "UNASSIGNED": "미배정",
+      "ASSIGNED": "배정",
+      "CONFIRMED": "확정"
+    }
+  },
+  "EXPORT": {
+    "DOWNLOAD": "다운로드"
   }
 }

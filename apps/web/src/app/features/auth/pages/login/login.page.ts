@@ -1,6 +1,12 @@
-// apps/web/src/app/features/auth/pages/login/login.page.ts
-// Square UI inspired design - minimal, clean, modern
-// FR-22: Biometric Quick Login integration
+/**
+ * @fileoverview 로그인 페이지 컴포넌트
+ * @description Square UI 디자인의 로그인 화면을 제공합니다.
+ * 
+ * 주요 기능:
+ * - 사용자명/비밀번호 로그인
+ * - FR-22: 생체 인증 빠른 로그인 지원
+ * - 다국어(i18n) 지원
+ */
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -8,48 +14,50 @@ import { Router } from '@angular/router';
 import { IonContent, IonSpinner, IonIcon, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOutline, eyeOffOutline, arrowForward, cube, fingerPrintOutline } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '@core/services/auth.service';
 import { BiometricService } from '@core/services/biometric.service';
+import { ROUTES } from '@shared/constants';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IonContent, IonSpinner, IonIcon, IonButton],
+  imports: [CommonModule, ReactiveFormsModule, IonContent, IonSpinner, IonIcon, IonButton, TranslateModule],
   template: `
     <ion-content class="login-content" [fullscreen]="true">
       <div class="login-wrapper">
-        <!-- Left Panel - Branding -->
+        <!-- 좌측 패널 - 브랜딩 -->
         <div class="brand-panel">
           <div class="brand-content">
             <div class="logo-box">
               <ion-icon name="cube"></ion-icon>
             </div>
-            <h1>Logistics ERP</h1>
-            <p>Streamline your delivery operations with our modern order management system.</p>
+            <h1>{{ 'BRAND.TITLE' | translate }}</h1>
+            <p>{{ 'BRAND.SUBTITLE' | translate }}</p>
             <div class="features">
-              <div class="feature"><span class="dot"></span>Real-time order tracking</div>
-              <div class="feature"><span class="dot"></span>Smart assignment system</div>
-              <div class="feature"><span class="dot"></span>Comprehensive reporting</div>
+              <div class="feature"><span class="dot"></span>{{ 'BRAND.FEATURES.REALTIME_TRACKING' | translate }}</div>
+              <div class="feature"><span class="dot"></span>{{ 'BRAND.FEATURES.SMART_ASSIGNMENT' | translate }}</div>
+              <div class="feature"><span class="dot"></span>{{ 'BRAND.FEATURES.COMPREHENSIVE_REPORTING' | translate }}</div>
             </div>
           </div>
-          <div class="brand-footer">© 2025 Logistics ERP</div>
+          <div class="brand-footer">{{ 'BRAND.COPYRIGHT' | translate }}</div>
         </div>
 
-        <!-- Right Panel - Login Form -->
+        <!-- 우측 패널 - 로그인 폼 -->
         <div class="form-panel">
           <div class="form-container">
-            <!-- Mobile Logo -->
+            <!-- 모바일 로고 -->
             <div class="mobile-logo">
               <div class="logo-box small"><ion-icon name="cube"></ion-icon></div>
-              <span>Logistics ERP</span>
+              <span>{{ 'BRAND.TITLE' | translate }}</span>
             </div>
 
             <div class="form-header">
-              <h2>Welcome back</h2>
-              <p>Enter your credentials to access your account</p>
+              <h2>{{ 'AUTH.LOGIN.WELCOME' | translate }}</h2>
+              <p>{{ 'AUTH.LOGIN.SUBTITLE' | translate }}</p>
             </div>
 
-            <!-- Biometric Quick Login -->
+            <!-- 생체 인증 빠른 로그인 -->
             @if (showBiometricButton()) {
               <div class="biometric-section">
                 <ion-button
@@ -64,33 +72,33 @@ import { BiometricService } from '@core/services/biometric.service';
                   } @else {
                     <ion-icon slot="start" name="fingerprint-outline"></ion-icon>
                   }
-                  {{ biometricService.getBiometryTypeName() }}로 로그인
+                  {{ 'AUTH.LOGIN.BIOMETRIC_LOGIN' | translate:{ type: biometricService.getBiometryTypeName() } }}
                 </ion-button>
-                <div class="divider"><span>또는</span></div>
+                <div class="divider"><span>{{ 'COMMON.OR' | translate }}</span></div>
               </div>
             }
 
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
               <div class="input-group">
-                <label for="username">Username</label>
+                <label for="username">{{ 'AUTH.LOGIN.USERNAME' | translate }}</label>
                 <input id="username" type="text" formControlName="username" 
-                       placeholder="Enter your username" autocomplete="username" autocapitalize="off" />
+                       [placeholder]="'AUTH.LOGIN.USERNAME_PLACEHOLDER' | translate" autocomplete="username" autocapitalize="off" />
                 @if (loginForm.get('username')?.touched && loginForm.get('username')?.invalid) {
-                  <span class="error-hint">Username required (min 3 chars)</span>
+                  <span class="error-hint">{{ 'AUTH.LOGIN.USERNAME_REQUIRED' | translate }}</span>
                 }
               </div>
 
               <div class="input-group">
-                <label for="password">Password</label>
+                <label for="password">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
                 <div class="password-wrap">
                   <input id="password" [type]="showPassword() ? 'text' : 'password'" 
-                         formControlName="password" placeholder="Enter your password" autocomplete="current-password" />
+                         formControlName="password" [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate" autocomplete="current-password" />
                   <button type="button" class="toggle-pw" (click)="togglePassword()">
                     <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
                   </button>
                 </div>
                 @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-                  <span class="error-hint">Password required (min 4 chars)</span>
+                  <span class="error-hint">{{ 'AUTH.LOGIN.PASSWORD_REQUIRED' | translate }}</span>
                 }
               </div>
 
@@ -106,16 +114,16 @@ import { BiometricService } from '@core/services/biometric.service';
               <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || authService.isLoading()">
                 @if (authService.isLoading()) {
                   <ion-spinner name="crescent"></ion-spinner>
-                  <span>Signing in...</span>
+                  <span>{{ 'AUTH.LOGIN.SIGNING_IN' | translate }}</span>
                 } @else {
-                  <span>Sign in</span>
+                  <span>{{ 'AUTH.LOGIN.SIGN_IN' | translate }}</span>
                   <ion-icon name="arrow-forward"></ion-icon>
                 }
               </button>
             </form>
 
             <div class="form-footer">
-              <p>Test: <code>admin</code> / <code>admin123!</code></p>
+              <p>{{ 'AUTH.LOGIN.TEST_ACCOUNT' | translate:{ username: 'admin', password: 'admin123!' } }}</p>
             </div>
           </div>
         </div>
@@ -234,11 +242,18 @@ export class LoginPage implements OnInit {
   protected readonly biometricService = inject(BiometricService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
+  
+  /** 비밀번호 표시 여부 */
   protected readonly showPassword = signal(false);
+  /** 생체 인증 버튼 표시 여부 */
   protected readonly showBiometricButton = signal(false);
+  /** 생체 인증 로딩 상태 */
   protected readonly isBiometricLoading = signal(false);
+  /** 생체 인증 에러 메시지 */
   protected readonly biometricError = signal<string | null>(null);
 
+  /** 로그인 폼 그룹 */
   protected readonly loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(4)]],
@@ -248,52 +263,60 @@ export class LoginPage implements OnInit {
     addIcons({ eyeOutline, eyeOffOutline, arrowForward, cube, fingerPrintOutline }); 
   }
 
+  /**
+   * 컴포넌트 초기화
+   * @description 생체 인증 가용성을 확인하고 버튼 표시 여부를 결정합니다.
+   */
   async ngOnInit(): Promise<void> {
-    // Check if biometric is available and enabled
     const available = await this.biometricService.checkAvailability();
     this.showBiometricButton.set(available && this.biometricService.currentConfig.enabled);
   }
 
-  protected togglePassword() { this.showPassword.update(v => !v); }
+  /** 비밀번호 표시/숨김 토글 */
+  protected togglePassword(): void { 
+    this.showPassword.update(v => !v); 
+  }
 
+  /**
+   * 로그인 폼 제출 처리
+   * @description 입력된 자격 증명으로 로그인을 시도합니다.
+   */
   protected async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) return;
     const { username, password } = this.loginForm.value;
     const success = await this.authService.login({ username, password });
-    if (success) await this.router.navigate(['/tabs/orders']);
+    if (success) await this.router.navigate([ROUTES.TABS.ORDERS]);
   }
 
   /**
-   * FR-22: Biometric quick login
+   * 생체 인증 로그인
+   * @description FR-22: 생체 인증으로 빠른 로그인을 수행합니다.
    */
   protected async loginWithBiometric(): Promise<void> {
     this.isBiometricLoading.set(true);
     this.biometricError.set(null);
 
     try {
-      // Authenticate with biometric
       const result = await this.biometricService.authenticate();
 
       if (!result) {
-        this.biometricError.set('생체 인증에 실패했습니다. 비밀번호로 로그인해주세요.');
+        this.biometricError.set(this.translate.instant('AUTH.ERRORS.BIOMETRIC_FAILED'));
         return;
       }
 
-      // Login with refresh token
       const success = await this.authService.refreshAccessToken(result.refreshToken);
 
       if (success) {
-        console.info(`[LoginPage] Biometric login success for user: ${result.userId}`);
-        await this.router.navigate(['/tabs/orders']);
+        console.info(`[LoginPage] 생체 인증 로그인 성공: ${result.userId}`);
+        await this.router.navigate([ROUTES.TABS.ORDERS]);
       } else {
-        this.biometricError.set('인증 토큰이 만료되었습니다. 비밀번호로 로그인해주세요.');
-        // Clear biometric data
+        this.biometricError.set(this.translate.instant('AUTH.ERRORS.SESSION_EXPIRED'));
         await this.biometricService.disableBiometric();
         this.showBiometricButton.set(false);
       }
-    } catch (error: any) {
-      console.error('[LoginPage] Biometric login failed:', error);
-      this.biometricError.set('생체 인증에 실패했습니다. 다시 시도하거나 비밀번호로 로그인해주세요.');
+    } catch (error: unknown) {
+      console.error('[LoginPage] 생체 인증 로그인 실패:', error);
+      this.biometricError.set(this.translate.instant('AUTH.ERRORS.BIOMETRIC_RETRY'));
     } finally {
       this.isBiometricLoading.set(false);
     }

@@ -10,6 +10,7 @@ import {
   IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { 
   downloadOutline, calendarOutline, trashOutline, cubeOutline, 
@@ -23,7 +24,8 @@ import { AuthService } from '../../../../core/services/auth.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    CommonModule, FormsModule, TranslateModule,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
     IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
     IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
@@ -34,7 +36,8 @@ import { AuthService } from '../../../../core/services/auth.service';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/reports"></ion-back-button>
         </ion-buttons>
-        <ion-title>폐가전 집계</ion-title>
+        <!-- 폐가전 집계 타이틀 -->
+        <ion-title>{{ 'REPORTS.WASTE.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="exportData()">
             <ion-icon slot="icon-only" name="download-outline"></ion-icon>
@@ -48,7 +51,7 @@ import { AuthService } from '../../../../core/services/auth.service';
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- Date Range Filter -->
+      <!-- Date Range Filter - 기간 필터 -->
       <div class="filter-section">
         <div class="date-filter">
           <ion-button fill="clear" size="small" id="open-waste-date-modal">
@@ -58,7 +61,7 @@ import { AuthService } from '../../../../core/services/auth.service';
         </div>
       </div>
 
-      <!-- Summary Cards -->
+      <!-- Summary Cards - 요약 카드 -->
       <div class="summary-section">
         <div class="total-card">
           <div class="total-icon">
@@ -66,23 +69,23 @@ import { AuthService } from '../../../../core/services/auth.service';
           </div>
           <div class="total-info">
             <span class="total-value">{{ reportsStore.wasteTotals().totalItems }}</span>
-            <span class="total-unit">대</span>
+            <span class="total-unit">{{ 'REPORTS.WASTE.UNIT' | translate }}</span>
           </div>
-          <span class="total-label">총 회수량</span>
+          <span class="total-label">{{ 'REPORTS.WASTE.TOTAL_COUNT' | translate }}</span>
         </div>
         <div class="stats-row">
           <div class="stat-item">
             <ion-icon name="layers-outline"></ion-icon>
             <div class="stat-content">
               <span class="stat-value">{{ reportsStore.wasteSummary().length }}</span>
-              <span class="stat-label">품목수</span>
+              <span class="stat-label">{{ 'REPORTS.WASTE.CATEGORY_COUNT' | translate }}</span>
             </div>
           </div>
           <div class="stat-item">
             <ion-icon name="trending-up-outline"></ion-icon>
             <div class="stat-content">
               <span class="stat-value">{{ avgPerCategory() | number:'1.0-0' }}</span>
-              <span class="stat-label">평균</span>
+              <span class="stat-label">{{ 'REPORTS.WASTE.AVERAGE' | translate }}</span>
             </div>
           </div>
         </div>
@@ -91,15 +94,15 @@ import { AuthService } from '../../../../core/services/auth.service';
       @if (reportsStore.isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'REPORTS.PROGRESS.LOADING' | translate }}</p>
         </div>
       } @else {
-        <!-- Top Categories Chart -->
+        <!-- Top Categories Chart - TOP 5 품목 -->
         @if (topCategories().length > 0) {
           <div class="section">
             <h3 class="section-title">
               <ion-icon name="trending-up-outline"></ion-icon>
-              TOP 5 품목
+              {{ 'REPORTS.WASTE.TOP5_TITLE' | translate }}
             </h3>
             <div class="chart-card">
               @for (item of topCategories(); track item.wasteCode; let i = $index) {
@@ -108,7 +111,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                   <div class="chart-info">
                     <div class="chart-header">
                       <span class="chart-name">{{ item.wasteName }}</span>
-                      <span class="chart-count">{{ item.quantity }}대</span>
+                      <span class="chart-count">{{ item.quantity }}{{ 'REPORTS.WASTE.UNIT' | translate }}</span>
                     </div>
                     <div class="chart-bar">
                       <div class="chart-fill" 
@@ -122,11 +125,11 @@ import { AuthService } from '../../../../core/services/auth.service';
           </div>
         }
 
-        <!-- Full List -->
+        <!-- Full List - 품목별 현황 -->
         <div class="section">
           <h3 class="section-title">
             <ion-icon name="cube-outline"></ion-icon>
-            품목별 현황
+            {{ 'REPORTS.WASTE.CATEGORY_STATUS' | translate }}
           </h3>
           <div class="category-list">
             @for (stat of reportsStore.wasteSummary(); track stat.wasteCode) {
@@ -136,34 +139,34 @@ import { AuthService } from '../../../../core/services/auth.service';
                   <span class="category-name">{{ stat.wasteName }}</span>
                 </div>
                 <div class="category-count" [class]="getCountClass(stat.quantity)">
-                  {{ stat.quantity }}대
+                  {{ stat.quantity }}{{ 'REPORTS.WASTE.UNIT' | translate }}
                 </div>
               </div>
             } @empty {
               <div class="empty-state">
                 <ion-icon name="cube-outline"></ion-icon>
-                <p>데이터가 없습니다</p>
+                <p>{{ 'REPORTS.WASTE.NO_DATA' | translate }}</p>
               </div>
             }
           </div>
         </div>
       }
 
-      <!-- Date Range Modal -->
+      <!-- Date Range Modal - 기간 선택 모달 -->
       <ion-modal trigger="open-waste-date-modal" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
         <ng-template>
           <ion-header>
             <ion-toolbar>
-              <ion-title>기간 선택</ion-title>
+              <ion-title>{{ 'REPORTS.PROGRESS.DATE_SELECT' | translate }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="applyDateFilter()">적용</ion-button>
+                <ion-button (click)="applyDateFilter()">{{ 'REPORTS.PROGRESS.APPLY' | translate }}</ion-button>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
           <ion-content class="ion-padding">
             <div class="date-inputs">
               <div class="date-field">
-                <label>시작일</label>
+                <label>{{ 'REPORTS.PROGRESS.START_DATE' | translate }}</label>
                 <ion-datetime-button datetime="waste-from"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
@@ -172,7 +175,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                 </ion-modal>
               </div>
               <div class="date-field">
-                <label>종료일</label>
+                <label>{{ 'REPORTS.PROGRESS.END_DATE' | translate }}</label>
                 <ion-datetime-button datetime="waste-to"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
@@ -181,10 +184,11 @@ import { AuthService } from '../../../../core/services/auth.service';
                 </ion-modal>
               </div>
             </div>
+            <!-- 빠른 필터 버튼들 -->
             <div class="quick-filters">
-              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">최근 7일</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">최근 30일</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('quarter')">최근 90일</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{ 'REPORTS.WASTE.LAST_7_DAYS' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{ 'REPORTS.WASTE.LAST_30_DAYS' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('quarter')">{{ 'REPORTS.WASTE.LAST_90_DAYS' | translate }}</ion-button>
             </div>
           </ion-content>
         </ng-template>
@@ -247,6 +251,7 @@ export class WasteSummaryPage implements OnInit {
   protected readonly reportsStore = inject(ReportsStore);
   private readonly authService = inject(AuthService);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   // Local state
   dateFrom = this.getDefaultDateFrom();
@@ -336,9 +341,18 @@ export class WasteSummaryPage implements OnInit {
     return 'low';
   }
 
+  // CSV 내보내기 - 폐가전 집계 데이터 다운로드
   async exportData() {
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+
     try {
-      const headers = ['코드', '품목', '수량'];
+      const headers = [
+        translateService.instant('EXPORT.HEADERS.CODE'),
+        translateService.instant('EXPORT.HEADERS.ITEM'),
+        translateService.instant('EXPORT.HEADERS.QUANTITY'),
+      ];
       const rows = this.reportsStore.wasteSummary().map(s => [s.wasteCode, s.wasteName, String(s.quantity)]);
       const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
       
@@ -351,15 +365,15 @@ export class WasteSummaryPage implements OnInit {
       a.click();
       URL.revokeObjectURL(url);
 
-      const toast = await this.toastCtrl.create({
-        message: 'CSV 다운로드 완료',
+      const toast = await toastController.create({
+        message: translateService.instant('REPORTS.WASTE.CSV_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
       await toast.present();
     } catch {
-      const toast = await this.toastCtrl.create({
-        message: '다운로드 실패',
+      const toast = await toastController.create({
+        message: translateService.instant('REPORTS.WASTE.CSV_FAILED'),
         duration: 2000,
         color: 'danger',
       });

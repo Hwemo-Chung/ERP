@@ -287,11 +287,11 @@ export class BackgroundSyncService {
    */
   private getOperationLabel(type: SyncOperation['type']): string {
     const labelMap: Record<SyncOperation['type'], string> = {
-      completion: '완료',
-      status_change: '상태변경',
-      waste: '폐기기기',
-      attachment: '첨부파일',
-      note: '메모',
+      completion: 'SYNC.OPERATION.COMPLETION',
+      status_change: 'SYNC.OPERATION.STATUS_CHANGE',
+      waste: 'SYNC.OPERATION.WASTE',
+      attachment: 'SYNC.OPERATION.ATTACHMENT',
+      note: 'SYNC.OPERATION.NOTE',
     };
     return labelMap[type] || type;
   }

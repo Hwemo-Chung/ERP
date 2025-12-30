@@ -21,6 +21,16 @@ describe('SessionManagerService - FR-19', () => {
     router = jasmine.createSpyObj('Router', ['navigate']);
     modalCtrl = jasmine.createSpyObj('ModalController', ['create']);
 
+    // Mock modal create to return a mock modal with present and onDidDismiss
+    const mockModal = {
+      present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
+      onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
+        Promise.resolve({ data: { action: 'extend' }, role: 'confirm' })
+      ),
+      dismiss: jasmine.createSpy('dismiss').and.returnValue(Promise.resolve()),
+    };
+    modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+
     TestBed.configureTestingModule({
       providers: [
         SessionManagerService,

@@ -30,6 +30,7 @@ import {
   IonSpinner,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { 
   notificationsOutline,
@@ -43,15 +44,23 @@ import {
 } from 'ionicons/icons';
 import { NotificationsService } from '../../../../core/services/notifications.service';
 
+/**
+ * 알림 카테고리 인터페이스
+ * Notification category interface
+ */
 interface NotificationCategory {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;        // i18n 키로 변경
+  descriptionKey: string; // i18n 키로 변경
   icon: string;
   enabled: boolean;
   color: string;
 }
 
+/**
+ * 기기 정보 인터페이스
+ * Device information interface
+ */
 interface DeviceInfo {
   deviceId: string;
   platform: string;
@@ -65,6 +74,7 @@ interface DeviceInfo {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -90,7 +100,8 @@ interface DeviceInfo {
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/settings" text=""></ion-back-button>
         </ion-buttons>
-        <ion-title>알림 설정</ion-title>
+        <!-- 알림 설정 타이틀 -->
+        <ion-title>{{ 'SETTINGS.NOTIFICATION.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -100,7 +111,7 @@ interface DeviceInfo {
           <ion-spinner name="crescent"></ion-spinner>
         </div>
       } @else {
-        <!-- 마스터 토글 -->
+        <!-- 마스터 토글 - Master toggle for all notifications -->
         <ion-card>
           <ion-card-content>
             <ion-item lines="none">
@@ -110,8 +121,8 @@ interface DeviceInfo {
                 [color]="masterEnabled() ? 'primary' : 'medium'">
               </ion-icon>
               <ion-label>
-                <h2>알림 받기</h2>
-                <p>이 기기에서 푸시 알림을 받습니다</p>
+                <h2>{{ 'SETTINGS.NOTIFICATION.MASTER_TOGGLE' | translate }}</h2>
+                <p>{{ 'SETTINGS.NOTIFICATION.MASTER_DESC' | translate }}</p>
               </ion-label>
               <ion-toggle 
                 [checked]="masterEnabled()" 
@@ -121,8 +132,8 @@ interface DeviceInfo {
           </ion-card-content>
         </ion-card>
 
-        <!-- 카테고리별 설정 -->
-        <h3 class="section-title">알림 카테고리</h3>
+        <!-- 카테고리별 설정 - Per-category notification settings -->
+        <h3 class="section-title">{{ 'SETTINGS.NOTIFICATION.CATEGORIES_TITLE' | translate }}</h3>
         <ion-card>
           <ion-list>
             @for (category of categories(); track category.id) {
@@ -133,8 +144,8 @@ interface DeviceInfo {
                   [color]="category.color">
                 </ion-icon>
                 <ion-label>
-                  <h3>{{ category.name }}</h3>
-                  <p>{{ category.description }}</p>
+                  <h3>{{ category.nameKey | translate }}</h3>
+                  <p>{{ category.descriptionKey | translate }}</p>
                 </ion-label>
                 <ion-toggle 
                   [checked]="category.enabled" 
@@ -146,8 +157,8 @@ interface DeviceInfo {
           </ion-list>
         </ion-card>
 
-        <!-- 현재 기기 정보 -->
-        <h3 class="section-title">현재 기기</h3>
+        <!-- 현재 기기 정보 - Current device information -->
+        <h3 class="section-title">{{ 'SETTINGS.NOTIFICATION.DEVICE.CURRENT_TITLE' | translate }}</h3>
         <ion-card>
           <ion-card-content>
             <ion-item lines="none">
@@ -155,16 +166,16 @@ interface DeviceInfo {
               <ion-label>
                 <h3>{{ currentDevice().model }}</h3>
                 <p>{{ currentDevice().platform }}</p>
-                <ion-note>마지막 사용: {{ currentDevice().lastUsed | date:'short' }}</ion-note>
+                <ion-note>{{ 'SETTINGS.NOTIFICATION.DEVICE.LAST_USED' | translate }}: {{ currentDevice().lastUsed | date:'short' }}</ion-note>
               </ion-label>
-              <ion-badge color="success">현재 기기</ion-badge>
+              <ion-badge color="success">{{ 'SETTINGS.NOTIFICATION.DEVICE.CURRENT_BADGE' | translate }}</ion-badge>
             </ion-item>
           </ion-card-content>
         </ion-card>
 
-        <!-- 저장된 다른 기기들 -->
+        <!-- 저장된 다른 기기들 - Other registered devices -->
         @if (otherDevices().length > 0) {
-          <h3 class="section-title">다른 기기</h3>
+          <h3 class="section-title">{{ 'SETTINGS.NOTIFICATION.DEVICE.OTHER_TITLE' | translate }}</h3>
           <ion-card>
             <ion-list>
               @for (device of otherDevices(); track device.deviceId) {
@@ -173,7 +184,7 @@ interface DeviceInfo {
                   <ion-label>
                     <h3>{{ device.model }}</h3>
                     <p>{{ device.platform }}</p>
-                    <ion-note>마지막 사용: {{ device.lastUsed | date:'short' }}</ion-note>
+                    <ion-note>{{ 'SETTINGS.NOTIFICATION.DEVICE.LAST_USED' | translate }}: {{ device.lastUsed | date:'short' }}</ion-note>
                   </ion-label>
                 </ion-item>
               }
@@ -217,40 +228,45 @@ interface DeviceInfo {
 export class NotificationSettingsPage implements OnInit {
   private readonly toastCtrl = inject(ToastController);
   private readonly notificationsService = inject(NotificationsService);
+  private readonly translate = inject(TranslateService);
 
   isLoading = signal(true);
   masterEnabled = signal(true);
   isSaving = signal(false);
 
+  /**
+   * 알림 카테고리 목록 (i18n 키 사용)
+   * Notification categories with i18n keys
+   */
   categories = signal<NotificationCategory[]>([
     {
       id: 'reassign',
-      name: '재배정 알림',
-      description: '주문 재배정 시 알림',
+      nameKey: 'SETTINGS.NOTIFICATION.CATEGORY.REASSIGN',
+      descriptionKey: 'SETTINGS.NOTIFICATION.CATEGORY.REASSIGN_DESC',
       icon: 'swap-horizontal-outline',
       enabled: true,
       color: 'primary',
     },
     {
       id: 'delay',
-      name: '연체 알림',
-      description: '처리 기한 초과 시 알림',
+      nameKey: 'SETTINGS.NOTIFICATION.CATEGORY.DELAY',
+      descriptionKey: 'SETTINGS.NOTIFICATION.CATEGORY.DELAY_DESC',
       icon: 'warning-outline',
       enabled: true,
       color: 'warning',
     },
     {
       id: 'customer',
-      name: '고객 요청 알림',
-      description: '고객 일정 변경/취소 요청 시 알림',
+      nameKey: 'SETTINGS.NOTIFICATION.CATEGORY.CUSTOMER',
+      descriptionKey: 'SETTINGS.NOTIFICATION.CATEGORY.CUSTOMER_DESC',
       icon: 'person-outline',
       enabled: true,
       color: 'success',
     },
     {
       id: 'system',
-      name: '시스템 알림',
-      description: '시스템 공지 및 업데이트 알림',
+      nameKey: 'SETTINGS.NOTIFICATION.CATEGORY.SYSTEM',
+      descriptionKey: 'SETTINGS.NOTIFICATION.CATEGORY.SYSTEM_DESC',
       icon: 'settings-outline',
       enabled: false,
       color: 'medium',
@@ -326,8 +342,15 @@ export class NotificationSettingsPage implements OnInit {
     await this.saveSettings();
   }
 
+  /**
+   * 설정 저장
+   * Save notification settings to server
+   */
   private async saveSettings() {
     this.isSaving.set(true);
+    // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
+    const translateService = this.translate;
+    
     try {
       const categories = this.categories();
       const settings = {
@@ -340,14 +363,14 @@ export class NotificationSettingsPage implements OnInit {
       await this.notificationsService.updateSettings(settings);
       
       const toast = await this.toastCtrl.create({
-        message: '알림 설정이 저장되었습니다.',
+        message: translateService.instant('SETTINGS.NOTIFICATION.TOAST.SAVE_SUCCESS'),
         duration: 1500,
         color: 'success',
       });
       await toast.present();
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '설정 저장에 실패했습니다.',
+        message: translateService.instant('SETTINGS.NOTIFICATION.TOAST.SAVE_ERROR'),
         duration: 2000,
         color: 'danger',
       });

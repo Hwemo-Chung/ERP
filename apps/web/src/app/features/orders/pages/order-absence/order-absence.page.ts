@@ -1,3 +1,4 @@
+// i18n 적용됨 - 번역 키: ORDERS.ABSENCE.*, ORDERS.STATUS.*
 import {
   Component,
   inject,
@@ -48,23 +49,24 @@ import {
   refreshOutline,
   alertCircleOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 
 /**
- * 부재 사유 코드 정의
+ * 부재 사유 코드 정의 - i18n 키 참조용
  */
 interface AbsenceReasonCode {
   value: string;
-  label: string;
+  labelKey: string;
 }
 
 const ABSENCE_REASON_CODES: AbsenceReasonCode[] = [
-  { value: 'NOT_HOME', label: '부재중' },
-  { value: 'NO_CONTACT', label: '연락두절' },
-  { value: 'REFUSED', label: '방문거부' },
-  { value: 'WRONG_ADDRESS', label: '주소오류' },
-  { value: 'OTHER', label: '기타' },
+  { value: 'NOT_HOME', labelKey: 'ORDERS.ABSENCE.REASON.NOT_HOME' },
+  { value: 'NO_CONTACT', labelKey: 'ORDERS.ABSENCE.REASON.NO_CONTACT' },
+  { value: 'REFUSED', labelKey: 'ORDERS.ABSENCE.REASON.REFUSED' },
+  { value: 'WRONG_ADDRESS', labelKey: 'ORDERS.ABSENCE.REASON.WRONG_ADDRESS' },
+  { value: 'OTHER', labelKey: 'ORDERS.ABSENCE.REASON.OTHER' },
 ];
 
 const MAX_RETRY_COUNT = 3;
@@ -98,6 +100,7 @@ const MAX_RETRY_COUNT = 3;
     IonBadge,
     IonNote,
     IonCheckbox,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -108,7 +111,7 @@ const MAX_RETRY_COUNT = 3;
             text=""
           ></ion-back-button>
         </ion-buttons>
-        <ion-title>부재 처리</ion-title>
+        <ion-title>{{ 'ORDERS.ABSENCE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -116,21 +119,21 @@ const MAX_RETRY_COUNT = 3;
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent" color="primary"></ion-spinner>
-          <p>로딩 중...</p>
+          <p>{{ 'ORDERS.ABSENCE.LOADING' | translate }}</p>
         </div>
       } @else if (order()) {
         <!-- Retry Count Badge -->
         <div class="retry-count-banner">
           <ion-icon name="refresh-outline"></ion-icon>
           <div class="retry-info">
-            <span class="retry-label">재방문</span>
+            <span class="retry-label">{{ 'ORDERS.ABSENCE.RETRY_COUNT' | translate }}</span>
             <span class="retry-value" [class.max-reached]="isMaxRetryReached()">
-              {{ currentRetryCount() }}/{{ maxRetryCount }}회
+              {{ currentRetryCount() }}/{{ maxRetryCount }}{{ 'COMMON.UNIT.TIMES' | translate }}
             </span>
           </div>
           @if (!isMaxRetryReached()) {
             <ion-badge class="retry-badge">
-              {{ remainingRetries() }}회 남음
+              {{ 'ORDERS.ABSENCE.RETRY_REMAINING' | translate: { count: remainingRetries() } }}
             </ion-badge>
           }
         </div>
@@ -140,8 +143,8 @@ const MAX_RETRY_COUNT = 3;
           <div class="warning-banner">
             <ion-icon name="warning-outline"></ion-icon>
             <div class="warning-content">
-              <strong>최대 재방문 횟수 도달</strong>
-              <p>더 이상 재방문 예약이 불가합니다. 관리자에게 에스컬레이션 처리가 필요합니다.</p>
+              <strong>{{ 'ORDERS.ABSENCE.MAX_RETRY_TITLE' | translate }}</strong>
+              <p>{{ 'ORDERS.ABSENCE.MAX_RETRY_DESC' | translate }}</p>
             </div>
           </div>
         }
@@ -167,7 +170,7 @@ const MAX_RETRY_COUNT = 3;
 
           <div class="info-row">
             <ion-icon name="calendar-outline"></ion-icon>
-            <span>예약일: {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span>
+            <span>{{ 'ORDERS.ABSENCE.CURRENT_APPOINTMENT' | translate }}: {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span>
           </div>
 
           @if (order()!.customerPhone) {
@@ -180,21 +183,21 @@ const MAX_RETRY_COUNT = 3;
 
         <!-- Absence Form -->
         <div class="form-section">
-          <h2 class="section-title">부재 정보</h2>
+          <h2 class="section-title">{{ 'ORDERS.ABSENCE.ORDER_INFO' | translate }}</h2>
 
           <!-- Absence Reason Select -->
           <div class="form-group">
-            <label class="form-label">부재 사유 <span class="required">*</span></label>
+            <label class="form-label">{{ 'ORDERS.ABSENCE.REASON.TITLE' | translate }} <span class="required">*</span></label>
             <ion-item class="custom-select" lines="none">
               <ion-select
                 [(ngModel)]="selectedReasonCode"
-                placeholder="사유를 선택하세요"
+                [placeholder]="'COMMON.PLACEHOLDER.SELECT' | translate"
                 interface="action-sheet"
-                [interfaceOptions]="{ header: '부재 사유 선택' }"
+                [interfaceOptions]="{ header: translate.instant('ORDERS.ABSENCE.REASON.TITLE') }"
               >
                 @for (reason of reasonCodes; track reason.value) {
                   <ion-select-option [value]="reason.value">
-                    {{ reason.label }}
+                    {{ reason.labelKey | translate }}
                   </ion-select-option>
                 }
               </ion-select>
@@ -210,8 +213,8 @@ const MAX_RETRY_COUNT = 3;
                 [disabled]="false"
               ></ion-checkbox>
               <ion-label>
-                <span class="checkbox-label">고객 연락 시도</span>
-                <ion-note class="checkbox-note">방문 전 고객에게 연락을 시도했습니다</ion-note>
+                <span class="checkbox-label">{{ 'ORDERS.ABSENCE.NOTIFY_CUSTOMER' | translate }}</span>
+                <ion-note class="checkbox-note">{{ 'ORDERS.ABSENCE.NOTIFY_CUSTOMER' | translate }}</ion-note>
               </ion-label>
             </ion-item>
           </div>
@@ -219,7 +222,7 @@ const MAX_RETRY_COUNT = 3;
           <!-- Next Visit Date Picker (only if retries remaining) -->
           @if (!isMaxRetryReached()) {
             <div class="form-group">
-              <label class="form-label">다음 방문 예정일 <span class="required">*</span></label>
+              <label class="form-label">{{ 'ORDERS.ABSENCE.NEXT_VISIT.DATE_LABEL' | translate }} <span class="required">*</span></label>
               <div class="date-picker-container">
                 <ion-datetime
                   [(ngModel)]="nextVisitDate"
@@ -231,23 +234,23 @@ const MAX_RETRY_COUNT = 3;
                   [firstDayOfWeek]="0"
                   class="custom-datetime"
                 >
-                  <span slot="title">다음 방문일 선택</span>
+                  <span slot="title">{{ 'ORDERS.ABSENCE.NEXT_VISIT.DATE_HINT' | translate }}</span>
                 </ion-datetime>
               </div>
               <div class="date-hint">
                 <ion-icon name="calendar-outline"></ion-icon>
-                <span>오늘로부터 최대 7일까지 선택 가능합니다</span>
+                <span>{{ 'ORDERS.ABSENCE.NEXT_VISIT.DATE_HINT' | translate }}</span>
               </div>
             </div>
           }
 
           <!-- Notes -->
           <div class="form-group">
-            <label class="form-label">비고 (선택)</label>
+            <label class="form-label">{{ 'ORDERS.ABSENCE.MEMO.LABEL' | translate }}</label>
             <ion-item class="custom-textarea" lines="none">
               <ion-textarea
                 [(ngModel)]="notes"
-                placeholder="추가 메모를 입력하세요... (방문 상황, 특이사항 등)"
+                [placeholder]="'ORDERS.ABSENCE.MEMO.PLACEHOLDER' | translate"
                 [rows]="4"
                 [autoGrow]="true"
                 [maxlength]="500"
@@ -262,8 +265,8 @@ const MAX_RETRY_COUNT = 3;
           <div class="info-banner">
             <ion-icon name="alert-circle-outline"></ion-icon>
             <div>
-              <strong>재방문 안내</strong>
-              <p>부재 처리 시 선택한 날짜로 자동 재방문 예약됩니다.</p>
+              <strong>{{ 'ORDERS.ABSENCE.NEXT_VISIT.TITLE' | translate }}</strong>
+              <p>{{ 'ORDERS.ABSENCE.NEXT_VISIT.DATE_HINT' | translate }}</p>
             </div>
           </div>
         }
@@ -281,10 +284,10 @@ const MAX_RETRY_COUNT = 3;
             >
               @if (isSubmitting()) {
                 <ion-spinner name="crescent" class="button-spinner"></ion-spinner>
-                <span>처리 중...</span>
+                <span>{{ 'COMMON.LOADING' | translate }}</span>
               } @else {
                 <ion-icon slot="start" name="warning-outline"></ion-icon>
-                <span>에스컬레이션 요청</span>
+                <span>{{ 'ORDERS.ABSENCE.ESCALATE' | translate }}</span>
               }
             </ion-button>
           } @else {
@@ -297,10 +300,10 @@ const MAX_RETRY_COUNT = 3;
             >
               @if (isSubmitting()) {
                 <ion-spinner name="crescent" class="button-spinner"></ion-spinner>
-                <span>처리 중...</span>
+                <span>{{ 'COMMON.LOADING' | translate }}</span>
               } @else {
                 <ion-icon slot="start" name="checkmark-outline"></ion-icon>
-                <span>부재 처리 및 재방문 예약</span>
+                <span>{{ 'ORDERS.ABSENCE.SUBMIT' | translate }}</span>
               }
             </ion-button>
           }
@@ -308,9 +311,9 @@ const MAX_RETRY_COUNT = 3;
       } @else {
         <div class="error-container">
           <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
-          <p>주문을 찾을 수 없습니다.</p>
+          <p>{{ 'COMMON.ERROR.NOT_FOUND' | translate }}</p>
           <ion-button fill="outline" routerLink="/tabs/orders">
-            주문 목록으로 돌아가기
+            {{ 'COMMON.BUTTON.BACK_TO_LIST' | translate }}
           </ion-button>
         </div>
       }
@@ -814,6 +817,9 @@ export class OrderAbsencePage implements OnInit {
     });
   }
 
+  // TranslateService를 템플릿에서 사용하기 위해 public으로 노출
+  readonly translate = inject(TranslateService);
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -852,7 +858,8 @@ export class OrderAbsencePage implements OnInit {
       }
     } catch (error) {
       console.error('Failed to load order:', error);
-      await this.showToast('주문 정보를 불러오는데 실패했습니다.', 'danger');
+      const msg = this.translate.instant('ORDERS.ABSENCE.ERROR.LOAD_FAILED');
+      await this.showToast(msg, 'danger');
     } finally {
       this.isLoading.set(false);
     }
@@ -911,32 +918,18 @@ export class OrderAbsencePage implements OnInit {
   }
 
   /**
-   * Get Korean label for order status
+   * Get translated label for order status
    */
   getStatusLabel(status: OrderStatus): string {
-    const labels: Record<OrderStatus, string> = {
-      [OrderStatus.UNASSIGNED]: '미배정',
-      [OrderStatus.ASSIGNED]: '배정',
-      [OrderStatus.CONFIRMED]: '배정확정',
-      [OrderStatus.RELEASED]: '출고확정',
-      [OrderStatus.DISPATCHED]: '출문',
-      [OrderStatus.POSTPONED]: '연기',
-      [OrderStatus.ABSENT]: '부재',
-      [OrderStatus.COMPLETED]: '인수',
-      [OrderStatus.PARTIAL]: '부분인수',
-      [OrderStatus.COLLECTED]: '회수',
-      [OrderStatus.CANCELLED]: '취소',
-      [OrderStatus.REQUEST_CANCEL]: '의뢰취소',
-    };
-    return labels[status] || status;
+    return this.translate.instant(`ORDERS.STATUS.${status}`);
   }
 
   /**
-   * Get Korean label for absence reason
+   * Get translated label for absence reason
    */
   private getReasonLabel(reasonCode: string): string {
     const reason = ABSENCE_REASON_CODES.find(r => r.value === reasonCode);
-    return reason?.label || reasonCode;
+    return reason ? this.translate.instant(reason.labelKey) : reasonCode;
   }
 
   /**
@@ -947,25 +940,21 @@ export class OrderAbsencePage implements OnInit {
       return;
     }
 
+    // 비동기 핸들러를 위한 변수 캡처
+    const translateService = this.translate;
     const nextRetryCount = this.currentRetryCount() + 1;
     const formattedDate = this.formatDate(this.nextVisitDate);
 
     const alert = await this.alertController.create({
-      header: '부재 처리 확인',
-      message: `
-        <p>부재 사유: ${this.getReasonLabel(this.selectedReasonCode)}</p>
-        <p>다음 방문일: ${formattedDate}</p>
-        <p>재방문 횟수: ${nextRetryCount}/${this.maxRetryCount}회</p>
-        <br>
-        <p>부재 처리를 진행하시겠습니까?</p>
-      `,
+      header: translateService.instant('ORDERS.ABSENCE.CONFIRM.TITLE'),
+      message: translateService.instant('ORDERS.ABSENCE.CONFIRM.MESSAGE'),
       buttons: [
         {
-          text: '취소',
+          text: translateService.instant('ORDERS.ABSENCE.CONFIRM.CANCEL'),
           role: 'cancel',
         },
         {
-          text: '확인',
+          text: translateService.instant('ORDERS.ABSENCE.CONFIRM.CONFIRM'),
           handler: () => this.processAbsence(),
         },
       ],
@@ -998,13 +987,13 @@ export class OrderAbsencePage implements OnInit {
       // Increment local retry count for demo
       this.currentRetryCount.set(this.currentRetryCount() + 1);
 
-      await this.showToast('부재 처리가 완료되었습니다. 재방문이 예약되었습니다.', 'success');
+      await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.SUCCESS'), 'success');
 
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
       console.error('Failed to process absence:', error);
-      await this.showToast('부재 처리에 실패했습니다. 다시 시도해주세요.', 'danger');
+      await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);
     }
@@ -1018,21 +1007,19 @@ export class OrderAbsencePage implements OnInit {
       return;
     }
 
+    // 비동기 핸들러를 위한 변수 캡처
+    const translateService = this.translate;
+
     const alert = await this.alertController.create({
-      header: '에스컬레이션 확인',
-      message: `
-        <p>최대 재방문 횟수(${this.maxRetryCount}회)에 도달했습니다.</p>
-        <p>부재 사유: ${this.getReasonLabel(this.selectedReasonCode)}</p>
-        <br>
-        <p>관리자에게 에스컬레이션 요청을 보내시겠습니까?</p>
-      `,
+      header: translateService.instant('ORDERS.ABSENCE.CONFIRM.TITLE'),
+      message: translateService.instant('ORDERS.ABSENCE.MAX_RETRY_DESC'),
       buttons: [
         {
-          text: '취소',
+          text: translateService.instant('ORDERS.ABSENCE.CONFIRM.CANCEL'),
           role: 'cancel',
         },
         {
-          text: '요청',
+          text: translateService.instant('ORDERS.ABSENCE.CONFIRM.CONFIRM'),
           handler: () => this.processEscalation(),
         },
       ],
@@ -1059,13 +1046,13 @@ export class OrderAbsencePage implements OnInit {
       // 3. Save all absence details
       // 4. Flag order for special handling
 
-      await this.showToast('에스컬레이션 요청이 전송되었습니다. 관리자가 확인 후 연락드릴 예정입니다.', 'warning');
+      await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.SUCCESS'), 'warning');
 
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
       console.error('Failed to process escalation:', error);
-      await this.showToast('에스컬레이션 요청에 실패했습니다. 다시 시도해주세요.', 'danger');
+      await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);
     }
@@ -1076,10 +1063,11 @@ export class OrderAbsencePage implements OnInit {
    */
   private formatDate(dateStr: string): string {
     const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}년 ${month}월 ${day}일`;
+    return date.toLocaleDateString(this.translate.currentLang || 'ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   }
 
   /**

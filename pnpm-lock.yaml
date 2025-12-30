@@ -437,6 +437,12 @@ importers:
       '@ngrx/signals':
         specifier: ^19.0.0
         version: 19.2.1(@angular/core@19.2.17(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+      '@ngx-translate/core':
+        specifier: ^16.0.0
+        version: 16.0.4(@angular/common@19.2.17(@angular/core@19.2.17(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@19.2.17(rxjs@7.8.2)(zone.js@0.15.1))
+      '@ngx-translate/http-loader':
+        specifier: ^16.0.0
+        version: 16.0.1(@angular/common@19.2.17(@angular/core@19.2.17(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@19.2.17(rxjs@7.8.2)(zone.js@0.15.1))
       capacitor-native-biometric:
         specifier: ^4.2.2
         version: 4.2.2

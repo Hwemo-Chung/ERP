@@ -1,4 +1,7 @@
-// apps/web/src/app/features/completion/pages/waste-pickup/waste-pickup.page.ts
+/**
+ * 폐가전 회수 페이지 컴포넌트
+ * PRD 명시된 폐가전 코드(P01~P21) 기반 회수 정보 입력
+ */
 import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -34,40 +37,41 @@ import {
   removeOutline,
   saveOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, WasteEntry } from '../../../../store/orders/orders.models';
 
 interface WasteItem {
   id: string;
   code: string;
-  name: string;
+  labelKey: string;
   quantity: number;
   selected: boolean;
 }
 
 // PRD 명시된 폐가전 코드 (P01~P21)
-const WASTE_CODES: { code: string; name: string }[] = [
-  { code: 'P01', name: '냉장고' },
-  { code: 'P02', name: '세탁기' },
-  { code: 'P03', name: '에어컨' },
-  { code: 'P04', name: 'TV' },
-  { code: 'P05', name: '전자레인지' },
-  { code: 'P06', name: '식기세척기' },
-  { code: 'P07', name: '건조기' },
-  { code: 'P08', name: '공기청정기' },
-  { code: 'P09', name: '제습기' },
-  { code: 'P10', name: '가습기' },
-  { code: 'P11', name: '청소기' },
-  { code: 'P12', name: '밥솥' },
-  { code: 'P13', name: '정수기' },
-  { code: 'P14', name: '비데' },
-  { code: 'P15', name: '온수매트' },
-  { code: 'P16', name: '선풍기' },
-  { code: 'P17', name: '히터' },
-  { code: 'P18', name: '안마의자' },
-  { code: 'P19', name: '러닝머신' },
-  { code: 'P20', name: '컴퓨터' },
-  { code: 'P21', name: '기타' },
+const WASTE_CODES: { code: string; labelKey: string }[] = [
+  { code: 'P01', labelKey: 'WASTE_CODES.P01' },
+  { code: 'P02', labelKey: 'WASTE_CODES.P02' },
+  { code: 'P03', labelKey: 'WASTE_CODES.P03' },
+  { code: 'P04', labelKey: 'WASTE_CODES.P04' },
+  { code: 'P05', labelKey: 'WASTE_CODES.P05' },
+  { code: 'P06', labelKey: 'WASTE_CODES.P06' },
+  { code: 'P07', labelKey: 'WASTE_CODES.P07' },
+  { code: 'P08', labelKey: 'WASTE_CODES.P08' },
+  { code: 'P09', labelKey: 'WASTE_CODES.P09' },
+  { code: 'P10', labelKey: 'WASTE_CODES.P10' },
+  { code: 'P11', labelKey: 'WASTE_CODES.P11' },
+  { code: 'P12', labelKey: 'WASTE_CODES.P12' },
+  { code: 'P13', labelKey: 'WASTE_CODES.P13' },
+  { code: 'P14', labelKey: 'WASTE_CODES.P14' },
+  { code: 'P15', labelKey: 'WASTE_CODES.P15' },
+  { code: 'P16', labelKey: 'WASTE_CODES.P16' },
+  { code: 'P17', labelKey: 'WASTE_CODES.P17' },
+  { code: 'P18', labelKey: 'WASTE_CODES.P18' },
+  { code: 'P19', labelKey: 'WASTE_CODES.P19' },
+  { code: 'P20', labelKey: 'WASTE_CODES.P20' },
+  { code: 'P21', labelKey: 'WASTE_CODES.P21' },
 ];
 
 @Component({
@@ -77,6 +81,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -105,7 +110,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
         <ion-buttons slot="start">
           <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
         </ion-buttons>
-        <ion-title>폐가전 회수</ion-title>
+        <ion-title>{{ 'COMPLETION.WASTE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -120,12 +125,12 @@ const WASTE_CODES: { code: string; name: string }[] = [
           <ion-card-header>
             <ion-card-title>
               <ion-icon name="trash-outline"></ion-icon>
-              폐가전 회수 등록
+              {{ 'COMPLETION.WASTE.CARD_TITLE' | translate }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <p class="instruction">
-              회수할 폐가전 품목을 선택하고 수량을 입력해주세요.
+              {{ 'COMPLETION.WASTE.INSTRUCTION' | translate }}
             </p>
           </ion-card-content>
         </ion-card>
@@ -135,13 +140,13 @@ const WASTE_CODES: { code: string; name: string }[] = [
           <ion-card-content>
             <ion-item>
               <ion-select
-                placeholder="폐가전 품목 선택"
+                [placeholder]="'COMPLETION.WASTE.SELECT_PLACEHOLDER' | translate"
                 [(ngModel)]="selectedCode"
                 interface="action-sheet"
               >
                 @for (waste of wasteCodes; track waste.code) {
                   <ion-select-option [value]="waste.code">
-                    {{ waste.code }} - {{ waste.name }}
+                    {{ waste.code }} - {{ waste.labelKey | translate }}
                   </ion-select-option>
                 }
               </ion-select>
@@ -149,7 +154,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
             <div class="add-row">
               <ion-input
                 type="number"
-                placeholder="수량"
+                [placeholder]="'COMPLETION.WASTE.QUANTITY_PLACEHOLDER' | translate"
                 [(ngModel)]="selectedQuantity"
                 min="1"
                 max="99"
@@ -164,7 +169,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
         <!-- Selected Items -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>회수 품목 ({{ totalItems() }}건)</ion-card-title>
+            <ion-card-title>{{ 'COMPLETION.WASTE.ITEMS_TITLE' | translate }} ({{ 'COMPLETION.WASTE.ITEMS_COUNT' | translate:{ count: totalItems() } }})</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             @if (items().length > 0) {
@@ -172,7 +177,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
                 @for (item of items(); track item.id) {
                   <ion-item>
                     <ion-label>
-                      <h3>{{ item.code }} - {{ item.name }}</h3>
+                      <h3>{{ item.code }} - {{ item.labelKey | translate }}</h3>
                     </ion-label>
                     <div class="quantity-controls" slot="end">
                       <ion-button fill="clear" size="small" (click)="decreaseQuantity(item)">
@@ -188,7 +193,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
               </ion-list>
             } @else {
               <div class="empty-state">
-                <p>등록된 폐가전이 없습니다.</p>
+                <p>{{ 'COMPLETION.WASTE.NO_ITEMS' | translate }}</p>
               </div>
             }
           </ion-card-content>
@@ -198,7 +203,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
         <div class="action-buttons">
           <ion-button expand="block" (click)="saveWastePickup()">
             <ion-icon name="save-outline" slot="start"></ion-icon>
-            저장
+            {{ 'COMPLETION.WASTE.SAVE_BTN' | translate }}
           </ion-button>
         </div>
       }
@@ -262,6 +267,7 @@ export class WastePickupPage implements OnInit {
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
   protected readonly ordersStore = inject(OrdersStore);
+  private readonly translateService = inject(TranslateService);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
@@ -297,7 +303,7 @@ export class WastePickupPage implements OnInit {
       this.items.set(order.completion.waste.map((w: WasteEntry) => ({
         id: crypto.randomUUID(),
         code: w.code,
-        name: WASTE_CODES.find(wc => wc.code === w.code)?.name || w.code,
+        labelKey: WASTE_CODES.find(wc => wc.code === w.code)?.labelKey || `WASTE_CODES.${w.code}`,
         quantity: w.quantity,
         selected: true,
       })));
@@ -328,7 +334,7 @@ export class WastePickupPage implements OnInit {
         {
           id: crypto.randomUUID(),
           code: waste.code,
-          name: waste.name,
+          labelKey: waste.labelKey,
           quantity: this.selectedQuantity,
           selected: true,
         },
@@ -358,6 +364,9 @@ export class WastePickupPage implements OnInit {
     });
   }
 
+  /**
+   * 폐가전 회수 정보 저장
+   */
   async saveWastePickup(): Promise<void> {
     try {
       const wasteData = this.items().map(i => ({
@@ -367,7 +376,7 @@ export class WastePickupPage implements OnInit {
       await this.ordersStore.updateOrderWaste(this.orderId(), wasteData);
       
       const toast = await this.toastCtrl.create({
-        message: '폐가전 회수 정보가 저장되었습니다.',
+        message: this.translateService.instant('COMPLETION.WASTE.SAVE_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
@@ -375,7 +384,7 @@ export class WastePickupPage implements OnInit {
       this.router.navigate(['/tabs/completion/process', this.orderId()]);
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '저장 중 오류가 발생했습니다.',
+        message: this.translateService.instant('COMPLETION.WASTE.SAVE_ERROR'),
         duration: 2000,
         color: 'danger',
       });

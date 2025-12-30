@@ -47,10 +47,23 @@ export interface MetadataCache {
   updatedAt: number;
 }
 
+// Background sync task
+export interface BackgroundSyncTask {
+  id?: string;
+  dataType: string;
+  operation: string;
+  data: any;
+  retries: number;
+  maxRetries: number;
+  lastAttempt?: number;
+  createdAt: number;
+}
+
 class ERPDatabase extends Dexie {
   orders!: Table<OfflineOrder, string>;
   syncQueue!: Table<SyncQueueEntry, number>;
   metadata!: Table<MetadataCache, string>;
+  backgroundSyncQueue!: Table<BackgroundSyncTask, string>;
 
   constructor() {
     super('ERPLogistics');
@@ -67,6 +80,14 @@ class ERPDatabase extends Dexie {
       orders: 'id, erpOrderNumber, status, appointmentDate, installerId, branchId, localUpdatedAt',
       syncQueue: '++id, timestamp, method, status, priority',
       metadata: 'key, updatedAt',
+    });
+
+    // Version 3: Added backgroundSyncQueue table
+    this.version(3).stores({
+      orders: 'id, erpOrderNumber, status, appointmentDate, installerId, branchId, localUpdatedAt',
+      syncQueue: '++id, timestamp, method, status, priority',
+      metadata: 'key, updatedAt',
+      backgroundSyncQueue: 'id, dataType, createdAt',
     });
   }
 }

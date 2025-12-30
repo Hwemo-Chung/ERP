@@ -1,0 +1,1316 @@
+{
+  "COMMON": {
+    "OK": "확인",
+    "CANCEL": "취소",
+    "SAVE": "저장",
+    "DELETE": "삭제",
+    "EDIT": "편집",
+    "CLOSE": "닫기",
+    "BACK": "뒤로",
+    "NEXT": "다음",
+    "PREV": "이전",
+    "LOADING": "로딩 중...",
+    "ERROR": "오류",
+    "SUCCESS": "성공",
+    "WARNING": "경고",
+    "COMPLETE": "완료",
+    "ADD": "추가",
+    "INFO": "정보",
+    "CONFIRM": "확인",
+    "YES": "예",
+    "NO": "아니오",
+    "SEARCH": "검색",
+    "FILTER": "필터",
+    "REFRESH": "새로고침",
+    "EXPORT": "내보내기",
+    "IMPORT": "가져오기",
+    "PRINT": "인쇄",
+    "DOWNLOAD": "다운로드",
+    "UPLOAD": "업로드",
+    "SELECT_ALL": "전체 선택",
+    "DESELECT_ALL": "전체 해제",
+    "NO_DATA": "데이터가 없습니다",
+    "ITEMS_COUNT": "{{count}}건",
+    "PAGE_OF": "{{current}} / {{total}} 페이지",
+    "REQUIRED": "필수",
+    "OPTIONAL": "선택",
+    "VIEW_DETAILS": "상세 보기",
+    "VIEW_DETAIL": "상세보기",
+    "VIEW_MORE": "더 보기",
+    "LOAD_MORE": "더 보기",
+    "ACTIONS": "작업",
+    "STATUS": "상태",
+    "DATE": "날짜",
+    "TIME": "시간",
+    "ALL": "전체",
+    "OR": "또는",
+    "ITEMS_SUFFIX": "건",
+    "COUNT_SUFFIX": "건",
+    "TIME_AGO": {
+      "JUST_NOW": "방금 전",
+      "MINUTES_AGO": "{{count}}분 전",
+      "HOURS_AGO": "{{count}}시간 전",
+      "DAYS_AGO": "{{count}}일 전"
+    },
+    "UNIT": {
+      "TIMES": "회"
+    },
+    "PLACEHOLDER": {
+      "SELECT": "선택하세요"
+    },
+    "ERROR": {
+      "TITLE": "오류",
+      "NOT_FOUND": "데이터를 찾을 수 없습니다"
+    },
+    "BUTTON": {
+      "BACK_TO_LIST": "목록으로 돌아가기",
+      "CANCEL": "취소",
+      "SAVE": "저장",
+      "EDIT": "수정",
+      "DELETE": "삭제",
+      "CONFIRM": "확인",
+      "RESET": "초기화",
+      "LOAD_MORE": "더보기",
+      "COMPLETE": "완료"
+    },
+    "WEEKDAY": {
+      "SUNDAY": "일요일",
+      "MONDAY": "월요일",
+      "TUESDAY": "화요일",
+      "WEDNESDAY": "수요일",
+      "THURSDAY": "목요일",
+      "FRIDAY": "금요일",
+      "SATURDAY": "토요일"
+    }
+  },
+  "FILTER": {
+    "TITLE": "필터",
+    "RESET": "초기화",
+    "APPLY": "적용하기",
+    "DATE_RANGE": "날짜 범위",
+    "START_DATE": "시작일",
+    "END_DATE": "종료일",
+    "STATUS": "상태",
+    "INSTALLER": "설치기사",
+    "BRANCH": "지점",
+    "ACTIVE_COUNT": "{{count}}개의 필터가 적용됨"
+  },
+  "CAMERA": {
+    "TAKE_PHOTO": "사진 촬영",
+    "SELECT_PHOTO": "사진 선택",
+    "CAMERA": "카메라",
+    "GALLERY": "갤러리",
+    "ADD_PHOTO": "사진 추가",
+    "PHOTO_ADDED": "{{count}}장의 사진이 추가되었습니다. 더 추가하시겠습니까?",
+    "PERMISSION_REQUIRED": "권한 필요",
+    "PERMISSION_MESSAGE": "카메라 및 갤러리 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
+    "CAPTURE_ERROR": "사진 촬영 중 오류가 발생했습니다."
+  },
+  "BARCODE": {
+    "INPUT_HEADER": "시리얼 번호 입력",
+    "INPUT_MESSAGE_NATIVE": "시리얼 번호를 입력하세요.",
+    "INPUT_MESSAGE_WEB": "바코드 스캐너는 모바일 앱에서 사용 가능합니다.\n직접 입력해 주세요.",
+    "PLACEHOLDER": "시리얼 번호 (10-20자)"
+  },
+  "FILE_ATTACHMENT": {
+    "TITLE": "첨부 파일",
+    "ADD_FILE": "파일 추가",
+    "CAMERA": "카메라",
+    "GALLERY": "갤러리",
+    "HELP_TEXT": "최대 {{maxFiles}}개, 각 {{maxSize}}까지 업로드 가능합니다.",
+    "ERROR": {
+      "SIZE_EXCEEDED": "{{fileName}}이(가) 5MB를 초과합니다.",
+      "MAX_FILES": "최대 {{maxFiles}}개까지만 첨부할 수 있습니다."
+    }
+  },
+  "ORDER_STATUS": {
+    "UNASSIGNED": "미배정",
+    "ASSIGNED": "배정",
+    "CONFIRMED": "배정확정",
+    "RELEASED": "출고확정",
+    "DISPATCHED": "출문",
+    "POSTPONED": "연기",
+    "ABSENT": "부재",
+    "COMPLETED": "인수",
+    "PARTIAL": "부분인수",
+    "COLLECTED": "회수",
+    "CANCELLED": "취소",
+    "REQUEST_CANCEL": "의뢰취소"
+  },
+  "AUTH": {
+    "LOGIN": {
+      "TITLE": "로그인",
+      "WELCOME": "환영합니다",
+      "SUBTITLE": "계정에 로그인하세요",
+      "USERNAME": "사용자명",
+      "USERNAME_PLACEHOLDER": "사용자명을 입력하세요",
+      "USERNAME_REQUIRED": "사용자명을 입력해 주세요 (최소 3자)",
+      "PASSWORD": "비밀번호",
+      "PASSWORD_PLACEHOLDER": "비밀번호를 입력하세요",
+      "PASSWORD_REQUIRED": "비밀번호를 입력해 주세요 (최소 4자)",
+      "REMEMBER_ME": "로그인 상태 유지",
+      "FORGOT_PASSWORD": "비밀번호를 잊으셨나요?",
+      "SIGN_IN": "로그인",
+      "SIGNING_IN": "로그인 중...",
+      "SIGN_OUT": "로그아웃",
+      "BIOMETRIC_LOGIN": "{{type}}로 로그인",
+      "TEST_ACCOUNT": "테스트: {{username}} / {{password}}"
+    },
+    "ERRORS": {
+      "INVALID_CREDENTIALS": "사용자명 또는 비밀번호가 올바르지 않습니다",
+      "SESSION_EXPIRED": "인증 토큰이 만료되었습니다. 비밀번호로 로그인해주세요.",
+      "UNAUTHORIZED": "접근 권한이 없습니다",
+      "BIOMETRIC_FAILED": "생체 인증에 실패했습니다. 비밀번호로 로그인해주세요.",
+      "BIOMETRIC_RETRY": "생체 인증에 실패했습니다. 다시 시도하거나 비밀번호로 로그인해주세요."
+    },
+    "LOGOUT": {
+      "TITLE": "로그아웃",
+      "CONFIRM": "로그아웃 하시겠습니까?",
+      "SUCCESS": "로그아웃되었습니다"
+    }
+  },
+  "BRAND": {
+    "TITLE": "물류 ERP",
+    "SUBTITLE": "현대적인 주문 관리 시스템으로 배송 운영을 간소화하세요.",
+    "COPYRIGHT": "© 2025 물류 ERP",
+    "FEATURES": {
+      "REALTIME_TRACKING": "실시간 주문 추적",
+      "SMART_ASSIGNMENT": "스마트 배정 시스템",
+      "COMPREHENSIVE_REPORTING": "종합 리포트"
+    }
+  },
+  "NAV": {
+    "DASHBOARD": "대시보드",
+    "ORDERS": "주문",
+    "ORDER_LIST": "주문 목록",
+    "ORDER_CREATE": "주문 등록",
+    "ASSIGNMENT": "배정",
+    "COMPLETION": "완료처리",
+    "REPORTS": "리포트",
+    "SETTINGS": "설정",
+    "PROFILE": "내 정보"
+  },
+  "PROFILE": {
+    "TITLE": "프로필",
+    "USER_INFO": "사용자 정보",
+    "SYNC_STATUS": {
+      "TITLE": "동기화 상태",
+      "PENDING": "동기화 대기중",
+      "OPERATIONS": "개 작업",
+      "SYNC_NOW": "지금 동기화"
+    },
+    "SETTINGS": {
+      "TITLE": "설정",
+      "PUSH_NOTIFICATIONS": "푸시 알림",
+      "DARK_MODE": "다크 모드"
+    },
+    "ABOUT": {
+      "TITLE": "정보",
+      "VERSION": "버전"
+    },
+    "LOGOUT": {
+      "BUTTON": "로그아웃",
+      "CONFIRM_TITLE": "로그아웃",
+      "CONFIRM_MESSAGE": "정말 로그아웃 하시겠습니까?",
+      "CANCEL": "취소",
+      "CONFIRM": "로그아웃"
+    }
+  },
+  "DASHBOARD": {
+    "TITLE": "대시보드",
+    "LOADING_DATA": "데이터를 불러오는 중...",
+    "STATS": {
+      "TOTAL_ORDERS": "전체 주문",
+      "COMPLETED": "완료",
+      "PENDING": "대기중",
+      "CANCELLED": "취소",
+      "COMPLETION_RATE": "완료율",
+      "CANCELLATION_RATE": "취소율"
+    },
+    "STATUS_BREAKDOWN": {
+      "TITLE": "상태별 현황",
+      "VIEW_DETAILS": "자세히",
+      "HEADER": {
+        "STATUS": "상태",
+        "COUNT": "건수",
+        "PERCENT": "비율",
+        "DISTRIBUTION": "분포"
+      }
+    },
+    "KPI": {
+      "TITLE": "성과 지표",
+      "COMPLETION_RATE": "완료율",
+      "CANCELLATION_RATE": "취소율",
+      "TARGET": "목표: {{value}}%",
+      "TARGET_LESS_THAN": "목표: {{value}}% 미만"
+    },
+    "TODAY_SUMMARY": {
+      "TITLE": "오늘의 요약",
+      "NEW_ORDERS": "신규 주문",
+      "PENDING_ASSIGNMENT": "배정 대기",
+      "IN_DELIVERY": "배송중"
+    },
+      "TARGET": "목표: {{value}}%"
+    },
+    "RECENT_ORDERS": {
+      "TITLE": "최근 주문",
+      "VIEW_ALL": "전체 보기",
+      "NO_ORDERS": "최근 주문이 없습니다"
+    },
+    "QUICK_ACTIONS": {
+      "TITLE": "빠른 작업",
+      "NEW_ORDER": "새 주문",
+      "ASSIGN_ORDERS": "배정하기",
+      "VIEW_REPORTS": "리포트 보기"
+    }
+  },
+  "ORDERS": {
+    "ERROR": {
+      "LOAD_FAILED": "주문 로드 실패"
+    },
+    "LIST": {
+      "TITLE": "주문 목록",
+      "SEARCH_PLACEHOLDER": "주문번호, 고객명, 주소 검색...",
+      "NO_ORDERS": "주문이 없습니다",
+      "NO_ORDERS_DESC": "검색 조건을 변경하거나 새로고침하세요",
+      "PULL_TO_REFRESH": "아래로 당겨 새로고침하세요",
+      "LOADING": "데이터 로딩 중...",
+      "EXPORT": "내보내기",
+      "COUNT": "주문 목록 ({{count}}건)"
+    },
+    "FILTER": {
+      "ALL": "전체",
+      "UNASSIGNED": "미배정",
+      "ASSIGNED": "배정완료",
+      "IN_PROGRESS": "진행중",
+      "COMPLETED": "완료",
+      "CANCELLED": "취소",
+      "STATUS": "상태",
+      "DATE": "날짜",
+      "INSTALLER": "설치기사"
+    },
+    "DETAIL": {
+      "TITLE": "주문 상세",
+      "ORDER_INFO": "주문 정보",
+      "ORDER_NUMBER": "주문번호",
+      "ORDER_DATE": "주문일",
+      "SCHEDULED_DATE": "예정일",
+      "CUSTOMER_INFO": "고객 정보",
+      "CUSTOMER_NAME": "고객명",
+      "PHONE": "연락처",
+      "ADDRESS": "주소",
+      "PRODUCT_INFO": "제품 정보",
+      "PRODUCT_NAME": "제품명",
+      "PRODUCTS": "제품",
+      "QUANTITY": "수량",
+      "PRICE": "금액",
+      "NOTES": "메모",
+      "INSTALLER_INFO": "설치기사 정보",
+      "INSTALLER": "설치기사",
+      "NOT_ASSIGNED": "미배정",
+      "CALL": "전화",
+      "NAVIGATE": "길찾기",
+      "ATTACHMENTS": "첨부 파일",
+      "TAKE_PHOTO": "사진 촬영",
+      "SCAN_DOCUMENT": "문서 스캔",
+      "GALLERY": "갤러리",
+      "SELECT_FILE": "파일 선택",
+      "UPLOADING": "{{progress}}% 업로드 중...",
+      "CONFIRM_STATUS_CHANGE": "상태 변경 확인",
+      "CHANGE_STATUS_TO": "{{status}} 상태로 변경하시겠습니까?",
+      "UPLOAD_SUCCESS": "{{fileName}} 업로드 완료",
+      "UPLOAD_FAILED": "{{fileName}} 업로드 실패",
+      "DELETE_FILE": "파일 삭제",
+      "DELETE_FILE_CONFIRM": "이 파일을 삭제하시겠습니까?",
+      "DELETE_FILE_NAME_CONFIRM": "{{fileName}}을 삭제하시겠습니까?",
+      "FILE_DELETED": "파일이 삭제되었습니다",
+      "DELETE_FAILED": "파일 삭제 실패",
+      "COMPRESSION_SUCCESS": "압축 완료: {{ratio}}% 감소",
+      "FILE_UPLOADED": "파일이 업로드되었습니다",
+      "FILE_UPLOAD_FAILED": "파일 업로드 실패",
+      "DOWNLOAD_FAILED": "파일 다운로드 실패"
+    },
+    "STATUS": {
+      "PENDING": "대기",
+      "UNASSIGNED": "미배정",
+      "ASSIGNED": "배정완료",
+      "CONFIRMED": "확정",
+      "RELEASED": "출고",
+      "DISPATCHED": "배송중",
+      "IN_PROGRESS": "설치중",
+      "COMPLETED": "완료",
+      "PARTIAL": "부분인수",
+      "CANCELLED": "취소",
+      "POSTPONED": "연기",
+      "ABSENCE": "부재",
+      "ABSENT": "부재",
+      "REQUEST_CANCEL": "취소요청",
+      "COLLECTED": "수거완료",
+      "REVERTED": "반품"
+    },
+    "ACTIONS": {
+      "ASSIGN": "배정",
+      "REASSIGN": "재배정",
+      "COMPLETE": "완료처리",
+      "CANCEL": "취소",
+      "POSTPONE": "연기",
+      "VIEW": "상세보기",
+      "EDIT": "수정",
+      "DELETE": "삭제"
+    },
+    "ASSIGN_MODAL": {
+      "TITLE": "주문 배정",
+      "INSTALLER_LABEL": "기술자 선택",
+      "INSTALLER_PLACEHOLDER": "기술자를 선택하세요",
+      "DATE_LABEL": "약속 날짜",
+      "SLOT_LABEL": "시간대 (선택)",
+      "SLOT_PLACEHOLDER": "시간대 선택",
+      "ASSIGN_BUTTON": "배정",
+      "ERROR": {
+        "INSTALLER_REQUIRED": "기술자를 선택해주세요",
+        "ASSIGN_FAILED": "배정 실패"
+      },
+      "SUCCESS": {
+        "ASSIGNED": "주문이 배정되었습니다"
+      }
+    },
+    "COMPLETION_MODAL": {
+      "TITLE": "설치 완료",
+      "SERIAL_SECTION": "상품 시리얼 번호",
+      "SERIAL_PLACEHOLDER": "시리얼 번호 입력",
+      "QUANTITY": "수량",
+      "WASTE_SECTION": "폐기 기기 수거",
+      "WASTE_CODE": "폐기 기기 코드",
+      "WASTE_CODE_SELECT": "코드 선택",
+      "ADD_WASTE": "폐기 기기 추가",
+      "PHOTO_SECTION": "설치 사진",
+      "TAKE_PHOTO": "사진 촬영",
+      "NOTES_LABEL": "특기사항 (선택)",
+      "NOTES_PLACEHOLDER": "특이사항을 입력하세요",
+      "ERROR": {
+        "CAMERA_ACCESS": "카메라 접근 실패",
+        "SAVE_FAILED": "완료 저장 실패"
+      },
+      "SUCCESS": {
+        "COMPLETED": "설치가 완료되었습니다"
+      }
+    },
+    "TABLE": {
+      "ORDER_NUMBER": "주문번호",
+      "CUSTOMER": "고객명",
+      "ADDRESS": "주소",
+      "PRODUCT": "제품",
+      "SCHEDULED_DATE": "예정일",
+      "STATUS": "상태",
+      "INSTALLER": "설치기사",
+      "ACTIONS": "작업"
+    },
+    "SPLIT": {
+      "TITLE": "분할 주문",
+      "CARD_TITLE": "주문 분할",
+      "ORDER_NUMBER": "주문번호",
+      "CUSTOMER_NAME": "고객명",
+      "APPOINTMENT_DATE": "예약일",
+      "DESCRIPTION": "다중 제품 주문을 여러 설치기사에게 분할 배정합니다.",
+      "PRODUCT_CODE": "제품코드",
+      "TOTAL_QTY": "총 수량",
+      "REMAINING_QTY": "남은 수량",
+      "INSTALLER_PLACEHOLDER": "설치기사명",
+      "QTY_PLACEHOLDER": "수량",
+      "ADD_SPLIT": "분할 추가",
+      "SAVE": "분할 저장",
+      "EMPTY": "분할 가능한 제품이 없습니다",
+      "QTY_SUFFIX": "개",
+      "CONFIRM": {
+        "TITLE": "분할 저장",
+        "MESSAGE": "주문을 분할하시겠습니까? 이 작업은 취소할 수 없습니다.",
+        "CANCEL": "취소",
+        "SAVE": "저장"
+      },
+      "TOAST": {
+        "QTY_WARNING": "모든 수량이 배정되어야 합니다.",
+        "SUCCESS": "분할이 저장되었습니다.",
+        "ERROR": "분할 저장에 실패했습니다.",
+        "SAVE_ERROR": "저장 중 오류가 발생했습니다."
+      }
+    },
+    "ABSENCE": {
+      "TITLE": "부재 처리",
+      "LOADING": "로딩 중...",
+      "RETRY_COUNT": "재방문",
+      "RETRY_REMAINING": "{{count}}회 남음",
+      "MAX_RETRY_TITLE": "최대 재방문 횟수 도달",
+      "MAX_RETRY_DESC": "더 이상 재방문 예약이 불가합니다. 관리자에게 에스컬레이션 처리가 필요합니다.",
+      "ORDER_INFO": "주문 정보",
+      "CURRENT_APPOINTMENT": "현재 예약일",
+      "INSTALLER": "담당 기사",
+      "REASON": {
+        "TITLE": "부재 사유",
+        "NOT_HOME": "부재중",
+        "NO_CONTACT": "연락두절",
+        "REFUSED": "방문거부",
+        "WRONG_ADDRESS": "주소오류",
+        "OTHER": "기타"
+      },
+      "NEXT_VISIT": {
+        "TITLE": "재방문 정보",
+        "DATE_LABEL": "재방문 날짜",
+        "DATE_HINT": "날짜를 선택하세요",
+        "TIME_LABEL": "재방문 시간",
+        "TIME_HINT": "시간을 선택하세요",
+        "MORNING": "오전",
+        "AFTERNOON": "오후"
+      },
+      "MEMO": {
+        "LABEL": "메모",
+        "PLACEHOLDER": "부재 관련 메모를 입력하세요..."
+      },
+      "NOTIFY_CUSTOMER": "고객에게 알림 발송",
+      "SUBMIT": "부재 처리",
+      "ESCALATE": "관리자 에스컬레이션",
+      "CONFIRM": {
+        "TITLE": "부재 처리 확인",
+        "MESSAGE": "부재 처리를 진행하시겠습니까?",
+        "CANCEL": "취소",
+        "CONFIRM": "처리"
+      },
+      "TOAST": {
+        "SUCCESS": "부재 처리가 완료되었습니다.",
+        "ERROR": "부재 처리에 실패했습니다.",
+        "REASON_REQUIRED": "부재 사유를 선택해주세요.",
+        "DATE_REQUIRED": "재방문 날짜를 선택해주세요."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "주문 정보를 불러오는데 실패했습니다."
+      }
+    },
+    "POSTPONE": {
+      "TITLE": "주문 연기",
+      "LOADING": "로딩 중...",
+      "CURRENT_APPOINTMENT": "현재 예약일",
+      "INSTALLER": "담당 기사",
+      "FORM_TITLE": "연기 정보",
+      "REASON": {
+        "TITLE": "연기 사유",
+        "CUSTOMER_REQUEST": "고객요청",
+        "OUT_OF_STOCK": "재고부족",
+        "INSTALLER_SCHEDULE": "기사일정",
+        "WEATHER": "날씨",
+        "OTHER": "기타"
+      },
+      "NEW_DATE": {
+        "TITLE": "새 예약일",
+        "DATE_LABEL": "날짜",
+        "DATE_HINT": "날짜를 선택하세요",
+        "TIME_LABEL": "시간",
+        "TIME_HINT": "시간을 선택하세요"
+      },
+      "MEMO": {
+        "LABEL": "메모",
+        "PLACEHOLDER": "연기 관련 메모를 입력하세요..."
+      },
+      "SUBMIT": "연기 처리",
+      "CONFIRM": {
+        "TITLE": "연기 처리 확인",
+        "MESSAGE": "주문을 연기하시겠습니까?",
+        "CANCEL": "취소",
+        "CONFIRM": "연기"
+      },
+      "TOAST": {
+        "SUCCESS": "연기 처리가 완료되었습니다.",
+        "ERROR": "연기 처리에 실패했습니다.",
+        "REASON_REQUIRED": "연기 사유를 선택해주세요.",
+        "DATE_REQUIRED": "새 예약일을 선택해주세요."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "주문 정보를 불러오는데 실패했습니다."
+      }
+    }
+  },
+  "ASSIGNMENT": {
+    "TITLE": "배정 관리",
+    "SEARCH_PLACEHOLDER": "주문번호, 고객명 검색...",
+    "UNASSIGNED_ORDERS": "미배정 주문",
+    "ASSIGNED_ORDERS": "배정된 주문",
+    "SELECT_INSTALLER": "설치기사 선택",
+    "ASSIGN_CONFIRM": "선택한 {{count}}건의 주문을 {{installer}}에게 배정하시겠습니까?",
+    "ASSIGN_SUCCESS": "{{count}}건의 주문이 배정되었습니다",
+    "ASSIGN_FAILED": "배정에 실패했습니다",
+    "NO_INSTALLER": "설치기사를 선택해주세요",
+    "NO_ORDERS_SELECTED": "배정할 주문을 선택해주세요",
+    "NO_ITEMS": "표시할 항목이 없습니다",
+    "NO_ITEMS_DESC": "필터를 변경하거나 새로고침하세요",
+    "BATCH_ASSIGN": {
+      "TITLE": "일괄 배정",
+      "INSTALLER_SELECT_TITLE": "설치기사 선택",
+      "INSTALLER_PLACEHOLDER": "설치기사를 선택하세요",
+      "DATE_TITLE": "배정 날짜",
+      "UNASSIGNED_SELECT_TITLE": "미배정 주문 선택",
+      "UNASSIGNED_COUNT": "미배정 주문",
+      "SELECTED_COUNT": "선택된 주문",
+      "SELECT_ALL": "전체 선택",
+      "NO_UNASSIGNED": "미배정 주문이 없습니다.",
+      "ASSIGN_BTN": "{{count}}건 배정",
+      "ITEMS_SUFFIX": "건",
+      "PRODUCTS_SUFFIX": "개 제품",
+      "CONFIRM_MESSAGE": "{{count}}건을 {{installer}} 기사에게 배정하시겠습니까?",
+      "OPERATION_NAME": "주문 배정"
+    },
+    "DETAIL": {
+      "TITLE": "배정 상세",
+      "LOADING": "데이터 로딩 중...",
+      "APPOINTMENT_DATE": "약속일시",
+      "INSTALLER": "설치기사",
+      "NOT_ASSIGNED": "미배정",
+      "CUSTOMER_INFO": "고객 정보",
+      "CUSTOMER_NAME": "고객명",
+      "CONTACT": "연락처",
+      "ADDRESS": "주소",
+      "CALL": "전화",
+      "PRODUCT_LIST": "제품 목록",
+      "SPECIAL_NOTES": "특이사항",
+      "NOT_FOUND": "배정 정보를 찾을 수 없습니다.",
+      "ASSIGN_INSTALLER": "설치기사 배정",
+      "CONFIRM_ASSIGNMENT": "배정 확정",
+      "CHANGE_INSTALLER": "기사 변경",
+      "CONFIRM_RELEASE": "출고 확정",
+      "CHANGE_APPOINTMENT": "약속일 변경",
+      "CANCEL": "취소",
+      "ACTION_HEADER": "작업 선택",
+      "ADD_NOTE": "특이사항 추가",
+      "CANCEL_REQUEST": "취소 요청",
+      "CLOSE": "닫기",
+      "PRINT_FAILED": "인쇄 파일 생성에 실패했습니다.",
+      "INSTALLER_NAME": "설치기사명",
+      "APPOINTMENT_DATE_INPUT": "약속일",
+      "ASSIGN": "배정",
+      "INSTALLER_ASSIGNED": "설치기사가 배정되었습니다.",
+      "CONFIRM_ASSIGNMENT_MSG": "이 배정을 확정하시겠습니까?",
+      "CONFIRM": "확정",
+      "ASSIGNMENT_CONFIRMED": "배정이 확정되었습니다.",
+      "NEW_INSTALLER_NAME": "새 설치기사명",
+      "CHANGE": "변경",
+      "INSTALLER_CHANGED": "설치기사가 변경되었습니다.",
+      "CONFIRM_RELEASE_MSG": "이 주문을 출고 확정하시겠습니까?",
+      "RELEASE_CONFIRMED": "출고가 확정되었습니다.",
+      "NEW_APPOINTMENT": "새 약속일",
+      "APPOINTMENT_CHANGED": "약속일이 변경되었습니다.",
+      "APPOINTMENT_DATE_LIMIT": "약속일은 오늘로부터 15일 이내여야 합니다.",
+      "NOTE_PLACEHOLDER": "특이사항을 입력하세요",
+      "SAVE": "저장",
+      "NOTE_ADDED": "특이사항이 추가되었습니다.",
+      "CANCEL_CONFIRM_HEADER": "취소 확인",
+      "CANCEL_CONFIRM_MSG": "정말로 이 배정을 취소 요청하시겠습니까?",
+      "CANCEL_REASON": "취소 사유",
+      "NO": "아니오",
+      "YES_CANCEL": "예, 취소합니다",
+      "CANCEL_REQUESTED": "취소 요청이 접수되었습니다. HQ 승인 후 처리됩니다."
+    },
+    "RELEASE": {
+      "TITLE": "출고 확정",
+      "TARGET_TITLE": "출고 확정 대상",
+      "TOTAL_ITEMS": "전체 항목",
+      "SELECTED_ITEMS": "선택된 항목",
+      "SELECT_ALL": "전체 선택",
+      "LOADING": "데이터 로딩 중...",
+      "NO_TARGET": "출고 확정 대상이 없습니다.",
+      "CONFIRM_BTN": "{{count}}건 출고 확정",
+      "ITEMS_SUFFIX": "건",
+      "PRODUCTS_COUNT": "{{count}}개 제품",
+      "CONFIRM_HEADER": "출고 확정",
+      "CONFIRM_MESSAGE": "{{count}}건을 출고 확정하시겠습니까?",
+      "SUCCESS_MESSAGE": "{{successCount}}건 출고 확정 완료",
+      "PARTIAL_SUCCESS": "{{successCount}}건 성공, {{failCount}}건 실패",
+      "ERROR": "출고 확정 처리 중 오류가 발생했습니다.",
+      "PRINT_SUMMARY": "출고요청집계표",
+      "PRINT_SUCCESS": "출고요청집계표가 다운로드되었습니다.",
+      "PRINT_FAILED": "인쇄 파일 생성에 실패했습니다."
+    }
+  },
+  "COMPLETION": {
+    "TITLE": "완료 처리",
+    "SIGNATURE": {
+      "TITLE": "서명",
+      "CUSTOMER_SIGNATURE": "고객 서명",
+      "INSTALLER_SIGNATURE": "설치기사 서명",
+      "CLEAR": "지우기",
+      "REQUIRED": "고객 서명이 필요합니다",
+      "TAP_TO_SIGN": "터치하여 서명"
+    },
+    "PHOTO": {
+      "TITLE": "설치 사진",
+      "TAKE_PHOTO": "사진 촬영",
+      "SELECT_PHOTO": "사진 선택",
+      "REQUIRED": "설치 사진이 필요합니다 (최소 1장)",
+      "ADDED": "사진이 추가되었습니다.",
+      "COUNT": "{{count}}장"
+    },
+    "FILTER": {
+      "PENDING": "대기",
+      "CERTIFICATE_ISSUED": "확인서 발행",
+      "CERTIFICATE_NOT_ISSUED": "확인서 미발행"
+    },
+    "STATUS": {
+      "SERIAL_ENTERED": "시리얼 입력완료",
+      "SERIAL_NOT_ENTERED": "시리얼 미입력",
+      "WASTE_PICKUP": "폐가전 회수",
+      "COMPLETED": "완료",
+      "NOT_COMPLETED": "미완료",
+      "OPTIONAL": "선택",
+      "ISSUED": "발행완료",
+      "NOT_ISSUED": "미발행"
+    },
+    "NO_ITEMS": "처리할 항목이 없습니다",
+    "ALL_COMPLETED": "모든 작업이 완료되었습니다",
+    "CONFIRM": "완료 처리하시겠습니까?",
+    "SUCCESS": "주문이 완료 처리되었습니다",
+    "FAILED": "완료 처리에 실패했습니다",
+    "PROCESS": {
+      "TITLE": "완료 처리",
+      "ORDER_INFO": "주문 정보",
+      "ORDER_NUMBER": "주문번호",
+      "CUSTOMER_NAME": "고객명",
+      "INSTALLER": "설치기사",
+      "STEPS_TITLE": "완료 처리 단계",
+      "SERIAL_INPUT": "시리얼 번호 입력",
+      "SERIAL_INPUT_DESC": "제품별 제조번호 입력",
+      "WASTE_PICKUP": "폐가전 회수",
+      "WASTE_PICKUP_DESC": "폐가전 회수 정보 입력",
+      "PHOTO_UPLOAD": "사진 첨부",
+      "PHOTO_UPLOAD_DESC": "설치 완료 사진 (선택)",
+      "CERTIFICATE": "설치 확인서",
+      "CERTIFICATE_DESC": "확인서 발행 및 서명",
+      "NOTES_TITLE": "특이사항",
+      "ADD_NOTE": "+ 특이사항 추가",
+      "NOTE_HEADER": "특이사항 추가",
+      "NOTE_PLACEHOLDER": "특이사항을 입력하세요...",
+      "COMPLETE_BTN": "완료 처리",
+      "CONFIRM_HEADER": "완료 처리",
+      "CONFIRM_MESSAGE": "주문을 완료 처리하시겠습니까?",
+      "COMPLETE": "완료",
+      "SUCCESS_MESSAGE": "완료 처리되었습니다.",
+      "ERROR_MESSAGE": "처리 중 오류가 발생했습니다."
+    },
+    "CERTIFICATE": {
+      "TITLE": "설치 확인서",
+      "DOCUMENT_TITLE": "설치 확인서",
+      "ORDER_INFO": "주문 정보",
+      "ORDER_NUMBER": "주문번호",
+      "INSTALL_DATE": "설치일",
+      "CUSTOMER_NAME": "고객명",
+      "INSTALL_ADDRESS": "설치주소",
+      "PRODUCTS_TITLE": "설치 제품",
+      "PRODUCT_NAME": "제품명",
+      "QUANTITY": "수량",
+      "SERIAL_NUMBER": "시리얼번호",
+      "INSTALLER_TITLE": "설치 기사",
+      "SIGNATURE_SECTION": "서명",
+      "CUSTOMER_SIGNATURE_ALT": "고객 서명",
+      "INSTALLER_SIGNATURE_ALT": "설치기사 서명",
+      "CONFIRMATION_TEXT": "위와 같이 설치가 완료되었음을 확인합니다.",
+      "PRINT_BTN": "인쇄",
+      "ISSUE_BTN": "확인서 발행",
+      "ISSUED_SUCCESS": "확인서가 발행되었습니다.",
+      "ISSUE_ERROR": "발행 중 오류가 발생했습니다."
+    },
+    "SERIAL": {
+      "TITLE": "시리얼 번호 입력",
+      "CARD_TITLE": "제품 시리얼 번호",
+      "INSTRUCTION": "각 제품의 제조번호(시리얼 번호)를 입력해주세요.",
+      "FORMAT_HINT": "영문/숫자 10-20자리",
+      "PLACEHOLDER": "시리얼 번호 입력",
+      "VALID": "유효",
+      "FORMAT_ERROR": "형식 오류",
+      "NO_PRODUCTS": "등록된 제품이 없습니다.",
+      "SAVE_BTN": "저장",
+      "SCAN_SUCCESS": "스캔 완료: {{content}}",
+      "SCAN_ERROR": "스캔 중 오류가 발생했습니다.",
+      "SAVE_SUCCESS": "시리얼 번호가 저장되었습니다.",
+      "SAVE_ERROR": "저장 중 오류가 발생했습니다."
+    },
+    "WASTE": {
+      "TITLE": "폐가전 회수",
+      "CARD_TITLE": "폐가전 회수 등록",
+      "INSTRUCTION": "회수할 폐가전 품목을 선택하고 수량을 입력해주세요.",
+      "SELECT_PLACEHOLDER": "폐가전 품목 선택",
+      "QUANTITY_PLACEHOLDER": "수량",
+      "ITEMS_TITLE": "회수 품목",
+      "ITEMS_COUNT": "{{count}}건",
+      "NO_ITEMS": "등록된 폐가전이 없습니다.",
+      "SAVE_BTN": "저장",
+      "SAVE_SUCCESS": "폐가전 회수 정보가 저장되었습니다.",
+      "SAVE_ERROR": "저장 중 오류가 발생했습니다."
+    }
+  },
+  "REPORTS": {
+    "TITLE": "리포트",
+    "DAILY": "일별 리포트",
+    "WEEKLY": "주간 리포트",
+    "MONTHLY": "월간 리포트",
+    "CUSTOM": "기간 설정",
+    "DATE_RANGE": "기간",
+    "GENERATE": "생성",
+    "EXPORT_EXCEL": "엑셀 다운로드",
+    "EXPORT_PDF": "PDF 다운로드",
+    "MENU": {
+      "TITLE": "리포트",
+      "SUBTITLE": "진행 현황 및 데이터 분석",
+      "PROGRESS_DASHBOARD": "진행현황 대시보드",
+      "PROGRESS_DASHBOARD_DESC": "설치기사별/지점별 진행 현황",
+      "CUSTOMER_HISTORY": "고객 이력 조회",
+      "CUSTOMER_HISTORY_DESC": "고객별 주문/설치 이력 검색",
+      "WASTE_SUMMARY": "폐가전 집계",
+      "WASTE_SUMMARY_DESC": "폐가전 회수 현황 및 통계",
+      "EXPORT": "데이터 내보내기",
+      "EXPORT_DESC": "ECOAS, CSV, PDF 출력"
+    },
+    "PROGRESS": {
+      "TITLE": "진행현황 대시보드",
+      "LOADING": "데이터 로딩 중...",
+      "TOTAL_ORDERS": "총 주문",
+      "COMPLETED": "완료",
+      "IN_PROGRESS": "진행중",
+      "CANCELLED": "취소",
+      "KPI_TITLE": "KPI 현황",
+      "COMPLETION_RATE": "완료율",
+      "WASTE_PICKUP": "폐가전 회수",
+      "ITEMS_SUFFIX": "건",
+      "VIEW_BY_INSTALLER": "설치기사별",
+      "VIEW_BY_BRANCH": "지점별",
+      "VIEW_BY_STATUS": "상태별",
+      "STATUS_LABEL": "현황",
+      "NO_DATA": "데이터가 없습니다",
+      "DATE_SELECT": "기간 선택",
+      "START_DATE": "시작일",
+      "END_DATE": "종료일",
+      "APPLY": "적용",
+      "TODAY": "오늘",
+      "THIS_WEEK": "이번 주",
+      "THIS_MONTH": "이번 달"
+    },
+    "CUSTOMER": {
+      "TITLE": "고객 이력 조회",
+      "SEARCH_PLACEHOLDER": "고객명, 연락처, 주소로 검색...",
+      "SEARCH_HINT": "2글자 이상 입력하세요",
+      "RECENT_SEARCHES": "최근 검색",
+      "SEARCHING": "검색 중...",
+      "RESULTS_COUNT": "검색 결과 {{count}}건",
+      "RESERVATION": "예약",
+      "NO_RESULTS": "검색 결과가 없습니다",
+      "NO_RESULTS_DESC": "다른 검색어를 시도해보세요",
+      "EMPTY_TITLE": "고객 이력 조회",
+      "EMPTY_DESC": "고객명, 연락처, 주소로 검색해주세요",
+      "CSV_SUCCESS": "CSV 다운로드 완료",
+      "CSV_FAILED": "다운로드 실패"
+    },
+    "WASTE": {
+      "TITLE": "폐가전 집계",
+      "TOTAL_COUNT": "총 회수량",
+      "UNIT": "대",
+      "CATEGORY_COUNT": "품목수",
+      "AVERAGE": "평균",
+      "TOP5_TITLE": "TOP 5 품목",
+      "CATEGORY_STATUS": "품목별 현황",
+      "NO_DATA": "데이터가 없습니다",
+      "LAST_7_DAYS": "최근 7일",
+      "LAST_30_DAYS": "최근 30일",
+      "LAST_90_DAYS": "최근 90일",
+      "CSV_SUCCESS": "CSV 다운로드 완료",
+      "CSV_FAILED": "다운로드 실패"
+    },
+    "EXPORT": {
+      "TITLE": "데이터 내보내기",
+      "DATE_SELECT": "기간 선택",
+      "TYPE_SELECT": "내보내기 유형",
+      "TYPE_ECOAS": "ECOAS 포맷",
+      "TYPE_ECOAS_DESC": "레거시 시스템 호환 형식",
+      "TYPE_COMPLETED": "설치완료 리스트",
+      "TYPE_COMPLETED_DESC": "완료된 주문 목록",
+      "TYPE_PENDING": "미완료 리스트",
+      "TYPE_PENDING_DESC": "진행중/대기 주문",
+      "TYPE_WASTE": "폐가전 회수 집계",
+      "TYPE_WASTE_DESC": "회수 현황 통계",
+      "TYPE_RAW": "Raw 데이터",
+      "TYPE_RAW_DESC": "전체 데이터 내보내기",
+      "FORMAT_SELECT": "파일 형식",
+      "EXPORT_BTN": "내보내기",
+      "PROCESSING": "처리중...",
+      "STATUS_PENDING": "내보내기 준비 중...",
+      "STATUS_PROCESSING": "파일 생성 중...",
+      "STATUS_COMPLETED": "내보내기 완료!",
+      "STATUS_ERROR": "오류",
+      "DOWNLOAD": "다운로드",
+      "SUCCESS": "내보내기 완료!",
+      "FAILED": "내보내기 실패",
+      "REQUEST_FAILED": "내보내기 요청 실패",
+      "STATUS_CHECK_FAILED": "상태 확인 실패",
+      "HEADERS": {
+        "CODE": "코드",
+        "ITEM": "품목",
+        "QUANTITY": "수량",
+        "CUSTOMER_NAME": "고객명",
+        "PHONE": "연락처",
+        "ADDRESS": "주소",
+        "ORDER_NUMBER": "주문번호",
+        "STATUS": "상태",
+        "APPOINTMENT_DATE": "예약일"
+      }
+    },
+    "RELEASE_SUMMARY": {
+      "TITLE": "출고요청집계표",
+      "START_DATE": "시작일",
+      "END_DATE": "종료일",
+      "FDC_SELECT": "FDC 선택",
+      "ALL": "전체",
+      "SEARCH_PLACEHOLDER": "모델코드 또는 모델명 검색...",
+      "TOTAL_ORDERS": "총 주문",
+      "TOTAL_QUANTITY": "총 수량",
+      "TOTAL_MODELS": "총 모델"
+    }
+  },
+  "PROFILE": {
+    "TITLE": "내 정보",
+    "USER_INFO": {
+      "TITLE": "사용자 정보",
+      "USERNAME": "사용자명",
+      "EMAIL": "이메일",
+      "PHONE": "전화번호",
+      "ROLE": "역할",
+      "BRANCH": "소속 지점",
+      "BRANCH_CODE": "지점 코드"
+    },
+    "SYNC": {
+      "TITLE": "동기화 상태",
+      "STATUS": "상태",
+      "NETWORK": "네트워크",
+      "ONLINE": "온라인",
+      "OFFLINE": "오프라인",
+      "PENDING_OPERATIONS": "대기 중인 작업",
+      "PENDING_COUNT": "{{count}}건",
+      "SYNC_NOW": "지금 동기화",
+      "SYNCING": "동기화 중...",
+      "LAST_SYNC": "마지막 동기화",
+      "SYNC_COMPLETED": "동기화 완료",
+      "SYNC_PENDING": "대기 중"
+    },
+    "SETTINGS": {
+      "TITLE": "설정",
+      "LANGUAGE": "언어",
+      "DARK_MODE": "다크 모드",
+      "NOTIFICATIONS": "푸시 알림"
+    },
+    "APP_INFO": {
+      "TITLE": "앱 정보",
+      "VERSION": "버전",
+      "ENVIRONMENT": "환경",
+      "ENV_PRODUCTION": "운영",
+      "ENV_DEVELOPMENT": "개발"
+    }
+  },
+  "SETTINGS": {
+    "SECTION": {
+      "MANAGEMENT": "관리",
+      "ACCOUNT": "계정"
+    },
+    "MENU": {
+      "SETTLEMENT": "정산 관리",
+      "SETTLEMENT_DESC": "주간 정산 기간 관리",
+      "NOTIFICATION_CENTER": "알림 센터",
+      "NOTIFICATION_CENTER_DESC": "푸시 알림 설정 및 이력",
+      "NOTIFICATION_SETTINGS": "알림 설정",
+      "NOTIFICATION_SETTINGS_DESC": "카테고리별 알림 활성화/무음",
+      "BIOMETRIC": "생체 인증",
+      "BIOMETRIC_DESC": "빠른 로그인 설정",
+      "LOGOUT_DESC": "계정에서 로그아웃"
+    },
+    "NOTIFICATION": {
+      "TITLE": "알림 설정",
+      "MASTER_TOGGLE": "알림 받기",
+      "MASTER_DESC": "이 기기에서 푸시 알림을 받습니다",
+      "CATEGORIES_TITLE": "알림 카테고리",
+      "CATEGORY": {
+        "REASSIGN": "재배정 알림",
+        "REASSIGN_DESC": "주문 재배정 시 알림",
+        "DELAY": "연체 알림",
+        "DELAY_DESC": "처리 기한 초과 시 알림",
+        "CUSTOMER": "고객 요청 알림",
+        "CUSTOMER_DESC": "고객 일정 변경/취소 요청 시 알림",
+        "SYSTEM": "시스템 알림",
+        "SYSTEM_DESC": "시스템 공지 및 업데이트 알림"
+      },
+      "DEVICE": {
+        "CURRENT_TITLE": "현재 기기",
+        "OTHER_TITLE": "다른 기기",
+        "CURRENT_BADGE": "현재 기기",
+        "LAST_USED": "마지막 사용"
+      },
+      "TOAST": {
+        "SAVE_SUCCESS": "알림 설정이 저장되었습니다.",
+        "SAVE_ERROR": "설정 저장에 실패했습니다."
+      }
+    },
+    "NOTIFICATION_CENTER": {
+      "TITLE": "알림 센터",
+      "MARK_ALL_READ": "모두 읽음",
+      "TAB_ALL": "전체",
+      "TAB_UNREAD": "안읽음",
+      "SETTINGS_TITLE": "알림 설정",
+      "SETTING_REASSIGN": "재배정 알림",
+      "SETTING_DELAY": "지연 알림",
+      "SETTING_CUSTOMER": "고객 요청",
+      "SETTING_PUSH": "푸시 알림",
+      "EMPTY": "알림이 없습니다",
+      "NEW": "NEW",
+      "TOAST": {
+        "MARK_ALL_READ": "모두 읽음 처리됨",
+        "SETTING_ERROR": "설정 저장 실패"
+      },
+      "TIME_AGO": {
+        "JUST_NOW": "방금"
+      }
+    },
+    },
+    "BIOMETRIC": {
+      "TITLE": "생체 인증 설정",
+      "ENABLE": "생체 인증 사용",
+      "ENABLE_DESC": "지문 또는 Face ID로 빠르게 로그인",
+      "NOT_AVAILABLE_TITLE": "생체 인증 사용 불가",
+      "NOT_AVAILABLE": "이 기기에서 생체 인증을 사용할 수 없습니다.",
+      "NOT_AVAILABLE_NOTES": {
+        "WEB_BROWSER": "웹 브라우저에서는 지원되지 않습니다",
+        "NATIVE_ONLY": "네이티브 앱(Android/iOS)에서만 사용 가능합니다",
+        "MUST_REGISTER": "기기에 생체 인증이 등록되어 있어야 합니다"
+      },
+      "QUICK_SECURE": "빠르고 안전한 로그인을 위해 생체 인증을 사용하세요.",
+      "ENABLE_LABEL": "생체 인증 활성화",
+      "ENABLE_NEXT_LOGIN": "다음 로그인부터 {{type}}로 간편하게 로그인할 수 있습니다",
+      "LAST_USED": "마지막 사용",
+      "SECURITY_INFO": {
+        "TITLE": "보안 정보",
+        "SAFE_STORAGE": "안전한 저장",
+        "SAFE_STORAGE_DESC": "인증 정보는 기기의 보안 저장소에 암호화되어 저장됩니다",
+        "DEVICE_ONLY": "기기 전용",
+        "DEVICE_ONLY_DESC": "생체 인증은 이 기기에서만 작동하며 다른 기기와 공유되지 않습니다",
+        "REAUTH_REQUIRED": "재인증 필요",
+        "REAUTH_REQUIRED_DESC": "30일 이상 사용하지 않으면 비밀번호로 다시 로그인해야 합니다"
+      },
+      "TEST_BUTTON": "생체 인증 테스트",
+      "CONFIRM_DISABLE": {
+        "TITLE": "생체 인증 비활성화",
+        "MESSAGE": "생체 인증을 비활성화하면 다음 로그인 시 이메일과 비밀번호를 입력해야 합니다. 계속하시겠습니까?",
+        "CANCEL": "취소",
+        "CONFIRM": "비활성화"
+      },
+      "TOAST": {
+        "ENABLE_SUCCESS": "생체 인증이 활성화되었습니다.",
+        "DISABLE_SUCCESS": "생체 인증이 비활성화되었습니다.",
+        "TEST_SUCCESS": "생체 인증이 정상적으로 작동합니다.",
+        "ERROR": "생체 인증 설정에 실패했습니다."
+      }
+    },
+    "SETTLEMENT": {
+      "TITLE": "정산 관리",
+      "PERIOD": "정산 기간",
+      "CURRENT_PERIOD": "현재 정산 기간",
+      "START_DATE": "시작일",
+      "END_DATE": "종료일",
+      "SUMMARY": "정산 요약",
+      "TOTAL_ORDERS": "총 주문",
+      "COMPLETED_ORDERS": "완료 주문",
+      "TOTAL_AMOUNT": "총 금액",
+      "DATE_RANGE": "기간",
+      "STATUS": {
+        "LABEL": "상태",
+        "OPEN": "진행중",
+        "LOCKED": "마감"
+      },
+      "ORDER_COUNT": "주문 수",
+      "ORDER_COUNT_VALUE": "{{count}}건",
+      "LOCKED_AT": "마감",
+      "LOCK_BUTTON": "정산 마감",
+      "UNLOCK_BUTTON": "해제",
+      "CLOSE_BUTTON": "마감",
+      "HISTORY": "정산 이력",
+      "NO_HISTORY": "이력이 없습니다",
+      "LOAD_ERROR": "정보를 불러올 수 없습니다",
+      "CONFIRM_LOCK": {
+        "TITLE": "정산 마감",
+        "MESSAGE": "{{start}} ~ {{end}} 마감?",
+        "CANCEL": "취소",
+        "CONFIRM": "마감"
+      },
+      "CONFIRM_UNLOCK": {
+        "TITLE": "마감 해제",
+        "MESSAGE": "해제하시겠습니까?",
+        "CANCEL": "취소",
+        "CONFIRM": "해제"
+      },
+      "TOAST": {
+        "LOCK_SUCCESS": "마감 완료",
+        "UNLOCK_SUCCESS": "해제 완료",
+        "ERROR": "오류 발생"
+      }
+    },
+    "SYSTEM": {
+      "TITLE": "시스템 설정",
+      "TAB": {
+        "SYSTEM": "시스템",
+        "USERS": "사용자",
+        "ROLES": "권한"
+      },
+      "SECTION": {
+        "SYSTEM": "시스템 설정"
+      },
+      "NOTIFICATION_FREQUENCY": "알림 빈도",
+      "FREQUENCY": {
+        "INSTANT": "즉시",
+        "BATCH": "일괄",
+        "OFF": "비활성화"
+      },
+      "BATCH_SCHEDULE_HOUR": "일괄 발송 시간",
+      "BATCH_HOUR_PLACEHOLDER": "시간 (0-23)",
+      "AUTO_LOCK_SETTLEMENT": "자동 정산 마감",
+      "AUTO_LOCK_DAY": "마감 요일",
+      "AUTO_LOCK_TIME": "마감 시간",
+      "MAINTENANCE_MODE": "유지보수 모드",
+      "MAINTENANCE_MESSAGE": "유지보수 메시지",
+      "MAINTENANCE_MESSAGE_PLACEHOLDER": "유지보수 중입니다. 잠시 후 다시 시도해주세요.",
+      "ROLES_POLICY": "권한 정책",
+      "ROLE": {
+        "HQ_ADMIN": "HQ 관리자",
+        "HQ_ADMIN_DESC": "전체 시스템 관리, 사용자 관리, 정산 관리, 리포트 조회",
+        "BRANCH_MANAGER": "지사 관리자",
+        "BRANCH_MANAGER_DESC": "지사별 배정/완료 관리, 지사 리포트, 정산 조회",
+        "INSTALLER": "기사",
+        "INSTALLER_DESC": "배정된 주문 수령, 완료 처리, 개인 리포트 조회"
+      },
+      "USER": {
+        "ADD": "사용자 추가",
+        "ADD_TITLE": "사용자 추가",
+        "EDIT_TITLE": "사용자 수정",
+        "NAME": "사용자명",
+        "EMAIL": "이메일",
+        "ROLE": "역할",
+        "BRANCH": "지사",
+        "BRANCH_CODE": "지사 코드",
+        "STATUS": "상태",
+        "ACTIVE": "활성화",
+        "INACTIVE": "비활성화",
+        "ACTIVATE": "활성화",
+        "DEACTIVATE": "비활성화",
+        "LAST_LOGIN": "마지막 로그인",
+        "EMPTY": "사용자가 없습니다"
+      },
+      "SUCCESS": {
+        "SAVED": "시스템 설정이 저장되었습니다.",
+        "USER_CREATED": "사용자가 추가되었습니다.",
+        "USER_UPDATED": "사용자가 수정되었습니다.",
+        "USER_ACTIVATED": "사용자가 활성화되었습니다.",
+        "USER_DEACTIVATED": "사용자가 비활성화되었습니다."
+      },
+      "ERROR": {
+        "ADMIN_ONLY": "HQ 관리자만 접근할 수 있습니다.",
+        "LOAD_USERS_FAILED": "사용자를 로드할 수 없습니다.",
+        "SAVE_FAILED": "저장 실패",
+        "STATUS_CHANGE_FAILED": "상태 변경 실패"
+      }
+    },
+    "CUSTOMER_CONTACT": {
+      "TITLE": "고객사 연락처",
+      "SEARCH_PLACEHOLDER": "고객명 또는 담당자 검색...",
+      "CONTACT_PERSON": "담당자",
+      "FILTER": {
+        "ALL": "전체"
+      },
+      "TYPE": {
+        "RECEIVER": "수신처",
+        "PICKUP": "픽업처",
+        "BOTH": "겸용"
+      },
+      "FIELD": {
+        "CUSTOMER_NAME": "고객사명",
+        "CUSTOMER_CODE": "고객 코드",
+        "CONTACT_NAME": "담당자명",
+        "DEPARTMENT": "부서",
+        "PHONE": "전화",
+        "EMAIL": "이메일",
+        "ADDRESS": "주소",
+        "BUSINESS_TYPE": "용도",
+        "MEMO": "메모"
+      },
+      "EMPTY": {
+        "TITLE": "연락처가 없습니다",
+        "DESCRIPTION": "새로운 고객사 연락처를 추가해주세요"
+      },
+      "MODAL": {
+        "ADD_TITLE": "연락처 추가",
+        "EDIT_TITLE": "연락처 수정"
+      },
+      "CONFIRM": {
+        "DELETE": "정말 삭제하시겠습니까?"
+      },
+      "SUCCESS": {
+        "CREATED": "연락처가 추가되었습니다.",
+        "UPDATED": "연락처가 수정되었습니다.",
+        "DELETED": "연락처가 삭제되었습니다."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "연락처를 로드할 수 없습니다.",
+        "LOAD_MORE_FAILED": "추가 로드 실패",
+        "SAVE_FAILED": "저장 실패",
+        "DELETE_FAILED": "삭제 실패"
+      }
+    },
+    "ROLES": {
+      "ADMIN": "관리자",
+      "MANAGER": "매니저",
+      "COORDINATOR": "코디네이터",
+      "INSTALLER": "설치기사",
+      "DEFAULT": "일반 사용자"
+    },
+    "DEFAULT_USER": "사용자",
+    "APP_VERSION": "앱 버전"
+  },
+  "ROLES": {
+    "HQ_ADMIN": "본사 관리자",
+    "BRANCH_MANAGER": "지점장",
+    "PARTNER_COORDINATOR": "협력업체 관리자",
+    "INSTALLER": "설치기사"
+  },
+  "LANGUAGES": {
+    "KO": "한국어",
+    "EN": "English"
+  },
+  "SYNC": {
+    "SUCCESS": {
+      "ALL_SYNCED": "모든 변경사항이 동기화되었습니다"
+    },
+    "WARNING": {
+      "PARTIAL_SYNC": "일부 변경사항을 동기화할 수 없습니다"
+    },
+    "OPERATION": {
+      "COMPLETION": "완료",
+      "STATUS_CHANGE": "상태변경",
+      "WASTE": "폐기기기",
+      "ATTACHMENT": "첨부파일",
+      "NOTE": "메모"
+    }
+  },
+  "BULK": {
+    "DEFAULT_OPERATION": "일괄 작업",
+    "RESULT": "결과",
+    "SUCCESS": "성공",
+    "FAILED": "실패",
+    "SUMMARY": "전체 {{total}}건 중 {{success}}건 처리 완료",
+    "FAILED_ITEMS": "실패 항목 ({{count}})",
+    "SUCCESS_ITEMS": "성공 항목 ({{count}})",
+    "UNKNOWN_ERROR": "알 수 없는 오류",
+    "RETRY_FAILED": "실패 항목 재시도 ({{count}}건)"
+  },
+  "CONFLICT": {
+    "ENTITY": {
+      "ORDER": "주문"
+    },
+    "FIELD": {
+      "STATUS": "상태",
+      "APPOINTMENT_DATE": "예약일",
+      "APPOINTMENT_SLOT": "예약시간",
+      "MEMO": "메모"
+    },
+    "CANCELLED": "사용자가 작업을 취소했습니다."
+  },
+  "ERRORS": {
+    "NETWORK": {
+      "OFFLINE": "네트워크 연결이 끊어졌습니다",
+      "CONNECTION_FAILED": "서버에 연결할 수 없습니다",
+      "TIMEOUT": "요청 시간이 초과되었습니다",
+      "RETRY": "다시 시도"
+    },
+    "VALIDATION": {
+      "REQUIRED_FIELD": "필수 입력 항목입니다",
+      "INVALID_FORMAT": "형식이 올바르지 않습니다",
+      "MIN_LENGTH": "최소 {{min}}자 이상 입력해 주세요",
+      "MAX_LENGTH": "최대 {{max}}자까지 입력 가능합니다"
+    },
+    "SERVER": {
+      "INTERNAL_ERROR": "서버 오류가 발생했습니다",
+      "NOT_FOUND": "요청한 데이터를 찾을 수 없습니다",
+      "FORBIDDEN": "접근 권한이 없습니다"
+    }
+  },
+  "APP": {
+    "OFFLINE_MODE": "오프라인 모드 - 온라인 복구 시 자동 동기화됩니다",
+    "UPDATE_AVAILABLE": "새 버전이 있습니다. 앱을 다시 로드하시겠습니까?",
+    "UPDATE_LATER": "나중에",
+    "UPDATE_NOW": "업데이트",
+    "SESSION_EXPIRING": "세션이 {{time}} 후 만료됩니다",
+    "BACK_TO_EXIT": "뒤로 버튼을 한번 더 누르면 앱이 종료됩니다",
+    "UNSAVED_CHANGES": {
+      "TITLE": "저장되지 않은 변경사항",
+      "MESSAGE": "작성 중인 내용이 있습니다. 정말 나가시겠습니까?",
+      "STAY": "머무르기",
+      "LEAVE": "나가기"
+    }
+  },
+  "SESSION": {
+    "MODAL_TITLE": "세션 만료 예정",
+    "EXPIRING_SOON": "세션이 {{seconds}}초 후 만료됩니다",
+    "SECURITY_MESSAGE": "보안을 위해 세션을 연장하거나 다시 로그인해 주세요",
+    "EXTEND_BUTTON": "세션 연장",
+    "EXPIRED_TITLE": "세션 만료",
+    "EXPIRED_MESSAGE": "세션이 만료되었습니다. 비밀번호를 입력하여 다시 로그인해 주세요.",
+    "LOGIN_BUTTON": "로그인",
+    "PASSWORD_PLACEHOLDER": "비밀번호",
+    "ERROR": {
+      "USER_NOT_FOUND": "사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요.",
+      "INVALID_PASSWORD": "비밀번호가 올바르지 않습니다.",
+      "AUTH_FAILED": "인증 중 오류가 발생했습니다. 다시 시도해 주세요."
+    }
+  },
+  "WASTE_CODES": {
+    "P01": "냉장고",
+    "P02": "세탁기",
+    "P03": "에어컨",
+    "P04": "텔레비전",
+    "P05": "전자레인지",
+    "P06": "컴퓨터",
+    "P07": "모니터",
+    "P08": "프린터",
+    "P09": "복사기",
+    "P10": "팩스",
+    "P11": "스캐너",
+    "P12": "청소기",
+    "P13": "음식물처리기",
+    "P14": "식기세척기",
+    "P15": "의류건조기",
+    "P16": "비데",
+    "P17": "정수기",
+    "P18": "공기청정기",
+    "P19": "가습기",
+    "P20": "제습기",
+    "P21": "기타"
+  },
+  "REPORTS": {
+    "RELEASE_SUMMARY": {
+      "TITLE": "출고요청집계표",
+      "FDC_NAME": "FDC명",
+      "MODEL_CODE": "모델코드",
+      "MODEL_NAME": "모델명",
+      "QUANTITY": "수량",
+      "TOTAL": "합계",
+      "PERIOD": "조회기간",
+      "PRINT_DATE": "출력일시",
+      "TOTAL_ORDERS": "총 주문",
+      "TOTAL_QUANTITY": "총 수량",
+      "FDC_COUNT": "FDC 수",
+      "UNIT": "개"
+    }
+  },
+  "SIGNATURE": {
+    "TITLE": "서명",
+    "CANCEL": "취소",
+    "CLEAR": "지우기",
+    "CONFIRM": "확인",
+    "HINT": "여기에 서명해주세요"
+  }
+}

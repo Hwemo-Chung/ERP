@@ -33,6 +33,7 @@ import {
   cubeOutline,
   printOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus } from '../../../../store/orders/orders.models';
 import { ReportsStore } from '../../../../store/reports/reports.store';
@@ -65,14 +66,16 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
+    TranslateModule,
   ],
   template: `
+    <!-- 출고 확정 페이지 헤더 -->
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/assignment"></ion-back-button>
         </ion-buttons>
-        <ion-title>출고 확정</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.RELEASE.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="printSummary()">
             <ion-icon name="print-outline"></ion-icon>
@@ -82,31 +85,31 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Summary Card -->
+      <!-- 출고 확정 대상 요약 카드 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>출고 확정 대상</ion-card-title>
+          <ion-card-title>{{ 'ASSIGNMENT.RELEASE.TARGET_TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="summary-row">
-            <span>전체 항목:</span>
-            <strong>{{ items().length }}건</strong>
+            <span>{{ 'ASSIGNMENT.RELEASE.TOTAL_ITEMS' | translate }}:</span>
+            <strong>{{ items().length }}{{ 'ASSIGNMENT.RELEASE.ITEMS_SUFFIX' | translate }}</strong>
           </div>
           <div class="summary-row">
-            <span>선택된 항목:</span>
-            <strong>{{ selectedCount() }}건</strong>
+            <span>{{ 'ASSIGNMENT.RELEASE.SELECTED_ITEMS' | translate }}:</span>
+            <strong>{{ selectedCount() }}{{ 'ASSIGNMENT.RELEASE.ITEMS_SUFFIX' | translate }}</strong>
           </div>
         </ion-card-content>
       </ion-card>
 
-      <!-- Select All -->
+      <!-- 전체 선택 체크박스 -->
       <ion-item>
         <ion-checkbox
           slot="start"
@@ -114,13 +117,14 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
           [indeterminate]="isIndeterminate()"
           (ionChange)="toggleSelectAll($event)"
         ></ion-checkbox>
-        <ion-label>전체 선택</ion-label>
+        <ion-label>{{ 'ASSIGNMENT.RELEASE.SELECT_ALL' | translate }}</ion-label>
       </ion-item>
 
       @if (isLoading()) {
+        <!-- 로딩 상태 -->
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'ASSIGNMENT.RELEASE.LOADING' | translate }}</p>
         </div>
       } @else {
         <ion-list>
@@ -136,26 +140,27 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                 <h3>{{ order.customerName }}</h3>
                 <p>
                   <ion-icon name="cube-outline"></ion-icon>
-                  {{ order.lines?.length || 0 }}개 제품 | {{ order.installerName || '미배정' }}
+                  {{ 'ASSIGNMENT.RELEASE.PRODUCTS_COUNT' | translate:{ count: order.lines?.length || 0 } }} | {{ order.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}
                 </p>
                 <ion-note>{{ order.appointmentDate || '-' }}</ion-note>
               </ion-label>
             </ion-item>
           } @empty {
+            <!-- 빈 상태 -->
             <div class="empty-state">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <p>출고 확정 대상이 없습니다.</p>
+              <p>{{ 'ASSIGNMENT.RELEASE.NO_TARGET' | translate }}</p>
             </div>
           }
         </ion-list>
       }
 
-      <!-- Confirm Button -->
+      <!-- 출고 확정 버튼 -->
       @if (selectedCount() > 0) {
         <div class="confirm-button">
           <ion-button expand="block" (click)="confirmRelease()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            {{ selectedCount() }}건 출고 확정
+            {{ 'ASSIGNMENT.RELEASE.CONFIRM_BTN' | translate:{ count: selectedCount() } }}
           </ion-button>
         </div>
       }
@@ -225,21 +230,34 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
   `],
 })
 export class ReleaseConfirmPage implements OnInit {
+  /** @description 주문 스토어 */
   private readonly ordersStore = inject(OrdersStore);
+  /** @description 리포트 스토어 */
   private readonly reportsStore = inject(ReportsStore);
+  /** @description 알림창 컨트롤러 */
   private readonly alertCtrl = inject(AlertController);
+  /** @description 토스트 컨트롤러 */
   private readonly toastCtrl = inject(ToastController);
+  /** @description 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
+  /** @description 로딩 상태 */
   protected readonly isLoading = signal(false);
+  /** @description 검색어 */
   protected readonly searchQuery = signal('');
+  /** @description 선택된 주문 ID 집합 */
   protected readonly selectedIds = signal<Set<string>>(new Set());
 
-  // Get confirmed orders that are ready for release
+  /**
+   * @description 확정 상태(CONFIRMED)인 주문 목록 (출고 대기)
+   */
   protected readonly confirmedOrders = computed(() => {
     return this.ordersStore.orders().filter(o => o.status === OrderStatus.CONFIRMED);
   });
 
-  // Filter by search query
+  /**
+   * @description 검색어로 필터링된 주문 목록
+   */
   protected readonly items = computed(() => {
     const query = this.searchQuery().toLowerCase();
     const orders = this.confirmedOrders();
@@ -253,6 +271,7 @@ export class ReleaseConfirmPage implements OnInit {
     );
   });
 
+  /** @description 선택된 항목 수 */
   protected readonly selectedCount = computed(() => this.selectedIds().size);
 
   constructor() {
@@ -318,6 +337,9 @@ export class ReleaseConfirmPage implements OnInit {
     });
   }
 
+  /**
+   * @description 출고요청집계표 인쇄 (PDF 다운로드)
+   */
   async printSummary(): Promise<void> {
     try {
       // Export release summary as PDF
@@ -327,17 +349,17 @@ export class ReleaseConfirmPage implements OnInit {
         status: [OrderStatus.CONFIRMED],
       });
       
-      this.reportsStore.downloadFile(blob, `출고요청집계표_${new Date().toISOString().split('T')[0]}.pdf`);
+      this.reportsStore.downloadFile(blob, `${this.translateService.instant('ASSIGNMENT.RELEASE.PRINT_SUMMARY')}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       const toast = await this.toastCtrl.create({
-        message: '출고요청집계표가 다운로드되었습니다.',
+        message: this.translateService.instant('ASSIGNMENT.RELEASE.PRINT_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
       await toast.present();
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '인쇄 파일 생성에 실패했습니다.',
+        message: this.translateService.instant('ASSIGNMENT.RELEASE.PRINT_FAILED'),
         duration: 2000,
         color: 'danger',
       });
@@ -345,16 +367,19 @@ export class ReleaseConfirmPage implements OnInit {
     }
   }
 
+  /**
+   * @description 선택된 주문들 출고 확정
+   */
   async confirmRelease(): Promise<void> {
     const selectedOrderIds = Array.from(this.selectedIds());
     
     const alert = await this.alertCtrl.create({
-      header: '출고 확정',
-      message: `${selectedOrderIds.length}건을 출고 확정하시겠습니까?`,
+      header: this.translateService.instant('ASSIGNMENT.RELEASE.CONFIRM_HEADER'),
+      message: this.translateService.instant('ASSIGNMENT.RELEASE.CONFIRM_MESSAGE', { count: selectedOrderIds.length }),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '확정',
+          text: this.translateService.instant('COMMON.CONFIRM'),
           handler: async () => {
             try {
               // Update each order status to RELEASED
@@ -374,8 +399,8 @@ export class ReleaseConfirmPage implements OnInit {
               this.selectedIds.set(new Set());
 
               const message = failCount > 0 
-                ? `${successCount}건 성공, ${failCount}건 실패`
-                : `${successCount}건 출고 확정 완료`;
+                ? this.translateService.instant('ASSIGNMENT.RELEASE.PARTIAL_SUCCESS', { successCount, failCount })
+                : this.translateService.instant('ASSIGNMENT.RELEASE.SUCCESS_MESSAGE', { successCount });
 
               const toast = await this.toastCtrl.create({
                 message,
@@ -385,7 +410,7 @@ export class ReleaseConfirmPage implements OnInit {
               await toast.present();
             } catch (error) {
               const toast = await this.toastCtrl.create({
-                message: '출고 확정 처리 중 오류가 발생했습니다.',
+                message: this.translateService.instant('ASSIGNMENT.RELEASE.ERROR'),
                 duration: 2000,
                 color: 'danger',
               });

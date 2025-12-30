@@ -39,6 +39,7 @@ import {
   checkmarkCircleOutline,
   cubeOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus } from '../../../../store/orders/orders.models';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -71,11 +72,12 @@ import { AuthService } from '../../../../core/services/auth.service';
     IonSpinner,
     IonFab,
     IonFabButton,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>배정 관리</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openFilter()">
             <ion-icon name="filter-outline"></ion-icon>
@@ -85,23 +87,23 @@ import { AuthService } from '../../../../core/services/auth.service';
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="currentStatus()" (ionChange)="onStatusChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'COMMON.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="unassigned">
-            <ion-label>미배정</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="assigned">
-            <ion-label>배정</ion-label>
+            <ion-label>{{ 'ORDERS.STATUS.ASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="confirmed">
-            <ion-label>확정</ion-label>
+            <ion-label>{{ 'ORDERS.STATUS.CONFIRMED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -116,26 +118,26 @@ import { AuthService } from '../../../../core/services/auth.service';
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value">{{ totalCount() }}</div>
-          <div class="stat-label">전체</div>
+          <div class="stat-label">{{ 'COMMON.ALL' | translate }}</div>
         </div>
         <div class="stat-card danger">
           <div class="stat-value">{{ unassignedCount() }}</div>
-          <div class="stat-label">미배정</div>
+          <div class="stat-label">{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</div>
         </div>
         <div class="stat-card warning">
           <div class="stat-value">{{ assignedCount() }}</div>
-          <div class="stat-label">배정</div>
+          <div class="stat-label">{{ 'ORDERS.STATUS.ASSIGNED' | translate }}</div>
         </div>
         <div class="stat-card success">
           <div class="stat-value">{{ confirmedCount() }}</div>
-          <div class="stat-label">확정</div>
+          <div class="stat-label">{{ 'ORDERS.STATUS.CONFIRMED' | translate }}</div>
         </div>
       </div>
 
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'ORDERS.LIST.LOADING' | translate }}</p>
         </div>
       } @else {
         <ion-list>
@@ -156,7 +158,7 @@ import { AuthService } from '../../../../core/services/auth.service';
                   </span>
                   <span class="meta-item" [class.unassigned]="!item.installerName">
                     <ion-icon name="person-outline"></ion-icon>
-                    {{ item.installerName || '미배정' }}
+                    {{ item.installerName || ('ORDERS.STATUS.UNASSIGNED' | translate) }}
                   </span>
                 </div>
                 @if (item.productSummary && item.productSummary !== '-') {
@@ -171,8 +173,8 @@ import { AuthService } from '../../../../core/services/auth.service';
           } @empty {
             <div class="empty-state">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <h3>표시할 항목이 없습니다</h3>
-              <p>필터를 변경하거나 새로고침하세요</p>
+              <h3>{{ 'ASSIGNMENT.NO_ITEMS' | translate }}</h3>
+              <p>{{ 'ASSIGNMENT.NO_ITEMS_DESC' | translate }}</p>
             </div>
           }
         </ion-list>
@@ -370,18 +372,31 @@ import { AuthService } from '../../../../core/services/auth.service';
   `],
 })
 export class AssignmentListPage implements OnInit {
+  /** 주문 데이터 상태 관리 스토어 */
   protected readonly ordersStore = inject(OrdersStore);
+  /** 인증 서비스 */
   private readonly authService = inject(AuthService);
+  /** 모달 컨트롤러 */
   private readonly modalController = inject(ModalController);
+  /** 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
+  /** 현재 선택된 상태 필터 */
   protected readonly currentStatus = signal<string>('all');
+  /** 검색어 */
   protected readonly searchQuery = signal('');
 
+  /** 로딩 상태 */
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
+  /** KPI 지표 */
   protected readonly kpi = computed(() => this.ordersStore.kpiMetrics());
+  /** 전체 건수 */
   protected readonly totalCount = computed(() => this.kpi().total);
+  /** 미배정 건수 */
   protected readonly unassignedCount = computed(() => this.kpi().pending);
+  /** 배정 건수 */
   protected readonly assignedCount = computed(() => this.kpi().assigned);
+  /** 확정 건수 */
   protected readonly confirmedCount = computed(() => this.kpi().confirmed);
 
   protected readonly assignments = computed(() => {
@@ -493,13 +508,19 @@ export class AssignmentListPage implements OnInit {
     return colors[status] || 'medium';
   }
 
+  /**
+   * 상태 코드를 i18n 기반 라벨로 변환
+   * @param status - 주문 상태 코드
+   * @returns 번역된 상태 라벨
+   */
   getStatusLabel(status: OrderStatus | string): string {
-    const labels: Record<string, string> = {
-      [OrderStatus.UNASSIGNED]: '미배정',
-      [OrderStatus.ASSIGNED]: '배정',
-      [OrderStatus.CONFIRMED]: '확정',
-      [OrderStatus.RELEASED]: '출고확정',
+    const statusI18nKeys: Record<string, string> = {
+      [OrderStatus.UNASSIGNED]: 'ORDERS.STATUS.UNASSIGNED',
+      [OrderStatus.ASSIGNED]: 'ORDERS.STATUS.ASSIGNED',
+      [OrderStatus.CONFIRMED]: 'ORDERS.STATUS.CONFIRMED',
+      [OrderStatus.RELEASED]: 'ORDERS.STATUS.RELEASED',
     };
-    return labels[status] || String(status);
+    const key = statusI18nKeys[status];
+    return key ? this.translateService.instant(key) : String(status);
   }
 }

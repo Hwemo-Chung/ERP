@@ -20,6 +20,7 @@ import {
   IonContent,
   IonFooter,
 } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-signature-pad',
@@ -34,16 +35,17 @@ import {
     IonButton,
     IonContent,
     IonFooter,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button (click)="close()">취소</ion-button>
+          <ion-button (click)="close()">{{ 'SIGNATURE.CANCEL' | translate }}</ion-button>
         </ion-buttons>
-        <ion-title>서명</ion-title>
+        <ion-title>{{ 'SIGNATURE.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="clear()">지우기</ion-button>
+          <ion-button (click)="clear()">{{ 'SIGNATURE.CLEAR' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -61,7 +63,7 @@ import {
           (touchend)="onTouchEnd($event)"
         ></canvas>
         @if (!hasSignature()) {
-          <p class="hint">여기에 서명해주세요</p>
+          <p class="hint">{{ 'SIGNATURE.HINT' | translate }}</p>
         }
       </div>
     </ion-content>
@@ -73,7 +75,7 @@ import {
           [disabled]="!hasSignature()"
           (click)="confirm()"
         >
-          확인
+          {{ 'SIGNATURE.CONFIRM' | translate }}
         </ion-button>
       </ion-toolbar>
     </ion-footer>

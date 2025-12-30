@@ -10,6 +10,7 @@
 import { Injectable, inject } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 import { ToastController } from '@ionic/angular/standalone';
+import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from './auth.service';
 import { NetworkService } from './network.service';
 import { BackgroundSyncService } from './background-sync.service';
@@ -23,6 +24,7 @@ export class AppInitService {
   private readonly syncQueue = inject(SyncQueueService);
   private readonly swUpdate = inject(SwUpdate);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   /**
    * Initialize app - call from AppComponent.ngOnInit()
@@ -93,16 +95,16 @@ export class AppInitService {
    */
   private async showUpdatePrompt(): Promise<void> {
     const toast = await this.toastCtrl.create({
-      message: '새 버전이 있습니다. 앱을 다시 로드하시겠습니까?',
+      message: this.translate.instant('APP.UPDATE_AVAILABLE'),
       duration: 0, // Don't auto-dismiss
       position: 'top',
       buttons: [
         {
-          text: '나중에',
+          text: this.translate.instant('APP.UPDATE_LATER'),
           role: 'cancel',
         },
         {
-          text: '업데이트',
+          text: this.translate.instant('APP.UPDATE_NOW'),
           handler: () => {
             this.swUpdate.activateUpdate().then(() => {
               window.location.reload();

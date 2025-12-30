@@ -149,7 +149,7 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should authenticate user on successful login', fakeAsync(() => {
-      const credentials = { loginId: 'testuser', password: 'password123' };
+      const credentials = { username: 'testuser', password: 'password123' };
 
       service.login(credentials);
 
@@ -167,7 +167,7 @@ describe('AuthService', () => {
     }));
 
     it('should set error on failed login', fakeAsync(() => {
-      const credentials = { loginId: 'testuser', password: 'wrong' };
+      const credentials = { username: 'testuser', password: 'wrong' };
 
       service.login(credentials);
 
@@ -181,7 +181,7 @@ describe('AuthService', () => {
     }));
 
     it('should set loading state during login', fakeAsync(() => {
-      const credentials = { loginId: 'testuser', password: 'password123' };
+      const credentials = { username: 'testuser', password: 'password123' };
 
       service.login(credentials);
       expect(service.isLoading()).toBeTrue();
