@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, AlertController } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { walletOutline, gitBranchOutline, notificationsOutline, personOutline, logOutOutline } from 'ionicons/icons';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -9,7 +10,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-settings-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge],
+  imports: [CommonModule, RouterLink, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge],
   template: `
     <ion-header><ion-toolbar><ion-title>설정</ion-title></ion-toolbar></ion-header>
     <ion-content class="ion-padding">
@@ -48,22 +49,28 @@ export class SettingsMenuPage {
   private authService = inject(AuthService);
   private alertController = inject(AlertController);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   constructor() { 
     addIcons({ walletOutline, gitBranchOutline, notificationsOutline, personOutline, logOutOutline }); 
   }
 
   async confirmLogout() {
+    const title = await this.translate.get('PROFILE.LOGOUT.CONFIRM_TITLE').toPromise();
+    const message = await this.translate.get('PROFILE.LOGOUT.CONFIRM_MESSAGE').toPromise();
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const logoutBtn = await this.translate.get('PROFILE.LOGOUT.BUTTON').toPromise();
+    
     const alert = await this.alertController.create({
-      header: '로그아웃',
-      message: '정말 로그아웃 하시겠습니까?',
+      header: title,
+      message: message,
       buttons: [
         {
-          text: '취소',
+          text: cancelBtn,
           role: 'cancel'
         },
         {
-          text: '로그아웃',
+          text: logoutBtn,
           role: 'destructive',
           handler: () => {
             this.logout();

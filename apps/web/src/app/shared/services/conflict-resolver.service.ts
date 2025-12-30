@@ -158,18 +158,23 @@ export class ConflictResolverService {
     if (a === b) return true;
     if (typeof a !== typeof b) return false;
     if (a === null || b === null) return a === b;
-    
+
     if (typeof a === 'object') {
+      // Check array vs object mismatch
+      const aIsArray = Array.isArray(a);
+      const bIsArray = Array.isArray(b);
+      if (aIsArray !== bIsArray) return false;
+
       const aObj = a as Record<string, unknown>;
       const bObj = b as Record<string, unknown>;
       const aKeys = Object.keys(aObj);
       const bKeys = Object.keys(bObj);
-      
+
       if (aKeys.length !== bKeys.length) return false;
-      
+
       return aKeys.every(key => this.deepEqual(aObj[key], bObj[key]));
     }
-    
+
     return false;
   }
 }

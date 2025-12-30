@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -31,6 +31,7 @@ import {
   ToastController,
   AlertController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { createOutline, trashOutline, closeOutline, checkmarkOutline, lockOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
@@ -44,6 +45,7 @@ import { AuthService } from '@app/core/services/auth.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -75,66 +77,66 @@ import { AuthService } from '@app/core/services/auth.service';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/settings"></ion-back-button>
         </ion-buttons>
-        <ion-title>시스템 설정</ion-title>
+        <ion-title>{{ 'SETTINGS.SYSTEM.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
       <!-- Tab Selection -->
       <ion-segment [(ngModel)]="activeTab" (ionChange)="onTabChange()" class="tab-segment">
-        <ion-segment-button value="system">시스템</ion-segment-button>
-        <ion-segment-button value="users">사용자</ion-segment-button>
-        <ion-segment-button value="roles">권한</ion-segment-button>
+        <ion-segment-button value="system">{{ 'SETTINGS.SYSTEM.TAB.SYSTEM' | translate }}</ion-segment-button>
+        <ion-segment-button value="users">{{ 'SETTINGS.SYSTEM.TAB.USERS' | translate }}</ion-segment-button>
+        <ion-segment-button value="roles">{{ 'SETTINGS.SYSTEM.TAB.ROLES' | translate }}</ion-segment-button>
       </ion-segment>
 
       <!-- System Settings Tab -->
       <div *ngIf="activeTab === 'system'" class="settings-section">
         <ion-card>
           <ion-card-header>
-            <ion-card-title>시스템 설정</ion-card-title>
+            <ion-card-title>{{ 'SETTINGS.SYSTEM.SECTION.SYSTEM' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <form [formGroup]="systemForm" (ngSubmit)="saveSystemSettings()">
               <ion-item>
-                <ion-label position="stacked">알림 빈도</ion-label>
+                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.NOTIFICATION_FREQUENCY' | translate }}</ion-label>
                 <ion-select formControlName="notificationFrequency">
-                  <ion-select-option value="instant">즉시</ion-select-option>
-                  <ion-select-option value="batch">일괄</ion-select-option>
-                  <ion-select-option value="off">비활성화</ion-select-option>
+                  <ion-select-option value="instant">{{ 'SETTINGS.SYSTEM.FREQUENCY.INSTANT' | translate }}</ion-select-option>
+                  <ion-select-option value="batch">{{ 'SETTINGS.SYSTEM.FREQUENCY.BATCH' | translate }}</ion-select-option>
+                  <ion-select-option value="off">{{ 'SETTINGS.SYSTEM.FREQUENCY.OFF' | translate }}</ion-select-option>
                 </ion-select>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('notificationFrequency')?.value === 'batch'">
-                <ion-label position="stacked">일괄 발송 시간</ion-label>
+                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.BATCH_SCHEDULE_HOUR' | translate }}</ion-label>
                 <ion-input
                   type="number"
                   formControlName="batchScheduleHour"
                   min="0"
                   max="23"
-                  placeholder="시간 (0-23)"
+                  [placeholder]="'SETTINGS.SYSTEM.BATCH_HOUR_PLACEHOLDER' | translate"
                 ></ion-input>
               </ion-item>
 
               <ion-item>
-                <ion-label>자동 정산 마감</ion-label>
+                <ion-label>{{ 'SETTINGS.SYSTEM.AUTO_LOCK_SETTLEMENT' | translate }}</ion-label>
                 <ion-toggle formControlName="autoLockSettlement"></ion-toggle>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('autoLockSettlement')?.value">
-                <ion-label position="stacked">마감 요일</ion-label>
+                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.AUTO_LOCK_DAY' | translate }}</ion-label>
                 <ion-select formControlName="autoLockDay">
-                  <ion-select-option value="0">일요일</ion-select-option>
-                  <ion-select-option value="1">월요일</ion-select-option>
-                  <ion-select-option value="2">화요일</ion-select-option>
-                  <ion-select-option value="3">수요일</ion-select-option>
-                  <ion-select-option value="4">목요일</ion-select-option>
-                  <ion-select-option value="5">금요일</ion-select-option>
-                  <ion-select-option value="6">토요일</ion-select-option>
+                  <ion-select-option value="0">{{ 'COMMON.WEEKDAY.SUNDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="1">{{ 'COMMON.WEEKDAY.MONDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="2">{{ 'COMMON.WEEKDAY.TUESDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="3">{{ 'COMMON.WEEKDAY.WEDNESDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="4">{{ 'COMMON.WEEKDAY.THURSDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="5">{{ 'COMMON.WEEKDAY.FRIDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="6">{{ 'COMMON.WEEKDAY.SATURDAY' | translate }}</ion-select-option>
                 </ion-select>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('autoLockSettlement')?.value">
-                <ion-label position="stacked">마감 시간</ion-label>
+                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.AUTO_LOCK_TIME' | translate }}</ion-label>
                 <ion-input
                   type="time"
                   formControlName="autoLockTime"
@@ -142,25 +144,25 @@ import { AuthService } from '@app/core/services/auth.service';
               </ion-item>
 
               <ion-item>
-                <ion-label>유지보수 모드</ion-label>
+                <ion-label>{{ 'SETTINGS.SYSTEM.MAINTENANCE_MODE' | translate }}</ion-label>
                 <ion-toggle formControlName="maintenanceMode"></ion-toggle>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('maintenanceMode')?.value">
-                <ion-label position="stacked">유지보수 메시지</ion-label>
+                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.MAINTENANCE_MESSAGE' | translate }}</ion-label>
                 <ion-input
                   formControlName="maintenanceMessage"
-                  placeholder="유지보수 중입니다. 잠시 후 다시 시도해주세요."
+                  [placeholder]="'SETTINGS.SYSTEM.MAINTENANCE_MESSAGE_PLACEHOLDER' | translate"
                 ></ion-input>
               </ion-item>
 
               <div class="form-actions">
                 <ion-button expand="block" (click)="resetSystemForm()">
-                  초기화
+                  {{ 'COMMON.BUTTON.RESET' | translate }}
                 </ion-button>
                 <ion-button expand="block" (click)="saveSystemSettings()" [disabled]="isSaving">
                   <ion-spinner *ngIf="isSaving" slot="start"></ion-spinner>
-                  저장
+                  {{ 'COMMON.BUTTON.SAVE' | translate }}
                 </ion-button>
               </div>
             </form>
@@ -173,7 +175,7 @@ import { AuthService } from '@app/core/services/auth.service';
         <div class="section-actions">
           <ion-button expand="block" (click)="openAddUserModal()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
-            사용자 추가
+            {{ 'SETTINGS.SYSTEM.USER.ADD' | translate }}
           </ion-button>
         </div>
 
@@ -195,22 +197,22 @@ import { AuthService } from '@app/core/services/auth.service';
               </div>
               <div class="user-details">
                 <p *ngIf="user.branchName">
-                  <strong>지사:</strong> {{ user.branchName }}
+                  <strong>{{ 'SETTINGS.SYSTEM.USER.BRANCH' | translate }}:</strong> {{ user.branchName }}
                 </p>
                 <p>
-                  <strong>상태:</strong>
+                  <strong>{{ 'SETTINGS.SYSTEM.USER.STATUS' | translate }}:</strong>
                   <ion-badge [color]="user.isActive ? 'success' : 'danger'">
-                    {{ user.isActive ? '활성화' : '비활성화' }}
+                    {{ user.isActive ? ('SETTINGS.SYSTEM.USER.ACTIVE' | translate) : ('SETTINGS.SYSTEM.USER.INACTIVE' | translate) }}
                   </ion-badge>
                 </p>
                 <p *ngIf="user.lastLogin">
-                  <strong>마지막 로그인:</strong> {{ user.lastLogin | date: 'yyyy.MM.dd HH:mm' }}
+                  <strong>{{ 'SETTINGS.SYSTEM.USER.LAST_LOGIN' | translate }}:</strong> {{ user.lastLogin | date: 'yyyy.MM.dd HH:mm' }}
                 </p>
               </div>
               <div class="user-actions">
                 <ion-button size="small" fill="outline" (click)="editUser(user)">
                   <ion-icon slot="start" name="create-outline"></ion-icon>
-                  수정
+                  {{ 'COMMON.BUTTON.EDIT' | translate }}
                 </ion-button>
                 <ion-button
                   size="small"
@@ -219,7 +221,7 @@ import { AuthService } from '@app/core/services/auth.service';
                   (click)="toggleUserStatus(user)"
                 >
                   <ion-icon slot="start" [name]="user.isActive ? 'lock-outline' : 'checkmark-outline'"></ion-icon>
-                  {{ user.isActive ? '비활성화' : '활성화' }}
+                  {{ user.isActive ? ('SETTINGS.SYSTEM.USER.DEACTIVATE' | translate) : ('SETTINGS.SYSTEM.USER.ACTIVATE' | translate) }}
                 </ion-button>
               </div>
             </ion-card-content>
@@ -228,7 +230,7 @@ import { AuthService } from '@app/core/services/auth.service';
 
         <div *ngIf="!isLoading && users.length === 0" class="empty-state">
           <ion-icon name="people-outline"></ion-icon>
-          <h3>사용자가 없습니다</h3>
+          <h3>{{ 'SETTINGS.SYSTEM.USER.EMPTY' | translate }}</h3>
         </div>
 
         <!-- User Modal -->
@@ -240,7 +242,7 @@ import { AuthService } from '@app/core/services/auth.service';
           <ng-template>
             <ion-header>
               <ion-toolbar>
-                <ion-title>{{ isEditingUser ? '사용자 수정' : '사용자 추가' }}</ion-title>
+                <ion-title>{{ isEditingUser ? ('SETTINGS.SYSTEM.USER.EDIT_TITLE' | translate) : ('SETTINGS.SYSTEM.USER.ADD_TITLE' | translate) }}</ion-title>
                 <ion-buttons slot="end">
                   <ion-button (click)="closeUserModal()">
                     <ion-icon name="close-outline"></ion-icon>
@@ -251,12 +253,12 @@ import { AuthService } from '@app/core/services/auth.service';
             <ion-content class="ion-padding">
               <form [formGroup]="userForm" (ngSubmit)="saveUser()">
                 <ion-item>
-                  <ion-label position="stacked">이름 *</ion-label>
-                  <ion-input formControlName="name" placeholder="사용자명"></ion-input>
+                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.NAME' | translate }} *</ion-label>
+                  <ion-input formControlName="name" [placeholder]="'SETTINGS.SYSTEM.USER.NAME' | translate"></ion-input>
                 </ion-item>
 
                 <ion-item>
-                  <ion-label position="stacked">이메일 *</ion-label>
+                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.EMAIL' | translate }} *</ion-label>
                   <ion-input
                     type="email"
                     formControlName="email"
@@ -266,22 +268,22 @@ import { AuthService } from '@app/core/services/auth.service';
                 </ion-item>
 
                 <ion-item>
-                  <ion-label position="stacked">역할 *</ion-label>
+                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.ROLE' | translate }} *</ion-label>
                   <ion-select formControlName="role">
-                    <ion-select-option value="HQ_ADMIN">HQ 관리자</ion-select-option>
-                    <ion-select-option value="BRANCH_MANAGER">지사 관리자</ion-select-option>
-                    <ion-select-option value="INSTALLER">기사</ion-select-option>
+                    <ion-select-option value="HQ_ADMIN">{{ 'SETTINGS.SYSTEM.ROLE.HQ_ADMIN' | translate }}</ion-select-option>
+                    <ion-select-option value="BRANCH_MANAGER">{{ 'SETTINGS.SYSTEM.ROLE.BRANCH_MANAGER' | translate }}</ion-select-option>
+                    <ion-select-option value="INSTALLER">{{ 'SETTINGS.SYSTEM.ROLE.INSTALLER' | translate }}</ion-select-option>
                   </ion-select>
                 </ion-item>
 
                 <ion-item *ngIf="userForm.get('role')?.value === 'BRANCH_MANAGER'">
-                  <ion-label position="stacked">지사</ion-label>
-                  <ion-input formControlName="branchCode" placeholder="지사 코드"></ion-input>
+                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.BRANCH' | translate }}</ion-label>
+                  <ion-input formControlName="branchCode" [placeholder]="'SETTINGS.SYSTEM.USER.BRANCH_CODE' | translate"></ion-input>
                 </ion-item>
 
                 <div class="modal-actions">
                   <ion-button expand="block" (click)="closeUserModal()" fill="outline">
-                    취소
+                    {{ 'COMMON.BUTTON.CANCEL' | translate }}
                   </ion-button>
                   <ion-button
                     expand="block"
@@ -289,7 +291,7 @@ import { AuthService } from '@app/core/services/auth.service';
                     [disabled]="!userForm.valid || isSaving"
                   >
                     <ion-spinner *ngIf="isSaving" slot="start"></ion-spinner>
-                    저장
+                    {{ 'COMMON.BUTTON.SAVE' | translate }}
                   </ion-button>
                 </div>
               </form>
@@ -302,21 +304,21 @@ import { AuthService } from '@app/core/services/auth.service';
       <div *ngIf="activeTab === 'roles'" class="settings-section">
         <ion-card>
           <ion-card-header>
-            <ion-card-title>권한 정책</ion-card-title>
+            <ion-card-title>{{ 'SETTINGS.SYSTEM.ROLES_POLICY' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <div class="roles-info">
               <div class="role-item">
-                <h4>HQ 관리자</h4>
-                <p>전체 시스템 관리, 사용자 관리, 정산 관리, 리포트 조회</p>
+                <h4>{{ 'SETTINGS.SYSTEM.ROLE.HQ_ADMIN' | translate }}</h4>
+                <p>{{ 'SETTINGS.SYSTEM.ROLE.HQ_ADMIN_DESC' | translate }}</p>
               </div>
               <div class="role-item">
-                <h4>지사 관리자</h4>
-                <p>지사별 배정/완료 관리, 지사 리포트, 정산 조회</p>
+                <h4>{{ 'SETTINGS.SYSTEM.ROLE.BRANCH_MANAGER' | translate }}</h4>
+                <p>{{ 'SETTINGS.SYSTEM.ROLE.BRANCH_MANAGER_DESC' | translate }}</p>
               </div>
               <div class="role-item">
-                <h4>기사</h4>
-                <p>배정된 주문 수령, 완료 처리, 개인 리포트 조회</p>
+                <h4>{{ 'SETTINGS.SYSTEM.ROLE.INSTALLER' | translate }}</h4>
+                <p>{{ 'SETTINGS.SYSTEM.ROLE.INSTALLER_DESC' | translate }}</p>
               </div>
             </div>
           </ion-card-content>
@@ -327,9 +329,9 @@ import { AuthService } from '@app/core/services/auth.service';
       <ion-alert
         *ngIf="errorMessage"
         [isOpen]="!!errorMessage"
-        header="오류"
+        [header]="'COMMON.ERROR.TITLE' | translate"
         [message]="errorMessage"
-        [buttons]="[{ text: '확인', handler: () => errorMessage = null }]"
+        [buttons]="[{ text: ('COMMON.BUTTON.CONFIRM' | translate), handler: () => errorMessage = null }]"
       ></ion-alert>
     </ion-content>
   `,
@@ -490,6 +492,8 @@ import { AuthService } from '@app/core/services/auth.service';
   `],
 })
 export class SystemSettingsPage implements OnInit {
+  private readonly translate = inject(TranslateService);
+  
   systemForm!: FormGroup;
   userForm!: FormGroup;
 
@@ -541,7 +545,7 @@ export class SystemSettingsPage implements OnInit {
   private checkAdminAccess() {
     const user = this.authService.user();
     if (!user || !user.roles.includes('HQ_ADMIN')) {
-      this.errorMessage = 'HQ 관리자만 접근할 수 있습니다.';
+      this.errorMessage = this.translate.instant('SETTINGS.SYSTEM.ERROR.ADMIN_ONLY');
     }
   }
 
@@ -564,7 +568,7 @@ export class SystemSettingsPage implements OnInit {
       );
       this.users = response;
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || '사용자를 로드할 수 없습니다.';
+      this.errorMessage = error?.error?.message || this.translate.instant('SETTINGS.SYSTEM.ERROR.LOAD_USERS_FAILED');
     } finally {
       this.isLoading = false;
     }
@@ -574,19 +578,23 @@ export class SystemSettingsPage implements OnInit {
     if (!this.systemForm.valid) return;
 
     this.isSaving = true;
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+    
     try {
       await firstValueFrom(
         this.http.put(`${this.apiUrl}/system`, this.systemForm.value)
       );
 
-      const toast = await this.toastCtrl.create({
-        message: '시스템 설정이 저장되었습니다.',
+      const toast = await toastController.create({
+        message: translateService.instant('SETTINGS.SYSTEM.SUCCESS.SAVED'),
         duration: 2000,
         color: 'success',
       });
       await toast.present();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || '저장 실패';
+      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -616,6 +624,10 @@ export class SystemSettingsPage implements OnInit {
     if (!this.userForm.valid) return;
 
     this.isSaving = true;
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+    
     try {
       const data = this.userForm.value;
       await firstValueFrom(
@@ -624,8 +636,11 @@ export class SystemSettingsPage implements OnInit {
           : this.http.post(`${this.apiUrl}/users`, data)
       );
 
-      const toast = await this.toastCtrl.create({
-        message: this.isEditingUser ? '사용자가 수정되었습니다.' : '사용자가 추가되었습니다.',
+      const message = this.isEditingUser 
+        ? translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_UPDATED')
+        : translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_CREATED');
+      const toast = await toastController.create({
+        message,
         duration: 2000,
         color: 'success',
       });
@@ -634,13 +649,17 @@ export class SystemSettingsPage implements OnInit {
       this.closeUserModal();
       this.loadUsers();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || '저장 실패';
+      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
   }
 
   async toggleUserStatus(user: SystemUser) {
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+    
     try {
       await firstValueFrom(
         this.http.patch(`${this.apiUrl}/users/${user.id}/status`, {
@@ -648,8 +667,11 @@ export class SystemSettingsPage implements OnInit {
         })
       );
 
-      const toast = await this.toastCtrl.create({
-        message: user.isActive ? '사용자가 비활성화되었습니다.' : '사용자가 활성화되었습니다.',
+      const message = user.isActive 
+        ? translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_DEACTIVATED')
+        : translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_ACTIVATED');
+      const toast = await toastController.create({
+        message,
         duration: 2000,
         color: 'success',
       });
@@ -657,7 +679,7 @@ export class SystemSettingsPage implements OnInit {
 
       this.loadUsers();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || '상태 변경 실패';
+      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.STATUS_CHANGE_FAILED');
     }
   }
 
@@ -668,12 +690,8 @@ export class SystemSettingsPage implements OnInit {
   }
 
   formatRole(role: UserRole): string {
-    const map: Record<UserRole, string> = {
-      HQ_ADMIN: 'HQ 관리자',
-      BRANCH_MANAGER: '지사 관리자',
-      INSTALLER: '기사',
-    };
-    return map[role] || role;
+    const key = `SETTINGS.SYSTEM.ROLE.${role}`;
+    return this.translate.instant(key);
   }
 
   getRoleColor(role: UserRole): string {

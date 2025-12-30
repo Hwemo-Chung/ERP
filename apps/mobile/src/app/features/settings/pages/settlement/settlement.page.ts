@@ -11,6 +11,7 @@ import { addIcons } from 'ionicons';
 import { lockClosedOutline, lockOpenOutline, refreshOutline } from 'ionicons/icons';
 import { SettlementService, SettlementPeriod } from '../../../../core/services/settlement.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-settlement',
@@ -20,6 +21,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
     IonLabel, IonBadge, IonButton, IonIcon, IonSpinner, IonRefresher, IonRefresherContent,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -42,7 +44,7 @@ import { AuthService } from '../../../../core/services/auth.service';
             <div class="center"><ion-spinner name="crescent"></ion-spinner></div>
           } @else if (currentPeriod()) {
             <p><strong>기간:</strong> {{ formatDate(currentPeriod()!.periodStart) }} ~ {{ formatDate(currentPeriod()!.periodEnd) }}</p>
-            <p><strong>상태:</strong> <ion-badge [color]="currentPeriod()!.status === 'OPEN' ? 'success' : 'danger'">{{ currentPeriod()!.status === 'OPEN' ? '진행중' : '마감' }}</ion-badge></p>
+            <p><strong>{{ 'SETTLEMENT.STATUS.LABEL' | translate }}:</strong> <ion-badge [color]="currentPeriod()!.status === 'OPEN' ? 'success' : 'danger'">{{ currentPeriod()!.status === 'OPEN' ? ('SETTLEMENT.STATUS.OPEN' | translate) : ('SETTLEMENT.STATUS.CLOSED' | translate) }}</ion-badge></p>
             @if (currentPeriod()!.orderCount !== undefined) { <p><strong>주문 수:</strong> {{ currentPeriod()!.orderCount }}건</p> }
             @if (currentPeriod()!.lockedAt) { <p class="sub"><ion-icon name="lock-closed-outline"></ion-icon> {{ formatDateTime(currentPeriod()!.lockedAt!) }} 마감</p> }
             @if (currentPeriod()!.status === 'OPEN' && canManage()) {
@@ -82,6 +84,7 @@ export class SettlementPage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly isLoading = signal(false);
   protected readonly currentPeriod = signal<SettlementPeriod | null>(null);
@@ -118,8 +121,11 @@ export class SettlementPage implements OnInit {
 
   async lockPeriod(p: SettlementPeriod) {
     const alert = await this.alertCtrl.create({
-      header: '정산 마감', message: `${this.formatDate(p.periodStart)} ~ ${this.formatDate(p.periodEnd)} 마감?`,
-      buttons: [{ text: '취소', role: 'cancel' }, { text: '마감', handler: async () => {
+      header: await this.translate.get('SETTLEMENT.ACTIONS.CLOSE').toPromise(), 
+      message: `${this.formatDate(p.periodStart)} ~ ${this.formatDate(p.periodEnd)} ${await this.translate.get('SETTLEMENT.ACTIONS.CLOSE').toPromise()}?`,
+      buttons: [
+        { text: await this.translate.get('SETTLEMENT.ACTIONS.CANCEL').toPromise(), role: 'cancel' }, 
+        { text: await this.translate.get('SETTLEMENT.ACTIONS.CLOSE').toPromise(), handler: async () => {
         try {
           const u = await this.svc.lockPeriod(p.id);
           if (this.currentPeriod()?.id === p.id) this.currentPeriod.set(u);
@@ -133,8 +139,11 @@ export class SettlementPage implements OnInit {
 
   async unlockPeriod(p: SettlementPeriod) {
     const alert = await this.alertCtrl.create({
-      header: '마감 해제', message: '해제하시겠습니까?',
-      buttons: [{ text: '취소', role: 'cancel' }, { text: '해제', handler: async () => {
+      header: await this.translate.get('SETTLEMENT.ACTIONS.UNLOCK').toPromise(), 
+      message: `${await this.translate.get('SETTLEMENT.ACTIONS.UNLOCK').toPromise()}?`,
+      buttons: [
+        { text: await this.translate.get('SETTLEMENT.ACTIONS.CANCEL').toPromise(), role: 'cancel' }, 
+        { text: await this.translate.get('SETTLEMENT.ACTIONS.UNLOCK').toPromise(), handler: async () => {
         try {
           const u = await this.svc.unlockPeriod(p.id);
           if (this.currentPeriod()?.id === p.id) this.currentPeriod.set(u);

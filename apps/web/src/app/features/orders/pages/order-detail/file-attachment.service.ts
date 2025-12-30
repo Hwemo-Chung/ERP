@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
@@ -20,6 +21,7 @@ export class FileAttachmentService {
   private readonly API_BASE = '/api/orders';
   private attachments$ = new BehaviorSubject<FileAttachment[]>([]);
   private uploadProgress$ = new BehaviorSubject<number>(0);
+  private readonly translate = inject(TranslateService);
 
   constructor(private http: HttpClient) {}
 
@@ -74,8 +76,8 @@ export class FileAttachmentService {
         quality: 90,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
-        promptLabelPicture: '사진 촬영',
-        promptLabelCancel: '취소',
+        promptLabelPicture: this.translate.instant('CAMERA.TAKE_PHOTO'),
+        promptLabelCancel: this.translate.instant('COMMON.BUTTON.CANCEL'),
       });
 
       if (!photo.base64String) {
@@ -111,8 +113,8 @@ export class FileAttachmentService {
         quality: 90,
         resultType: CameraResultType.Base64,
         source: CameraSource.Photos,
-        promptLabelPicture: '사진 선택',
-        promptLabelCancel: '취소',
+        promptLabelPicture: this.translate.instant('CAMERA.SELECT_PHOTO'),
+        promptLabelCancel: this.translate.instant('COMMON.BUTTON.CANCEL'),
       });
 
       if (!photo.base64String) {

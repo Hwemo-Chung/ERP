@@ -13,6 +13,7 @@ import { addIcons } from 'ionicons';
 import { downloadOutline, calendarOutline, trashOutline } from 'ionicons/icons';
 import { ReportsService, WasteSummary, WasteStat } from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-waste-summary',
@@ -23,6 +24,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
     IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
     IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -144,6 +146,7 @@ export class WasteSummaryPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
   private readonly authService = inject(AuthService);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly isLoading = signal(false);
   protected readonly dateFrom = signal(this.getDefaultDateFrom());
@@ -218,7 +221,11 @@ export class WasteSummaryPage implements OnInit {
 
   async exportData() {
     try {
-      const headers = ['코드', '품목', '수량'];
+      const headers = [
+        this.translate.instant('WASTE.EXPORT.HEADERS.CODE'),
+        this.translate.instant('WASTE.EXPORT.HEADERS.ITEM'),
+        this.translate.instant('WASTE.EXPORT.HEADERS.QUANTITY')
+      ];
       const rows = this.wasteStats().map(s => [s.code, s.name, String(s.count)]);
       const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
       

@@ -1,3 +1,4 @@
+// i18n 적용됨 - 번역 키: ORDERS.POSTPONE.*, ORDERS.STATUS.*
 import {
   Component,
   inject,
@@ -44,23 +45,24 @@ import {
   locationOutline,
   documentTextOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 
 /**
- * 연기 사유 코드 정의
+ * 연기 사유 코드 정의 - i18n 키 참조용
  */
 interface ReasonCode {
   value: string;
-  label: string;
+  labelKey: string;
 }
 
 const REASON_CODES: ReasonCode[] = [
-  { value: 'CUSTOMER_REQUEST', label: '고객요청' },
-  { value: 'OUT_OF_STOCK', label: '재고부족' },
-  { value: 'INSTALLER_SCHEDULE', label: '기사일정' },
-  { value: 'WEATHER', label: '날씨' },
-  { value: 'OTHER', label: '기타' },
+  { value: 'CUSTOMER_REQUEST', labelKey: 'ORDERS.POSTPONE.REASON.CUSTOMER_REQUEST' },
+  { value: 'OUT_OF_STOCK', labelKey: 'ORDERS.POSTPONE.REASON.OUT_OF_STOCK' },
+  { value: 'INSTALLER_SCHEDULE', labelKey: 'ORDERS.POSTPONE.REASON.INSTALLER_SCHEDULE' },
+  { value: 'WEATHER', labelKey: 'ORDERS.POSTPONE.REASON.WEATHER' },
+  { value: 'OTHER', labelKey: 'ORDERS.POSTPONE.REASON.OTHER' },
 ];
 
 @Component({
@@ -91,6 +93,7 @@ const REASON_CODES: ReasonCode[] = [
     IonCardContent,
     IonBadge,
     IonNote,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -101,7 +104,7 @@ const REASON_CODES: ReasonCode[] = [
             text=""
           ></ion-back-button>
         </ion-buttons>
-        <ion-title>주문 연기</ion-title>
+        <ion-title>{{ 'ORDERS.POSTPONE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -109,7 +112,7 @@ const REASON_CODES: ReasonCode[] = [
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent" color="primary"></ion-spinner>
-          <p>로딩 중...</p>
+          <p>{{ 'ORDERS.POSTPONE.LOADING' | translate }}</p>
         </div>
       } @else if (order()) {
         <!-- Order Summary Card -->
@@ -133,34 +136,34 @@ const REASON_CODES: ReasonCode[] = [
 
           <div class="info-row">
             <ion-icon name="calendar-outline"></ion-icon>
-            <span>현재 예약일: {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span>
+            <span>{{ 'ORDERS.POSTPONE.CURRENT_APPOINTMENT' | translate }}: {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span>
           </div>
 
           @if (order()!.installerName) {
             <div class="info-row">
               <ion-icon name="time-outline"></ion-icon>
-              <span>담당 기사: {{ order()!.installerName }}</span>
+              <span>{{ 'ORDERS.POSTPONE.INSTALLER' | translate }}: {{ order()!.installerName }}</span>
             </div>
           }
         </div>
 
         <!-- Postpone Form -->
         <div class="form-section">
-          <h2 class="section-title">연기 정보</h2>
+          <h2 class="section-title">{{ 'ORDERS.POSTPONE.FORM_TITLE' | translate }}</h2>
 
           <!-- Reason Code Select -->
           <div class="form-group">
-            <label class="form-label">연기 사유 <span class="required">*</span></label>
+            <label class="form-label">{{ 'ORDERS.POSTPONE.REASON.TITLE' | translate }} <span class="required">*</span></label>
             <ion-item class="custom-select" lines="none">
               <ion-select
                 [(ngModel)]="selectedReasonCode"
-                placeholder="사유를 선택하세요"
+                [placeholder]="'COMMON.PLACEHOLDER.SELECT' | translate"
                 interface="action-sheet"
-                [interfaceOptions]="{ header: '연기 사유 선택' }"
+                [interfaceOptions]="{ header: translate.instant('ORDERS.POSTPONE.REASON.TITLE') }"
               >
                 @for (reason of reasonCodes; track reason.value) {
                   <ion-select-option [value]="reason.value">
-                    {{ reason.label }}
+                    {{ reason.labelKey | translate }}
                   </ion-select-option>
                 }
               </ion-select>
@@ -169,7 +172,7 @@ const REASON_CODES: ReasonCode[] = [
 
           <!-- New Appointment Date -->
           <div class="form-group">
-            <label class="form-label">새 예약일 <span class="required">*</span></label>
+            <label class="form-label">{{ 'ORDERS.POSTPONE.NEW_DATE.TITLE' | translate }} <span class="required">*</span></label>
             <div class="date-picker-container">
               <ion-datetime
                 [(ngModel)]="selectedDate"
@@ -181,22 +184,22 @@ const REASON_CODES: ReasonCode[] = [
                 [firstDayOfWeek]="0"
                 class="custom-datetime"
               >
-                <span slot="title">새 예약일 선택</span>
+                <span slot="title">{{ 'ORDERS.POSTPONE.NEW_DATE.DATE_HINT' | translate }}</span>
               </ion-datetime>
             </div>
             <div class="date-hint">
               <ion-icon name="time-outline"></ion-icon>
-              <span>오늘로부터 최대 15일까지 선택 가능합니다</span>
+              <span>{{ 'ORDERS.POSTPONE.NEW_DATE.DATE_HINT' | translate }}</span>
             </div>
           </div>
 
           <!-- Notes -->
           <div class="form-group">
-            <label class="form-label">비고 (선택)</label>
+            <label class="form-label">{{ 'ORDERS.POSTPONE.MEMO.LABEL' | translate }}</label>
             <ion-item class="custom-textarea" lines="none">
               <ion-textarea
                 [(ngModel)]="notes"
-                placeholder="추가 메모를 입력하세요..."
+                [placeholder]="'ORDERS.POSTPONE.MEMO.PLACEHOLDER' | translate"
                 [rows]="4"
                 [autoGrow]="true"
                 [maxlength]="500"
@@ -210,8 +213,8 @@ const REASON_CODES: ReasonCode[] = [
         <div class="notification-info">
           <ion-icon name="document-text-outline"></ion-icon>
           <div>
-            <strong>알림 안내</strong>
-            <p>연기 처리 시 고객 및 담당 기사에게 알림이 발송됩니다.</p>
+            <strong>{{ 'ORDERS.POSTPONE.CONFIRM.TITLE' | translate }}</strong>
+            <p>{{ 'ORDERS.POSTPONE.CONFIRM.MESSAGE' | translate }}</p>
           </div>
         </div>
 
@@ -225,18 +228,18 @@ const REASON_CODES: ReasonCode[] = [
           >
             @if (isSubmitting()) {
               <ion-spinner name="crescent" class="button-spinner"></ion-spinner>
-              <span>처리 중...</span>
+              <span>{{ 'COMMON.LOADING' | translate }}</span>
             } @else {
               <ion-icon slot="start" name="checkmark-outline"></ion-icon>
-              <span>연기 처리</span>
+              <span>{{ 'ORDERS.POSTPONE.SUBMIT' | translate }}</span>
             }
           </ion-button>
         </div>
       } @else {
         <div class="error-container">
-          <p>주문을 찾을 수 없습니다.</p>
+          <p>{{ 'COMMON.ERROR.NOT_FOUND' | translate }}</p>
           <ion-button fill="outline" routerLink="/tabs/orders">
-            주문 목록으로 돌아가기
+            {{ 'COMMON.BUTTON.BACK_TO_LIST' | translate }}
           </ion-button>
         </div>
       }
@@ -564,6 +567,9 @@ export class OrderPostponePage implements OnInit {
   // Constants
   readonly reasonCodes = REASON_CODES;
 
+  // TranslateService를 템플릿에서 사용하기 위해 public으로 노출
+  readonly translate = inject(TranslateService);
+
   // Computed values for date constraints
   minDate = computed(() => {
     const tomorrow = new Date();
@@ -626,7 +632,8 @@ export class OrderPostponePage implements OnInit {
       }
     } catch (error) {
       console.error('Failed to load order:', error);
-      await this.showToast('주문 정보를 불러오는데 실패했습니다.', 'danger');
+      const msg = this.translate.instant('ORDERS.POSTPONE.ERROR.LOAD_FAILED');
+      await this.showToast(msg, 'danger');
     } finally {
       this.isLoading.set(false);
     }
@@ -662,24 +669,10 @@ export class OrderPostponePage implements OnInit {
   }
 
   /**
-   * Get Korean label for order status
+   * Get translated label for order status
    */
   getStatusLabel(status: OrderStatus): string {
-    const labels: Record<OrderStatus, string> = {
-      [OrderStatus.UNASSIGNED]: '미배정',
-      [OrderStatus.ASSIGNED]: '배정',
-      [OrderStatus.CONFIRMED]: '배정확정',
-      [OrderStatus.RELEASED]: '출고확정',
-      [OrderStatus.DISPATCHED]: '출문',
-      [OrderStatus.POSTPONED]: '연기',
-      [OrderStatus.ABSENT]: '부재',
-      [OrderStatus.COMPLETED]: '인수',
-      [OrderStatus.PARTIAL]: '부분인수',
-      [OrderStatus.COLLECTED]: '회수',
-      [OrderStatus.CANCELLED]: '취소',
-      [OrderStatus.REQUEST_CANCEL]: '의뢰취소',
-    };
-    return labels[status] || status;
+    return this.translate.instant(`ORDERS.STATUS.${status}`);
   }
 
   /**
@@ -690,17 +683,20 @@ export class OrderPostponePage implements OnInit {
       return;
     }
 
+    // 비동기 핸들러를 위한 변수 캡처
+    const translateService = this.translate;
+
     // Show confirmation dialog
     const alert = await this.alertController.create({
-      header: '연기 확인',
-      message: `주문을 ${this.formatDate(this.selectedDate)}로 연기하시겠습니까?`,
+      header: translateService.instant('ORDERS.POSTPONE.CONFIRM.TITLE'),
+      message: translateService.instant('ORDERS.POSTPONE.CONFIRM.MESSAGE'),
       buttons: [
         {
-          text: '취소',
+          text: translateService.instant('ORDERS.POSTPONE.CONFIRM.CANCEL'),
           role: 'cancel',
         },
         {
-          text: '확인',
+          text: translateService.instant('ORDERS.POSTPONE.CONFIRM.CONFIRM'),
           handler: () => this.processPostpone(),
         },
       ],
@@ -728,27 +724,28 @@ export class OrderPostponePage implements OnInit {
       // 3. Trigger notifications to customer and installer
 
       // Show success message
-      await this.showToast('연기 처리가 완료되었습니다.', 'success');
+      await this.showToast(this.translate.instant('ORDERS.POSTPONE.TOAST.SUCCESS'), 'success');
 
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
       console.error('Failed to postpone order:', error);
-      await this.showToast('연기 처리에 실패했습니다. 다시 시도해주세요.', 'danger');
+      await this.showToast(this.translate.instant('ORDERS.POSTPONE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
   /**
-   * Format date for display
+   * Format date for display using locale
    */
   private formatDate(dateStr: string): string {
     const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}년 ${month}월 ${day}일`;
+    return date.toLocaleDateString(this.translate.currentLang || 'ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   }
 
   /**

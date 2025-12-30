@@ -20,20 +20,21 @@ export enum OrderStatus {
 
 /**
  * Human-readable labels for order statuses
+ * @deprecated Use i18n keys ORDER_STATUS.* instead
  */
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  [OrderStatus.UNASSIGNED]: '미배정',
-  [OrderStatus.ASSIGNED]: '배정',
-  [OrderStatus.CONFIRMED]: '배정확정',
-  [OrderStatus.RELEASED]: '출고확정',
-  [OrderStatus.DISPATCHED]: '출문',
-  [OrderStatus.POSTPONED]: '연기',
-  [OrderStatus.ABSENT]: '부재',
-  [OrderStatus.COMPLETED]: '인수',
-  [OrderStatus.PARTIAL]: '부분인수',
-  [OrderStatus.COLLECTED]: '회수',
-  [OrderStatus.CANCELLED]: '취소',
-  [OrderStatus.REQUEST_CANCEL]: '의뢰취소',
+  [OrderStatus.UNASSIGNED]: 'ORDER_STATUS.UNASSIGNED',
+  [OrderStatus.ASSIGNED]: 'ORDER_STATUS.ASSIGNED',
+  [OrderStatus.CONFIRMED]: 'ORDER_STATUS.CONFIRMED',
+  [OrderStatus.RELEASED]: 'ORDER_STATUS.RELEASED',
+  [OrderStatus.DISPATCHED]: 'ORDER_STATUS.DISPATCHED',
+  [OrderStatus.POSTPONED]: 'ORDER_STATUS.POSTPONED',
+  [OrderStatus.ABSENT]: 'ORDER_STATUS.ABSENT',
+  [OrderStatus.COMPLETED]: 'ORDER_STATUS.COMPLETED',
+  [OrderStatus.PARTIAL]: 'ORDER_STATUS.PARTIAL',
+  [OrderStatus.COLLECTED]: 'ORDER_STATUS.COLLECTED',
+  [OrderStatus.CANCELLED]: 'ORDER_STATUS.CANCELLED',
+  [OrderStatus.REQUEST_CANCEL]: 'ORDER_STATUS.REQUEST_CANCEL',
 };
 
 /**

@@ -1,3 +1,15 @@
+/**
+ * @fileoverview 주문 목록 페이지 컴포넌트
+ * @description 주문 목록을 표시하고 필터링, 검색, 정렬 기능을 제공합니다.
+ * 
+ * 주요 기능:
+ * - 주문 목록 조회 및 무한 스크롤
+ * - 상태별 필터링
+ * - 검색 기능
+ * - 테이블/카드 뷰 모드 전환
+ * - 반응형 레이아웃 (웹/모바일)
+ * - 다국어(i18n) 지원
+ */
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -43,11 +55,13 @@ import {
   reorderFourOutline,
   personOutline
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NetworkService } from '@core/services/network.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { UIStore } from '../../../../store/ui/ui.store';
 import { OrderStatus } from '../../../../store/orders/orders.models';
+import { BREAKPOINTS } from '@shared/constants';
 
 @Component({
   selector: 'app-order-list',
@@ -76,11 +90,12 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
     IonSelect,
     IonSelectOption,
     IonCheckbox,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>주문 목록</ion-title>
+        <ion-title>{{ 'ORDERS.LIST.TITLE' | translate }}</ion-title>
         @if (networkService.isOffline()) {
           <ion-icon slot="end" name="cloud-offline-outline" color="warning" style="margin-right: 16px;"></ion-icon>
         }
@@ -89,20 +104,20 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
       <ion-toolbar class="mobile-only">
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명, 주소 검색..."
+          [placeholder]="'ORDERS.LIST.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar class="mobile-only">
         <ion-segment [value]="currentFilter()" (ionChange)="onFilterChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="pending">
-            <ion-label>미배정</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="assigned">
-            <ion-label>배정완료</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.ASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -125,22 +140,22 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
                 <ion-icon name="search-outline"></ion-icon>
                 <input 
                   type="text" 
-                  placeholder="주문번호, 고객명, 주소 검색..." 
+                  [placeholder]="'ORDERS.LIST.SEARCH_PLACEHOLDER' | translate" 
                   (input)="onSearchWeb($event)"
                 />
               </div>
               <div class="filter-group">
-                <label>상태</label>
+                <label>{{ 'ORDERS.FILTER.STATUS' | translate }}</label>
                 <select (change)="onStatusFilter($event)">
-                  <option value="all">전체</option>
-                  <option value="pending">미배정</option>
-                  <option value="assigned">배정완료</option>
-                  <option value="dispatched">배송중</option>
-                  <option value="completed">완료</option>
+                  <option value="all">{{ 'ORDERS.FILTER.ALL' | translate }}</option>
+                  <option value="pending">{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</option>
+                  <option value="assigned">{{ 'ORDERS.FILTER.ASSIGNED' | translate }}</option>
+                  <option value="dispatched">{{ 'ORDERS.STATUS.DISPATCHED' | translate }}</option>
+                  <option value="completed">{{ 'ORDERS.FILTER.COMPLETED' | translate }}</option>
                 </select>
               </div>
               <div class="filter-group">
-                <label>날짜</label>
+                <label>{{ 'ORDERS.FILTER.DATE' | translate }}</label>
                 <input type="date" [value]="today" (change)="onDateFilter($event)" />
               </div>
             </div>
@@ -150,7 +165,7 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
               </button>
               <button class="web-btn secondary">
                 <ion-icon name="download-outline"></ion-icon>
-                내보내기
+                {{ 'COMMON.EXPORT' | translate }}
               </button>
             </div>
           </div>
@@ -159,42 +174,42 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
           <div class="web-stats-row">
             <div class="stat-item">
               <span class="stat-value">{{ ordersStore.kpiMetrics().total }}</span>
-              <span class="stat-label">전체</span>
+              <span class="stat-label">{{ 'COMMON.ALL' | translate }}</span>
             </div>
             <div class="stat-item danger">
               <span class="stat-value">{{ ordersStore.kpiMetrics().pending }}</span>
-              <span class="stat-label">미배정</span>
+              <span class="stat-label">{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</span>
             </div>
             <div class="stat-item warning">
               <span class="stat-value">{{ ordersStore.kpiMetrics().dispatched }}</span>
-              <span class="stat-label">진행중</span>
+              <span class="stat-label">{{ 'ORDERS.FILTER.IN_PROGRESS' | translate }}</span>
             </div>
             <div class="stat-item success">
               <span class="stat-value">{{ ordersStore.kpiMetrics().completed }}</span>
-              <span class="stat-label">완료</span>
+              <span class="stat-label">{{ 'ORDERS.FILTER.COMPLETED' | translate }}</span>
             </div>
           </div>
 
           @if (ordersStore.isLoading() && ordersStore.orders().length === 0) {
             <div class="loading-container">
               <ion-spinner name="crescent"></ion-spinner>
-              <p>데이터 로딩 중...</p>
+              <p>{{ 'ORDERS.LIST.LOADING' | translate }}</p>
             </div>
           } @else if (ordersStore.filteredOrders().length === 0) {
             <div class="empty-state">
               <ion-icon name="list-outline"></ion-icon>
-              <h3>주문이 없습니다</h3>
-              <p>검색 조건을 변경하거나 새로고침하세요</p>
+              <h3>{{ 'ORDERS.LIST.NO_ORDERS' | translate }}</h3>
+              <p>{{ 'ORDERS.LIST.NO_ORDERS_DESC' | translate }}</p>
             </div>
           } @else {
             <!-- 테이블 뷰 -->
             @if (viewMode() === 'table') {
               <div class="web-data-table">
                 <div class="table-header">
-                  <div class="table-title">주문 목록 ({{ ordersStore.filteredOrders().length }}건)</div>
+                  <div class="table-title">{{ 'ORDERS.LIST.COUNT' | translate:{ count: ordersStore.filteredOrders().length } }}</div>
                   <div class="table-actions">
                     <button class="web-btn ghost sm" (click)="selectAll()">
-                      전체 선택
+                      {{ 'COMMON.SELECT_ALL' | translate }}
                     </button>
                   </div>
                 </div>
@@ -204,13 +219,13 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
                       <th class="col-checkbox">
                         <input type="checkbox" (change)="selectAll()" />
                       </th>
-                      <th class="col-order">주문번호</th>
-                      <th class="col-status">상태</th>
-                      <th class="col-customer">고객명</th>
-                      <th class="col-address">주소</th>
-                      <th class="col-date">예약일시</th>
-                      <th class="col-installer">담당기사</th>
-                      <th class="col-actions">작업</th>
+                      <th class="col-order">{{ 'ORDERS.TABLE.ORDER_NUMBER' | translate }}</th>
+                      <th class="col-status">{{ 'COMMON.STATUS' | translate }}</th>
+                      <th class="col-customer">{{ 'ORDERS.TABLE.CUSTOMER' | translate }}</th>
+                      <th class="col-address">{{ 'ORDERS.TABLE.ADDRESS' | translate }}</th>
+                      <th class="col-date">{{ 'ORDERS.TABLE.SCHEDULED_DATE' | translate }}</th>
+                      <th class="col-installer">{{ 'ORDERS.TABLE.INSTALLER' | translate }}</th>
+                      <th class="col-actions">{{ 'COMMON.ACTIONS' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -250,14 +265,14 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
                               {{ order.installerName }}
                             </div>
                           } @else {
-                            <span class="unassigned">미배정</span>
+                            <span class="unassigned">{{ 'ORDERS.STATUS.UNASSIGNED' | translate }}</span>
                           }
                         </td>
                         <td class="col-actions" (click)="$event.stopPropagation()">
-                          <button class="action-btn" title="상세보기" (click)="viewOrder(order.id)">
+                          <button class="action-btn" [title]="'COMMON.VIEW_DETAIL' | translate" (click)="viewOrder(order.id)">
                             <ion-icon name="eye-outline"></ion-icon>
                           </button>
-                          <button class="action-btn" title="수정" (click)="editOrder(order.id)">
+                          <button class="action-btn" [title]="'COMMON.EDIT' | translate" (click)="editOrder(order.id)">
                             <ion-icon name="create-outline"></ion-icon>
                           </button>
                         </td>
@@ -268,10 +283,10 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
                 @if (ordersStore.pagination().hasMore) {
                   <div class="table-footer">
                     <div class="pagination-info">
-                      {{ ordersStore.filteredOrders().length }} / {{ ordersStore.pagination().total }}건
+                      {{ ordersStore.filteredOrders().length }} / {{ ordersStore.pagination().total }}{{ 'COMMON.ITEMS_SUFFIX' | translate }}
                     </div>
                     <button class="web-btn secondary sm" (click)="loadMoreWeb()">
-                      더 보기
+                      {{ 'COMMON.LOAD_MORE' | translate }}
                     </button>
                   </div>
                 }
@@ -309,7 +324,7 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
                           {{ order.installerName }}
                         </div>
                       } @else {
-                        <span class="unassigned">미배정</span>
+                        <span class="unassigned">{{ 'ORDERS.STATUS.UNASSIGNED' | translate }}</span>
                       }
                     </div>
                   </div>
@@ -326,32 +341,32 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-value">{{ ordersStore.kpiMetrics().total }}</div>
-            <div class="stat-label">전체</div>
+            <div class="stat-label">{{ 'COMMON.ALL' | translate }}</div>
           </div>
           <div class="stat-card danger">
             <div class="stat-value">{{ ordersStore.kpiMetrics().pending }}</div>
-            <div class="stat-label">미배정</div>
+            <div class="stat-label">{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</div>
           </div>
           <div class="stat-card warning">
             <div class="stat-value">{{ ordersStore.kpiMetrics().dispatched }}</div>
-            <div class="stat-label">진행중</div>
+            <div class="stat-label">{{ 'ORDERS.FILTER.IN_PROGRESS' | translate }}</div>
           </div>
           <div class="stat-card success">
             <div class="stat-value">{{ ordersStore.kpiMetrics().completed }}</div>
-            <div class="stat-label">완료</div>
+            <div class="stat-label">{{ 'ORDERS.FILTER.COMPLETED' | translate }}</div>
           </div>
         </div>
 
         @if (ordersStore.isLoading() && ordersStore.orders().length === 0) {
           <div class="loading-container">
             <ion-spinner name="crescent"></ion-spinner>
-            <p>데이터 로딩 중...</p>
+            <p>{{ 'ORDERS.LIST.LOADING' | translate }}</p>
           </div>
         } @else if (ordersStore.filteredOrders().length === 0) {
           <div class="empty-state">
             <ion-icon name="list-outline"></ion-icon>
-            <h3>주문이 없습니다</h3>
-            <p>아래로 당겨 새로고침하세요</p>
+            <h3>{{ 'ORDERS.LIST.NO_ORDERS' | translate }}</h3>
+            <p>{{ 'ORDERS.LIST.PULL_TO_REFRESH' | translate }}</p>
           </div>
         } @else {
           <ion-list>
@@ -1068,16 +1083,28 @@ import { OrderStatus } from '../../../../store/orders/orders.models';
   `],
 })
 export class OrderListPage implements OnInit {
+  /** 주문 데이터 상태 관리 스토어 */
   readonly ordersStore = inject(OrdersStore);
+  /** 설치기사 데이터 상태 관리 스토어 */
   readonly installersStore = inject(InstallersStore);
+  /** UI 상태 관리 스토어 */
   readonly uiStore = inject(UIStore);
+  /** 네트워크 연결 상태 서비스 */
   protected readonly networkService = inject(NetworkService);
+  /** Angular 라우터 서비스 */
   private readonly router = inject(Router);
+  /** 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
+  /** 현재 적용된 필터 상태 (all, pending, assigned) */
   protected readonly currentFilter = signal<'all' | 'pending' | 'assigned'>('all');
-  protected readonly isWebView = signal(window.innerWidth >= 1080);
+  /** 웹 뷰 여부 (1080px 이상) */
+  protected readonly isWebView = signal(window.innerWidth >= BREAKPOINTS.WEB_VIEW);
+  /** 현재 뷰 모드 (table 또는 card) */
   protected readonly viewMode = signal<'table' | 'card'>('table');
+  /** 선택된 주문 ID 집합 */
   protected readonly selectedOrders = signal<Set<string>>(new Set());
+  /** 오늘 날짜 (YYYY-MM-DD 형식) */
   protected readonly today = new Date().toISOString().split('T')[0];
 
   constructor() {
@@ -1101,7 +1128,7 @@ export class OrderListPage implements OnInit {
 
   @HostListener('window:resize', ['$event'])
   onResize() {
-    this.isWebView.set(window.innerWidth >= 1080);
+    this.isWebView.set(window.innerWidth >= BREAKPOINTS.WEB_VIEW);
   }
 
   ngOnInit(): void {
@@ -1224,22 +1251,29 @@ export class OrderListPage implements OnInit {
     return colorMap[status] || 'medium';
   }
 
+  /**
+   * 주문 상태 코드를 i18n 기반 라벨로 변환
+   * @param status - 주문 상태 코드 (OrderStatus enum 값)
+   * @returns 번역된 상태 라벨 문자열
+   */
   protected getStatusLabel(status: string): string {
-    const labelMap: Record<string, string> = {
-      [OrderStatus.UNASSIGNED]: '미배정',
-      [OrderStatus.ASSIGNED]: '배정',
-      [OrderStatus.CONFIRMED]: '배정확정',
-      [OrderStatus.RELEASED]: '출고확정',
-      [OrderStatus.DISPATCHED]: '출문',
-      [OrderStatus.POSTPONED]: '연기',
-      [OrderStatus.ABSENT]: '부재',
-      [OrderStatus.COMPLETED]: '인수',
-      [OrderStatus.PARTIAL]: '부분인수',
-      [OrderStatus.COLLECTED]: '회수',
-      [OrderStatus.CANCELLED]: '취소',
-      [OrderStatus.REQUEST_CANCEL]: '의뢰취소',
+    // 상태 코드와 i18n 키 매핑
+    const statusI18nKeys: Record<string, string> = {
+      [OrderStatus.UNASSIGNED]: 'ORDERS.STATUS.UNASSIGNED',
+      [OrderStatus.ASSIGNED]: 'ORDERS.STATUS.ASSIGNED',
+      [OrderStatus.CONFIRMED]: 'ORDERS.STATUS.CONFIRMED',
+      [OrderStatus.RELEASED]: 'ORDERS.STATUS.RELEASED',
+      [OrderStatus.DISPATCHED]: 'ORDERS.STATUS.DISPATCHED',
+      [OrderStatus.POSTPONED]: 'ORDERS.STATUS.POSTPONED',
+      [OrderStatus.ABSENT]: 'ORDERS.STATUS.ABSENT',
+      [OrderStatus.COMPLETED]: 'ORDERS.STATUS.COMPLETED',
+      [OrderStatus.PARTIAL]: 'ORDERS.STATUS.PARTIAL',
+      [OrderStatus.COLLECTED]: 'ORDERS.STATUS.COLLECTED',
+      [OrderStatus.CANCELLED]: 'ORDERS.STATUS.CANCELLED',
+      [OrderStatus.REQUEST_CANCEL]: 'ORDERS.STATUS.REQUEST_CANCEL',
     };
-    return labelMap[status] || status;
+    const key = statusI18nKeys[status];
+    return key ? this.translateService.instant(key) : status;
   }
 
   private async loadOrders(): Promise<void> {
@@ -1248,7 +1282,8 @@ export class OrderListPage implements OnInit {
       await this.ordersStore.loadOrders(branchCode, 1, 20);
       await this.installersStore.loadInstallers(branchCode);
     } catch (error) {
-      this.uiStore.showToast('주문 로드 실패', 'danger');
+      const msg = this.translateService.instant('ORDERS.ERROR.LOAD_FAILED');
+      this.uiStore.showToast(msg, 'danger');
     }
   }
 }

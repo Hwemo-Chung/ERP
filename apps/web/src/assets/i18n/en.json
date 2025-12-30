@@ -1,0 +1,1313 @@
+{
+  "COMMON": {
+    "OK": "OK",
+    "CANCEL": "Cancel",
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "CLOSE": "Close",
+    "BACK": "Back",
+    "NEXT": "Next",
+    "PREV": "Previous",
+    "LOADING": "Loading...",
+    "ERROR": "Error",
+    "SUCCESS": "Success",
+    "WARNING": "Warning",
+    "COMPLETE": "Complete",
+    "ADD": "Add",
+    "INFO": "Information",
+    "CONFIRM": "Confirm",
+    "YES": "Yes",
+    "NO": "No",
+    "SEARCH": "Search",
+    "FILTER": "Filter",
+    "REFRESH": "Refresh",
+    "EXPORT": "Export",
+    "IMPORT": "Import",
+    "PRINT": "Print",
+    "DOWNLOAD": "Download",
+    "UPLOAD": "Upload",
+    "SELECT_ALL": "Select All",
+    "DESELECT_ALL": "Deselect All",
+    "NO_DATA": "No data available",
+    "ITEMS_COUNT": "{{count}} items",
+    "PAGE_OF": "Page {{current}} of {{total}}",
+    "REQUIRED": "Required",
+    "OPTIONAL": "Optional",
+    "VIEW_DETAILS": "View Details",
+    "VIEW_DETAIL": "View Detail",
+    "VIEW_MORE": "View More",
+    "LOAD_MORE": "Load More",
+    "ACTIONS": "Actions",
+    "STATUS": "Status",
+    "DATE": "Date",
+    "TIME": "Time",
+    "ALL": "All",
+    "OR": "or",
+    "ITEMS_SUFFIX": " items",
+    "COUNT_SUFFIX": "",
+    "TIME_AGO": {
+      "JUST_NOW": "Just now",
+      "MINUTES_AGO": "{{count}} min ago",
+      "HOURS_AGO": "{{count}} hours ago",
+      "DAYS_AGO": "{{count}} days ago"
+    },
+    "UNIT": {
+      "TIMES": ""
+    },
+    "PLACEHOLDER": {
+      "SELECT": "Select..."
+    },
+    "ERROR": {
+      "TITLE": "Error",
+      "NOT_FOUND": "Data not found"
+    },
+    "BUTTON": {
+      "BACK_TO_LIST": "Back to list",
+      "CANCEL": "Cancel",
+      "SAVE": "Save",
+      "EDIT": "Edit",
+      "DELETE": "Delete",
+      "CONFIRM": "Confirm",
+      "RESET": "Reset",
+      "LOAD_MORE": "Load More",
+      "COMPLETE": "Complete"
+    },
+    "WEEKDAY": {
+      "SUNDAY": "Sunday",
+      "MONDAY": "Monday",
+      "TUESDAY": "Tuesday",
+      "WEDNESDAY": "Wednesday",
+      "THURSDAY": "Thursday",
+      "FRIDAY": "Friday",
+      "SATURDAY": "Saturday"
+    }
+  },
+  "FILTER": {
+    "TITLE": "Filter",
+    "RESET": "Reset",
+    "APPLY": "Apply",
+    "DATE_RANGE": "Date Range",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
+    "STATUS": "Status",
+    "INSTALLER": "Installer",
+    "BRANCH": "Branch",
+    "ACTIVE_COUNT": "{{count}} filters applied"
+  },
+  "CAMERA": {
+    "TAKE_PHOTO": "Take Photo",
+    "SELECT_PHOTO": "Select Photo",
+    "CAMERA": "Camera",
+    "GALLERY": "Gallery",
+    "ADD_PHOTO": "Add Photo",
+    "PHOTO_ADDED": "{{count}} photo(s) added. Would you like to add more?",
+    "PERMISSION_REQUIRED": "Permission Required",
+    "PERMISSION_MESSAGE": "Camera and gallery access permission is required. Please allow permission in settings.",
+    "CAPTURE_ERROR": "An error occurred while taking a photo."
+  },
+  "BARCODE": {
+    "INPUT_HEADER": "Enter Serial Number",
+    "INPUT_MESSAGE_NATIVE": "Please enter the serial number.",
+    "INPUT_MESSAGE_WEB": "Barcode scanner is available in the mobile app.\nPlease enter manually.",
+    "PLACEHOLDER": "Serial Number (10-20 characters)"
+  },
+  "FILE_ATTACHMENT": {
+    "TITLE": "Attachments",
+    "ADD_FILE": "Add File",
+    "CAMERA": "Camera",
+    "GALLERY": "Gallery",
+    "HELP_TEXT": "Max {{maxFiles}} files, up to {{maxSize}} each.",
+    "ERROR": {
+      "SIZE_EXCEEDED": "{{fileName}} exceeds 5MB.",
+      "MAX_FILES": "Maximum {{maxFiles}} files allowed."
+    }
+  },
+  "ORDER_STATUS": {
+    "UNASSIGNED": "Unassigned",
+    "ASSIGNED": "Assigned",
+    "CONFIRMED": "Confirmed",
+    "RELEASED": "Released",
+    "DISPATCHED": "Dispatched",
+    "POSTPONED": "Postponed",
+    "ABSENT": "Absent",
+    "COMPLETED": "Completed",
+    "PARTIAL": "Partial",
+    "COLLECTED": "Collected",
+    "CANCELLED": "Cancelled",
+    "REQUEST_CANCEL": "Cancel Requested"
+  },
+  "AUTH": {
+    "LOGIN": {
+      "TITLE": "Login",
+      "WELCOME": "Welcome back",
+      "SUBTITLE": "Enter your credentials to access your account",
+      "USERNAME": "Username",
+      "USERNAME_PLACEHOLDER": "Enter your username",
+      "USERNAME_REQUIRED": "Username required (min 3 chars)",
+      "PASSWORD": "Password",
+      "PASSWORD_PLACEHOLDER": "Enter your password",
+      "PASSWORD_REQUIRED": "Password required (min 4 chars)",
+      "REMEMBER_ME": "Remember me",
+      "FORGOT_PASSWORD": "Forgot password?",
+      "SIGN_IN": "Sign in",
+      "SIGNING_IN": "Signing in...",
+      "SIGN_OUT": "Sign out",
+      "BIOMETRIC_LOGIN": "Login with {{type}}",
+      "TEST_ACCOUNT": "Test: {{username}} / {{password}}"
+    },
+    "ERRORS": {
+      "INVALID_CREDENTIALS": "Invalid username or password",
+      "SESSION_EXPIRED": "Authentication token expired. Please login with password.",
+      "UNAUTHORIZED": "Access denied",
+      "BIOMETRIC_FAILED": "Biometric authentication failed. Please login with password.",
+      "BIOMETRIC_RETRY": "Biometric authentication failed. Please try again or login with password."
+    },
+    "LOGOUT": {
+      "TITLE": "Logout",
+      "CONFIRM": "Are you sure you want to logout?",
+      "SUCCESS": "Logged out successfully"
+    }
+  },
+  "BRAND": {
+    "TITLE": "Logistics ERP",
+    "SUBTITLE": "Streamline your delivery operations with our modern order management system.",
+    "COPYRIGHT": "© 2025 Logistics ERP",
+    "FEATURES": {
+      "REALTIME_TRACKING": "Real-time order tracking",
+      "SMART_ASSIGNMENT": "Smart assignment system",
+      "COMPREHENSIVE_REPORTING": "Comprehensive reporting"
+    }
+  },
+  "NAV": {
+    "DASHBOARD": "Dashboard",
+    "ORDERS": "Orders",
+    "ORDER_LIST": "Order List",
+    "ORDER_CREATE": "Create Order",
+    "ASSIGNMENT": "Assignment",
+    "COMPLETION": "Completion",
+    "REPORTS": "Reports",
+    "SETTINGS": "Settings",
+    "PROFILE": "Profile"
+  },
+  "PROFILE": {
+    "TITLE": "Profile",
+    "USER_INFO": "User Info",
+    "SYNC_STATUS": {
+      "TITLE": "Sync Status",
+      "PENDING": "Pending Sync",
+      "OPERATIONS": " operations",
+      "SYNC_NOW": "Sync Now"
+    },
+    "SETTINGS": {
+      "TITLE": "Settings",
+      "PUSH_NOTIFICATIONS": "Push Notifications",
+      "DARK_MODE": "Dark Mode"
+    },
+    "ABOUT": {
+      "TITLE": "About",
+      "VERSION": "Version"
+    },
+    "LOGOUT": {
+      "BUTTON": "Logout",
+      "CONFIRM_TITLE": "Logout",
+      "CONFIRM_MESSAGE": "Are you sure you want to logout?",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Logout"
+    }
+  },
+  "DASHBOARD": {
+    "TITLE": "Dashboard",
+    "LOADING_DATA": "Loading data...",
+    "STATS": {
+      "TOTAL_ORDERS": "Total Orders",
+      "COMPLETED": "Completed",
+      "PENDING": "Pending",
+      "CANCELLED": "Cancelled",
+      "COMPLETION_RATE": "Completion Rate",
+      "CANCELLATION_RATE": "Cancellation Rate"
+    },
+    "STATUS_BREAKDOWN": {
+      "TITLE": "Status Breakdown",
+      "VIEW_DETAILS": "Details",
+      "HEADER": {
+        "STATUS": "Status",
+        "COUNT": "Count",
+        "PERCENT": "Percent",
+        "DISTRIBUTION": "Distribution"
+      }
+    },
+    "KPI": {
+      "TITLE": "KPI Metrics",
+      "COMPLETION_RATE": "Completion Rate",
+      "CANCELLATION_RATE": "Cancellation Rate",
+      "TARGET": "Target: {{value}}%",
+      "TARGET_LESS_THAN": "Target: Less than {{value}}%"
+    },
+    "TODAY_SUMMARY": {
+      "TITLE": "Today's Summary",
+      "NEW_ORDERS": "New Orders",
+      "PENDING_ASSIGNMENT": "Pending Assignment",
+      "IN_DELIVERY": "In Delivery"
+    },
+      "TARGET": "Target: {{value}}%"
+    },
+    "RECENT_ORDERS": {
+      "TITLE": "Recent Orders",
+      "VIEW_ALL": "View All",
+      "NO_ORDERS": "No recent orders"
+    },
+    "QUICK_ACTIONS": {
+      "TITLE": "Quick Actions",
+      "NEW_ORDER": "New Order",
+      "ASSIGN_ORDERS": "Assign Orders",
+      "VIEW_REPORTS": "View Reports"
+    }
+  },
+  "ORDERS": {
+    "ERROR": {
+      "LOAD_FAILED": "Failed to load orders"
+    },
+    "LIST": {
+      "TITLE": "Order List",
+      "SEARCH_PLACEHOLDER": "Search by order number, customer, address...",
+      "NO_ORDERS": "No orders found",
+      "NO_ORDERS_DESC": "Try adjusting your search criteria or refresh",
+      "PULL_TO_REFRESH": "Pull down to refresh",
+      "LOADING": "Loading data...",
+      "EXPORT": "Export",
+      "COUNT": "Order List ({{count}} items)"
+    },
+    "FILTER": {
+      "ALL": "All",
+      "UNASSIGNED": "Unassigned",
+      "ASSIGNED": "Assigned",
+      "IN_PROGRESS": "In Progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "STATUS": "Status",
+      "DATE": "Date",
+      "INSTALLER": "Installer"
+    },
+    "DETAIL": {
+      "TITLE": "Order Details",
+      "ORDER_INFO": "Order Information",
+      "ORDER_NUMBER": "Order Number",
+      "ORDER_DATE": "Order Date",
+      "SCHEDULED_DATE": "Scheduled Date",
+      "CUSTOMER_INFO": "Customer Information",
+      "CUSTOMER_NAME": "Customer Name",
+      "PHONE": "Phone",
+      "ADDRESS": "Address",
+      "PRODUCT_INFO": "Product Information",
+      "PRODUCT_NAME": "Product Name",
+      "PRODUCTS": "Products",
+      "QUANTITY": "Quantity",
+      "PRICE": "Price",
+      "NOTES": "Notes",
+      "INSTALLER_INFO": "Installer Information",
+      "INSTALLER": "Installer",
+      "NOT_ASSIGNED": "Not Assigned",
+      "CALL": "Call",
+      "NAVIGATE": "Navigate",
+      "ATTACHMENTS": "Attachments",
+      "TAKE_PHOTO": "Take Photo",
+      "SCAN_DOCUMENT": "Scan Document",
+      "GALLERY": "Gallery",
+      "SELECT_FILE": "Select File",
+      "UPLOADING": "{{progress}}% Uploading...",
+      "CONFIRM_STATUS_CHANGE": "Confirm Status Change",
+      "CHANGE_STATUS_TO": "Change status to {{status}}?",
+      "UPLOAD_SUCCESS": "{{fileName}} uploaded successfully",
+      "UPLOAD_FAILED": "{{fileName}} upload failed",
+      "DELETE_FILE": "Delete File",
+      "DELETE_FILE_CONFIRM": "Are you sure you want to delete this file?",
+      "DELETE_FILE_NAME_CONFIRM": "Are you sure you want to delete {{fileName}}?",
+      "FILE_DELETED": "File deleted successfully",
+      "DELETE_FAILED": "Failed to delete file",
+      "COMPRESSION_SUCCESS": "Compression complete: {{ratio}}% reduced",
+      "FILE_UPLOADED": "File uploaded successfully",
+      "FILE_UPLOAD_FAILED": "File upload failed",
+      "DOWNLOAD_FAILED": "File download failed"
+    },
+    "STATUS": {
+      "PENDING": "Pending",
+      "UNASSIGNED": "Unassigned",
+      "ASSIGNED": "Assigned",
+      "CONFIRMED": "Confirmed",
+      "RELEASED": "Released",
+      "DISPATCHED": "Dispatched",
+      "IN_PROGRESS": "In Progress",
+      "COMPLETED": "Completed",
+      "PARTIAL": "Partial",
+      "CANCELLED": "Cancelled",
+      "POSTPONED": "Postponed",
+      "ABSENCE": "Absence",
+      "ABSENT": "Absent",
+      "REQUEST_CANCEL": "Cancel Requested",
+      "COLLECTED": "Collected",
+      "REVERTED": "Reverted"
+    },
+    "ACTIONS": {
+      "ASSIGN": "Assign",
+      "REASSIGN": "Reassign",
+      "COMPLETE": "Complete",
+      "CANCEL": "Cancel",
+      "POSTPONE": "Postpone",
+      "VIEW": "View",
+      "EDIT": "Edit",
+      "DELETE": "Delete"
+    },
+    "ASSIGN_MODAL": {
+      "TITLE": "Assign Order",
+      "INSTALLER_LABEL": "Select Installer",
+      "INSTALLER_PLACEHOLDER": "Select an installer",
+      "DATE_LABEL": "Appointment Date",
+      "SLOT_LABEL": "Time Slot (Optional)",
+      "SLOT_PLACEHOLDER": "Select time slot",
+      "ASSIGN_BUTTON": "Assign",
+      "ERROR": {
+        "INSTALLER_REQUIRED": "Please select an installer",
+        "ASSIGN_FAILED": "Assignment failed"
+      },
+      "SUCCESS": {
+        "ASSIGNED": "Order has been assigned"
+      }
+    },
+    "COMPLETION_MODAL": {
+      "TITLE": "Installation Complete",
+      "SERIAL_SECTION": "Product Serial Numbers",
+      "SERIAL_PLACEHOLDER": "Enter serial number",
+      "QUANTITY": "Quantity",
+      "WASTE_SECTION": "Waste Equipment Pickup",
+      "WASTE_CODE": "Waste Equipment Code",
+      "WASTE_CODE_SELECT": "Select code",
+      "ADD_WASTE": "Add Waste Equipment",
+      "PHOTO_SECTION": "Installation Photos",
+      "TAKE_PHOTO": "Take Photo",
+      "NOTES_LABEL": "Notes (Optional)",
+      "NOTES_PLACEHOLDER": "Enter any additional notes",
+      "ERROR": {
+        "CAMERA_ACCESS": "Camera access failed",
+        "SAVE_FAILED": "Failed to save completion"
+      },
+      "SUCCESS": {
+        "COMPLETED": "Installation completed successfully"
+      }
+    },
+    "TABLE": {
+      "ORDER_NUMBER": "Order No.",
+      "CUSTOMER": "Customer",
+      "ADDRESS": "Address",
+      "PRODUCT": "Product",
+      "SCHEDULED_DATE": "Scheduled Date",
+      "STATUS": "Status",
+      "INSTALLER": "Installer",
+      "ACTIONS": "Actions"
+    },
+    "SPLIT": {
+      "TITLE": "Split Order",
+      "CARD_TITLE": "Order Split",
+      "ORDER_NUMBER": "Order No.",
+      "CUSTOMER_NAME": "Customer",
+      "APPOINTMENT_DATE": "Appointment Date",
+      "DESCRIPTION": "Split multi-product orders across multiple installers.",
+      "PRODUCT_CODE": "Product Code",
+      "TOTAL_QTY": "Total Qty",
+      "REMAINING_QTY": "Remaining Qty",
+      "INSTALLER_PLACEHOLDER": "Installer Name",
+      "QTY_PLACEHOLDER": "Qty",
+      "ADD_SPLIT": "Add Split",
+      "SAVE": "Save Split",
+      "EMPTY": "No products available to split",
+      "QTY_SUFFIX": "",
+      "CONFIRM": {
+        "TITLE": "Save Split",
+        "MESSAGE": "Split this order? This action cannot be undone.",
+        "CANCEL": "Cancel",
+        "SAVE": "Save"
+      },
+      "TOAST": {
+        "QTY_WARNING": "All quantities must be assigned.",
+        "SUCCESS": "Split saved successfully.",
+        "ERROR": "Failed to save split.",
+        "SAVE_ERROR": "Error occurred while saving."
+      }
+    },
+    "ABSENCE": {
+      "TITLE": "Absence Processing",
+      "LOADING": "Loading...",
+      "RETRY_COUNT": "Re-visit",
+      "RETRY_REMAINING": "{{count}} remaining",
+      "MAX_RETRY_TITLE": "Maximum Re-visits Reached",
+      "MAX_RETRY_DESC": "No more re-visit scheduling possible. Escalation to administrator required.",
+      "ORDER_INFO": "Order Info",
+      "CURRENT_APPOINTMENT": "Current Appointment",
+      "INSTALLER": "Installer",
+      "REASON": {
+        "TITLE": "Absence Reason",
+        "NOT_HOME": "Not Home",
+        "NO_CONTACT": "No Contact",
+        "REFUSED": "Visit Refused",
+        "WRONG_ADDRESS": "Wrong Address",
+        "OTHER": "Other"
+      },
+      "NEXT_VISIT": {
+        "TITLE": "Re-visit Info",
+        "DATE_LABEL": "Re-visit Date",
+        "DATE_HINT": "Select date",
+        "TIME_LABEL": "Re-visit Time",
+        "TIME_HINT": "Select time",
+        "MORNING": "Morning",
+        "AFTERNOON": "Afternoon"
+      },
+      "MEMO": {
+        "LABEL": "Memo",
+        "PLACEHOLDER": "Enter absence memo..."
+      },
+      "NOTIFY_CUSTOMER": "Send notification to customer",
+      "SUBMIT": "Process Absence",
+      "ESCALATE": "Escalate to Admin",
+      "CONFIRM": {
+        "TITLE": "Confirm Absence",
+        "MESSAGE": "Proceed with absence processing?",
+        "CANCEL": "Cancel",
+        "CONFIRM": "Process"
+      },
+      "TOAST": {
+        "SUCCESS": "Absence processed successfully.",
+        "ERROR": "Failed to process absence.",
+        "REASON_REQUIRED": "Please select absence reason.",
+        "DATE_REQUIRED": "Please select re-visit date."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "Failed to load order information."
+      }
+    },
+    "POSTPONE": {
+      "TITLE": "Postpone Order",
+      "LOADING": "Loading...",
+      "CURRENT_APPOINTMENT": "Current Appointment",
+      "INSTALLER": "Installer",
+      "FORM_TITLE": "Postpone Info",
+      "REASON": {
+        "TITLE": "Postpone Reason",
+        "CUSTOMER_REQUEST": "Customer Request",
+        "OUT_OF_STOCK": "Out of Stock",
+        "INSTALLER_SCHEDULE": "Installer Schedule",
+        "WEATHER": "Weather",
+        "OTHER": "Other"
+      },
+      "NEW_DATE": {
+        "TITLE": "New Appointment",
+        "DATE_LABEL": "Date",
+        "DATE_HINT": "Select date",
+        "TIME_LABEL": "Time",
+        "TIME_HINT": "Select time"
+      },
+      "MEMO": {
+        "LABEL": "Memo",
+        "PLACEHOLDER": "Enter postpone memo..."
+      },
+      "SUBMIT": "Process Postpone",
+      "CONFIRM": {
+        "TITLE": "Confirm Postpone",
+        "MESSAGE": "Postpone this order?",
+        "CANCEL": "Cancel",
+        "CONFIRM": "Postpone"
+      },
+      "TOAST": {
+        "SUCCESS": "Postpone processed successfully.",
+        "ERROR": "Failed to process postpone.",
+        "REASON_REQUIRED": "Please select postpone reason.",
+        "DATE_REQUIRED": "Please select new appointment date."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "Failed to load order information."
+      }
+    }
+  },
+  "ASSIGNMENT": {
+    "TITLE": "Assignment Management",
+    "SEARCH_PLACEHOLDER": "Search by order number, customer...",
+    "UNASSIGNED_ORDERS": "Unassigned Orders",
+    "ASSIGNED_ORDERS": "Assigned Orders",
+    "SELECT_INSTALLER": "Select Installer",
+    "ASSIGN_CONFIRM": "Assign {{count}} order(s) to {{installer}}?",
+    "ASSIGN_SUCCESS": "{{count}} order(s) assigned successfully",
+    "ASSIGN_FAILED": "Assignment failed",
+    "NO_INSTALLER": "Please select an installer",
+    "NO_ORDERS_SELECTED": "Please select orders to assign",
+    "NO_ITEMS": "No items to display",
+    "NO_ITEMS_DESC": "Change filters or refresh",
+    "BATCH_ASSIGN": {
+      "TITLE": "Batch Assign",
+      "INSTALLER_SELECT_TITLE": "Select Installer",
+      "INSTALLER_PLACEHOLDER": "Select an installer",
+      "DATE_TITLE": "Assignment Date",
+      "UNASSIGNED_SELECT_TITLE": "Select Unassigned Orders",
+      "UNASSIGNED_COUNT": "Unassigned Orders",
+      "SELECTED_COUNT": "Selected Orders",
+      "SELECT_ALL": "Select All",
+      "NO_UNASSIGNED": "No unassigned orders.",
+      "ASSIGN_BTN": "Assign {{count}} Orders",
+      "ITEMS_SUFFIX": " items",
+      "PRODUCTS_SUFFIX": " products",
+      "CONFIRM_MESSAGE": "Assign {{count}} order(s) to {{installer}}?",
+      "OPERATION_NAME": "Order Assignment"
+    },
+    "DETAIL": {
+      "TITLE": "Assignment Details",
+      "LOADING": "Loading data...",
+      "APPOINTMENT_DATE": "Appointment Date",
+      "INSTALLER": "Installer",
+      "NOT_ASSIGNED": "Not Assigned",
+      "CUSTOMER_INFO": "Customer Information",
+      "CUSTOMER_NAME": "Customer Name",
+      "CONTACT": "Contact",
+      "ADDRESS": "Address",
+      "CALL": "Call",
+      "PRODUCT_LIST": "Product List",
+      "SPECIAL_NOTES": "Special Notes",
+      "NOT_FOUND": "Assignment information not found.",
+      "ASSIGN_INSTALLER": "Assign Installer",
+      "CONFIRM_ASSIGNMENT": "Confirm Assignment",
+      "CHANGE_INSTALLER": "Change Installer",
+      "CONFIRM_RELEASE": "Confirm Release",
+      "CHANGE_APPOINTMENT": "Change Appointment",
+      "CANCEL": "Cancel",
+      "ACTION_HEADER": "Select Action",
+      "ADD_NOTE": "Add Note",
+      "CANCEL_REQUEST": "Request Cancellation",
+      "CLOSE": "Close",
+      "PRINT_FAILED": "Failed to generate print file.",
+      "INSTALLER_NAME": "Installer Name",
+      "APPOINTMENT_DATE_INPUT": "Appointment Date",
+      "ASSIGN": "Assign",
+      "INSTALLER_ASSIGNED": "Installer assigned successfully.",
+      "CONFIRM_ASSIGNMENT_MSG": "Confirm this assignment?",
+      "CONFIRM": "Confirm",
+      "ASSIGNMENT_CONFIRMED": "Assignment confirmed.",
+      "NEW_INSTALLER_NAME": "New Installer Name",
+      "CHANGE": "Change",
+      "INSTALLER_CHANGED": "Installer changed successfully.",
+      "CONFIRM_RELEASE_MSG": "Confirm release for this order?",
+      "RELEASE_CONFIRMED": "Release confirmed.",
+      "NEW_APPOINTMENT": "New Appointment Date",
+      "APPOINTMENT_CHANGED": "Appointment date changed.",
+      "APPOINTMENT_DATE_LIMIT": "Appointment must be within 15 days from today.",
+      "NOTE_PLACEHOLDER": "Enter special notes",
+      "SAVE": "Save",
+      "NOTE_ADDED": "Note added successfully.",
+      "CANCEL_CONFIRM_HEADER": "Confirm Cancellation",
+      "CANCEL_CONFIRM_MSG": "Are you sure you want to request cancellation?",
+      "CANCEL_REASON": "Cancellation Reason",
+      "NO": "No",
+      "YES_CANCEL": "Yes, Cancel",
+      "CANCEL_REQUESTED": "Cancellation requested. Will be processed after HQ approval."
+    },
+    "RELEASE": {
+      "TITLE": "Confirm Release",
+      "TARGET_TITLE": "Release Targets",
+      "TOTAL_ITEMS": "Total Items",
+      "SELECTED_ITEMS": "Selected Items",
+      "SELECT_ALL": "Select All",
+      "LOADING": "Loading data...",
+      "NO_TARGET": "No items for release confirmation.",
+      "CONFIRM_BTN": "Confirm {{count}} Release(s)",
+      "ITEMS_SUFFIX": " items",
+      "PRODUCTS_COUNT": "{{count}} products",
+      "CONFIRM_HEADER": "Confirm Release",
+      "CONFIRM_MESSAGE": "Confirm release for {{count}} order(s)?",
+      "SUCCESS_MESSAGE": "{{successCount}} order(s) released",
+      "PARTIAL_SUCCESS": "{{successCount}} succeeded, {{failCount}} failed",
+      "ERROR": "Error occurred during release confirmation.",
+      "PRINT_SUMMARY": "Release Summary",
+      "PRINT_SUCCESS": "Release summary downloaded.",
+      "PRINT_FAILED": "Failed to generate print file."
+    }
+  },
+  "COMPLETION": {
+    "TITLE": "Completion",
+    "SIGNATURE": {
+      "TITLE": "Signature",
+      "CUSTOMER_SIGNATURE": "Customer Signature",
+      "INSTALLER_SIGNATURE": "Installer Signature",
+      "CLEAR": "Clear",
+      "REQUIRED": "Customer signature is required",
+      "TAP_TO_SIGN": "Tap to sign"
+    },
+    "PHOTO": {
+      "TITLE": "Installation Photos",
+      "TAKE_PHOTO": "Take Photo",
+      "SELECT_PHOTO": "Select Photo",
+      "REQUIRED": "At least 1 installation photo is required",
+      "ADDED": "Photo added.",
+      "COUNT": "{{count}} photos"
+    },
+    "FILTER": {
+      "PENDING": "Pending",
+      "CERTIFICATE_ISSUED": "Certificate Issued",
+      "CERTIFICATE_NOT_ISSUED": "Certificate Not Issued"
+    },
+    "STATUS": {
+      "SERIAL_ENTERED": "Serial Entered",
+      "SERIAL_NOT_ENTERED": "Serial Not Entered",
+      "WASTE_PICKUP": "Waste Pickup",
+      "COMPLETED": "Completed",
+      "NOT_COMPLETED": "Not Completed",
+      "OPTIONAL": "Optional",
+      "ISSUED": "Issued",
+      "NOT_ISSUED": "Not Issued"
+    },
+    "NO_ITEMS": "No items to process",
+    "ALL_COMPLETED": "All tasks completed",
+    "CONFIRM": "Complete this order?",
+    "SUCCESS": "Order completed successfully",
+    "FAILED": "Completion failed",
+    "PROCESS": {
+      "TITLE": "Completion Process",
+      "ORDER_INFO": "Order Information",
+      "ORDER_NUMBER": "Order Number",
+      "CUSTOMER_NAME": "Customer Name",
+      "INSTALLER": "Installer",
+      "STEPS_TITLE": "Completion Steps",
+      "SERIAL_INPUT": "Serial Number Input",
+      "SERIAL_INPUT_DESC": "Enter serial numbers for each product",
+      "WASTE_PICKUP": "Waste Pickup",
+      "WASTE_PICKUP_DESC": "Enter waste pickup information",
+      "PHOTO_UPLOAD": "Photo Upload",
+      "PHOTO_UPLOAD_DESC": "Installation photos (optional)",
+      "CERTIFICATE": "Installation Certificate",
+      "CERTIFICATE_DESC": "Issue certificate and signatures",
+      "NOTES_TITLE": "Special Notes",
+      "ADD_NOTE": "+ Add Note",
+      "NOTE_HEADER": "Add Note",
+      "NOTE_PLACEHOLDER": "Enter notes here...",
+      "COMPLETE_BTN": "Complete Order",
+      "CONFIRM_HEADER": "Complete Order",
+      "CONFIRM_MESSAGE": "Are you sure you want to complete this order?",
+      "COMPLETE": "Complete",
+      "SUCCESS_MESSAGE": "Order completed successfully.",
+      "ERROR_MESSAGE": "An error occurred while processing."
+    },
+    "CERTIFICATE": {
+      "TITLE": "Installation Certificate",
+      "DOCUMENT_TITLE": "Installation Certificate",
+      "ORDER_INFO": "Order Information",
+      "ORDER_NUMBER": "Order Number",
+      "INSTALL_DATE": "Installation Date",
+      "CUSTOMER_NAME": "Customer Name",
+      "INSTALL_ADDRESS": "Installation Address",
+      "PRODUCTS_TITLE": "Installed Products",
+      "PRODUCT_NAME": "Product Name",
+      "QUANTITY": "Quantity",
+      "SERIAL_NUMBER": "Serial Number",
+      "INSTALLER_TITLE": "Installer",
+      "SIGNATURE_SECTION": "Signatures",
+      "CUSTOMER_SIGNATURE_ALT": "Customer Signature",
+      "INSTALLER_SIGNATURE_ALT": "Installer Signature",
+      "CONFIRMATION_TEXT": "I confirm that the above installation has been completed.",
+      "PRINT_BTN": "Print",
+      "ISSUE_BTN": "Issue Certificate",
+      "ISSUED_SUCCESS": "Certificate issued successfully.",
+      "ISSUE_ERROR": "An error occurred while issuing."
+    },
+    "SERIAL": {
+      "TITLE": "Serial Number Input",
+      "CARD_TITLE": "Product Serial Numbers",
+      "INSTRUCTION": "Please enter the serial number for each product.",
+      "FORMAT_HINT": "Alphanumeric 10-20 characters",
+      "PLACEHOLDER": "Enter serial number",
+      "VALID": "Valid",
+      "FORMAT_ERROR": "Invalid format",
+      "NO_PRODUCTS": "No products registered.",
+      "SAVE_BTN": "Save",
+      "SCAN_SUCCESS": "Scan complete: {{content}}",
+      "SCAN_ERROR": "An error occurred while scanning.",
+      "SAVE_SUCCESS": "Serial numbers saved successfully.",
+      "SAVE_ERROR": "An error occurred while saving."
+    },
+    "WASTE": {
+      "TITLE": "Waste Pickup",
+      "CARD_TITLE": "Waste Appliance Registration",
+      "INSTRUCTION": "Select waste appliances to collect and enter quantities.",
+      "SELECT_PLACEHOLDER": "Select waste appliance",
+      "QUANTITY_PLACEHOLDER": "Quantity",
+      "ITEMS_TITLE": "Pickup Items",
+      "ITEMS_COUNT": "{{count}} items",
+      "NO_ITEMS": "No waste appliances registered.",
+      "SAVE_BTN": "Save",
+      "SAVE_SUCCESS": "Waste pickup information saved successfully.",
+      "SAVE_ERROR": "An error occurred while saving."
+    }
+  },
+  "REPORTS": {
+    "TITLE": "Reports",
+    "DAILY": "Daily Report",
+    "WEEKLY": "Weekly Report",
+    "MONTHLY": "Monthly Report",
+    "CUSTOM": "Custom Range",
+    "DATE_RANGE": "Date Range",
+    "GENERATE": "Generate",
+    "EXPORT_EXCEL": "Export Excel",
+    "EXPORT_PDF": "Export PDF",
+    "MENU": {
+      "TITLE": "Reports",
+      "SUBTITLE": "Progress tracking and data analysis",
+      "PROGRESS_DASHBOARD": "Progress Dashboard",
+      "PROGRESS_DASHBOARD_DESC": "Progress by installer/branch",
+      "CUSTOMER_HISTORY": "Customer History",
+      "CUSTOMER_HISTORY_DESC": "Search customer order history",
+      "WASTE_SUMMARY": "Waste Summary",
+      "WASTE_SUMMARY_DESC": "Waste collection stats",
+      "EXPORT": "Data Export",
+      "EXPORT_DESC": "ECOAS, CSV, PDF export"
+    },
+    "PROGRESS": {
+      "TITLE": "Progress Dashboard",
+      "LOADING": "Loading data...",
+      "TOTAL_ORDERS": "Total Orders",
+      "COMPLETED": "Completed",
+      "IN_PROGRESS": "In Progress",
+      "CANCELLED": "Cancelled",
+      "KPI_TITLE": "KPI Status",
+      "COMPLETION_RATE": "Completion Rate",
+      "WASTE_PICKUP": "Waste Pickup",
+      "ITEMS_SUFFIX": " items",
+      "VIEW_BY_INSTALLER": "By Installer",
+      "VIEW_BY_BRANCH": "By Branch",
+      "VIEW_BY_STATUS": "By Status",
+      "STATUS_LABEL": "Status",
+      "NO_DATA": "No data available",
+      "DATE_SELECT": "Select Date Range",
+      "START_DATE": "Start Date",
+      "END_DATE": "End Date",
+      "APPLY": "Apply",
+      "TODAY": "Today",
+      "THIS_WEEK": "This Week",
+      "THIS_MONTH": "This Month"
+    },
+    "CUSTOMER": {
+      "TITLE": "Customer History",
+      "SEARCH_PLACEHOLDER": "Search by name, phone, address...",
+      "SEARCH_HINT": "Enter at least 2 characters",
+      "RECENT_SEARCHES": "Recent Searches",
+      "SEARCHING": "Searching...",
+      "RESULTS_COUNT": "{{count}} results found",
+      "RESERVATION": "Reservation",
+      "NO_RESULTS": "No results found",
+      "NO_RESULTS_DESC": "Try a different search term",
+      "EMPTY_TITLE": "Customer History",
+      "EMPTY_DESC": "Search by name, phone, or address",
+      "CSV_SUCCESS": "CSV download complete",
+      "CSV_FAILED": "Download failed"
+    },
+    "WASTE": {
+      "TITLE": "Waste Summary",
+      "TOTAL_COUNT": "Total Collected",
+      "UNIT": "units",
+      "CATEGORY_COUNT": "Categories",
+      "AVERAGE": "Average",
+      "TOP5_TITLE": "TOP 5 Categories",
+      "CATEGORY_STATUS": "Category Status",
+      "NO_DATA": "No data available",
+      "LAST_7_DAYS": "Last 7 days",
+      "LAST_30_DAYS": "Last 30 days",
+      "LAST_90_DAYS": "Last 90 days",
+      "CSV_SUCCESS": "CSV download complete",
+      "CSV_FAILED": "Download failed"
+    },
+    "EXPORT": {
+      "TITLE": "Data Export",
+      "DATE_SELECT": "Select Date Range",
+      "TYPE_SELECT": "Export Type",
+      "TYPE_ECOAS": "ECOAS Format",
+      "TYPE_ECOAS_DESC": "Legacy system compatible format",
+      "TYPE_COMPLETED": "Completed List",
+      "TYPE_COMPLETED_DESC": "Completed orders list",
+      "TYPE_PENDING": "Pending List",
+      "TYPE_PENDING_DESC": "In progress/pending orders",
+      "TYPE_WASTE": "Waste Collection Summary",
+      "TYPE_WASTE_DESC": "Collection statistics",
+      "TYPE_RAW": "Raw Data",
+      "TYPE_RAW_DESC": "Export all data",
+      "FORMAT_SELECT": "File Format",
+      "EXPORT_BTN": "Export",
+      "PROCESSING": "Processing...",
+      "STATUS_PENDING": "Preparing export...",
+      "STATUS_PROCESSING": "Generating file...",
+      "STATUS_COMPLETED": "Export complete!",
+      "STATUS_ERROR": "Error",
+      "DOWNLOAD": "Download",
+      "SUCCESS": "Export complete!",
+      "FAILED": "Export failed",
+      "REQUEST_FAILED": "Export request failed",
+      "STATUS_CHECK_FAILED": "Status check failed",
+      "HEADERS": {
+        "CODE": "Code",
+        "ITEM": "Item",
+        "QUANTITY": "Quantity",
+        "CUSTOMER_NAME": "Customer Name",
+        "PHONE": "Phone",
+        "ADDRESS": "Address",
+        "ORDER_NUMBER": "Order Number",
+        "STATUS": "Status",
+        "APPOINTMENT_DATE": "Appointment Date"
+      }
+    },
+    "RELEASE_SUMMARY": {
+      "TITLE": "Release Summary",
+      "START_DATE": "Start Date",
+      "END_DATE": "End Date",
+      "FDC_SELECT": "Select FDC",
+      "ALL": "All",
+      "SEARCH_PLACEHOLDER": "Search by model code or name...",
+      "TOTAL_ORDERS": "Total Orders",
+      "TOTAL_QUANTITY": "Total Quantity",
+      "TOTAL_MODELS": "Total Models"
+    }
+  },
+  "PROFILE": {
+    "TITLE": "Profile",
+    "USER_INFO": {
+      "TITLE": "User Information",
+      "USERNAME": "Username",
+      "EMAIL": "Email",
+      "PHONE": "Phone",
+      "ROLE": "Role",
+      "BRANCH": "Branch",
+      "BRANCH_CODE": "Branch Code"
+    },
+    "SYNC": {
+      "TITLE": "Sync Status",
+      "STATUS": "Status",
+      "NETWORK": "Network",
+      "ONLINE": "Online",
+      "OFFLINE": "Offline",
+      "PENDING_OPERATIONS": "Pending Operations",
+      "PENDING_COUNT": "{{count}} items",
+      "SYNC_NOW": "Sync Now",
+      "SYNCING": "Syncing...",
+      "LAST_SYNC": "Last Sync",
+      "SYNC_COMPLETED": "Sync Completed",
+      "SYNC_PENDING": "Pending"
+    },
+    "SETTINGS": {
+      "TITLE": "Settings",
+      "LANGUAGE": "Language",
+      "DARK_MODE": "Dark Mode",
+      "NOTIFICATIONS": "Push Notifications"
+    },
+    "APP_INFO": {
+      "TITLE": "App Information",
+      "VERSION": "Version",
+      "ENVIRONMENT": "Environment",
+      "ENV_PRODUCTION": "Production",
+      "ENV_DEVELOPMENT": "Development"
+    }
+  },  "SETTINGS": {
+    "SECTION": {
+      "MANAGEMENT": "Management",
+      "ACCOUNT": "Account"
+    },
+    "MENU": {
+      "SETTLEMENT": "Settlement",
+      "SETTLEMENT_DESC": "Manage weekly settlement periods",
+      "NOTIFICATION_CENTER": "Notification Center",
+      "NOTIFICATION_CENTER_DESC": "Push notification settings and history",
+      "NOTIFICATION_SETTINGS": "Notification Settings",
+      "NOTIFICATION_SETTINGS_DESC": "Enable/mute notifications by category",
+      "BIOMETRIC": "Biometric Authentication",
+      "BIOMETRIC_DESC": "Quick login settings",
+      "LOGOUT_DESC": "Log out from account"
+    },
+    "NOTIFICATION": {
+      "TITLE": "Notification Settings",
+      "MASTER_TOGGLE": "Receive Notifications",
+      "MASTER_DESC": "Receive push notifications on this device",
+      "CATEGORIES_TITLE": "Notification Categories",
+      "CATEGORY": {
+        "REASSIGN": "Reassignment Notifications",
+        "REASSIGN_DESC": "Notify when orders are reassigned",
+        "DELAY": "Delay Notifications",
+        "DELAY_DESC": "Notify when deadlines are exceeded",
+        "CUSTOMER": "Customer Request Notifications",
+        "CUSTOMER_DESC": "Notify when customer schedule changes/cancellations",
+        "SYSTEM": "System Notifications",
+        "SYSTEM_DESC": "System announcements and update notifications"
+      },
+      "DEVICE": {
+        "CURRENT_TITLE": "Current Device",
+        "OTHER_TITLE": "Other Devices",
+        "CURRENT_BADGE": "Current Device",
+        "LAST_USED": "Last Used"
+      },
+      "TOAST": {
+        "SAVE_SUCCESS": "Notification settings saved.",
+        "SAVE_ERROR": "Failed to save settings."
+      }
+    },
+    "NOTIFICATION_CENTER": {
+      "TITLE": "Notification Center",
+      "MARK_ALL_READ": "Mark All Read",
+      "TAB_ALL": "All",
+      "TAB_UNREAD": "Unread",
+      "SETTINGS_TITLE": "Notification Settings",
+      "SETTING_REASSIGN": "Reassignment",
+      "SETTING_DELAY": "Delay Alerts",
+      "SETTING_CUSTOMER": "Customer Requests",
+      "SETTING_PUSH": "Push Notifications",
+      "EMPTY": "No notifications",
+      "NEW": "NEW",
+      "TOAST": {
+        "MARK_ALL_READ": "All marked as read",
+        "SETTING_ERROR": "Failed to save setting"
+      },
+      "TIME_AGO": {
+        "JUST_NOW": "Just now"
+      }
+    },
+    "BIOMETRIC": {
+      "TITLE": "Biometric Authentication Settings",
+      "ENABLE": "Use Biometric Authentication",
+      "ENABLE_DESC": "Quick login with fingerprint or Face ID",
+      "NOT_AVAILABLE_TITLE": "Biometric Not Available",
+      "NOT_AVAILABLE": "Biometric authentication is not available on this device.",
+      "NOT_AVAILABLE_NOTES": {
+        "WEB_BROWSER": "Not supported in web browsers",
+        "NATIVE_ONLY": "Only available in native apps (Android/iOS)",
+        "MUST_REGISTER": "Biometric must be registered on the device"
+      },
+      "QUICK_SECURE": "Use biometric authentication for quick and secure login.",
+      "ENABLE_LABEL": "Enable Biometric Authentication",
+      "ENABLE_NEXT_LOGIN": "From next login, you can easily login with {{type}}",
+      "LAST_USED": "Last Used",
+      "SECURITY_INFO": {
+        "TITLE": "Security Information",
+        "SAFE_STORAGE": "Safe Storage",
+        "SAFE_STORAGE_DESC": "Authentication data is encrypted and stored in device secure storage",
+        "DEVICE_ONLY": "Device Only",
+        "DEVICE_ONLY_DESC": "Biometric authentication only works on this device and is not shared",
+        "REAUTH_REQUIRED": "Re-authentication Required",
+        "REAUTH_REQUIRED_DESC": "If not used for 30+ days, you must login with password again"
+      },
+      "TEST_BUTTON": "Test Biometric Authentication",
+      "CONFIRM_DISABLE": {
+        "TITLE": "Disable Biometric Authentication",
+        "MESSAGE": "Disabling biometric will require email and password for next login. Continue?",
+        "CANCEL": "Cancel",
+        "CONFIRM": "Disable"
+      },
+      "TOAST": {
+        "ENABLE_SUCCESS": "Biometric authentication enabled.",
+        "DISABLE_SUCCESS": "Biometric authentication disabled.",
+        "TEST_SUCCESS": "Biometric authentication works correctly.",
+        "ERROR": "Failed to configure biometric authentication."
+      }
+    },
+    "SETTLEMENT": {
+      "TITLE": "Settlement Management",
+      "PERIOD": "Settlement Period",
+      "CURRENT_PERIOD": "Current Settlement Period",
+      "START_DATE": "Start Date",
+      "END_DATE": "End Date",
+      "SUMMARY": "Settlement Summary",
+      "TOTAL_ORDERS": "Total Orders",
+      "COMPLETED_ORDERS": "Completed Orders",
+      "TOTAL_AMOUNT": "Total Amount",
+      "DATE_RANGE": "Period",
+      "STATUS": {
+        "LABEL": "Status",
+        "OPEN": "In Progress",
+        "LOCKED": "Closed"
+      },
+      "ORDER_COUNT": "Order Count",
+      "ORDER_COUNT_VALUE": "{{count}} orders",
+      "LOCKED_AT": "Closed",
+      "LOCK_BUTTON": "Close Settlement",
+      "UNLOCK_BUTTON": "Reopen",
+      "CLOSE_BUTTON": "Close",
+      "HISTORY": "Settlement History",
+      "NO_HISTORY": "No history",
+      "LOAD_ERROR": "Unable to load information",
+      "CONFIRM_LOCK": {
+        "TITLE": "Close Settlement",
+        "MESSAGE": "Close {{start}} ~ {{end}}?",
+        "CANCEL": "Cancel",
+        "CONFIRM": "Close"
+      },
+      "CONFIRM_UNLOCK": {
+        "TITLE": "Reopen Settlement",
+        "MESSAGE": "Reopen this settlement?",
+        "CANCEL": "Cancel",
+        "CONFIRM": "Reopen"
+      },
+      "TOAST": {
+        "LOCK_SUCCESS": "Settlement closed",
+        "UNLOCK_SUCCESS": "Settlement reopened",
+        "ERROR": "Error occurred"
+      }
+    },
+    "SYSTEM": {
+      "TITLE": "System Settings",
+      "TAB": {
+        "SYSTEM": "System",
+        "USERS": "Users",
+        "ROLES": "Roles"
+      },
+      "SECTION": {
+        "SYSTEM": "System Settings"
+      },
+      "NOTIFICATION_FREQUENCY": "Notification Frequency",
+      "FREQUENCY": {
+        "INSTANT": "Instant",
+        "BATCH": "Batch",
+        "OFF": "Disabled"
+      },
+      "BATCH_SCHEDULE_HOUR": "Batch Schedule Hour",
+      "BATCH_HOUR_PLACEHOLDER": "Hour (0-23)",
+      "AUTO_LOCK_SETTLEMENT": "Auto Lock Settlement",
+      "AUTO_LOCK_DAY": "Lock Day",
+      "AUTO_LOCK_TIME": "Lock Time",
+      "MAINTENANCE_MODE": "Maintenance Mode",
+      "MAINTENANCE_MESSAGE": "Maintenance Message",
+      "MAINTENANCE_MESSAGE_PLACEHOLDER": "System is under maintenance. Please try again later.",
+      "ROLES_POLICY": "Roles Policy",
+      "ROLE": {
+        "HQ_ADMIN": "HQ Admin",
+        "HQ_ADMIN_DESC": "Full system management, user management, settlement management, report access",
+        "BRANCH_MANAGER": "Branch Manager",
+        "BRANCH_MANAGER_DESC": "Branch assignment/completion management, branch reports, settlement viewing",
+        "INSTALLER": "Installer",
+        "INSTALLER_DESC": "Receive assigned orders, complete processing, personal report access"
+      },
+      "USER": {
+        "ADD": "Add User",
+        "ADD_TITLE": "Add User",
+        "EDIT_TITLE": "Edit User",
+        "NAME": "Name",
+        "EMAIL": "Email",
+        "ROLE": "Role",
+        "BRANCH": "Branch",
+        "BRANCH_CODE": "Branch Code",
+        "STATUS": "Status",
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "ACTIVATE": "Activate",
+        "DEACTIVATE": "Deactivate",
+        "LAST_LOGIN": "Last Login",
+        "EMPTY": "No users found"
+      },
+      "SUCCESS": {
+        "SAVED": "System settings saved.",
+        "USER_CREATED": "User created.",
+        "USER_UPDATED": "User updated.",
+        "USER_ACTIVATED": "User activated.",
+        "USER_DEACTIVATED": "User deactivated."
+      },
+      "ERROR": {
+        "ADMIN_ONLY": "HQ Admin access only.",
+        "LOAD_USERS_FAILED": "Failed to load users.",
+        "SAVE_FAILED": "Save failed",
+        "STATUS_CHANGE_FAILED": "Status change failed"
+      }
+    },
+    "CUSTOMER_CONTACT": {
+      "TITLE": "Customer Contacts",
+      "SEARCH_PLACEHOLDER": "Search by customer or contact name...",
+      "CONTACT_PERSON": "Contact Person",
+      "FILTER": {
+        "ALL": "All"
+      },
+      "TYPE": {
+        "RECEIVER": "Receiver",
+        "PICKUP": "Pickup",
+        "BOTH": "Both"
+      },
+      "FIELD": {
+        "CUSTOMER_NAME": "Customer Name",
+        "CUSTOMER_CODE": "Customer Code",
+        "CONTACT_NAME": "Contact Name",
+        "DEPARTMENT": "Department",
+        "PHONE": "Phone",
+        "EMAIL": "Email",
+        "ADDRESS": "Address",
+        "BUSINESS_TYPE": "Business Type",
+        "MEMO": "Memo"
+      },
+      "EMPTY": {
+        "TITLE": "No contacts found",
+        "DESCRIPTION": "Add a new customer contact"
+      },
+      "MODAL": {
+        "ADD_TITLE": "Add Contact",
+        "EDIT_TITLE": "Edit Contact"
+      },
+      "CONFIRM": {
+        "DELETE": "Are you sure you want to delete?"
+      },
+      "SUCCESS": {
+        "CREATED": "Contact created.",
+        "UPDATED": "Contact updated.",
+        "DELETED": "Contact deleted."
+      },
+      "ERROR": {
+        "LOAD_FAILED": "Failed to load contacts.",
+        "LOAD_MORE_FAILED": "Failed to load more",
+        "SAVE_FAILED": "Save failed",
+        "DELETE_FAILED": "Delete failed"
+      }
+    },
+    "ROLES": {
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "COORDINATOR": "Coordinator",
+      "INSTALLER": "Installer",
+      "DEFAULT": "General User"
+    },
+    "DEFAULT_USER": "User",
+    "APP_VERSION": "App Version"
+  },  "ROLES": {
+    "HQ_ADMIN": "HQ Administrator",
+    "BRANCH_MANAGER": "Branch Manager",
+    "PARTNER_COORDINATOR": "Partner Coordinator",
+    "INSTALLER": "Installer"
+  },
+  "LANGUAGES": {
+    "KO": "한국어",
+    "EN": "English"
+  },
+  "SYNC": {
+    "SUCCESS": {
+      "ALL_SYNCED": "All changes have been synced"
+    },
+    "WARNING": {
+      "PARTIAL_SYNC": "Some changes could not be synced"
+    },
+    "OPERATION": {
+      "COMPLETION": "Completion",
+      "STATUS_CHANGE": "Status Change",
+      "WASTE": "Waste Pickup",
+      "ATTACHMENT": "Attachment",
+      "NOTE": "Note"
+    }
+  },
+  "BULK": {
+    "DEFAULT_OPERATION": "Bulk Operation",
+    "RESULT": "Result",
+    "SUCCESS": "Success",
+    "FAILED": "Failed",
+    "SUMMARY": "{{success}} of {{total}} items processed",
+    "FAILED_ITEMS": "Failed Items ({{count}})",
+    "SUCCESS_ITEMS": "Successful Items ({{count}})",
+    "UNKNOWN_ERROR": "Unknown error",
+    "RETRY_FAILED": "Retry Failed Items ({{count}})"
+  },
+  "CONFLICT": {
+    "ENTITY": {
+      "ORDER": "Order"
+    },
+    "FIELD": {
+      "STATUS": "Status",
+      "APPOINTMENT_DATE": "Appointment Date",
+      "APPOINTMENT_SLOT": "Appointment Slot",
+      "MEMO": "Memo"
+    },
+    "CANCELLED": "User cancelled the operation."
+  },
+  "ERRORS": {
+    "NETWORK": {
+      "OFFLINE": "Network connection lost",
+      "CONNECTION_FAILED": "Cannot connect to server",
+      "TIMEOUT": "Request timed out",
+      "RETRY": "Retry"
+    },
+    "VALIDATION": {
+      "REQUIRED_FIELD": "This field is required",
+      "INVALID_FORMAT": "Invalid format",
+      "MIN_LENGTH": "Minimum {{min}} characters required",
+      "MAX_LENGTH": "Maximum {{max}} characters allowed"
+    },
+    "SERVER": {
+      "INTERNAL_ERROR": "Server error occurred",
+      "NOT_FOUND": "Requested data not found",
+      "FORBIDDEN": "Access denied"
+    }
+  },
+  "APP": {
+    "OFFLINE_MODE": "Offline Mode - Will sync automatically when online",
+    "UPDATE_AVAILABLE": "A new version is available. Would you like to reload?",
+    "UPDATE_LATER": "Later",
+    "UPDATE_NOW": "Update",
+    "SESSION_EXPIRING": "Session expires in {{time}}",
+    "BACK_TO_EXIT": "Press back again to exit the app",
+    "UNSAVED_CHANGES": {
+      "TITLE": "Unsaved Changes",
+      "MESSAGE": "You have unsaved changes. Are you sure you want to leave?",
+      "STAY": "Stay",
+      "LEAVE": "Leave"
+    }
+  },
+  "SESSION": {
+    "MODAL_TITLE": "Session Expiring Soon",
+    "EXPIRING_SOON": "Session expires in {{seconds}} seconds",
+    "SECURITY_MESSAGE": "Please extend your session or log in again for security",
+    "EXTEND_BUTTON": "Extend Session",
+    "EXPIRED_TITLE": "Session Expired",
+    "EXPIRED_MESSAGE": "Your session has expired. Please enter your password to log in again.",
+    "LOGIN_BUTTON": "Login",
+    "PASSWORD_PLACEHOLDER": "Password",
+    "ERROR": {
+      "USER_NOT_FOUND": "User information not found. Please log in again.",
+      "INVALID_PASSWORD": "Incorrect password.",
+      "AUTH_FAILED": "Authentication failed. Please try again."
+    }
+  },
+  "WASTE_CODES": {
+    "P01": "Refrigerator",
+    "P02": "Washing Machine",
+    "P03": "Air Conditioner",
+    "P04": "Television",
+    "P05": "Microwave",
+    "P06": "Computer",
+    "P07": "Monitor",
+    "P08": "Printer",
+    "P09": "Copier",
+    "P10": "Fax",
+    "P11": "Scanner",
+    "P12": "Vacuum Cleaner",
+    "P13": "Food Disposer",
+    "P14": "Dishwasher",
+    "P15": "Clothes Dryer",
+    "P16": "Bidet",
+    "P17": "Water Purifier",
+    "P18": "Air Purifier",
+    "P19": "Humidifier",
+    "P20": "Dehumidifier",
+    "P21": "Other"
+  },
+  "REPORTS": {
+    "RELEASE_SUMMARY": {
+      "TITLE": "Release Request Summary",
+      "FDC_NAME": "FDC Name",
+      "MODEL_CODE": "Model Code",
+      "MODEL_NAME": "Model Name",
+      "QUANTITY": "Quantity",
+      "TOTAL": "Total",
+      "PERIOD": "Period",
+      "PRINT_DATE": "Print Date",
+      "TOTAL_ORDERS": "Total Orders",
+      "TOTAL_QUANTITY": "Total Quantity",
+      "FDC_COUNT": "FDC Count",
+      "UNIT": "pcs"
+    }
+  },
+  "SIGNATURE": {
+    "TITLE": "Signature",
+    "CANCEL": "Cancel",
+    "CLEAR": "Clear",
+    "CONFIRM": "Confirm",
+    "HINT": "Please sign here"
+  }
+}

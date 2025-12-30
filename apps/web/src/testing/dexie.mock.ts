@@ -3,15 +3,16 @@
  * Provides in-memory testing for offline storage
  */
 
-import type { OfflineOrder, SyncQueueEntry, MetadataCache } from '../app/core/db/database';
+import type { OfflineOrder, SyncQueueEntry, MetadataCache, BackgroundSyncTask } from '../app/core/db/database';
 
 // Re-export types so they can be imported from this mock
-export type { OfflineOrder, SyncQueueEntry, MetadataCache };
+export type { OfflineOrder, SyncQueueEntry, MetadataCache, BackgroundSyncTask };
 
 // Mock storage
 let mockOrders: Map<string, OfflineOrder> = new Map();
 let mockSyncQueue: Map<number, SyncQueueEntry> = new Map();
 let mockMetadata: Map<string, MetadataCache> = new Map();
+let mockBackgroundSyncQueue: Map<string, BackgroundSyncTask> = new Map();
 let syncQueueIdCounter = 1;
 
 // Generic mock table operations with configurable primary key
@@ -196,12 +197,14 @@ const createMockTable = <T, K extends string | number = string | number>(
 const ordersTable = createMockTable<OfflineOrder, string>(mockOrders, 'id', false);
 const syncQueueTable = createMockTable<SyncQueueEntry, number>(mockSyncQueue, 'id', true);
 const metadataTable = createMockTable<MetadataCache, string>(mockMetadata, 'key', false);
+const backgroundSyncQueueTable = createMockTable<BackgroundSyncTask, string>(mockBackgroundSyncQueue, 'id', false);
 
 // Mock database
 export const db = {
   orders: ordersTable,
   syncQueue: syncQueueTable,
   metadata: metadataTable,
+  backgroundSyncQueue: backgroundSyncQueueTable,
 };
 
 // Test helpers
@@ -221,8 +224,12 @@ export const __configureDexieMock = {
     mockOrders.clear();
     mockSyncQueue.clear();
     mockMetadata.clear();
+    mockBackgroundSyncQueue.clear();
     syncQueueIdCounter = 1;
     (syncQueueTable as any)._resetAutoIncrement();
+  },
+  resetBackgroundSyncQueue: () => {
+    mockBackgroundSyncQueue.clear();
   },
   getOrders: () => Array.from(mockOrders.values()),
   getSyncQueue: () => Array.from(mockSyncQueue.values()),

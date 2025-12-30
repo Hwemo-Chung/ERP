@@ -1,3 +1,5 @@
+// apps/web/src/app/features/profile/profile.page.ts
+// User profile page - Settings, sync status, and logout
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -18,6 +20,7 @@ import {
   IonToggle,
   AlertController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   personCircleOutline,
@@ -36,6 +39,7 @@ import { environment } from '@env/environment';
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -55,12 +59,13 @@ import { environment } from '@env/environment';
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Profile</ion-title>
+        <!-- 프로필 타이틀 -->
+        <ion-title>{{ 'PROFILE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- User Info Card -->
+      <!-- User Info Card - 사용자 정보 카드 -->
       <ion-card>
         <ion-card-content class="user-card">
           <ion-avatar>
@@ -78,18 +83,18 @@ import { environment } from '@env/environment';
         </ion-card-content>
       </ion-card>
 
-      <!-- Sync Status -->
+      <!-- Sync Status - 동기화 상태 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Sync Status</ion-card-title>
+          <ion-card-title>{{ 'PROFILE.SYNC_STATUS.TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list lines="none">
             <ion-item>
               <ion-icon slot="start" name="refresh-outline"></ion-icon>
               <ion-label>
-                <h3>Pending Sync</h3>
-                <p>{{ syncQueue.pendingCount() }} operations</p>
+                <h3>{{ 'PROFILE.SYNC_STATUS.PENDING' | translate }}</h3>
+                <p>{{ syncQueue.pendingCount() }}{{ 'PROFILE.SYNC_STATUS.OPERATIONS' | translate }}</p>
               </ion-label>
               @if (syncQueue.pendingCount() > 0) {
                 <ion-button
@@ -99,7 +104,7 @@ import { environment } from '@env/environment';
                   (click)="forceSync()"
                   [disabled]="syncQueue.isSyncing()"
                 >
-                  Sync Now
+                  {{ 'PROFILE.SYNC_STATUS.SYNC_NOW' | translate }}
                 </ion-button>
               }
             </ion-item>
@@ -107,38 +112,38 @@ import { environment } from '@env/environment';
         </ion-card-content>
       </ion-card>
 
-      <!-- Settings -->
+      <!-- Settings - 설정 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Settings</ion-card-title>
+          <ion-card-title>{{ 'PROFILE.SETTINGS.TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list lines="full">
             <ion-item>
               <ion-icon slot="start" name="notifications-outline"></ion-icon>
-              <ion-label>Push Notifications</ion-label>
+              <ion-label>{{ 'PROFILE.SETTINGS.PUSH_NOTIFICATIONS' | translate }}</ion-label>
               <ion-toggle slot="end" [checked]="true"></ion-toggle>
             </ion-item>
             <ion-item>
               <ion-icon slot="start" name="moon-outline"></ion-icon>
-              <ion-label>Dark Mode</ion-label>
+              <ion-label>{{ 'PROFILE.SETTINGS.DARK_MODE' | translate }}</ion-label>
               <ion-toggle slot="end" (ionChange)="toggleDarkMode($event)"></ion-toggle>
             </ion-item>
           </ion-list>
         </ion-card-content>
       </ion-card>
 
-      <!-- App Info -->
+      <!-- App Info - 앱 정보 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>About</ion-card-title>
+          <ion-card-title>{{ 'PROFILE.ABOUT.TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list lines="none">
             <ion-item>
               <ion-icon slot="start" name="information-circle-outline"></ion-icon>
               <ion-label>
-                <h3>Version</h3>
+                <h3>{{ 'PROFILE.ABOUT.VERSION' | translate }}</h3>
                 <p>{{ version }}</p>
               </ion-label>
             </ion-item>
@@ -146,7 +151,7 @@ import { environment } from '@env/environment';
         </ion-card-content>
       </ion-card>
 
-      <!-- Logout Button -->
+      <!-- Logout Button - 로그아웃 버튼 -->
       <ion-button
         expand="block"
         color="danger"
@@ -154,7 +159,7 @@ import { environment } from '@env/environment';
         (click)="confirmLogout()"
       >
         <ion-icon slot="start" name="log-out-outline"></ion-icon>
-        Logout
+        {{ 'PROFILE.LOGOUT.BUTTON' | translate }}
       </ion-button>
     </ion-content>
   `,
@@ -214,6 +219,7 @@ export class ProfilePage {
   protected readonly authService = inject(AuthService);
   protected readonly syncQueue = inject(SyncQueueService);
   private readonly alertCtrl = inject(AlertController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly version = environment.appVersion;
 
@@ -236,14 +242,21 @@ export class ProfilePage {
     document.body.classList.toggle('dark', event.detail.checked);
   }
 
+  /**
+   * 로그아웃 확인 다이얼로그 표시
+   * Shows logout confirmation dialog
+   */
   protected async confirmLogout(): Promise<void> {
+    // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
+    const translateService = this.translate;
+    
     const alert = await this.alertCtrl.create({
-      header: 'Logout',
-      message: 'Are you sure you want to logout?',
+      header: translateService.instant('PROFILE.LOGOUT.CONFIRM_TITLE'),
+      message: translateService.instant('PROFILE.LOGOUT.CONFIRM_MESSAGE'),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: translateService.instant('PROFILE.LOGOUT.CANCEL'), role: 'cancel' },
         {
-          text: 'Logout',
+          text: translateService.instant('PROFILE.LOGOUT.CONFIRM'),
           handler: () => this.authService.logout(),
         },
       ],

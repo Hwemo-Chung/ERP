@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { AlertController, ActionSheetController } from '@ionic/angular/standalone';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface CapturedPhoto {
   dataUrl: string;
@@ -17,6 +18,7 @@ export interface CapturedPhoto {
 export class CameraService {
   private readonly alertCtrl = inject(AlertController);
   private readonly actionSheetCtrl = inject(ActionSheetController);
+  private readonly translate = inject(TranslateService);
   
   readonly isCapturing = signal(false);
 
@@ -101,20 +103,20 @@ export class CameraService {
   private async selectSource(): Promise<CameraSource | null> {
     return new Promise(async (resolve) => {
       const sheet = await this.actionSheetCtrl.create({
-        header: '사진 선택',
+        header: this.translate.instant('CAMERA.SELECT_PHOTO'),
         buttons: [
           {
-            text: '카메라',
+            text: this.translate.instant('CAMERA.CAMERA'),
             icon: 'camera-outline',
             data: CameraSource.Camera,
           },
           {
-            text: '갤러리',
+            text: this.translate.instant('CAMERA.GALLERY'),
             icon: 'image-outline',
             data: CameraSource.Photos,
           },
           {
-            text: '취소',
+            text: this.translate.instant('COMMON.CANCEL'),
             role: 'cancel',
             data: null,
           },
@@ -212,16 +214,16 @@ export class CameraService {
   private async askContinue(currentCount: number): Promise<boolean> {
     return new Promise(async (resolve) => {
       const alert = await this.alertCtrl.create({
-        header: '사진 추가',
-        message: `${currentCount}장의 사진이 추가되었습니다. 더 추가하시겠습니까?`,
+        header: this.translate.instant('CAMERA.ADD_PHOTO'),
+        message: this.translate.instant('CAMERA.PHOTO_ADDED', { count: currentCount }),
         buttons: [
           {
-            text: '완료',
+            text: this.translate.instant('COMMON.COMPLETE'),
             role: 'cancel',
             handler: () => resolve(false),
           },
           {
-            text: '추가',
+            text: this.translate.instant('COMMON.ADD'),
             handler: () => resolve(true),
           },
         ],
@@ -232,18 +234,18 @@ export class CameraService {
 
   private async showPermissionError(): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: '권한 필요',
-      message: '카메라 및 갤러리 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
-      buttons: ['확인'],
+      header: this.translate.instant('CAMERA.PERMISSION_REQUIRED'),
+      message: this.translate.instant('CAMERA.PERMISSION_MESSAGE'),
+      buttons: [this.translate.instant('COMMON.OK')],
     });
     await alert.present();
   }
 
   private async showCaptureError(): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: '오류',
-      message: '사진 촬영 중 오류가 발생했습니다.',
-      buttons: ['확인'],
+      header: this.translate.instant('COMMON.ERROR'),
+      message: this.translate.instant('CAMERA.CAPTURE_ERROR'),
+      buttons: [this.translate.instant('COMMON.OK')],
     });
     await alert.present();
   }

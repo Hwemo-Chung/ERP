@@ -24,6 +24,7 @@ import {
   IonInput,
   IonSpinner,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   timeOutline,
@@ -40,6 +41,7 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonModal,
     IonHeader,
     IonToolbar,
@@ -60,7 +62,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <ion-toolbar color="warning">
             <ion-title>
               <ion-icon name="time-outline"></ion-icon>
-              세션 만료
+              {{ 'SESSION.MODAL_TITLE' | translate }}
             </ion-title>
           </ion-toolbar>
         </ion-header>
@@ -73,18 +75,17 @@ import { AuthService } from '../../../core/services/auth.service';
                 <div class="icon-wrap warning">
                   <ion-icon name="time-outline"></ion-icon>
                 </div>
-                <h2>세션이 곧 만료됩니다</h2>
+                <h2>{{ 'SESSION.EXPIRING_SOON' | translate }}</h2>
                 <p class="countdown">
                   <span class="time">{{ remainingMinutes() }}:{{ remainingSeconds() }}</span>
                 </p>
                 <p class="message">
-                  보안을 위해 장시간 미사용 시 자동 로그아웃됩니다.<br>
-                  작업을 계속하시려면 세션을 연장하세요.
+                  {{ 'SESSION.SECURITY_MESSAGE' | translate }}
                 </p>
 
                 <ion-button expand="block" (click)="extendSession()">
                   <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                  세션 연장
+                  {{ 'SESSION.EXTEND_BTN' | translate }}
                 </ion-button>
               </div>
             } @else {
@@ -93,20 +94,19 @@ import { AuthService } from '../../../core/services/auth.service';
                 <div class="icon-wrap danger">
                   <ion-icon name="lock-closed-outline"></ion-icon>
                 </div>
-                <h2>세션이 만료되었습니다</h2>
+                <h2>{{ 'SESSION.EXPIRED_TITLE' | translate }}</h2>
                 <p class="message">
-                  다시 로그인해 주세요.<br>
-                  작성 중인 내용은 보존됩니다.
+                  {{ 'SESSION.EXPIRED_MESSAGE' | translate }}
                 </p>
 
                 <form (ngSubmit)="onRelogin()">
                   <ion-item>
-                    <ion-label position="stacked">비밀번호</ion-label>
+                    <ion-label position="stacked">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</ion-label>
                     <ion-input
                       type="password"
                       [(ngModel)]="password"
                       name="password"
-                      placeholder="비밀번호를 입력하세요"
+                      [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate"
                       [disabled]="isLoading()"
                     ></ion-input>
                   </ion-item>
@@ -124,7 +124,7 @@ import { AuthService } from '../../../core/services/auth.service';
                       <ion-spinner name="crescent"></ion-spinner>
                     } @else {
                       <ion-icon name="log-in-outline" slot="start"></ion-icon>
-                      로그인
+                      {{ 'AUTH.LOGIN.SIGN_IN' | translate }}
                     }
                   </ion-button>
                 </form>
@@ -225,6 +225,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly translate = inject(TranslateService);
 
   isOpen = input<boolean>(false);
   warningSeconds = input<number>(300); // 5분 경고
@@ -293,7 +294,7 @@ export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
 
     const username = this.currentUsername();
     if (!username) {
-      this.errorMessage.set('사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요.');
+      this.errorMessage.set(this.translate.instant('SESSION.ERROR.USER_NOT_FOUND'));
       return;
     }
 
@@ -311,10 +312,10 @@ export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
         this.reloginSuccess.emit();
       } else {
         const error = this.authService.error();
-        this.errorMessage.set(error || '비밀번호가 올바르지 않습니다.');
+        this.errorMessage.set(error || this.translate.instant('SESSION.ERROR.INVALID_PASSWORD'));
       }
     } catch (error) {
-      this.errorMessage.set('인증 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      this.errorMessage.set(this.translate.instant('SESSION.ERROR.AUTH_FAILED'));
     } finally {
       this.isLoading.set(false);
     }

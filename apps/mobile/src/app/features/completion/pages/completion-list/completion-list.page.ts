@@ -315,9 +315,9 @@ export class CompletionListPage implements OnInit {
 
   getStatusLabel(status: OrderStatus): string {
     const labels: Record<string, string> = {
-      [OrderStatus.DISPATCHED]: '대기',
-      [OrderStatus.PARTIAL]: '진행중',
-      [OrderStatus.COMPLETED]: '완료',
+      [OrderStatus.DISPATCHED]: 'REPORTS.COMPLETION.FILTER.WAITING',
+      [OrderStatus.PARTIAL]: 'REPORTS.COMPLETION.STATUS.IN_PROGRESS',
+      [OrderStatus.COMPLETED]: 'REPORTS.COMPLETION.STATUS.COMPLETED',
     };
     return labels[status] || String(status);
   }

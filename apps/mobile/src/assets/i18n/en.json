@@ -10,7 +10,21 @@
     "ERROR": "Error",
     "SUCCESS": "Success",
     "WARNING": "Warning",
-    "INFO": "Information"
+    "INFO": "Information",
+    "BUTTONS": {
+      "OK": "OK",
+      "CANCEL": "Cancel",
+      "ADD": "Add",
+      "CLOSE": "Close",
+      "MARK_RETURN": "Mark as Returned",
+      "ASSIGN": "Assign"
+    },
+    "COUNT_SUFFIX": "items"
+  },
+  "PLACEHOLDERS": {
+    "QUANTITY": "Quantity",
+    "ALL": "All",
+    "DOWNLOAD": "Download"
   },
   "PROFILE": {
     "TITLE": "Profile",
@@ -102,5 +116,213 @@
     "UPDATE_AVAILABLE": "A new version is available. Would you like to reload the app?",
     "UPDATE_LATER": "Later",
     "UPDATE_NOW": "Update"
+  },
+  "ORDER_STATUS": {
+    "UNASSIGNED": "Unassigned",
+    "ASSIGNED": "Assigned",
+    "CONFIRMED": "Confirmed",
+    "RELEASED": "Released",
+    "DISPATCHED": "Dispatched",
+    "POSTPONED": "Postponed",
+    "ABSENT": "Absent",
+    "COMPLETED": "Completed",
+    "PARTIAL": "Partial",
+    "COLLECTED": "Collected",
+    "CANCELLED": "Cancelled",
+    "REQUEST_CANCEL": "Cancel Requested"
+  },
+  "COMPLETION": {
+    "STATUS": {
+      "COMPLETED": "Completed",
+      "NOT_COMPLETED": "Not Completed",
+      "OPTIONAL": "Optional",
+      "ISSUED": "Issued",
+      "NOT_ISSUED": "Not Issued",
+      "WAITING": "Waiting",
+      "IN_PROGRESS": "In Progress",
+      "VALID": "Valid"
+    },
+    "FIELDS": {
+      "SPECIAL_NOTES": "Special Notes",
+      "ORDER_NUMBER": "Order Number",
+      "INSTALL_DATE": "Install Date",
+      "CUSTOMER_NAME": "Customer Name",
+      "INSTALL_ADDRESS": "Install Address",
+      "PRODUCT_NAME": "Product Name",
+      "QUANTITY": "Quantity",
+      "SERIAL_NUMBER": "Serial Number"
+    },
+    "FILTER": {
+      "ALL": "All",
+      "WAITING": "Waiting",
+      "COMPLETED": "Completed"
+    }
+  },
+  "REPORTS": {
+    "TITLE": "Reports",
+    "RELEASE_SUMMARY": {
+      "TITLE": "Release Request Summary"
+    }
+  },
+  "FILTER": {
+    "ALL": "All"
+  },
+  "FIELD_LABELS": {
+    "STATUS": "Status",
+    "INSTALLER_ID": "Installer",
+    "INSTALLER_NAME": "Installer Name",
+    "APPOINTMENT_DATE": "Appointment Date",
+    "APPOINTMENT_SLOT": "Time Slot",
+    "NOTES": "Notes",
+    "CUSTOMER_NAME": "Customer Name",
+    "CUSTOMER_PHONE": "Customer Phone",
+    "CUSTOMER_ADDRESS": "Customer Address",
+    "SERIAL_NUMBER": "Serial Number",
+    "WASTE_CODE": "Waste Code",
+    "QUANTITY": "Quantity"
+  },
+  "USER_ROLES": {
+    "BRANCH_MANAGER": "Branch Manager",
+    "INSTALLER": "Installer"
+  },
+  "WASTE": {
+    "CATEGORIES": {
+      "REFRIGERATOR": "Refrigerator",
+      "WASHER": "Washer",
+      "AIR_CONDITIONER": "Air Conditioner",
+      "TV": "TV",
+      "SMALL_APPLIANCE": "Small Appliance",
+      "OTHER": "Other"
+    },
+    "ITEMS": {
+      "P03": "Kimchi Refrigerator",
+      "P04": "Freezer",
+      "P07": "Dryer",
+      "P13": "Monitor",
+      "P14": "Microwave",
+      "P15": "Dishwasher",
+      "P16": "Air Purifier",
+      "P17": "Dehumidifier",
+      "P18": "Vacuum Cleaner",
+      "P19": "Food Disposer",
+      "P20": "Water Purifier"
+    },
+    "EXPORT": {
+      "HEADERS": {
+        "CODE": "Code",
+        "ITEM": "Item",
+        "QUANTITY": "Quantity"
+      }
+    }
+  },
+  "SYNC": {
+    "OPERATION": {
+      "COMPLETION": "Completion",
+      "STATUS_CHANGE": "Status Change",
+      "WASTE": "Waste",
+      "ATTACHMENT": "Attachment",
+      "NOTE": "Note"
+    }
+  },
+  "SETTLEMENT": {
+    "STATUS": {
+      "LABEL": "Status",
+      "OPEN": "Open",
+      "CLOSED": "Closed"
+    },
+    "ACTIONS": {
+      "CANCEL": "Cancel",
+      "CLOSE": "Close",
+      "UNLOCK": "Unlock"
+    }
+  },
+  "REPORTS": {
+    "TITLE": "Reports",
+    "MENU": {
+      "PROGRESS": "Progress Dashboard",
+      "PROGRESS_DESC": "Progress by Installer / Branch",
+      "CUSTOMER_HISTORY": "Customer History",
+      "CUSTOMER_HISTORY_DESC": "Search order/installation history by customer",
+      "WASTE_SUMMARY": "Waste Electronics Summary",
+      "WASTE_SUMMARY_DESC": "Waste electronics collection status and statistics",
+      "UNRETURNED": "Unreturned Items",
+      "UNRETURNED_DESC": "Unreturned items status and cancellation targets",
+      "EXPORT": "Data Export",
+      "EXPORT_DESC": "ECOAS, CSV, PDF export"
+    },
+    "COMPLETION": {
+      "TITLE": "Installation Completion",
+      "STEPS": {
+        "SERIAL_INPUT": "Serial Number Input",
+        "SERIAL_INPUT_DESC": "Enter product serial numbers",
+        "WASTE_PICKUP": "Waste Collection",
+        "WASTE_PICKUP_DESC": "Enter waste collection information",
+        "PHOTO_UPLOAD": "Photo Attachment",
+        "PHOTO_UPLOAD_DESC": "Installation completion photos (optional)",
+        "CERTIFICATE": "Completion Certificate",
+        "CERTIFICATE_DESC": "Issue and sign certificate"
+      },
+      "STATUS": {
+        "COMPLETED": "Completed",
+        "NOT_COMPLETED": "Not Completed",
+        "OPTIONAL": "Optional",
+        "ISSUED": "Issued",
+        "NOT_ISSUED": "Not Issued",
+        "VALID": "Valid"
+      },
+      "FIELDS": {
+        "ATTACHED_PHOTO": "Attached Photos",
+        "SPECIAL_NOTES": "Special Notes",
+        "ADD_NOTES": "+ Add Notes",
+        "ORDER_NUMBER": "Order Number",
+        "INSTALL_DATE": "Installation Date",
+        "CUSTOMER_NAME": "Customer Name",
+        "INSTALL_ADDRESS": "Installation Address",
+        "PRODUCT_NAME": "Product Name",
+        "QUANTITY": "Quantity",
+        "SERIAL_NUMBER": "Serial Number",
+        "PHOTOS": "{{count}} photos"
+      },
+      "FILTER": {
+        "ALL": "All",
+        "WAITING": "Waiting",
+        "COMPLETED": "Completed"
+      }
+    },
+    "CUSTOMER_HISTORY": {
+      "TITLE": "Customer History",
+      "EXPORT_HEADERS": ["Name", "Phone", "Orders", "Latest Order"]
+    },
+    "PROGRESS_DASHBOARD": {
+      "TITLE": "Progress Dashboard",
+      "GROUPBY": {
+        "INSTALLER": "By Installer",
+        "BRANCH": "By Branch",
+        "STATUS": "By Status"
+      }
+    },
+    "UNRETURNED_ITEMS": {
+      "TITLE": "Unreturned Items",
+      "RETURN_STATUS": "Return Status",
+      "RETURNED": "Returned",
+      "NOT_RETURNED": "Not Returned",
+      "MARK_RETURN": "Mark as Returned",
+      "ACTIONS": ["OK"],
+      "EXPORT_HEADERS": ["Order Number", "Customer", "Item", "Cancel Date", "Cancel Reason", "Return Status", "Return Date"]
+    },
+    "RELEASE_SUMMARY": {
+      "TITLE": "Release Request Summary"
+    }
+  },
+  "ASSIGNMENT": {
+    "UNASSIGNED": "Unassigned",
+    "STATUS": {
+      "UNASSIGNED": "Unassigned",
+      "ASSIGNED": "Assigned",
+      "CONFIRMED": "Confirmed"
+    }
+  },
+  "EXPORT": {
+    "DOWNLOAD": "Download"
   }
 }

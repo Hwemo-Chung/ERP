@@ -49,6 +49,7 @@ import {
   cameraOutline,
   trashOutline,
 } from 'ionicons/icons';
+import { TranslateModule } from '@ngx-translate/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { OrdersStore } from '../../../../store/orders/orders.store';
@@ -70,6 +71,7 @@ import {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     IonModal,
     IonHeader,
     IonToolbar,
@@ -147,7 +149,7 @@ import {
                   formControlName="quantity"
                   type="number"
                   min="1"
-                  placeholder="수량"
+                  [placeholder]="'PLACEHOLDERS.QUANTITY' | translate"
                   slot="end"
                 ></ion-input>
                 <ion-button

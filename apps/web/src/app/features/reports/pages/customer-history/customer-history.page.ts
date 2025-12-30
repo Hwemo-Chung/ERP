@@ -10,6 +10,7 @@ import {
   IonButton, IonIcon, IonRefresher, IonRefresherContent, IonChip,
   ToastController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { 
   downloadOutline, personOutline, callOutline, locationOutline, 
@@ -24,7 +25,8 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    CommonModule, FormsModule, TranslateModule,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
     IonButton, IonIcon, IonRefresher, IonRefresherContent, IonChip,
   ],
@@ -34,7 +36,8 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/reports"></ion-back-button>
         </ion-buttons>
-        <ion-title>고객 이력 조회</ion-title>
+        <!-- 고객 이력 조회 타이틀 -->
+        <ion-title>{{ 'REPORTS.CUSTOMER.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="exportCSV()" [disabled]="reportsStore.customerHistory().length === 0">
             <ion-icon slot="icon-only" name="download-outline"></ion-icon>
@@ -48,27 +51,27 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- Search Section -->
+      <!-- Search Section - 검색 섹션 -->
       <div class="search-section">
         <div class="search-card">
           <ion-searchbar
             mode="ios"
             [debounce]="0"
-            placeholder="고객명, 연락처, 주소로 검색..."
+            [placeholder]="'REPORTS.CUSTOMER.SEARCH_PLACEHOLDER' | translate"
             (ionInput)="onSearch($event)"
             [value]="searchQuery()"
             class="custom-searchbar"
           ></ion-searchbar>
           <p class="search-hint">
             <ion-icon name="search-outline"></ion-icon>
-            2글자 이상 입력하세요
+            {{ 'REPORTS.CUSTOMER.SEARCH_HINT' | translate }}
           </p>
         </div>
 
-        <!-- Recent Searches -->
+        <!-- Recent Searches - 최근 검색 -->
         @if (recentSearches().length > 0 && !searchQuery()) {
           <div class="recent-section">
-            <span class="recent-label">최근 검색</span>
+            <span class="recent-label">{{ 'REPORTS.CUSTOMER.RECENT_SEARCHES' | translate }}</span>
             <div class="recent-chips">
               @for (term of recentSearches(); track term) {
                 <ion-chip (click)="applyRecentSearch(term)">{{ term }}</ion-chip>
@@ -81,17 +84,17 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
       @if (reportsStore.isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>검색 중...</p>
+          <p>{{ 'REPORTS.CUSTOMER.SEARCHING' | translate }}</p>
         </div>
       } @else {
-        <!-- Results Count -->
+        <!-- Results Count - 검색 결과 수 -->
         @if (searchQuery() && searchQuery().length >= 2) {
           <div class="results-header">
-            <span class="results-count">검색 결과 {{ reportsStore.customerHistory().length }}건</span>
+            <span class="results-count">{{ 'REPORTS.CUSTOMER.RESULTS_COUNT' | translate:{ count: reportsStore.customerHistory().length } }}</span>
           </div>
         }
 
-        <!-- Customer List -->
+        <!-- Customer List - 고객 리스트 -->
         <div class="customer-list">
           @for (customer of reportsStore.customerHistory(); track customer.orderId) {
             <div class="customer-card" (click)="viewDetail(customer)">
@@ -118,7 +121,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
                 <div class="customer-footer">
                   <span class="last-order">
                     <ion-icon name="calendar-outline"></ion-icon>
-                    예약: {{ customer.appointmentDate | date:'yyyy.MM.dd' }}
+                    {{ 'REPORTS.CUSTOMER.RESERVATION' | translate }}: {{ customer.appointmentDate | date:'yyyy.MM.dd' }}
                   </span>
                   <span class="total-amount">
                     {{ customer.status }}
@@ -128,15 +131,16 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
               <ion-icon name="chevron-forward-outline" class="arrow-icon"></ion-icon>
             </div>
           } @empty {
+            <!-- 빈 상태 메시지 -->
             <div class="empty-state">
               @if (searchQuery() && searchQuery().length >= 2) {
                 <ion-icon name="search-outline"></ion-icon>
-                <h3>검색 결과가 없습니다</h3>
-                <p>다른 검색어를 시도해보세요</p>
+                <h3>{{ 'REPORTS.CUSTOMER.NO_RESULTS' | translate }}</h3>
+                <p>{{ 'REPORTS.CUSTOMER.NO_RESULTS_DESC' | translate }}</p>
               } @else {
                 <ion-icon name="person-outline"></ion-icon>
-                <h3>고객 이력 조회</h3>
-                <p>고객명, 연락처, 주소로 검색해주세요</p>
+                <h3>{{ 'REPORTS.CUSTOMER.EMPTY_TITLE' | translate }}</h3>
+                <p>{{ 'REPORTS.CUSTOMER.EMPTY_DESC' | translate }}</p>
               }
             </div>
           }
@@ -185,6 +189,7 @@ export class CustomerHistoryPage implements OnInit, OnDestroy {
   protected readonly reportsStore = inject(ReportsStore);
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly searchQuery = signal('');
   protected readonly recentSearches = signal<string[]>([]);
@@ -268,13 +273,25 @@ export class CustomerHistoryPage implements OnInit, OnDestroy {
     return address.length > 25 ? address.substring(0, 25) + '...' : address;
   }
 
+  // CSV 내보내기 - 고객 이력 데이터 다운로드
   async exportCSV() {
     const customers = this.reportsStore.customerHistory();
     if (customers.length === 0) return;
 
+    // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
+    const translateService = this.translate;
+    const toastController = this.toastCtrl;
+
     try {
       // Generate CSV
-      const headers = ['고객명', '연락처', '주소', '주문번호', '상태', '예약일'];
+      const headers = [
+        translateService.instant('EXPORT.HEADERS.CUSTOMER_NAME'),
+        translateService.instant('EXPORT.HEADERS.PHONE'),
+        translateService.instant('EXPORT.HEADERS.ADDRESS'),
+        translateService.instant('EXPORT.HEADERS.ORDER_NUMBER'),
+        translateService.instant('EXPORT.HEADERS.STATUS'),
+        translateService.instant('EXPORT.HEADERS.APPOINTMENT_DATE'),
+      ];
       const rows = customers.map(c => [
         c.customerName,
         c.customerPhone,
@@ -294,15 +311,15 @@ export class CustomerHistoryPage implements OnInit, OnDestroy {
       a.click();
       URL.revokeObjectURL(url);
 
-      const toast = await this.toastCtrl.create({
-        message: 'CSV 다운로드 완료',
+      const toast = await toastController.create({
+        message: translateService.instant('REPORTS.CUSTOMER.CSV_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
       await toast.present();
     } catch (error) {
-      const toast = await this.toastCtrl.create({
-        message: '다운로드 실패',
+      const toast = await toastController.create({
+        message: translateService.instant('REPORTS.CUSTOMER.CSV_FAILED'),
         duration: 2000,
         color: 'danger',
       });

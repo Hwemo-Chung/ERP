@@ -36,6 +36,7 @@ import {
   calendarOutline,
   checkmarkCircleOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BulkOperationService } from '@app/shared/services/bulk-operation.service';
 import { BulkOperationResult } from '@app/shared/components/bulk-operation-result/bulk-operation-result.component';
 import { OrdersStore } from '../../../../store/orders/orders.store';
@@ -88,36 +89,38 @@ interface Installer {
     IonDatetime,
     IonDatetimeButton,
     IonModal,
+    TranslateModule,
   ],
   template: `
+    <!-- 일괄 배정 페이지 헤더 -->
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/assignment"></ion-back-button>
         </ion-buttons>
-        <ion-title>일괄 배정</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.BATCH_ASSIGN.TITLE' | translate }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Installer Selection -->
+      <!-- 설치기사 선택 카드 -->
       <ion-card>
         <ion-card-header>
           <ion-card-title>
             <ion-icon name="people-outline"></ion-icon>
-            설치기사 선택
+            {{ 'ASSIGNMENT.BATCH_ASSIGN.INSTALLER_SELECT_TITLE' | translate }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-select
-            placeholder="설치기사를 선택하세요"
+            [placeholder]="'ASSIGNMENT.BATCH_ASSIGN.INSTALLER_PLACEHOLDER' | translate"
             [(ngModel)]="selectedInstallerId"
             interface="action-sheet"
           >
@@ -130,12 +133,12 @@ interface Installer {
         </ion-card-content>
       </ion-card>
 
-      <!-- Date Selection -->
+      <!-- 배정 날짜 선택 카드 -->
       <ion-card>
         <ion-card-header>
           <ion-card-title>
             <ion-icon name="calendar-outline"></ion-icon>
-            배정 날짜
+            {{ 'ASSIGNMENT.BATCH_ASSIGN.DATE_TITLE' | translate }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
@@ -154,24 +157,24 @@ interface Installer {
         </ion-card-content>
       </ion-card>
 
-      <!-- Order Selection -->
+      <!-- 미배정 주문 선택 카드 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>미배정 주문 선택</ion-card-title>
+          <ion-card-title>{{ 'ASSIGNMENT.BATCH_ASSIGN.UNASSIGNED_SELECT_TITLE' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="summary-row">
-            <span>미배정 주문:</span>
-            <strong>{{ orders().length }}건</strong>
+            <span>{{ 'ASSIGNMENT.BATCH_ASSIGN.UNASSIGNED_COUNT' | translate }}:</span>
+            <strong>{{ orders().length }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong>
           </div>
           <div class="summary-row">
-            <span>선택된 주문:</span>
-            <strong>{{ selectedCount() }}건</strong>
+            <span>{{ 'ASSIGNMENT.BATCH_ASSIGN.SELECTED_COUNT' | translate }}:</span>
+            <strong>{{ selectedCount() }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong>
           </div>
         </ion-card-content>
       </ion-card>
 
-      <!-- Select All -->
+      <!-- 전체 선택 체크박스 -->
       <ion-item>
         <ion-checkbox
           slot="start"
@@ -179,7 +182,7 @@ interface Installer {
           [indeterminate]="isIndeterminate()"
           (ionChange)="toggleSelectAll($event)"
         ></ion-checkbox>
-        <ion-label>전체 선택</ion-label>
+        <ion-label>{{ 'ASSIGNMENT.BATCH_ASSIGN.SELECT_ALL' | translate }}</ion-label>
       </ion-item>
 
       @if (isLoading()) {
@@ -198,23 +201,24 @@ interface Installer {
               <ion-label>
                 <h2>{{ order.orderNumber }}</h2>
                 <h3>{{ order.customerName }}</h3>
-                <p>{{ order.appointmentDate }} | {{ order.productCount }}개 제품</p>
+                <p>{{ order.appointmentDate }} | {{ order.productCount }}{{ 'ASSIGNMENT.BATCH_ASSIGN.PRODUCTS_SUFFIX' | translate }}</p>
               </ion-label>
             </ion-item>
           } @empty {
+            <!-- 미배정 주문 없음 상태 -->
             <div class="empty-state">
-              <p>미배정 주문이 없습니다.</p>
+              <p>{{ 'ASSIGNMENT.BATCH_ASSIGN.NO_UNASSIGNED' | translate }}</p>
             </div>
           }
         </ion-list>
       }
 
-      <!-- Assign Button -->
+      <!-- 배정 버튼 -->
       @if (selectedCount() > 0 && selectedInstallerId) {
         <div class="confirm-button">
           <ion-button expand="block" (click)="batchAssign()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            {{ selectedCount() }}건 배정
+            {{ 'ASSIGNMENT.BATCH_ASSIGN.ASSIGN_BTN' | translate:{ count: selectedCount() } }}
           </ion-button>
         </div>
       }
@@ -262,8 +266,12 @@ interface Installer {
   `],
 })
 export class BatchAssignPage implements OnInit {
+  /** @description 일괄 작업 서비스 */
   private readonly bulkOperationService = inject(BulkOperationService);
+  /** @description 주문 상태 관리 스토어 */
   protected readonly ordersStore = inject(OrdersStore);
+  /** @description 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
   
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
   protected readonly orders = signal<UnassignedOrder[]>([]);
@@ -358,6 +366,10 @@ export class BatchAssignPage implements OnInit {
     );
   }
 
+  /**
+   * @description 선택된 주문들을 설치기사에게 일괄 배정
+   * @returns Promise<void>
+   */
   async batchAssign(): Promise<void> {
     const selectedOrders = this.orders().filter(o => o.selected);
     const installer = this.installers().find(i => i.id === this.selectedInstallerId);
@@ -367,12 +379,15 @@ export class BatchAssignPage implements OnInit {
     }
 
     const alert = await this.alertCtrl.create({
-      header: '일괄 배정',
-      message: `${this.selectedCount()}건을 ${installer.name} 기사에게 배정하시겠습니까?`,
+      header: this.translateService.instant('ASSIGNMENT.BATCH_ASSIGN.TITLE'),
+      message: this.translateService.instant('ASSIGNMENT.BATCH_ASSIGN.CONFIRM_MESSAGE', {
+        count: this.selectedCount(),
+        installer: installer.name
+      }),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '배정',
+          text: this.translateService.instant('ORDERS.ACTIONS.ASSIGN'),
           handler: () => {
             this.executeBatchAssign(selectedOrders, installer);
           },
@@ -382,6 +397,11 @@ export class BatchAssignPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * @description 일괄 배정 실행 및 결과 처리
+   * @param orders 배정할 주문 목록
+   * @param installer 대상 설치기사
+   */
   private async executeBatchAssign(
     orders: UnassignedOrder[],
     installer: Installer
@@ -389,7 +409,7 @@ export class BatchAssignPage implements OnInit {
     // BulkOperationService로 실행
     const result = await this.bulkOperationService.execute({
       items: orders,
-      operationName: '주문 배정',
+      operationName: this.translateService.instant('ASSIGNMENT.BATCH_ASSIGN.OPERATION_NAME'),
       operation: (order) => this.assignOrderToInstaller(order.id, installer.id),
       getItemId: (order) => order.id,
       getItemLabel: (order) => `${order.orderNumber} - ${order.customerName}`,

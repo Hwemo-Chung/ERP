@@ -70,20 +70,21 @@ export interface ConflictData {
 
 /**
  * Field labels for Korean display
+ * @deprecated Use FIELD_LABELS_I18N_KEYS with TranslateService instead
  */
 const FIELD_LABELS: Record<string, string> = {
-  status: '상태',
-  installerId: '설치기사',
-  installerName: '설치기사명',
-  appointmentDate: '방문예정일',
-  appointmentSlot: '방문시간대',
-  notes: '특기사항',
-  customerName: '고객명',
-  customerPhone: '고객연락처',
-  customerAddress: '고객주소',
-  serialNumber: '시리얼번호',
-  wasteCode: '폐기코드',
-  quantity: '수량',
+  status: 'FIELD_LABELS.STATUS',
+  installerId: 'FIELD_LABELS.INSTALLER_ID',
+  installerName: 'FIELD_LABELS.INSTALLER_NAME',
+  appointmentDate: 'FIELD_LABELS.APPOINTMENT_DATE',
+  appointmentSlot: 'FIELD_LABELS.APPOINTMENT_SLOT',
+  notes: 'FIELD_LABELS.NOTES',
+  customerName: 'FIELD_LABELS.CUSTOMER_NAME',
+  customerPhone: 'FIELD_LABELS.CUSTOMER_PHONE',
+  customerAddress: 'FIELD_LABELS.CUSTOMER_ADDRESS',
+  serialNumber: 'FIELD_LABELS.SERIAL_NUMBER',
+  wasteCode: 'FIELD_LABELS.WASTE_CODE',
+  quantity: 'FIELD_LABELS.QUANTITY',
 };
 
 /**

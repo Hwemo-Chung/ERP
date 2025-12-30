@@ -25,6 +25,7 @@ import {
 } from 'ionicons/icons';
 import { ReportsService, UnreturnedItem, UnreturnedSummary } from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
 
@@ -38,6 +39,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
     IonLabel, IonBadge, IonSpinner, IonButton, IonIcon, IonSegment, IonSegmentButton,
     IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
     IonSearchbar, IonChip, IonNote, IonItemSliding, IonItemOptions, IonItemOption,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -45,7 +47,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/reports"></ion-back-button>
         </ion-buttons>
-        <ion-title>미환입 현황</ion-title>
+        <ion-title>{{ 'REPORTS.UNRETURNED_ITEMS.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="exportData()" [disabled]="isLoading()">
             <ion-icon name="download-outline"></ion-icon>
@@ -173,7 +175,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                       </p>
                       <p>
                         <ion-chip [color]="item.isReturned ? 'success' : 'danger'" size="small">
-                          {{ item.isReturned ? '환입완료' : '미환입' }}
+                          {{ item.isReturned ? ('REPORTS.UNRETURNED_ITEMS.RETURNED' | translate) : ('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED' | translate) }}
                         </ion-chip>
                         @if (item.productName) {
                           <ion-chip color="medium" size="small">{{ item.productName }}</ion-chip>
@@ -336,6 +338,7 @@ export class UnreturnedItemsPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly toastCtrl = inject(ToastController);
   private readonly alertCtrl = inject(AlertController);
+  private readonly translate = inject(TranslateService);
 
   // State signals
   protected readonly isLoading = signal(false);
@@ -469,6 +472,12 @@ export class UnreturnedItemsPage implements OnInit {
   }
 
   async showItemDetail(item: UnreturnedItem) {
+    const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const markReturnBtn = await this.translate.get('COMMON.BUTTONS.MARK_RETURN').toPromise();
+    const returnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.RETURNED').toPromise();
+    const notReturnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED').toPromise();
+    
     const alert = await this.alertCtrl.create({
       header: item.orderNo,
       subHeader: item.customerName,
@@ -476,27 +485,30 @@ export class UnreturnedItemsPage implements OnInit {
         <p><strong>품목:</strong> ${item.productName || '-'}</p>
         <p><strong>취소일:</strong> ${new Date(item.cancelledAt).toLocaleDateString('ko-KR')}</p>
         <p><strong>취소사유:</strong> ${item.cancelReason || '-'}</p>
-        <p><strong>환입상태:</strong> ${item.isReturned ? '환입완료' : '미환입'}</p>
+        <p><strong>환입상태:</strong> ${item.isReturned ? returnedText : notReturnedText}</p>
         ${item.returnedAt ? `<p><strong>환입일:</strong> ${new Date(item.returnedAt).toLocaleDateString('ko-KR')}</p>` : ''}
       `,
       buttons: item.isReturned
-        ? ['확인']
+        ? [okBtn]
         : [
-            { text: '취소', role: 'cancel' },
-            { text: '환입처리', handler: () => this.markAsReturned(item) }
+            { text: cancelBtn, role: 'cancel' },
+            { text: markReturnBtn, handler: () => this.markAsReturned(item) }
           ],
     });
     await alert.present();
   }
 
   async markAsReturned(item: UnreturnedItem) {
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
+    
     const alert = await this.alertCtrl.create({
       header: '환입 처리',
       message: `${item.orderNo} 건을 환입 처리하시겠습니까?`,
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: cancelBtn, role: 'cancel' },
         {
-          text: '확인',
+          text: okBtn,
           handler: async () => {
             try {
               await this.reportsService.markItemAsReturned(item.orderId).toPromise();
@@ -524,14 +536,14 @@ export class UnreturnedItemsPage implements OnInit {
 
   async exportData() {
     try {
-      const headers = ['주문번호', '고객명', '품목', '취소일', '취소사유', '환입상태', '환입일'];
+      const headers = this.translate.instant('REPORTS.UNRETURNED_ITEMS.EXPORT_HEADERS');
       const rows = this.filteredItems().map(item => [
         item.orderNo,
         item.customerName,
         item.productName || '',
         new Date(item.cancelledAt).toLocaleDateString('ko-KR'),
         item.cancelReason || '',
-        item.isReturned ? '환입완료' : '미환입',
+        item.isReturned ? this.translate.instant('REPORTS.UNRETURNED_ITEMS.RETURNED') : this.translate.instant('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED'),
         item.returnedAt ? new Date(item.returnedAt).toLocaleDateString('ko-KR') : '',
       ]);
       const csv = [headers, ...rows].map(r => r.join(',')).join('\n');

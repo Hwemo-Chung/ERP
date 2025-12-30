@@ -44,6 +44,7 @@ import {
 } from 'ionicons/icons';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersService, Order } from '../../services/orders.service';
 import { FileAttachmentComponent, FileAttachment } from '../../../../shared/components/file-attachment/file-attachment.component';
 import { FileAttachmentService } from './file-attachment.service';
@@ -82,6 +83,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
     IonSpinner,
     IonActionSheet,
     FileAttachmentComponent,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -89,7 +91,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/orders"></ion-back-button>
         </ion-buttons>
-        <ion-title>Order Details</ion-title>
+        <ion-title>{{ 'ORDERS.DETAIL.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -116,7 +118,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
               <ion-item>
                 <ion-icon slot="start" name="time-outline"></ion-icon>
                 <ion-label>
-                  <p>Appointment</p>
+                  <p>{{ 'ORDERS.DETAIL.SCHEDULED_DATE' | translate }}</p>
                   <h3>{{ order()!.appointmentDate | date:'yyyy-MM-dd' }} {{ order()!.appointmentSlot }}</h3>
                 </ion-label>
               </ion-item>
@@ -124,7 +126,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                 <ion-item>
                   <ion-icon slot="start" name="person-outline"></ion-icon>
                   <ion-label>
-                    <p>Installer</p>
+                    <p>{{ 'ORDERS.DETAIL.INSTALLER' | translate }}</p>
                     <h3>{{ order()!.installerName }}</h3>
                   </ion-label>
                 </ion-item>
@@ -136,7 +138,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         <!-- Customer Info Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Customer Information</ion-card-title>
+            <ion-card-title>{{ 'ORDERS.DETAIL.CUSTOMER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
@@ -150,11 +152,11 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
             <div class="action-buttons">
               <ion-button fill="outline" size="small" (click)="callCustomer()">
                 <ion-icon slot="start" name="call-outline"></ion-icon>
-                Call
+                {{ 'ORDERS.DETAIL.CALL' | translate }}
               </ion-button>
               <ion-button fill="outline" size="small" (click)="navigateToAddress()">
                 <ion-icon slot="start" name="navigate-outline"></ion-icon>
-                Navigate
+                {{ 'ORDERS.DETAIL.NAVIGATE' | translate }}
               </ion-button>
             </div>
           </ion-card-content>
@@ -164,7 +166,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         @if (order()!.orderLines?.length) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>Products ({{ order()!.orderLines!.length }})</ion-card-title>
+              <ion-card-title>{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{ order()!.orderLines!.length }})</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               <ion-list>
@@ -189,7 +191,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
           <ion-card-header>
             <ion-card-title>
               <ion-icon name="attach-outline"></ion-icon>
-              첨부 파일
+              {{ 'ORDERS.DETAIL.ATTACHMENTS' | translate }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
@@ -211,7 +213,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   [disabled]="isUploading()"
                 >
                   <ion-icon slot="start" name="camera"></ion-icon>
-                  사진 촬영
+                  {{ 'ORDERS.DETAIL.TAKE_PHOTO' | translate }}
                 </ion-button>
                 <ion-button
                   fill="outline"
@@ -220,7 +222,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   [disabled]="isUploading()"
                 >
                   <ion-icon slot="start" name="document-outline"></ion-icon>
-                  문서 스캔
+                  {{ 'ORDERS.DETAIL.SCAN_DOCUMENT' | translate }}
                 </ion-button>
                 <ion-button
                   fill="outline"
@@ -229,7 +231,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   [disabled]="isUploading()"
                 >
                   <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
-                  갤러리
+                  {{ 'ORDERS.DETAIL.GALLERY' | translate }}
                 </ion-button>
               } @else {
                 <input
@@ -247,7 +249,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   [disabled]="isUploading()"
                 >
                   <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
-                  파일 선택
+                  {{ 'ORDERS.DETAIL.SELECT_FILE' | translate }}
                 </ion-button>
               }
             </div>
@@ -260,7 +262,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   [value]="uploadProgress()"
                   max="100"
                 ></progress>
-                <p>{{ uploadProgress() }}% 업로드 중...</p>
+                <p>{{ 'ORDERS.DETAIL.UPLOADING' | translate:{ progress: uploadProgress() } }}</p>
               </div>
             }
 
@@ -268,7 +270,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
             @if (attachments().length > 0) {
               <div class="attachments-list">
                 <p class="list-header">
-                  첨부 파일 ({{ attachments().length }})
+                  {{ 'ORDERS.DETAIL.ATTACHMENTS' | translate }} ({{ attachments().length }})
                 </p>
                 @for (attachment of attachments(); track attachment.id) {
                   <div class="attachment-item">
@@ -332,7 +334,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         }
       } @else {
         <div class="empty-state">
-          <h3>Order not found</h3>
+          <h3>{{ 'ORDERS.LIST.NO_ORDERS' | translate }}</h3>
         </div>
       }
     </ion-content>
@@ -500,20 +502,36 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   `],
 })
 export class OrderDetailPage implements OnInit, OnDestroy {
+  /** 라우트 파라미터 접근용 서비스 */
   private readonly route = inject(ActivatedRoute);
+  /** 라우터 서비스 */
   private readonly router = inject(Router);
+  /** 주문 데이터 서비스 */
   private readonly ordersService = inject(OrdersService);
+  /** 파일 첨부 서비스 */
   private readonly fileService = inject(FileAttachmentService);
+  /** 액션 시트 컨트롤러 */
   private readonly actionSheetCtrl = inject(ActionSheetController);
+  /** 알림 다이얼로그 컨트롤러 */
   private readonly alertCtrl = inject(AlertController);
+  /** 토스트 알림 컨트롤러 */
   private readonly toastCtrl = inject(ToastController);
+  /** 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
+  /** 컴포넌트 파괴 시 구독 해제용 Subject */
   private readonly destroy$ = new Subject<void>();
 
+  /** 현재 조회 중인 주문 데이터 */
   protected readonly order = signal<Order | null>(null);
+  /** 로딩 상태 */
   protected readonly isLoading = signal(true);
+  /** 허용된 상태 전환 목록 */
   protected readonly allowedTransitions = signal<string[]>([]);
+  /** 첨부 파일 목록 */
   protected readonly attachments = signal<FileAttachment[]>([]);
+  /** 파일 업로드 진행 중 여부 */
   protected readonly isUploading = signal(false);
+  /** 업로드 진행률 (0-100) */
   protected readonly uploadProgress = signal(0);
 
   constructor() {
@@ -588,13 +606,14 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   }
 
   protected async confirmStatusChange(newStatus: string): Promise<void> {
+    const statusLabel = this.getStatusLabel(newStatus);
     const alert = await this.alertCtrl.create({
-      header: 'Confirm Status Change',
-      message: `Change status to ${this.getStatusLabel(newStatus)}?`,
+      header: this.translateService.instant('ORDERS.DETAIL.CONFIRM_STATUS_CHANGE'),
+      message: this.translateService.instant('ORDERS.DETAIL.CHANGE_STATUS_TO', { status: statusLabel }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: 'Confirm',
+          text: this.translateService.instant('COMMON.CONFIRM'),
           handler: () => this.updateStatus(newStatus),
         },
       ],
@@ -620,17 +639,23 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * 상태 코드를 i18n 기반 라벨로 변환
+   * @param status - 주문 상태 코드
+   * @returns 번역된 상태 라벨
+   */
   protected getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      CONFIRMED: 'Confirm Assignment',
-      DISPATCHED: 'Start Dispatch',
-      COMPLETED: 'Mark Complete',
-      COLLECTED: 'Mark Collected',
-      ABSENT: 'Customer Absent',
-      POSTPONED: 'Postpone',
-      ASSIGNED: 'Revert to Assigned',
+    const statusI18nKeys: Record<string, string> = {
+      CONFIRMED: 'ORDERS.STATUS.CONFIRMED',
+      DISPATCHED: 'ORDERS.STATUS.DISPATCHED',
+      COMPLETED: 'ORDERS.STATUS.COMPLETED',
+      COLLECTED: 'ORDERS.STATUS.COLLECTED',
+      ABSENT: 'ORDERS.STATUS.ABSENT',
+      POSTPONED: 'ORDERS.STATUS.POSTPONED',
+      ASSIGNED: 'ORDERS.STATUS.ASSIGNED',
     };
-    return labels[status] || status;
+    const key = statusI18nKeys[status];
+    return key ? this.translateService.instant(key) : status;
   }
 
   protected getStatusButtonColor(status: string): string {
@@ -702,7 +727,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
         );
 
         const toast = await this.toastCtrl.create({
-          message: `${file.name} 업로드 완료`,
+          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_SUCCESS', { fileName: file.name }),
           duration: 2000,
           color: 'success',
         });
@@ -712,7 +737,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
         this.attachments.update(list => list.filter(a => a.id !== tempId));
         
         const toast = await this.toastCtrl.create({
-          message: `${file.name} 업로드 실패`,
+          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_FAILED', { fileName: file.name }),
           duration: 2000,
           color: 'danger',
         });
@@ -723,12 +748,12 @@ export class OrderDetailPage implements OnInit, OnDestroy {
 
   protected async onFileDelete(fileId: string): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: '파일 삭제',
-      message: '이 파일을 삭제하시겠습니까?',
+      header: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE'),
+      message: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE_CONFIRM'),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '삭제',
+          text: this.translateService.instant('COMMON.DELETE'),
           role: 'destructive',
           handler: async () => {
             try {
@@ -737,14 +762,14 @@ export class OrderDetailPage implements OnInit, OnDestroy {
               this.attachments.update(list => list.filter(a => a.id !== fileId));
               
               const toast = await this.toastCtrl.create({
-                message: '파일이 삭제되었습니다.',
+                message: this.translateService.instant('ORDERS.DETAIL.FILE_DELETED'),
                 duration: 2000,
                 color: 'success',
               });
               await toast.present();
             } catch (error) {
               const toast = await this.toastCtrl.create({
-                message: '파일 삭제 실패',
+                message: this.translateService.instant('ORDERS.DETAIL.DELETE_FAILED'),
                 duration: 2000,
                 color: 'danger',
               });
@@ -823,7 +848,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
       if (result.success && result.base64Data) {
         attachment.base64Data = result.base64Data;
         const toast = await this.toastCtrl.create({
-          message: `압축 완료: ${result.compressionRatio}% 감소`,
+          message: this.translateService.instant('ORDERS.DETAIL.COMPRESSION_SUCCESS', { ratio: result.compressionRatio }),
           duration: 2000,
           color: 'success',
         });
@@ -844,7 +869,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
             this.attachments.update(list => [...list, attachment]);
             this.isUploading.set(false);
             const toast = this.toastCtrl.create({
-              message: '파일이 업로드되었습니다',
+              message: this.translateService.instant('ORDERS.DETAIL.FILE_UPLOADED'),
               duration: 2000,
               color: 'success',
             });
@@ -853,7 +878,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
           error: (err) => {
             this.isUploading.set(false);
             const toast = this.toastCtrl.create({
-              message: '파일 업로드 실패',
+              message: this.translateService.instant('ORDERS.DETAIL.FILE_UPLOAD_FAILED'),
               duration: 2000,
               color: 'danger',
             });
@@ -882,7 +907,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
         error: () => {
           this.toastCtrl
             .create({
-              message: '파일 다운로드 실패',
+              message: this.translateService.instant('ORDERS.DETAIL.DOWNLOAD_FAILED'),
               duration: 2000,
               color: 'danger',
             })
@@ -893,12 +918,12 @@ export class OrderDetailPage implements OnInit, OnDestroy {
 
   protected async deleteAttachment(attachment: FileAttachment): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: '파일 삭제',
-      message: `${attachment.name}을 삭제하시겠습니까?`,
+      header: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE'),
+      message: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE_NAME_CONFIRM', { fileName: attachment.name }),
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: '삭제',
+          text: this.translateService.instant('COMMON.DELETE'),
           role: 'destructive',
           handler: () => {
             const orderId = this.order()?.id;
@@ -911,7 +936,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
                     this.attachments.update(list => list.filter(a => a.id !== attachment.id));
                     this.toastCtrl
                       .create({
-                        message: '파일이 삭제되었습니다',
+                        message: this.translateService.instant('ORDERS.DETAIL.FILE_DELETED'),
                         duration: 2000,
                         color: 'success',
                       })

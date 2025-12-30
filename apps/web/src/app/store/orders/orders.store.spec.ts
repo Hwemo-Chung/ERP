@@ -336,13 +336,22 @@ describe('OrdersStore', () => {
       const initialVersion = mockOrder1.version;
       store.assignOrder('order-1', 'installer-1', '2025-12-20');
 
-      tick();
-
+      // Check optimistic update before HTTP response
       const updatedOrder = store.orders().find((o) => o.id === 'order-1');
       expect(updatedOrder?.installerId).toBe('installer-1');
       expect(updatedOrder?.appointmentDate).toBe('2025-12-20');
       expect(updatedOrder?.status).toBe(OrderStatus.ASSIGNED);
       expect(updatedOrder?.version).toBe(initialVersion + 1);
+
+      // Flush the HTTP request
+      const req = httpMock.expectOne(`${environment.apiUrl}/orders/order-1`);
+      req.flush({
+        ...mockOrder1,
+        installerId: 'installer-1',
+        appointmentDate: '2025-12-20',
+        version: 2,
+      });
+      tick();
     }));
 
     it('should save optimistic update to IndexedDB', fakeAsync(() => {

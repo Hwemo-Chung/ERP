@@ -6,6 +6,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   IonHeader,
   IonToolbar,
@@ -69,6 +70,7 @@ export interface BranchOption {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -95,11 +97,11 @@ export interface BranchOption {
             <ion-icon name="close-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
-        <ion-title>필터</ion-title>
+        <ion-title>{{ 'FILTER.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="reset()" color="medium">
             <ion-icon name="refresh-outline"></ion-icon>
-            초기화
+            {{ 'FILTER.RESET' | translate }}
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -110,12 +112,12 @@ export interface BranchOption {
       <div class="filter-section">
         <h3>
           <ion-icon name="calendar-outline"></ion-icon>
-          날짜 범위
+          {{ 'FILTER.DATE_RANGE' | translate }}
         </h3>
 
         <ion-list>
           <ion-item>
-            <ion-label>시작일</ion-label>
+            <ion-label>{{ 'FILTER.START_DATE' | translate }}</ion-label>
             <ion-datetime-button datetime="startDate"></ion-datetime-button>
           </ion-item>
           <ion-datetime
@@ -127,7 +129,7 @@ export interface BranchOption {
           ></ion-datetime>
 
           <ion-item>
-            <ion-label>종료일</ion-label>
+            <ion-label>{{ 'FILTER.END_DATE' | translate }}</ion-label>
             <ion-datetime-button datetime="endDate"></ion-datetime-button>
           </ion-item>
           <ion-datetime
@@ -142,7 +144,7 @@ export interface BranchOption {
 
       <!-- Status Section -->
       <div class="filter-section">
-        <h3>상태</h3>
+        <h3>{{ 'FILTER.STATUS' | translate }}</h3>
         <div class="status-chips">
           @for (status of availableStatuses(); track status) {
             <ion-chip
@@ -161,17 +163,17 @@ export interface BranchOption {
         <div class="filter-section">
           <h3>
             <ion-icon name="person-outline"></ion-icon>
-            설치기사
+            {{ 'FILTER.INSTALLER' | translate }}
           </h3>
           <ion-list>
             <ion-item>
               <ion-select
                 [value]="selectedInstaller()"
                 (ionChange)="onInstallerChange($event)"
-                placeholder="전체"
+                [placeholder]="'COMMON.ALL' | translate"
                 interface="action-sheet"
               >
-                <ion-select-option value="">전체</ion-select-option>
+                <ion-select-option value="">{{ 'COMMON.ALL' | translate }}</ion-select-option>
                 @for (installer of installers(); track installer.id) {
                   <ion-select-option [value]="installer.id">
                     {{ installer.name }}
@@ -188,17 +190,17 @@ export interface BranchOption {
         <div class="filter-section">
           <h3>
             <ion-icon name="business-outline"></ion-icon>
-            지점
+            {{ 'FILTER.BRANCH' | translate }}
           </h3>
           <ion-list>
             <ion-item>
               <ion-select
                 [value]="selectedBranch()"
                 (ionChange)="onBranchChange($event)"
-                placeholder="전체"
+                [placeholder]="'COMMON.ALL' | translate"
                 interface="action-sheet"
               >
-                <ion-select-option value="">전체</ion-select-option>
+                <ion-select-option value="">{{ 'COMMON.ALL' | translate }}</ion-select-option>
                 @for (branch of branches(); track branch.code) {
                   <ion-select-option [value]="branch.code">
                     {{ branch.name }}
@@ -214,7 +216,7 @@ export interface BranchOption {
       @if (activeFilterCount() > 0) {
         <div class="active-filters">
           <ion-note>
-            {{ activeFilterCount() }}개의 필터가 적용됨
+            {{ 'FILTER.ACTIVE_COUNT' | translate: { count: activeFilterCount() } }}
           </ion-note>
         </div>
       }
@@ -224,7 +226,7 @@ export interface BranchOption {
       <ion-toolbar>
         <ion-button expand="block" (click)="apply()">
           <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-          적용하기
+          {{ 'FILTER.APPLY' | translate }}
         </ion-button>
       </ion-toolbar>
     </ion-footer>
@@ -273,6 +275,7 @@ export interface BranchOption {
 export class OrderFilterModal implements OnInit {
   private readonly modalController = inject(ModalController);
   private readonly navParams = inject(NavParams);
+  private readonly translate = inject(TranslateService);
 
   // Input data from parent
   protected readonly context = signal<FilterContext>('all');
@@ -367,7 +370,8 @@ export class OrderFilterModal implements OnInit {
   }
 
   getStatusLabel(status: OrderStatus): string {
-    return ORDER_STATUS_LABELS[status] || status;
+    const key = ORDER_STATUS_LABELS[status];
+    return key ? this.translate.instant(key) : status;
   }
 
   onStartDateChange(event: CustomEvent): void {

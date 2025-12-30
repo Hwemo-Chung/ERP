@@ -4,16 +4,21 @@ import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 
+/**
+ * 설정 메뉴 페이지
+ * 사용자 프로필, 정산 관리, 알림, 로그아웃 등 설정 메뉴 제공
+ */
 @Component({
   selector: 'app-settings-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton],
+  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton, TranslateModule],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>설정</ion-title>
+        <ion-title>{{ 'NAV.SETTINGS' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -29,15 +34,15 @@ import { AuthService } from '../../../../core/services/auth.service';
       </div>
 
       <div class="menu-section">
-        <div class="section-title">관리</div>
+        <div class="section-title">{{ 'SETTINGS.SECTION.MANAGEMENT' | translate }}</div>
         <div class="menu-cards">
           <a class="menu-card" routerLink="settlement">
             <div class="card-icon primary">
               <ion-icon name="wallet-outline"></ion-icon>
             </div>
             <div class="card-content">
-              <h3>정산 관리</h3>
-              <p>주간 정산 기간 관리</p>
+              <h3>{{ 'SETTINGS.MENU.SETTLEMENT' | translate }}</h3>
+              <p>{{ 'SETTINGS.MENU.SETTLEMENT_DESC' | translate }}</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
           </a>
@@ -47,8 +52,8 @@ import { AuthService } from '../../../../core/services/auth.service';
               <ion-icon name="notifications-outline"></ion-icon>
             </div>
             <div class="card-content">
-              <h3>알림 센터</h3>
-              <p>푸시 알림 설정 및 이력</p>
+              <h3>{{ 'SETTINGS.MENU.NOTIFICATION_CENTER' | translate }}</h3>
+              <p>{{ 'SETTINGS.MENU.NOTIFICATION_CENTER_DESC' | translate }}</p>
             </div>
             <ion-badge color="danger" class="badge">3</ion-badge>
             <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
@@ -59,8 +64,8 @@ import { AuthService } from '../../../../core/services/auth.service';
               <ion-icon name="options-outline"></ion-icon>
             </div>
             <div class="card-content">
-              <h3>알림 설정</h3>
-              <p>카테고리별 알림 활성화/무음</p>
+              <h3>{{ 'SETTINGS.MENU.NOTIFICATION_SETTINGS' | translate }}</h3>
+              <p>{{ 'SETTINGS.MENU.NOTIFICATION_SETTINGS_DESC' | translate }}</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
           </a>
@@ -70,8 +75,8 @@ import { AuthService } from '../../../../core/services/auth.service';
               <ion-icon name="finger-print-outline"></ion-icon>
             </div>
             <div class="card-content">
-              <h3>생체 인증</h3>
-              <p>빠른 로그인 설정</p>
+              <h3>{{ 'SETTINGS.MENU.BIOMETRIC' | translate }}</h3>
+              <p>{{ 'SETTINGS.MENU.BIOMETRIC_DESC' | translate }}</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
           </a>
@@ -79,22 +84,22 @@ import { AuthService } from '../../../../core/services/auth.service';
       </div>
 
       <div class="menu-section">
-        <div class="section-title">계정</div>
+        <div class="section-title">{{ 'SETTINGS.SECTION.ACCOUNT' | translate }}</div>
         <div class="menu-cards">
           <button class="menu-card logout" (click)="logout()">
             <div class="card-icon danger">
               <ion-icon name="log-out-outline"></ion-icon>
             </div>
             <div class="card-content">
-              <h3>로그아웃</h3>
-              <p>계정에서 로그아웃</p>
+              <h3>{{ 'AUTH.LOGIN.SIGN_OUT' | translate }}</h3>
+              <p>{{ 'SETTINGS.MENU.LOGOUT_DESC' | translate }}</p>
             </div>
           </button>
         </div>
       </div>
 
       <div class="app-version">
-        <p>앱 버전 1.0.0</p>
+        <p>{{ 'SETTINGS.APP_VERSION' | translate }} 1.0.0</p>
       </div>
     </ion-content>
   `,
@@ -267,28 +272,44 @@ import { AuthService } from '../../../../core/services/auth.service';
   `],
 })
 export class SettingsMenuPage {
+  /** 인증 서비스 */
   private readonly authService = inject(AuthService);
+  /** 라우터 서비스 */
   private readonly router = inject(Router);
+  /** 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
   constructor() { 
     addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline }); 
   }
 
+  /**
+   * 현재 로그인한 사용자 이름 반환
+   * @returns 사용자 이름 또는 기본값
+   */
   userName() {
-    return this.authService.user()?.name || '사용자';
+    return this.authService.user()?.name || this.translateService.instant('SETTINGS.DEFAULT_USER');
   }
 
+  /**
+   * 현재 사용자의 역할을 i18n 기반 라벨로 변환
+   * @returns 번역된 역할 라벨
+   */
   userRole() {
     const role = this.authService.user()?.roles?.[0];
-    const roles: Record<string, string> = {
-      admin: '관리자',
-      manager: '매니저',
-      coordinator: '코디네이터',
-      installer: '설치기사',
+    const roleI18nKeys: Record<string, string> = {
+      admin: 'SETTINGS.ROLES.ADMIN',
+      manager: 'SETTINGS.ROLES.MANAGER',
+      coordinator: 'SETTINGS.ROLES.COORDINATOR',
+      installer: 'SETTINGS.ROLES.INSTALLER',
     };
-    return roles[role || ''] || role || '일반 사용자';
+    const key = roleI18nKeys[role || ''];
+    return key ? this.translateService.instant(key) : (role || this.translateService.instant('SETTINGS.ROLES.DEFAULT'));
   }
 
+  /**
+   * 로그아웃 처리
+   */
   async logout(): Promise<void> {
     await this.authService.logout();
     this.router.navigate(['/login'], { replaceUrl: true });

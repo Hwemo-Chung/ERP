@@ -36,6 +36,7 @@ import {
   refreshOutline,
   businessOutline,
 } from 'ionicons/icons';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   OrderStatus,
   ORDER_STATUS_LABELS,
@@ -69,6 +70,7 @@ export interface BranchOption {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -168,10 +170,10 @@ export interface BranchOption {
               <ion-select
                 [value]="selectedInstaller()"
                 (ionChange)="onInstallerChange($event)"
-                placeholder="전체"
+                [placeholder]="'PLACEHOLDERS.ALL' | translate"
                 interface="action-sheet"
               >
-                <ion-select-option value="">전체</ion-select-option>
+                <ion-select-option value="">{{ 'PLACEHOLDERS.ALL' | translate }}</ion-select-option>
                 @for (installer of installers(); track installer.id) {
                   <ion-select-option [value]="installer.id">
                     {{ installer.name }}
@@ -195,10 +197,10 @@ export interface BranchOption {
               <ion-select
                 [value]="selectedBranch()"
                 (ionChange)="onBranchChange($event)"
-                placeholder="전체"
+                [placeholder]="'PLACEHOLDERS.ALL' | translate"
                 interface="action-sheet"
               >
-                <ion-select-option value="">전체</ion-select-option>
+                <ion-select-option value="">{{ 'PLACEHOLDERS.ALL' | translate }}</ion-select-option>
                 @for (branch of branches(); track branch.code) {
                   <ion-select-option [value]="branch.code">
                     {{ branch.name }}

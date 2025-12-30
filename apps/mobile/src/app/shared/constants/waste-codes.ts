@@ -21,12 +21,12 @@ export enum WasteCategory {
 }
 
 export const WASTE_CATEGORY_LABELS: Record<WasteCategory, string> = {
-  [WasteCategory.REFRIGERATOR]: '냉장고류',
-  [WasteCategory.WASHER]: '세탁기류',
-  [WasteCategory.AIR_CONDITIONER]: '에어컨류',
-  [WasteCategory.TV]: 'TV류',
-  [WasteCategory.SMALL_APPLIANCE]: '소형가전',
-  [WasteCategory.OTHER]: '기타',
+  [WasteCategory.REFRIGERATOR]: 'WASTE.CATEGORIES.REFRIGERATOR',
+  [WasteCategory.WASHER]: 'WASTE.CATEGORIES.WASHER',
+  [WasteCategory.AIR_CONDITIONER]: 'WASTE.CATEGORIES.AIR_CONDITIONER',
+  [WasteCategory.TV]: 'WASTE.CATEGORIES.TV',
+  [WasteCategory.SMALL_APPLIANCE]: 'WASTE.CATEGORIES.SMALL_APPLIANCE',
+  [WasteCategory.OTHER]: 'WASTE.CATEGORIES.OTHER',
 };
 
 /**

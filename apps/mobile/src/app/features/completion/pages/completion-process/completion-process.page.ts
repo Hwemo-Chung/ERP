@@ -35,6 +35,7 @@ import {
   cameraOutline,
   closeCircleOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.models';
 import { CameraService } from '../../../../core/services/camera.service';
@@ -47,6 +48,7 @@ import { UIStore } from '../../../../store/ui/ui.store';
   imports: [
     CommonModule,
     RouterLink,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -267,6 +269,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
   private readonly toastCtrl = inject(ToastController);
+  protected readonly translate = inject(TranslateService);
   protected readonly ordersStore = inject(OrdersStore);
   private readonly cameraService = inject(CameraService);
   private readonly uiStore = inject(UIStore);
@@ -370,6 +373,9 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
    * Add a note to the order
    */
   async addNote(): Promise<void> {
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const addBtn = await this.translate.get('COMMON.BUTTONS.ADD').toPromise();
+    
     const alert = await this.alertCtrl.create({
       header: '특이사항 추가',
       inputs: [
@@ -384,9 +390,9 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
         },
       ],
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: cancelBtn, role: 'cancel' },
         {
-          text: '추가',
+          text: addBtn,
           handler: async (data) => {
             const note = data.note?.trim();
             if (note) {
@@ -404,13 +410,16 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
    * Complete the order
    */
   async completeOrder(): Promise<void> {
+    const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
+    const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
+    
     const alert = await this.alertCtrl.create({
       header: '완료 처리',
       message: '주문을 완료 처리하시겠습니까?',
       buttons: [
-        { text: '취소', role: 'cancel' },
+        { text: cancelBtn, role: 'cancel' },
         {
-          text: '완료',
+          text: okBtn,
           handler: async () => {
             await this.performComplete();
           },

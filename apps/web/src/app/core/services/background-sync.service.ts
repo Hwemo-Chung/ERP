@@ -14,25 +14,18 @@
 
 import { Injectable, inject, effect, signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
+import { TranslateService } from '@ngx-translate/core';
 import { NetworkService } from './network.service';
 import { environment } from '@env/environment';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
-import { db, SyncQueueEntry } from '@app/core/db/database';
+import { db, SyncQueueEntry, BackgroundSyncTask } from '@app/core/db/database';
 
 // Re-export SyncQueueEntry as SyncOperation for backwards compatibility
 export type SyncOperation = SyncQueueEntry;
 
-export interface BackgroundSyncTask {
-  id: string;
-  dataType: string;
-  operation: string;
-  data: any;
-  retries: number;
-  maxRetries: number;
-  lastAttempt?: number;
-  createdAt: number;
-}
+// Re-export BackgroundSyncTask type from database
+export type { BackgroundSyncTask } from '@app/core/db/database';
 
 @Injectable({ providedIn: 'root' })
 export class BackgroundSyncService {
@@ -40,6 +33,7 @@ export class BackgroundSyncService {
   private readonly syncQueue = inject(SyncQueueService);
   private readonly uiStore = inject(UIStore);
   private readonly swUpdate = inject(SwUpdate);
+  private readonly translate = inject(TranslateService);
 
   private syncInProgress = false;
   private readonly SYNC_TAG = 'erp-sync';
@@ -117,7 +111,7 @@ export class BackgroundSyncService {
       createdAt: Date.now(),
     };
 
-    await db.table('backgroundSyncQueue').add(task);
+    await db.backgroundSyncQueue.add(task);
     await this.updatePendingCount();
 
     if (this.workerRegistration && 'sync' in this.workerRegistration) {
@@ -135,14 +129,14 @@ export class BackgroundSyncService {
    * Get pending tasks
    */
   async getPendingTasks(): Promise<BackgroundSyncTask[]> {
-    return await db.table('backgroundSyncQueue').toArray();
+    return await db.backgroundSyncQueue.toArray();
   }
 
   /**
    * Update pending tasks count
    */
   private async updatePendingCount() {
-    const count = await db.table('backgroundSyncQueue').count();
+    const count = await db.backgroundSyncQueue.count();
     this.pendingTasksCount.set(count);
   }
 
@@ -150,7 +144,7 @@ export class BackgroundSyncService {
    * Remove task from queue
    */
   async removeTask(taskId: string) {
-    await db.table('backgroundSyncQueue').delete(taskId);
+    await db.backgroundSyncQueue.delete(taskId);
     await this.updatePendingCount();
   }
 
@@ -158,11 +152,11 @@ export class BackgroundSyncService {
    * Retry a specific task
    */
   async retryTask(taskId: string) {
-    const task = await db.table('backgroundSyncQueue').get(taskId);
+    const task = await db.backgroundSyncQueue.get(taskId);
     if (!task) return;
 
     if (task.retries < task.maxRetries) {
-      await db.table('backgroundSyncQueue').update(taskId, {
+      await db.backgroundSyncQueue.update(taskId, {
         retries: task.retries + 1,
         lastAttempt: Date.now(),
       });
@@ -222,10 +216,12 @@ export class BackgroundSyncService {
 
     try {
       await this.processPendingOperations();
-      this.uiStore.showToast('모든 변경사항이 동기화되었습니다', 'success', 2000);
+      const successMsg = this.translate.instant('SYNC.SUCCESS.ALL_SYNCED');
+      this.uiStore.showToast(successMsg, 'success', 2000);
     } catch (error) {
       console.error('[Sync] Sync error:', error);
-      this.uiStore.showToast('일부 변경사항을 동기화할 수 없습니다', 'warning', 3000);
+      const warningMsg = this.translate.instant('SYNC.WARNING.PARTIAL_SYNC');
+      this.uiStore.showToast(warningMsg, 'warning', 3000);
     } finally {
       this.syncInProgress = false;
     }
@@ -395,14 +391,15 @@ export class BackgroundSyncService {
    * Get human-readable label for operation type
    */
   private getOperationLabel(type: SyncOperation['type']): string {
-    const labelMap: Record<SyncOperation['type'], string> = {
-      completion: '완료',
-      status_change: '상태변경',
-      waste: '폐기기기',
-      attachment: '첨부파일',
-      note: '메모',
+    const keyMap: Record<SyncOperation['type'], string> = {
+      completion: 'SYNC.OPERATION.COMPLETION',
+      status_change: 'SYNC.OPERATION.STATUS_CHANGE',
+      waste: 'SYNC.OPERATION.WASTE',
+      attachment: 'SYNC.OPERATION.ATTACHMENT',
+      note: 'SYNC.OPERATION.NOTE',
     };
-    return labelMap[type] || type;
+    const key = keyMap[type];
+    return key ? this.translate.instant(key) : type;
   }
 
   /**

@@ -12,6 +12,7 @@ import {
 import { addIcons } from 'ionicons';
 import { downloadOutline, personOutline, callOutline } from 'ionicons/icons';
 import { ReportsService, CustomerRecord } from '../../../../core/services/reports.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 @Component({
@@ -21,7 +22,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
   imports: [
     CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
-    IonButton, IonIcon, IonRefresher, IonRefresherContent,
+    IonButton, IonIcon, IonRefresher, IonRefresherContent, TranslateModule,
   ],
   template: `
     <ion-header>
@@ -89,6 +90,7 @@ export class CustomerHistoryPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly isLoading = signal(false);
   protected readonly searchQuery = signal('');
@@ -156,7 +158,7 @@ export class CustomerHistoryPage implements OnInit {
 
     try {
       // Generate CSV
-      const headers = ['이름', '연락처', '주문수', '최근주문'];
+      const headers = this.translate.instant('REPORTS.CUSTOMER_HISTORY.EXPORT_HEADERS');
       const rows = this.customers().map(c => [
         c.name,
         c.phone,

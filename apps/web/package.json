@@ -32,6 +32,8 @@
     "@capacitor/preferences": "^6.0.3",
     "@ionic/angular": "^8.4.2",
     "@ngrx/signals": "^19.0.0",
+    "@ngx-translate/core": "^16.0.0",
+    "@ngx-translate/http-loader": "^16.0.0",
     "capacitor-native-biometric": "^4.2.2",
     "dexie": "^4.0.10",
     "rxjs": "~7.8.1",

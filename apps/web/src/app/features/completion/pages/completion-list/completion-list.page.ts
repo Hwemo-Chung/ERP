@@ -35,6 +35,7 @@ import {
   personOutline,
   documentTextOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus } from '../../../../store/orders/orders.models';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -65,11 +66,12 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
     IonRefresher,
     IonRefresherContent,
     IonSpinner,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>완료 처리</ion-title>
+        <ion-title>{{ 'COMPLETION.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openFilter()">
             <ion-icon name="filter-outline"></ion-icon>
@@ -79,26 +81,26 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="currentFilter()" (ionChange)="onFilterChange($event)" [scrollable]="true">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'COMMON.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="dispatched">
-            <ion-label>대기</ion-label>
+            <ion-label>{{ 'COMPLETION.FILTER.PENDING' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="completed">
-            <ion-label>완료</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.COMPLETED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="issued">
-            <ion-label>확인서 발행</ion-label>
+            <ion-label>{{ 'COMPLETION.FILTER.CERTIFICATE_ISSUED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="not-issued">
-            <ion-label>확인서 미발행</ion-label>
+            <ion-label>{{ 'COMPLETION.FILTER.CERTIFICATE_NOT_ISSUED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -113,26 +115,26 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
       <div class="stats-grid">
         <div class="stat-card warning">
           <div class="stat-value">{{ pendingCount() }}</div>
-          <div class="stat-label">대기</div>
+          <div class="stat-label">{{ 'COMPLETION.FILTER.PENDING' | translate }}</div>
         </div>
         <div class="stat-card primary">
           <div class="stat-value">{{ inProgressCount() }}</div>
-          <div class="stat-label">진행중</div>
+          <div class="stat-label">{{ 'ORDERS.FILTER.IN_PROGRESS' | translate }}</div>
         </div>
         <div class="stat-card success">
           <div class="stat-value">{{ completedCount() }}</div>
-          <div class="stat-label">완료</div>
+          <div class="stat-label">{{ 'ORDERS.FILTER.COMPLETED' | translate }}</div>
         </div>
         <div class="stat-card tertiary">
           <div class="stat-value">{{ certificateIssuedCount() }}</div>
-          <div class="stat-label">확인서 발행</div>
+          <div class="stat-label">{{ 'COMPLETION.FILTER.CERTIFICATE_ISSUED' | translate }}</div>
         </div>
       </div>
 
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'ORDERS.LIST.LOADING' | translate }}</p>
         </div>
       } @else {
         <ion-list>
@@ -158,17 +160,17 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
                 </div>
                 <div class="status-tags">
                   @if (item.serialEntered) {
-                    <span class="tag success">시리얼 입력완료</span>
+                    <span class="tag success">{{ 'COMPLETION.STATUS.SERIAL_ENTERED' | translate }}</span>
                   } @else {
-                    <span class="tag warning">시리얼 미입력</span>
+                    <span class="tag warning">{{ 'COMPLETION.STATUS.SERIAL_NOT_ENTERED' | translate }}</span>
                   }
                   @if (item.wastePickedUp) {
-                    <span class="tag success">폐가전 회수</span>
+                    <span class="tag success">{{ 'COMPLETION.STATUS.WASTE_PICKUP' | translate }}</span>
                   }
                   @if (item.certificateIssued) {
                     <span class="tag info">
                       <ion-icon name="document-text-outline"></ion-icon>
-                      확인서 발행
+                      {{ 'COMPLETION.FILTER.CERTIFICATE_ISSUED' | translate }}
                     </span>
                   }
                 </div>
@@ -178,8 +180,8 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
           } @empty {
             <div class="empty-state">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <h3>처리할 항목이 없습니다</h3>
-              <p>모든 작업이 완료되었습니다</p>
+              <h3>{{ 'COMPLETION.NO_ITEMS' | translate }}</h3>
+              <p>{{ 'COMPLETION.ALL_COMPLETED' | translate }}</p>
             </div>
           }
         </ion-list>
@@ -383,12 +385,20 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
   `],
 })
 export class CompletionListPage implements OnInit {
+  /** 주문 데이터 상태 관리 스토어 */
   protected readonly ordersStore = inject(OrdersStore);
+  /** 인증 서비스 */
   private readonly authService = inject(AuthService);
+  /** 모달 컨트롤러 */
   private readonly modalController = inject(ModalController);
+  /** 다국어 번역 서비스 */
+  private readonly translateService = inject(TranslateService);
 
+  /** 현재 선택된 필터 */
   protected readonly currentFilter = signal<CompletionFilter>('all');
+  /** 검색어 */
   protected readonly searchQuery = signal('');
+  /** 로딩 상태 */
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
 
   protected readonly pendingCount = computed(() => {
@@ -524,13 +534,19 @@ export class CompletionListPage implements OnInit {
     return colors[status] || 'medium';
   }
 
+  /**
+   * 상태 코드를 i18n 기반 라벨로 변환
+   * @param status - 주문 상태 코드
+   * @returns 번역된 상태 라벨
+   */
   getStatusLabel(status: OrderStatus): string {
-    const labels: Record<string, string> = {
-      [OrderStatus.DISPATCHED]: '대기',
-      [OrderStatus.COMPLETED]: '인수',
-      [OrderStatus.PARTIAL]: '부분인수',
-      [OrderStatus.COLLECTED]: '회수',
+    const statusI18nKeys: Record<string, string> = {
+      [OrderStatus.DISPATCHED]: 'COMPLETION.FILTER.PENDING',
+      [OrderStatus.COMPLETED]: 'ORDERS.STATUS.COMPLETED',
+      [OrderStatus.PARTIAL]: 'ORDERS.STATUS.PARTIAL',
+      [OrderStatus.COLLECTED]: 'ORDERS.STATUS.COLLECTED',
     };
-    return labels[status] || String(status);
+    const key = statusI18nKeys[status];
+    return key ? this.translateService.instant(key) : String(status);
   }
 }

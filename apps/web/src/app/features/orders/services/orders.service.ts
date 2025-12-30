@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { environment } from '@env/environment';
 import { db } from '@core/db/database';
 import { NetworkService } from '@core/services/network.service';
@@ -67,6 +68,7 @@ export class OrdersService {
   private readonly http = inject(HttpClient);
   private readonly networkService = inject(NetworkService);
   private readonly conflictResolver = inject(ConflictResolverService);
+  private readonly translate = inject(TranslateService);
   private readonly apiUrl = `${environment.apiUrl}/orders`;
 
   async getOrders(params: OrderListParams): Promise<PaginatedResponse<Order>> {
@@ -143,14 +145,14 @@ export class OrdersService {
         
         if (serverOrder && localOrder) {
           const resolution = await this.conflictResolver.resolveConflict(
-            '주문',
+            this.translate.instant('CONFLICT.ENTITY.ORDER'),
             { ...localOrder, updatedAt: new Date(localOrder.updatedAt) },
             { ...serverOrder, updatedAt: new Date(serverOrder.updatedAt) },
             {
-              status: '상태',
-              appointmentDate: '예약일',
-              appointmentSlot: '예약시간',
-              customerMemo: '메모',
+              status: this.translate.instant('CONFLICT.FIELD.STATUS'),
+              appointmentDate: this.translate.instant('CONFLICT.FIELD.APPOINTMENT_DATE'),
+              appointmentSlot: this.translate.instant('CONFLICT.FIELD.APPOINTMENT_SLOT'),
+              customerMemo: this.translate.instant('CONFLICT.FIELD.MEMO'),
             }
           );
 
@@ -166,7 +168,7 @@ export class OrdersService {
           }
           
           // Cancel - throw to let caller handle
-          throw new Error('사용자가 작업을 취소했습니다.');
+          throw new Error(this.translate.instant('CONFLICT.CANCELLED'));
         }
       }
       throw error;

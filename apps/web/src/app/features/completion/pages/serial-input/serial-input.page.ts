@@ -1,4 +1,7 @@
-// apps/web/src/app/features/completion/pages/serial-input/serial-input.page.ts
+/**
+ * 시리얼 번호 입력 페이지 컴포넌트
+ * 제품별 시리얼 번호(10-20자리 영숫자) 입력 및 바코드 스캔 기능
+ */
 import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -31,6 +34,7 @@ import {
   checkmarkCircleOutline,
   saveOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 import { BarcodeScannerService } from '../../../../core/services/barcode-scanner.service';
@@ -51,6 +55,7 @@ interface ProductSerial {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -76,7 +81,7 @@ interface ProductSerial {
         <ion-buttons slot="start">
           <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
         </ion-buttons>
-        <ion-title>시리얼 번호 입력</ion-title>
+        <ion-title>{{ 'COMPLETION.SERIAL.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openScanner()">
             <ion-icon name="scan-outline"></ion-icon>
@@ -95,13 +100,13 @@ interface ProductSerial {
           <ion-card-header>
             <ion-card-title>
               <ion-icon name="barcode-outline"></ion-icon>
-              제품 시리얼 번호
+              {{ 'COMPLETION.SERIAL.CARD_TITLE' | translate }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <p class="instruction">
-              각 제품의 제조번호(시리얼 번호)를 입력해주세요.
-              영문/숫자 10-20자리
+              {{ 'COMPLETION.SERIAL.INSTRUCTION' | translate }}
+              {{ 'COMPLETION.SERIAL.FORMAT_HINT' | translate }}
             </p>
           </ion-card-content>
         </ion-card>
@@ -117,7 +122,7 @@ interface ProductSerial {
                 <ion-item>
                   <ion-input
                     type="text"
-                    placeholder="시리얼 번호 입력"
+                    [placeholder]="'COMPLETION.SERIAL.PLACEHOLDER' | translate"
                     [(ngModel)]="product.serialNumber"
                     (ionInput)="onSerialInput(i)"
                     [class.valid]="product.isValid"
@@ -128,15 +133,15 @@ interface ProductSerial {
                   </ion-button>
                 </ion-item>
                 @if (product.isValid) {
-                  <ion-badge color="success">유효</ion-badge>
+                  <ion-badge color="success">{{ 'COMPLETION.SERIAL.VALID' | translate }}</ion-badge>
                 } @else if (product.serialNumber) {
-                  <ion-badge color="danger">형식 오류</ion-badge>
+                  <ion-badge color="danger">{{ 'COMPLETION.SERIAL.FORMAT_ERROR' | translate }}</ion-badge>
                 }
               </ion-card-content>
             </ion-card>
           } @empty {
             <div class="empty-state">
-              <p>등록된 제품이 없습니다.</p>
+              <p>{{ 'COMPLETION.SERIAL.NO_PRODUCTS' | translate }}</p>
             </div>
           }
         </ion-list>
@@ -149,7 +154,7 @@ interface ProductSerial {
             (click)="saveSerials()"
           >
             <ion-icon name="save-outline" slot="start"></ion-icon>
-            저장
+            {{ 'COMPLETION.SERIAL.SAVE_BTN' | translate }}
           </ion-button>
         </div>
       }
@@ -218,6 +223,7 @@ export class SerialInputPage implements OnInit {
   private readonly toastCtrl = inject(ToastController);
   protected readonly ordersStore = inject(OrdersStore);
   private readonly scannerService = inject(BarcodeScannerService);
+  private readonly translateService = inject(TranslateService);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
@@ -272,6 +278,10 @@ export class SerialInputPage implements OnInit {
     }
   }
 
+  /**
+   * 바코드 스캔으로 시리얼 번호 입력
+   * @param index 대상 제품 인덱스
+   */
   async scanSerial(index: number): Promise<void> {
     try {
       const result = await this.scannerService.scan();
@@ -285,7 +295,7 @@ export class SerialInputPage implements OnInit {
         });
 
         const toast = await this.toastCtrl.create({
-          message: `스캔 완료: ${result.content}`,
+          message: this.translateService.instant('COMPLETION.SERIAL.SCAN_SUCCESS', { content: result.content }),
           duration: 1500,
           color: 'success',
         });
@@ -293,7 +303,7 @@ export class SerialInputPage implements OnInit {
       }
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '스캔 중 오류가 발생했습니다.',
+        message: this.translateService.instant('COMPLETION.SERIAL.SCAN_ERROR'),
         duration: 2000,
         color: 'danger',
       });
@@ -301,6 +311,10 @@ export class SerialInputPage implements OnInit {
     }
   }
 
+  /**
+   * 수동 입력 시 시리얼 번호 유효성 검증
+   * @param index 대상 제품 인덱스
+   */
   onSerialInput(index: number): void {
     this.products.update(products => {
       const updated = [...products];
@@ -311,11 +325,17 @@ export class SerialInputPage implements OnInit {
     });
   }
 
+  /**
+   * 모든 시리얼 번호가 유효한지 확인
+   */
   allValid(): boolean {
     const prods = this.products();
     return prods.length > 0 && prods.every(p => p.isValid);
   }
 
+  /**
+   * 시리얼 번호 저장
+   */
   async saveSerials(): Promise<void> {
     try {
       const serialUpdates = this.products().map(p => ({
@@ -325,7 +345,7 @@ export class SerialInputPage implements OnInit {
       await this.ordersStore.updateOrderSerials(this.orderId(), serialUpdates);
       
       const toast = await this.toastCtrl.create({
-        message: '시리얼 번호가 저장되었습니다.',
+        message: this.translateService.instant('COMPLETION.SERIAL.SAVE_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
@@ -333,7 +353,7 @@ export class SerialInputPage implements OnInit {
       this.router.navigate(['/tabs/completion/process', this.orderId()]);
     } catch (error) {
       const toast = await this.toastCtrl.create({
-        message: '저장 중 오류가 발생했습니다.',
+        message: this.translateService.instant('COMPLETION.SERIAL.SAVE_ERROR'),
         duration: 2000,
         color: 'danger',
       });

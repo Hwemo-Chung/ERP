@@ -5,9 +5,10 @@
  * After opt-in, biometric prompt unlocks session without password 
  * if refresh token valid; fallback path logged.
  */
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { BiometryType, NativeBiometric } from 'capacitor-native-biometric';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject } from 'rxjs';
 
 export interface BiometricConfig {
@@ -41,6 +42,8 @@ export class BiometricService {
 
   public readonly isAvailable = signal<boolean>(false);
   public readonly biometryType = signal<BiometryType | null>(null);
+
+  private readonly translate = inject(TranslateService);
 
   constructor() {
     this.initializeBiometric();
@@ -169,7 +172,7 @@ export class BiometricService {
 
     try {
       // Verify biometric
-      await this.verifyIdentity('로그인');
+      await this.verifyIdentity(this.translate.instant('AUTH.LOGIN.SIGN_IN'));
 
       // Retrieve stored credentials
       const credentials = await NativeBiometric.getCredentials({

@@ -1,6 +1,7 @@
 import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BackgroundSyncService, SyncOperation } from './background-sync.service';
 import { NetworkService } from './network.service';
 import { SyncQueueService } from './sync-queue.service';
@@ -114,13 +115,19 @@ describe('BackgroundSyncService', () => {
       Promise.resolve(new Response('{}', { status: 200 }))
     );
 
+    // Mock TranslateService
+    const translateSpy = jasmine.createSpyObj('TranslateService', ['instant']);
+    translateSpy.instant.and.callFake((key: string) => key);
+
     await TestBed.configureTestingModule({
+      imports: [TranslateModule.forRoot()],
       providers: [
         BackgroundSyncService,
         { provide: NetworkService, useValue: networkServiceSpy },
         { provide: SyncQueueService, useValue: syncQueueServiceSpy },
         { provide: UIStore, useValue: uiStoreSpy },
         { provide: SwUpdate, useValue: swUpdateSpy },
+        { provide: TranslateService, useValue: translateSpy },
       ],
     }).compileComponents();
 

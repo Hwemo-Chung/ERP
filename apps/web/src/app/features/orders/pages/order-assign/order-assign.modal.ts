@@ -24,6 +24,7 @@ import {
   IonSpinner,
   ModalController,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { checkmarkOutline, closeOutline } from 'ionicons/icons';
 
@@ -41,6 +42,7 @@ import { Installer } from '../../../../../../store/installers/installers.models'
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     IonModal,
     IonHeader,
     IonToolbar,
@@ -60,7 +62,7 @@ import { Installer } from '../../../../../../store/installers/installers.models'
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>주문 배정</ion-title>
+        <ion-title>{{ 'ORDERS.ASSIGN_MODAL.TITLE' | translate }}</ion-title>
         <ion-button slot="end" fill="clear" (click)="dismiss()">
           <ion-icon name="close-outline"></ion-icon>
         </ion-button>
@@ -78,11 +80,11 @@ import { Installer } from '../../../../../../store/installers/installers.models'
 
         <!-- Installer Selection -->
         <ion-item>
-          <ion-label position="stacked">기술자 선택</ion-label>
-          <ion-select formControlName="installerId" placeholder="기술자를 선택하세요">
+          <ion-label position="stacked">{{ 'ORDERS.ASSIGN_MODAL.INSTALLER_LABEL' | translate }}</ion-label>
+          <ion-select formControlName="installerId" [placeholder]="'ORDERS.ASSIGN_MODAL.INSTALLER_PLACEHOLDER' | translate">
             @for (installer of installersStore.filteredInstallers(); track installer.id) {
               <ion-select-option [value]="installer.id">
-                {{ installer.name }} ({{ installer.assignedOrderCount || 0 }}건)
+                {{ installer.name }} ({{ installer.assignedOrderCount || 0 }}{{ 'COMMON.COUNT_SUFFIX' | translate }})
               </ion-select-option>
             }
           </ion-select>
@@ -90,7 +92,7 @@ import { Installer } from '../../../../../../store/installers/installers.models'
 
         <!-- Appointment Date -->
         <ion-item>
-          <ion-label position="stacked">약속 날짜</ion-label>
+          <ion-label position="stacked">{{ 'ORDERS.ASSIGN_MODAL.DATE_LABEL' | translate }}</ion-label>
           <ion-datetime-button datetime="appointmentDate"></ion-datetime-button>
           <ion-datetime
             id="appointmentDate"
@@ -102,8 +104,8 @@ import { Installer } from '../../../../../../store/installers/installers.models'
 
         <!-- Appointment Slot (Optional) -->
         <ion-item>
-          <ion-label position="stacked">시간대 (선택)</ion-label>
-          <ion-select formControlName="appointmentSlot" placeholder="시간대 선택">
+          <ion-label position="stacked">{{ 'ORDERS.ASSIGN_MODAL.SLOT_LABEL' | translate }}</ion-label>
+          <ion-select formControlName="appointmentSlot" [placeholder]="'ORDERS.ASSIGN_MODAL.SLOT_PLACEHOLDER' | translate">
             <ion-select-option value="09:00">09:00 - 12:00</ion-select-option>
             <ion-select-option value="12:00">12:00 - 15:00</ion-select-option>
             <ion-select-option value="15:00">15:00 - 18:00</ion-select-option>
@@ -112,7 +114,7 @@ import { Installer } from '../../../../../../store/installers/installers.models'
 
         <!-- Error message -->
         @if (form.get('installerId')?.hasError('required') && form.get('installerId')?.touched) {
-          <div class="error-message">기술자를 선택해주세요</div>
+          <div class="error-message">{{ 'ORDERS.ASSIGN_MODAL.ERROR.INSTALLER_REQUIRED' | translate }}</div>
         }
 
         @if (isSubmitting()) {
@@ -126,11 +128,11 @@ import { Installer } from '../../../../../../store/installers/installers.models'
     <ion-footer>
       <ion-toolbar>
         <ion-button slot="start" fill="outline" (click)="dismiss()">
-          취소
+          {{ 'COMMON.BUTTON.CANCEL' | translate }}
         </ion-button>
         <ion-button slot="end" [disabled]="!form.valid || isSubmitting()" (click)="onSubmit()">
           <ion-icon name="checkmark-outline"></ion-icon>
-          배정
+          {{ 'ORDERS.ASSIGN_MODAL.ASSIGN_BUTTON' | translate }}
         </ion-button>
       </ion-toolbar>
     </ion-footer>
@@ -181,6 +183,7 @@ import { Installer } from '../../../../../../store/installers/installers.models'
 export class OrderAssignModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly modalCtrl = inject(ModalController);
+  private readonly translate = inject(TranslateService);
   readonly ordersStore = inject(OrdersStore);
   readonly installersStore = inject(InstallersStore);
   readonly uiStore = inject(UIStore);
@@ -229,16 +232,18 @@ export class OrderAssignModal implements OnInit {
     if (!this.form.valid || !this.order) return;
 
     this.isSubmitting.set(true);
+    const successMsg = this.translate.instant('ORDERS.ASSIGN_MODAL.SUCCESS.ASSIGNED');
+    const errorMsg = this.translate.instant('ORDERS.ASSIGN_MODAL.ERROR.ASSIGN_FAILED');
 
     try {
       const { installerId, appointmentDate } = this.form.value;
 
       await this.ordersStore.assignOrder(this.order.id, installerId, appointmentDate);
 
-      this.uiStore.showToast('주문이 배정되었습니다', 'success');
+      this.uiStore.showToast(successMsg, 'success');
       await this.modalCtrl.dismiss(null, 'confirm');
     } catch (error) {
-      this.uiStore.showToast('배정 실패', 'danger');
+      this.uiStore.showToast(errorMsg, 'danger');
     } finally {
       this.isSubmitting.set(false);
     }
