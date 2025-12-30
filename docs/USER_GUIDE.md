@@ -132,9 +132,9 @@ pnpm web:dev
 ```
 Host: localhost
 Port: 5432
-Database: logistics_erp
-Username: postgres
-Password: postgres
+Database: erp_logistics
+Username: erp_user
+Password: erp_password
 ```
 
 ### 3.2 Prisma Studio (GUI 도구)
@@ -154,13 +154,13 @@ pnpm db:studio
 ### 3.3 CLI로 데이터베이스 접속
 ```bash
 # Docker 컨테이너 내 psql 접속
-docker exec -it erp-postgres psql -U postgres -d logistics_erp
+docker exec -it erp_postgres psql -U erp_user -d erp_logistics
 
 # 자주 사용하는 SQL 명령어
 \dt                    # 모든 테이블 목록
-\d "Order"             # Order 테이블 구조
-SELECT * FROM "User";  # 사용자 목록 조회
-SELECT * FROM "Order" LIMIT 10;  # 주문 10건 조회
+\d orders              # orders 테이블 구조
+SELECT * FROM users;   # 사용자 목록 조회
+SELECT * FROM orders LIMIT 10;  # 주문 10건 조회
 \q                     # 종료
 ```
 
@@ -441,4 +441,4 @@ pnpm lint
 
 ---
 
-*Last Updated: 2025-12-27*
+*Last Updated: 2025-12-30*

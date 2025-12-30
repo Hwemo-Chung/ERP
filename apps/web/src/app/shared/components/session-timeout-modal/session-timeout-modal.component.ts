@@ -7,7 +7,7 @@
  * - 재로그인 프롬프트 (폼 데이터 손실 없이)
  * - 세션 연장 옵션
  */
-import { Component, ChangeDetectionStrategy, inject, signal, input, output, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, input, output, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -25,12 +25,13 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  timeOutline, 
-  lockClosedOutline, 
+import {
+  timeOutline,
+  lockClosedOutline,
   logInOutline,
   refreshOutline,
 } from 'ionicons/icons';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-session-timeout-modal',
@@ -223,6 +224,8 @@ import {
   `]
 })
 export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
+
   isOpen = input<boolean>(false);
   warningSeconds = input<number>(300); // 5분 경고
 
@@ -233,6 +236,9 @@ export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
   isLoading = signal(false);
   errorMessage = signal('');
   password = '';
+
+  // Get current user's loginId for re-authentication
+  protected readonly currentUsername = computed(() => this.authService.user()?.loginId ?? '');
 
   private remainingTime = signal(300);
   private intervalId: any;
@@ -285,17 +291,30 @@ export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
   async onRelogin() {
     if (!this.password) return;
 
+    const username = this.currentUsername();
+    if (!username) {
+      this.errorMessage.set('사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     try {
-      // TODO: 실제 재인증 로직 연결
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 성공 시
-      this.reloginSuccess.emit();
+      const success = await this.authService.login({
+        username,
+        password: this.password,
+      });
+
+      if (success) {
+        this.password = '';
+        this.reloginSuccess.emit();
+      } else {
+        const error = this.authService.error();
+        this.errorMessage.set(error || '비밀번호가 올바르지 않습니다.');
+      }
     } catch (error) {
-      this.errorMessage.set('비밀번호가 올바르지 않습니다.');
+      this.errorMessage.set('인증 중 오류가 발생했습니다. 다시 시도해 주세요.');
     } finally {
       this.isLoading.set(false);
     }

@@ -21,7 +21,9 @@ import {
   IonRefresherContent,
   IonSpinner,
   RefresherCustomEvent,
+  ModalController,
 } from '@ionic/angular/standalone';
+import { OrderFilterModal, FilterContext } from '../../../../shared/components/order-filter/order-filter.modal';
 import { addIcons } from 'ionicons';
 import {
   filterOutline,
@@ -383,6 +385,7 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all' | 'issued' | 'not-iss
 export class CompletionListPage implements OnInit {
   protected readonly ordersStore = inject(OrdersStore);
   private readonly authService = inject(AuthService);
+  private readonly modalController = inject(ModalController);
 
   protected readonly currentFilter = signal<CompletionFilter>('all');
   protected readonly searchQuery = signal('');
@@ -491,8 +494,24 @@ export class CompletionListPage implements OnInit {
     event.target.complete();
   }
 
-  openFilter(): void {
-    console.log('Open filter modal');
+  async openFilter(): Promise<void> {
+    const modal = await this.modalController.create({
+      component: OrderFilterModal,
+      componentProps: {
+        context: 'completion' as FilterContext,
+        currentFilters: this.ordersStore.filters(),
+        installers: [],
+        branches: [],
+      },
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'apply' && data) {
+      this.ordersStore.setFilters(data);
+      await this.loadData();
+    }
   }
 
   getStatusColor(status: OrderStatus): string {

@@ -1,6 +1,6 @@
 # Logistics ERP 프로젝트 진행 상황
 
-> 📅 **마지막 업데이트**: 2025-12-26
+> 📅 **마지막 업데이트**: 2025-12-30
 > 🔄 **자동 생성**: `pnpm progress` 명령으로 재생성 가능
 
 ---
@@ -142,6 +142,9 @@ FR 구현:      ████████████████████ 100
 - [x] Capacitor 서비스 구현 (BarcodeScannerService, CameraService)
 - [x] SignaturePadComponent 구현 (확인서 서명 기능)
 - [x] 모든 TODO 항목 제거 완료
+- [x] Order Filter Modal 구현 (배정/완료 리스트 필터링) - 2025-12-30
+- [x] Session Re-authentication Logic 구현 (세션 타임아웃 후 재인증) - 2025-12-30
+- [x] 문서 정리 및 아카이브 폴더 정리 - 2025-12-30
 - [ ] Store 연결 - Reports 모듈 API 연동
 - [ ] Store 연결 - Settings 모듈 기능 구현
 - [ ] 오프라인 지원 (IndexedDB + Sync Queue)
