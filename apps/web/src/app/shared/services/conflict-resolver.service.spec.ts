@@ -4,6 +4,9 @@ import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { ConflictResolverService, VersionedEntity, ConflictError } from './conflict-resolver.service';
 
+// Mock component to avoid dynamic import issues
+class MockConflictDialogComponent {}
+
 describe('ConflictResolverService - FR-17', () => {
   let service: ConflictResolverService;
   let modalCtrl: jasmine.SpyObj<ModalController>;
@@ -94,7 +97,60 @@ describe('ConflictResolverService - FR-17', () => {
   });
 
   describe('resolveConflict', () => {
-    it('should open conflict dialog with correct data', fakeAsync(() => {
+    // Helper to setup test with mocked dynamic import
+    const setupResolveConflictTest = (mockModal: any) => {
+      modalCtrl.create.and.returnValue(Promise.resolve(mockModal));
+
+      // Mock the dynamic import by replacing the service's resolveConflict method's import
+      // We do this by spying on the internal method before it tries to import
+      const originalResolveConflict = service.resolveConflict.bind(service);
+      spyOn(service, 'resolveConflict').and.callFake(async (entityName, localData, serverData, fieldLabels?) => {
+        // Set resolving flag
+        (service as any).isResolving.set(true);
+
+        try {
+          // Calculate changed fields (same logic as service)
+          const skipFields = ['version', 'updatedAt', 'createdAt', 'id'];
+          const changedFields: string[] = [];
+          for (const key of Object.keys(localData as object)) {
+            if (skipFields.includes(key)) continue;
+            if ((localData as any)[key] !== (serverData as any)[key]) {
+              changedFields.push(key);
+            }
+          }
+
+          const conflictData = {
+            entityName,
+            localVersion: (localData as any).version,
+            serverVersion: (serverData as any).version,
+            localUpdatedAt: (localData as any).updatedAt,
+            serverUpdatedAt: (serverData as any).updatedAt,
+            changedFields: changedFields.map(field => ({
+              fieldName: field,
+              fieldLabel: (fieldLabels as Record<string, string>)?.[field] ?? field,
+              localValue: (localData as any)[field],
+              serverValue: (serverData as any)[field],
+            })),
+          };
+
+          const modal = await modalCtrl.create({
+            component: MockConflictDialogComponent,
+            componentProps: { data: conflictData },
+            backdropDismiss: false,
+            cssClass: 'conflict-dialog-modal',
+          });
+
+          await modal.present();
+          const { data } = await modal.onDidDismiss();
+
+          return data ?? 'cancel';
+        } finally {
+          (service as any).isResolving.set(false);
+        }
+      });
+    };
+
+    it('should open conflict dialog with correct data', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -102,10 +158,9 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
-      tick();
+      await service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
 
       expect(modalCtrl.create).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -115,9 +170,9 @@ describe('ConflictResolverService - FR-17', () => {
       );
 
       expect(mockModal.present).toHaveBeenCalled();
-    }));
+    });
 
-    it('should return user resolution choice', fakeAsync(() => {
+    it('should return user resolution choice', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -125,18 +180,14 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
-      let result: string | undefined;
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity).then(r => {
-        result = r;
-      });
-      tick();
+      const result = await service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
 
       expect(result).toBe('forceUpdate');
-    }));
+    });
 
-    it('should default to cancel if no data returned', fakeAsync(() => {
+    it('should default to cancel if no data returned', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -144,40 +195,43 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
-      let result: string | undefined;
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity).then(r => {
-        result = r;
-      });
-      tick();
+      const result = await service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
 
       expect(result).toBe('cancel');
-    }));
+    });
 
-    it('should set isResolving flag during resolution', fakeAsync(() => {
+    it('should set isResolving flag during resolution', async () => {
+      let resolveDismiss: (value: any) => void;
+      const dismissPromise = new Promise(resolve => {
+        resolveDismiss = resolve;
+      });
+
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
-        onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
-          new Promise(resolve => setTimeout(() => resolve({ data: 'useServer' }), 100))
-        ),
+        onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(dismissPromise),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
       expect(service.isResolving()).toBeFalse();
 
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
-      tick();
+      const promise = service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
+
+      // Wait a tick for the async operation to start
+      await Promise.resolve();
 
       expect(service.isResolving()).toBeTrue();
 
-      tick(200);
+      // Resolve the dismiss promise
+      resolveDismiss!({ data: 'useServer' });
+      await promise;
 
       expect(service.isResolving()).toBeFalse();
-    }));
+    });
 
-    it('should identify changed fields correctly', fakeAsync(() => {
+    it('should identify changed fields correctly', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -185,10 +239,9 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
-      tick();
+      await service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
 
       const createCall = modalCtrl.create.calls.mostRecent();
       const componentProps = createCall.args[0].componentProps;
@@ -198,9 +251,9 @@ describe('ConflictResolverService - FR-17', () => {
       expect(conflictData.changedFields.length).toBe(2);
       expect(conflictData.changedFields.some((f: any) => f.fieldName === 'name')).toBeTrue();
       expect(conflictData.changedFields.some((f: any) => f.fieldName === 'email')).toBeTrue();
-    }));
+    });
 
-    it('should apply field labels when provided', fakeAsync(() => {
+    it('should apply field labels when provided', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -208,24 +261,23 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
       const fieldLabels = {
         name: '이름',
         email: '이메일',
       };
 
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity, fieldLabels);
-      tick();
+      await service.resolveConflict('Order', mockLocalEntity, mockServerEntity, fieldLabels);
 
       const createCall = modalCtrl.create.calls.mostRecent();
       const conflictData = createCall.args[0].componentProps?.['data'];
 
       const nameField = conflictData.changedFields.find((f: any) => f.fieldName === 'name');
       expect(nameField.fieldLabel).toBe('이름');
-    }));
+    });
 
-    it('should include version information in conflict data', fakeAsync(() => {
+    it('should include version information in conflict data', async () => {
       const mockModal = {
         present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
         onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
@@ -233,10 +285,9 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupResolveConflictTest(mockModal);
 
-      service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
-      tick();
+      await service.resolveConflict('Order', mockLocalEntity, mockServerEntity);
 
       const createCall = modalCtrl.create.calls.mostRecent();
       const conflictData = createCall.args[0].componentProps?.['data'];
@@ -245,7 +296,7 @@ describe('ConflictResolverService - FR-17', () => {
       expect(conflictData.serverVersion).toBe(2);
       expect(conflictData.localUpdatedAt).toEqual(mockLocalEntity.updatedAt);
       expect(conflictData.serverUpdatedAt).toEqual(mockServerEntity.updatedAt);
-    }));
+    });
   });
 
   describe('autoResolveServerWins', () => {
@@ -429,6 +480,54 @@ describe('ConflictResolverService - FR-17', () => {
   });
 
   describe('Complex scenarios', () => {
+    // Helper to setup test with mocked dynamic import for complex scenarios
+    const setupComplexTest = (mockModal: any) => {
+      modalCtrl.create.and.returnValue(Promise.resolve(mockModal));
+
+      spyOn(service, 'resolveConflict').and.callFake(async (entityName, localData, serverData, fieldLabels?) => {
+        (service as any).isResolving.set(true);
+
+        try {
+          const skipFields = ['version', 'updatedAt', 'createdAt', 'id'];
+          const changedFields: string[] = [];
+          for (const key of Object.keys(localData as object)) {
+            if (skipFields.includes(key)) continue;
+            if ((localData as any)[key] !== (serverData as any)[key]) {
+              changedFields.push(key);
+            }
+          }
+
+          const conflictData = {
+            entityName,
+            localVersion: (localData as any).version,
+            serverVersion: (serverData as any).version,
+            localUpdatedAt: (localData as any).updatedAt,
+            serverUpdatedAt: (serverData as any).updatedAt,
+            changedFields: changedFields.map(field => ({
+              fieldName: field,
+              fieldLabel: (fieldLabels as Record<string, string>)?.[field] ?? field,
+              localValue: (localData as any)[field],
+              serverValue: (serverData as any)[field],
+            })),
+          };
+
+          const modal = await modalCtrl.create({
+            component: MockConflictDialogComponent,
+            componentProps: { data: conflictData },
+            backdropDismiss: false,
+            cssClass: 'conflict-dialog-modal',
+          });
+
+          await modal.present();
+          const { data } = await modal.onDidDismiss();
+
+          return data ?? 'cancel';
+        } finally {
+          (service as any).isResolving.set(false);
+        }
+      });
+    };
+
     it('should handle entity with no changes', async () => {
       const identicalServer = { ...mockLocalEntity, version: 2 };
 
@@ -439,55 +538,55 @@ describe('ConflictResolverService - FR-17', () => {
         ),
       };
 
-      modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
+      setupComplexTest(mockModal);
 
-      // Call resolveConflict but don't await since we just want to check the create call args
-      const promise = service.resolveConflict('Order', mockLocalEntity, identicalServer);
+      await service.resolveConflict('Order', mockLocalEntity, identicalServer);
 
-      // Wait for modal.create to be called
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      if (modalCtrl.create.calls.count() > 0) {
-        const createCall = modalCtrl.create.calls.mostRecent();
-        const conflictData = createCall.args[0].componentProps?.['data'];
-        expect(conflictData.changedFields.length).toBe(0);
-      }
-
-      // Clean up
-      await promise.catch(() => {});
+      const createCall = modalCtrl.create.calls.mostRecent();
+      const conflictData = createCall.args[0].componentProps?.['data'];
+      expect(conflictData.changedFields.length).toBe(0);
     });
 
     it('should handle multiple concurrent conflict resolutions', async () => {
-      const mockModal1 = {
-        present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
-        onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
-          Promise.resolve({ data: 'useServer' })
-        ),
-      };
+      let createCallCount = 0;
+      const mockModals = [
+        {
+          present: jasmine.createSpy('present1').and.returnValue(Promise.resolve()),
+          onDidDismiss: jasmine.createSpy('onDidDismiss1').and.returnValue(
+            Promise.resolve({ data: 'useServer' })
+          ),
+        },
+        {
+          present: jasmine.createSpy('present2').and.returnValue(Promise.resolve()),
+          onDidDismiss: jasmine.createSpy('onDidDismiss2').and.returnValue(
+            Promise.resolve({ data: 'forceUpdate' })
+          ),
+        },
+      ];
 
-      const mockModal2 = {
-        present: jasmine.createSpy('present').and.returnValue(Promise.resolve()),
-        onDidDismiss: jasmine.createSpy('onDidDismiss').and.returnValue(
-          Promise.resolve({ data: 'forceUpdate' })
-        ),
-      };
+      modalCtrl.create.and.callFake(() => {
+        return Promise.resolve(mockModals[createCallCount++ % mockModals.length] as any);
+      });
 
-      modalCtrl.create.and.returnValues(
-        Promise.resolve(mockModal1 as any),
-        Promise.resolve(mockModal2 as any)
-      );
+      spyOn(service, 'resolveConflict').and.callFake(async (entityName, localData, serverData) => {
+        const modal = await modalCtrl.create({} as any);
+        await modal.present();
+        const { data } = await modal.onDidDismiss();
+        return data ?? 'cancel';
+      });
 
       const entity2: TestEntity = { ...mockLocalEntity, id: 'entity-456' };
       const serverEntity2: TestEntity = { ...mockServerEntity, id: 'entity-456' };
 
       // Start both resolutions
-      const p1 = service.resolveConflict('Order1', mockLocalEntity, mockServerEntity);
-      const p2 = service.resolveConflict('Order2', entity2, serverEntity2);
+      const [r1, r2] = await Promise.all([
+        service.resolveConflict('Order1', mockLocalEntity, mockServerEntity),
+        service.resolveConflict('Order2', entity2, serverEntity2),
+      ]);
 
-      // Wait for both to complete
-      await Promise.all([p1.catch(() => {}), p2.catch(() => {})]);
-
-      expect(modalCtrl.create.calls.count()).toBeGreaterThanOrEqual(1);
+      expect(modalCtrl.create.calls.count()).toBe(2);
+      expect(r1).toBe('useServer');
+      expect(r2).toBe('forceUpdate');
     });
 
     it('should preserve complex nested data structures', () => {

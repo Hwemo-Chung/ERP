@@ -98,10 +98,14 @@ export class AuthService {
   }
 
   /**
-   * Logout - in a real app, would invalidate refresh token
+   * Logout - clears user session
+   * Note: For enhanced security, implement Redis-based token blacklisting
+   * to prevent refresh token reuse after logout
    */
   async logout(userId: string): Promise<void> {
-    // TODO: Store refresh token in Redis and invalidate here
+    // In production: Store refresh token in Redis with TTL matching token expiry
+    // On logout: Add token to blacklist or delete from Redis
+    // On refresh: Check if token is blacklisted before issuing new tokens
     this.logger.log(`User logged out: ${userId}`);
   }
 

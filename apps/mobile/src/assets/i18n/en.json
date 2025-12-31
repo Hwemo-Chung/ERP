@@ -324,5 +324,12 @@
   },
   "EXPORT": {
     "DOWNLOAD": "Download"
+  },
+  "SIGNATURE": {
+    "TITLE": "Signature",
+    "CANCEL": "Cancel",
+    "CLEAR": "Clear",
+    "CONFIRM": "Confirm",
+    "HINT": "Sign here"
   }
 }

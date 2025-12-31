@@ -5,6 +5,18 @@ import { AuthService, User, AuthTokens } from './auth.service';
 import { Preferences, __configureMock } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 
+// Helper function to create a valid JWT token with expiry
+function createMockJwt(expiresInSeconds: number = 3600): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({
+    sub: 'user-123',
+    exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
+    iat: Math.floor(Date.now() / 1000),
+  }));
+  const signature = 'mock-signature';
+  return `${header}.${payload}.${signature}`;
+}
+
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
@@ -19,14 +31,18 @@ describe('AuthService', () => {
     locale: 'ko',
   };
 
-  const mockTokens: AuthTokens = {
-    accessToken: 'mock-access-token',
-    refreshToken: 'mock-refresh-token',
-  };
+  // Use valid JWT format tokens (expires in 1 hour)
+  let mockTokens: AuthTokens;
 
   beforeEach(async () => {
     // Reset mock to default behavior
     __configureMock.resetMocks();
+
+    // Generate fresh valid JWT tokens for each test
+    mockTokens = {
+      accessToken: createMockJwt(3600),  // Expires in 1 hour
+      refreshToken: createMockJwt(86400), // Expires in 24 hours
+    };
 
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
@@ -242,6 +258,21 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
+    // Initialize authenticated state before each logout test
+    beforeEach(fakeAsync(() => {
+      __configureMock.setGetMock(async (opts) => {
+        switch (opts.key) {
+          case 'erp_access_token': return { value: mockTokens.accessToken };
+          case 'erp_refresh_token': return { value: mockTokens.refreshToken };
+          case 'erp_user': return { value: JSON.stringify(mockUser) };
+          default: return { value: null };
+        }
+      });
+
+      service.initialize();
+      tick();
+    }));
+
     it('should clear storage and navigate to login', fakeAsync(() => {
       const removedKeys: string[] = [];
 
@@ -250,6 +281,7 @@ describe('AuthService', () => {
       });
 
       service.logout();
+      tick(); // Allow the logout to start
 
       const req = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
       req.flush({});
@@ -272,6 +304,7 @@ describe('AuthService', () => {
       });
 
       service.logout();
+      tick(); // Allow the logout to start
 
       const req = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
       req.flush({}, { status: 500, statusText: 'Server Error' });
@@ -341,11 +374,16 @@ describe('AuthService', () => {
     }));
 
     it('should return false when no refresh token exists', fakeAsync(async () => {
-      // Reset to unauthenticated state
+      // Reset to unauthenticated state by calling logout
       service.logout();
-      httpMock.expectOne(`${environment.apiUrl}/auth/logout`).flush({});
+      tick(); // Allow logout to start
+
+      // Flush the logout request that was made since we had tokens
+      const logoutReq = httpMock.expectOne(`${environment.apiUrl}/auth/logout`);
+      logoutReq.flush({});
       tick();
 
+      // Now refreshTokens should return false since there are no tokens
       const result = await service.refreshTokens();
 
       expect(result).toBeFalse();

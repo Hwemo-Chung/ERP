@@ -324,5 +324,12 @@
   },
   "EXPORT": {
     "DOWNLOAD": "다운로드"
+  },
+  "SIGNATURE": {
+    "TITLE": "서명",
+    "CANCEL": "취소",
+    "CLEAR": "지우기",
+    "CONFIRM": "확인",
+    "HINT": "여기에 서명해주세요"
   }
 }

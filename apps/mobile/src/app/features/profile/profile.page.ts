@@ -62,6 +62,7 @@ import { AuthService } from '@core/services/auth.service';
 import { SyncQueueService } from '@core/services/sync-queue.service';
 import { NetworkService } from '@core/services/network.service';
 import { TranslationService, SupportedLanguage } from '@core/services/translation.service';
+import { NotificationsService } from '@core/services/notifications.service';
 import { environment } from '@env/environment';
 import { getRoleLabel, getRoleColor } from '@shared/constants/roles';
 import {
@@ -460,6 +461,7 @@ export class ProfilePage implements OnInit {
   protected readonly t = inject(TranslationService);
   private readonly alertCtrl = inject(AlertController);
   private readonly modalCtrl = inject(ModalController);
+  private readonly notificationsService = inject(NotificationsService);
 
   protected readonly version = environment.appVersion;
   protected readonly environmentKey = environment.production
@@ -670,14 +672,65 @@ export class ProfilePage implements OnInit {
   }
 
   /**
-   * Save notification preferences to localStorage
+   * Save notification preferences to localStorage and sync with backend
    */
-  private saveNotificationPreferences(): void {
+  private async saveNotificationPreferences(): Promise<void> {
+    const prefs = this.notificationPrefs();
+
+    // Save to localStorage for offline access
     localStorage.setItem(
       this.STORAGE_KEYS.NOTIFICATIONS,
-      JSON.stringify(this.notificationPrefs())
+      JSON.stringify(prefs)
     );
-    // TODO: Sync with backend API to store user preferences
-    // TODO: Update push notification subscriptions via Capacitor
+
+    // Sync with backend API if online
+    if (!this.networkService.isOffline()) {
+      try {
+        // Convert notification preferences to API format
+        const apiSettings = {
+          reassign: prefs.orderAssignment,
+          delay: prefs.orderStatusChange,
+          customer: prefs.customerRequest,
+          pushEnabled: true, // Always enabled if any category is enabled
+        };
+
+        await this.notificationsService.updateSettings(apiSettings);
+      } catch (error) {
+        console.error('[Profile] Failed to sync notification preferences:', error);
+        // Preferences are saved locally, will sync on next attempt
+      }
+    }
+
+    // Update push notification subscription via Capacitor (if available)
+    this.updatePushSubscription(prefs);
+  }
+
+  /**
+   * Update push notification subscription based on preferences
+   */
+  private async updatePushSubscription(prefs: NotificationPreferences): Promise<void> {
+    try {
+      // Dynamic import to avoid SSR issues
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+
+      // Check if any notification is enabled
+      const anyEnabled = Object.values(prefs).some(v => v === true);
+
+      if (anyEnabled) {
+        // Request permission and register for push if not already done
+        const permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive !== 'granted') {
+          const result = await PushNotifications.requestPermissions();
+          if (result.receive === 'granted') {
+            await PushNotifications.register();
+          }
+        }
+      }
+      // Note: Unregistering push notifications when all are disabled
+      // is typically not needed as the server-side filtering handles this
+    } catch (error) {
+      // Push notifications not available (web or permission denied)
+      console.debug('[Profile] Push notifications not available:', error);
+    }
   }
 }

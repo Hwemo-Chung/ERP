@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Query, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Query, Param, UseGuards, HttpCode, HttpStatus, Res, StreamableFile } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse, ApiProduces } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -165,6 +166,29 @@ export class ReportsController {
   @ApiOperation({ summary: 'Get export status and download URL' })
   getExport(@Param('exportId') exportId: string) {
     return this.reportsService.getExport(exportId);
+  }
+
+  @Get('export/:orderId/download')
+  @ApiOperation({ summary: 'Download PDF installation confirmation' })
+  @ApiProduces('application/pdf')
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file',
+    content: { 'application/pdf': {} },
+  })
+  async downloadPdf(
+    @Param('orderId') orderId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const pdfBuffer = await this.reportsService.getPdfBuffer(orderId);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="installation-confirmation-${orderId}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    return new StreamableFile(pdfBuffer);
   }
 
   @Get('install-confirmation')

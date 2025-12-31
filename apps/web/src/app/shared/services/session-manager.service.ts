@@ -11,6 +11,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { ModalController } from '@ionic/angular/standalone';
+import { AuthService } from '@core/services/auth.service';
 
 export interface SessionState {
   isAuthenticated: boolean;
@@ -27,8 +28,9 @@ const STORAGE_KEY = 'session_preserved_data';
   providedIn: 'root'
 })
 export class SessionManagerService {
-  private router = inject(Router);
-  private modalCtrl = inject(ModalController);
+  private readonly router = inject(Router);
+  private readonly modalCtrl = inject(ModalController);
+  private readonly authService = inject(AuthService);
 
   // State
   private _state = signal<SessionState>({
@@ -139,11 +141,31 @@ export class SessionManagerService {
 
   /**
    * 재인증 후 세션 복구
+   * FR-19: Refresh tokens and restore session with preserved form data
    */
   async restoreSession(): Promise<boolean> {
-    // TODO: 토큰 갱신 API 호출
-    this.startSession();
-    return true;
+    try {
+      // Call token refresh API
+      const success = await this.authService.refreshTokens();
+
+      if (success) {
+        // Restart session tracking
+        this.startSession();
+
+        // Restore any preserved form data from storage
+        this.loadPreservedData();
+
+        return true;
+      } else {
+        // Token refresh failed - redirect to login
+        await this.authService.logout();
+        return false;
+      }
+    } catch (error) {
+      console.error('[SessionManager] Failed to restore session:', error);
+      await this.authService.logout();
+      return false;
+    }
   }
 
   // Private methods
