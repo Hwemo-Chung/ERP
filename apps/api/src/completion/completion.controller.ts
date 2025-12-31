@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { CompletionService } from './completion.service';
 import { AmendCompletionDto } from './dto/amend-completion.dto';
+import { CompletionRequestDto, WasteLogRequestDto } from './dto/completion-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -57,19 +58,19 @@ export class CompletionController {
   @Post('complete')
   @HttpCode(HttpStatus.OK)
   @Roles('INSTALLER', 'BRANCH_MANAGER', 'HQ_ADMIN')
+  @ApiOperation({
+    summary: 'Complete order with serial numbers',
+    description: 'Complete order by capturing serial numbers and optionally logging waste pickups'
+  })
+  @ApiParam({ name: 'orderId', description: 'Order ID' })
   async completeOrder(
     @Param('orderId') orderId: string,
-    @Body() dto: any,
+    @Body() dto: CompletionRequestDto,
     @CurrentUser() user: User,
-  ): Promise<any> {
+  ) {
     this.logger.log(
       `Completion requested for order ${orderId} by user ${user.id}`,
     );
-
-    // Validate request
-    if (!dto.lines || !Array.isArray(dto.lines)) {
-      throw new Error('lines must be an array');
-    }
 
     return this.completionService.completeOrder(orderId, dto, user.id);
   }
@@ -89,11 +90,16 @@ export class CompletionController {
   @Post('waste')
   @HttpCode(HttpStatus.CREATED)
   @Roles('INSTALLER', 'BRANCH_MANAGER', 'HQ_ADMIN')
+  @ApiOperation({
+    summary: 'Log waste pickup',
+    description: 'Record waste pickup entries for an order (separate from completion)'
+  })
+  @ApiParam({ name: 'orderId', description: 'Order ID' })
   async logWaste(
     @Param('orderId') orderId: string,
-    @Body() dto: any,
+    @Body() dto: WasteLogRequestDto,
     @CurrentUser() user: User,
-  ): Promise<any> {
+  ) {
     this.logger.log(`Waste pickup logged for order ${orderId}`);
 
     return this.completionService.logWastePickup(orderId, dto, user.id);

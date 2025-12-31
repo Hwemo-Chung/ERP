@@ -11,8 +11,14 @@ interface ApiResponse {
  * API Response Interceptor
  * Unwraps the standard API response format: { success, data, timestamp }
  * Extracts the 'data' field for cleaner service/store code
+ * Skips i18n translation files and other static assets
  */
 export const apiResponseInterceptor: HttpInterceptorFn = (req, next) => {
+  // Skip interceptor for i18n files and other assets
+  if (req.url.includes('/assets/i18n/') || req.url.includes('/assets/')) {
+    return next(req);
+  }
+
   return next(req).pipe(
     map((event) => {
       if (event instanceof HttpResponse && event.body) {

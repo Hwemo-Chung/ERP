@@ -419,6 +419,55 @@ echo ""
 # ============================================================================
 log_info "Step 8: 개발 서버 시작..."
 
+# 로그 디렉토리 생성
+LOG_DIR="$(pwd)/logs"
+mkdir -p "$LOG_DIR"
+
+# PID 파일
+PID_FILE="$(pwd)/.pids"
+> "$PID_FILE"  # 초기화
+
+# 포트 사용 확인 함수
+check_port() {
+    local port=$1
+    if lsof -i :$port >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 서비스 대기 함수
+wait_for_service() {
+    local url=$1
+    local name=$2
+    local max_attempts=${3:-60}
+    local attempt=1
+
+    echo -ne "${YELLOW}$name 시작 대기 중...${NC}"
+    while [ $attempt -le $max_attempts ]; do
+        if curl -s "$url" >/dev/null 2>&1; then
+            echo -e " ${GREEN}✓${NC}"
+            return 0
+        fi
+        sleep 1
+        attempt=$((attempt + 1))
+        echo -n "."
+    done
+    echo -e " ${RED}✗ (타임아웃)${NC}"
+    return 1
+}
+
+# 포트 정리 함수
+kill_port() {
+    local port=$1
+    if check_port $port; then
+        log_warn "포트 $port 사용 중 - 기존 프로세스 종료..."
+        lsof -ti :$port | xargs kill -9 2>/dev/null || true
+        sleep 2
+    fi
+}
+
 echo ""
 echo -e "${BLUE}어떤 개발 환경을 시작하시겠습니까?${NC}"
 
@@ -430,21 +479,55 @@ if echo "$APP_TYPES" | grep -q "mobile"; then
         echo "2. 모바일 버전만 - http://localhost:4201"
         echo "3. 웹 + 모바일 (두 개의 포트에서) - 4200 + 4201"
         echo "4. 백엔드만 (API) - http://localhost:3000"
-        echo "5. 전체 (웹 + 모바일 + 백엔드) - 3개의 터미널"
+        echo "5. 전체 (웹 + 모바일 + 백엔드) - 백그라운드 실행"
         echo "6. 수동 실행"
     else
         echo "2. 백엔드만 (API) - http://localhost:3000"
-        echo "3. 전체 (모바일 + 백엔드) - 2개의 터미널"
+        echo "3. 전체 (모바일 + 백엔드) - 백그라운드 실행"
         echo "4. 수동 실행"
     fi
 else
     echo "1. 백엔드만 (API) - http://localhost:3000"
-    echo "2. 전체 (웹 + 백엔드) - 2개의 터미널"
+    echo "2. 전체 (웹 + 백엔드) - 백그라운드 실행"
     echo "3. 수동 실행"
 fi
 
 echo ""
 read -p "선택: " dev_choice
+
+# API 서버 시작 함수 (백그라운드)
+start_api() {
+    kill_port 3000
+    log_info "API 서버 시작 중..."
+    cd "$(pwd)/apps/api"
+    pnpm run build > /dev/null 2>&1
+    nohup node --enable-source-maps dist/main.js > "$LOG_DIR/api.log" 2>&1 &
+    echo $! >> "$PID_FILE"
+    cd - > /dev/null
+    wait_for_service "http://localhost:3000/api/v1/health" "API 서버" 60
+}
+
+# 웹 앱 시작 함수 (백그라운드)
+start_web() {
+    kill_port 4200
+    log_info "웹 앱 시작 중..."
+    cd "$(pwd)/apps/web"
+    nohup pnpm run start > "$LOG_DIR/web.log" 2>&1 &
+    echo $! >> "$PID_FILE"
+    cd - > /dev/null
+    wait_for_service "http://localhost:4200" "웹 앱" 120
+}
+
+# 모바일 앱 시작 함수 (백그라운드)
+start_mobile() {
+    kill_port 4201
+    log_info "모바일 앱 시작 중..."
+    cd "$(pwd)/apps/mobile"
+    nohup pnpm ng serve --port 4201 > "$LOG_DIR/mobile.log" 2>&1 &
+    echo $! >> "$PID_FILE"
+    cd - > /dev/null
+    wait_for_service "http://localhost:4201" "모바일 앱" 120
+}
 
 # 선택된 앱 타입에 따른 처리
 if echo "$APP_TYPES" | grep -q "web" && echo "$APP_TYPES" | grep -q "mobile"; then
@@ -452,59 +535,34 @@ if echo "$APP_TYPES" | grep -q "web" && echo "$APP_TYPES" | grep -q "mobile"; th
     case $dev_choice in
         1)
             log_info "웹 버전 개발 서버를 시작합니다..."
-            cd apps/web && ng serve --open
+            cd apps/web && pnpm ng serve --open
             ;;
         2)
             log_info "모바일 버전 개발 서버를 시작합니다..."
-            cd apps/mobile && ng serve --port 4201 --open
+            cd apps/mobile && pnpm ng serve --port 4201 --open
             ;;
         3)
-            log_info "웹 + 모바일을 시작합니다 (2개의 포트)..."
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/web' && ng serve --open"
-end tell
-EOF
-            sleep 2
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/mobile' && ng serve --port 4201 --open"
-end tell
-EOF
-            log_success "웹 (4200) + 모바일 (4201) 시작됨!"
+            start_web
+            start_mobile
+            log_success "웹 (4200) + 모바일 (4201) 백그라운드 시작됨!"
             ;;
         4)
             log_info "백엔드 개발 서버를 시작합니다..."
-            cd apps/api && npm run start:dev
+            cd apps/api && pnpm run start:dev
             ;;
         5)
-            log_info "전체 스택을 시작합니다 (3개의 터미널)..."
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/api' && npm run start:dev"
-end tell
-EOF
-            sleep 2
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/web' && ng serve --open"
-end tell
-EOF
-            sleep 2
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/mobile' && ng serve --port 4201 --open"
-end tell
-EOF
-            log_success "모든 서버가 시작되었습니다! (API: 3000, 웹: 4200, 모바일: 4201)"
+            start_api
+            start_web
+            start_mobile
+            log_success "모든 서버가 백그라운드에서 시작되었습니다!"
             ;;
         6)
             log_info "수동 실행 선택"
             echo ""
             echo -e "${BLUE}다음 명령어로 시작하세요:${NC}"
-            echo "  웹:       cd apps/web && ng serve"
-            echo "  모바일:   cd apps/mobile && ng serve --port 4201"
-            echo "  백엔드:   cd apps/api && npm run start:dev"
+            echo "  웹:       cd apps/web && pnpm ng serve"
+            echo "  모바일:   cd apps/mobile && pnpm ng serve --port 4201"
+            echo "  백엔드:   cd apps/api && pnpm run start:dev"
             ;;
         *)
             log_error "잘못된 선택입니다"
@@ -516,33 +574,23 @@ elif echo "$APP_TYPES" | grep -q "web"; then
     case $dev_choice in
         1)
             log_info "웹 버전 개발 서버를 시작합니다..."
-            cd apps/web && ng serve --open
+            cd apps/web && pnpm ng serve --open
             ;;
         2)
             log_info "백엔드 개발 서버를 시작합니다..."
-            cd apps/api && npm run start:dev
+            cd apps/api && pnpm run start:dev
             ;;
         3)
-            log_info "웹 + 백엔드를 시작합니다..."
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/api' && npm run start:dev"
-end tell
-EOF
-            sleep 2
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/web' && ng serve --open"
-end tell
-EOF
-            log_success "웹 (4200) + 백엔드 (3000) 시작됨!"
+            start_api
+            start_web
+            log_success "웹 (4200) + 백엔드 (3000) 백그라운드 시작됨!"
             ;;
         4)
             log_info "수동 실행 선택"
             echo ""
             echo -e "${BLUE}다음 명령어로 시작하세요:${NC}"
-            echo "  웹:       cd apps/web && ng serve"
-            echo "  백엔드:   cd apps/api && npm run start:dev"
+            echo "  웹:       cd apps/web && pnpm ng serve"
+            echo "  백엔드:   cd apps/api && pnpm run start:dev"
             ;;
         *)
             log_error "잘못된 선택입니다"
@@ -554,33 +602,23 @@ else
     case $dev_choice in
         1)
             log_info "모바일 버전 개발 서버를 시작합니다..."
-            cd apps/mobile && ng serve --open
+            cd apps/mobile && pnpm ng serve --open
             ;;
         2)
             log_info "백엔드 개발 서버를 시작합니다..."
-            cd apps/api && npm run start:dev
+            cd apps/api && pnpm run start:dev
             ;;
         3)
-            log_info "모바일 + 백엔드를 시작합니다..."
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/api' && npm run start:dev"
-end tell
-EOF
-            sleep 2
-            osascript <<EOF
-tell app "Terminal"
-    do script "cd '$(pwd)/apps/mobile' && ng serve --open"
-end tell
-EOF
-            log_success "모바일 (4200) + 백엔드 (3000) 시작됨!"
+            start_api
+            start_mobile
+            log_success "모바일 (4201) + 백엔드 (3000) 백그라운드 시작됨!"
             ;;
         4)
             log_info "수동 실행 선택"
             echo ""
             echo -e "${BLUE}다음 명령어로 시작하세요:${NC}"
-            echo "  모바일:   cd apps/mobile && ng serve"
-            echo "  백엔드:   cd apps/api && npm run start:dev"
+            echo "  모바일:   cd apps/mobile && pnpm ng serve"
+            echo "  백엔드:   cd apps/api && pnpm run start:dev"
             ;;
         *)
             log_error "잘못된 선택입니다"

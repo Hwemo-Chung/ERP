@@ -4,6 +4,11 @@ import { catchError, throwError } from 'rxjs';
 import { ToastController } from '@ionic/angular/standalone';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  // Skip interceptor for static assets (i18n, images, etc.)
+  if (req.url.includes('/assets/')) {
+    return next(req);
+  }
+
   const toastCtrl = inject(ToastController);
 
   return next(req).pipe(

@@ -307,6 +307,9 @@ export class OrdersController {
   @ApiOperation({ summary: 'Delete order (soft delete)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 204, description: 'Order deleted' })
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.ordersService.remove(id, user.sub);
+  }
 
   // ============================================
   // File Attachments Endpoints
@@ -419,8 +422,5 @@ export class OrdersController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.attachmentsService.deleteAttachment(id, attachmentId, user.sub);
-  }
-  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return this.ordersService.remove(id, user.sub);
   }
 }

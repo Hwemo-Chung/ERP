@@ -263,21 +263,21 @@ if "!APP_TYPES!"=="web mobile" (
     if "!dev_choice!"=="1" (
         echo %COLOR_YELLOW%웹 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\web
-        call ng serve --open
+        call npx ng serve --open
     ) else if "!dev_choice!"=="2" (
         echo %COLOR_YELLOW%모바일 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\mobile
-        call ng serve --port 4201 --open
+        call npx ng serve --port 4201 --open
     ) else if "!dev_choice!"=="3" (
         echo %COLOR_YELLOW%웹과 모바일을 시작합니다 (2개의 새 터미널에서)...%COLOR_RESET%
 
         echo %COLOR_YELLOW%새 터미널에서 웹을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\web && ng serve --open"
+        start cmd /k "cd apps\web && npx ng serve --open"
 
         timeout /t 3
 
         echo %COLOR_YELLOW%새 터미널에서 모바일을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\mobile && ng serve --port 4201 --open"
+        start cmd /k "cd apps\mobile && npx ng serve --port 4201 --open"
     ) else if "!dev_choice!"=="4" (
         echo %COLOR_YELLOW%백엔드 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\api
@@ -291,20 +291,20 @@ if "!APP_TYPES!"=="web mobile" (
         timeout /t 3
 
         echo %COLOR_YELLOW%새 터미널에서 웹을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\web && ng serve --open"
+        start cmd /k "cd apps\web && npx ng serve --open"
 
         timeout /t 3
 
         echo %COLOR_YELLOW%새 터미널에서 모바일을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\mobile && ng serve --port 4201"
+        start cmd /k "cd apps\mobile && npx ng serve --port 4201"
 
         echo %COLOR_GREEN%✓ 모든 서버가 시작되었습니다!%COLOR_RESET%
     ) else if "!dev_choice!"=="6" (
         echo %COLOR_YELLOW%개발 서버를 시작하지 않았습니다%COLOR_RESET%
         echo.
         echo %COLOR_BLUE%수동으로 시작하려면:%COLOR_RESET%
-        echo   웹:     cd apps\web ^&^& ng serve
-        echo   모바일: cd apps\mobile ^&^& ng serve --port 4201
+        echo   웹:     cd apps\web ^&^& npx ng serve
+        echo   모바일: cd apps\mobile ^&^& npx ng serve --port 4201
         echo   백엔드: cd apps\api ^&^& npm run start:dev
     ) else (
         echo %COLOR_RED%✗ 잘못된 선택입니다%COLOR_RESET%
@@ -315,7 +315,7 @@ if "!APP_TYPES!"=="web mobile" (
     if "!dev_choice!"=="1" (
         echo %COLOR_YELLOW%웹 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\web
-        call ng serve --open
+        call npx ng serve --open
     ) else if "!dev_choice!"=="2" (
         echo %COLOR_YELLOW%백엔드 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\api
@@ -329,14 +329,14 @@ if "!APP_TYPES!"=="web mobile" (
         timeout /t 2
 
         echo %COLOR_YELLOW%새 터미널에서 웹을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\web && ng serve --open"
+        start cmd /k "cd apps\web && npx ng serve --open"
 
         echo %COLOR_GREEN%✓ 모든 서버가 시작되었습니다!%COLOR_RESET%
     ) else if "!dev_choice!"=="4" (
         echo %COLOR_YELLOW%개발 서버를 시작하지 않았습니다%COLOR_RESET%
         echo.
         echo %COLOR_BLUE%수동으로 시작하려면:%COLOR_RESET%
-        echo   웹:     cd apps\web ^&^& ng serve
+        echo   웹:     cd apps\web ^&^& npx ng serve
         echo   백엔드: cd apps\api ^&^& npm run start:dev
     ) else (
         echo %COLOR_RED%✗ 잘못된 선택입니다%COLOR_RESET%
@@ -347,7 +347,7 @@ if "!APP_TYPES!"=="web mobile" (
     if "!dev_choice!"=="1" (
         echo %COLOR_YELLOW%모바일 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\mobile
-        call ng serve --open
+        call npx ng serve --open
     ) else if "!dev_choice!"=="2" (
         echo %COLOR_YELLOW%백엔드 개발 서버를 시작합니다...%COLOR_RESET%
         cd apps\api
@@ -361,14 +361,14 @@ if "!APP_TYPES!"=="web mobile" (
         timeout /t 2
 
         echo %COLOR_YELLOW%새 터미널에서 모바일을 시작하는 중...%COLOR_RESET%
-        start cmd /k "cd apps\mobile && ng serve --open"
+        start cmd /k "cd apps\mobile && npx ng serve --open"
 
         echo %COLOR_GREEN%✓ 모든 서버가 시작되었습니다!%COLOR_RESET%
     ) else if "!dev_choice!"=="4" (
         echo %COLOR_YELLOW%개발 서버를 시작하지 않았습니다%COLOR_RESET%
         echo.
         echo %COLOR_BLUE%수동으로 시작하려면:%COLOR_RESET%
-        echo   모바일: cd apps\mobile ^&^& ng serve
+        echo   모바일: cd apps\mobile ^&^& npx ng serve
         echo   백엔드: cd apps\api ^&^& npm run start:dev
     ) else (
         echo %COLOR_RED%✗ 잘못된 선택입니다%COLOR_RESET%

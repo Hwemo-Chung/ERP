@@ -100,4 +100,11 @@ export class SyncQueueService {
     await db.syncQueue.clear();
     this._pendingCount.set(0);
   }
+
+  /**
+   * Process pending operations (alias for processQueue)
+   */
+  async processPendingOperations(): Promise<void> {
+    return this.processQueue();
+  }
 }

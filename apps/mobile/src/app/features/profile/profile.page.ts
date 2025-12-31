@@ -52,11 +52,6 @@ import {
   businessOutline,
   alertCircleOutline,
   languageOutline,
-  clipboardOutline,
-  checkmarkCircleOutline,
-  closeCircleOutline,
-  swapHorizontalOutline,
-  lockClosedOutline,
 } from 'ionicons/icons';
 import { AuthService } from '@core/services/auth.service';
 import { SyncQueueService } from '@core/services/sync-queue.service';
@@ -512,11 +507,6 @@ export class ProfilePage implements OnInit {
       businessOutline,
       alertCircleOutline,
       languageOutline,
-      clipboardOutline,
-      checkmarkCircleOutline,
-      closeCircleOutline,
-      swapHorizontalOutline,
-      lockClosedOutline,
     });
   }
 
@@ -688,9 +678,9 @@ export class ProfilePage implements OnInit {
       try {
         // Convert notification preferences to API format
         const apiSettings = {
-          reassign: prefs.orderAssignment,
-          delay: prefs.orderStatusChange,
-          customer: prefs.customerRequest,
+          reassign: prefs.ORDER_ASSIGNED,
+          delay: prefs.STATUS_CHANGED,
+          customer: prefs.ORDER_COMPLETED,
           pushEnabled: true, // Always enabled if any category is enabled
         };
 

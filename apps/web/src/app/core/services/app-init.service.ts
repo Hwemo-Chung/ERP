@@ -33,11 +33,16 @@ export class AppInitService {
     console.log('[App Init] Starting initialization...');
 
     try {
-      // 1. Restore authentication session
+      // 1. Initialize translations
+      console.log('[App Init] Loading translations...');
+      this.translate.use('ko'); // Set default language to Korean
+      this.translate.setDefaultLang('ko');
+
+      // 2. Restore authentication session
       console.log('[App Init] Restoring auth session...');
       await this.auth.initialize();
 
-      // 2. Initialize network listener
+      // 3. Initialize network listener
       console.log('[App Init] Initializing network listener...');
       await this.network.initializeNetworkListener();
 

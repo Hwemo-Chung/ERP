@@ -167,7 +167,9 @@ export class ImageOptimizationService {
     // 캐시 크기 제한 (FIFO)
     if (cache.size > this.MAX_CACHE_SIZE) {
       const firstKey = cache.keys().next().value;
-      cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
     }
 
     this.cache.next(cache);

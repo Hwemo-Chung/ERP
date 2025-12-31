@@ -2,7 +2,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { AuthService, User, AuthTokens } from './auth.service';
-import { Preferences, __configureMock } from '@capacitor/preferences';
+import { Preferences, __configureMock, GetOptions, SetOptions, RemoveOptions } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 
 // Helper function to create a valid JWT token with expiry
@@ -107,7 +107,7 @@ describe('AuthService', () => {
 
   describe('initialize', () => {
     it('should restore session when valid tokens exist in storage', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -134,7 +134,7 @@ describe('AuthService', () => {
     }));
 
     it('should remain unauthenticated when only access token exists', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         if (opts.key === 'erp_access_token') {
           return { value: mockTokens.accessToken };
         }
@@ -148,7 +148,7 @@ describe('AuthService', () => {
     }));
 
     it('should handle corrupted user JSON gracefully', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -165,7 +165,7 @@ describe('AuthService', () => {
     }));
 
     it('should handle invalid JSON in user storage gracefully', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -198,7 +198,7 @@ describe('AuthService', () => {
       const credentials = { username: 'testuser', password: 'password123' };
       let storedValues: Record<string, string> = {};
 
-      __configureMock.setSetMock(async (opts) => {
+      __configureMock.setSetMock(async (opts: SetOptions) => {
         storedValues[opts.key] = opts.value;
       });
 
@@ -260,7 +260,7 @@ describe('AuthService', () => {
   describe('logout', () => {
     // Initialize authenticated state before each logout test
     beforeEach(fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -276,7 +276,7 @@ describe('AuthService', () => {
     it('should clear storage and navigate to login', fakeAsync(() => {
       const removedKeys: string[] = [];
 
-      __configureMock.setRemoveMock(async (opts) => {
+      __configureMock.setRemoveMock(async (opts: RemoveOptions) => {
         removedKeys.push(opts.key);
       });
 
@@ -299,7 +299,7 @@ describe('AuthService', () => {
     it('should still logout even if API call fails', fakeAsync(() => {
       const removedKeys: string[] = [];
 
-      __configureMock.setRemoveMock(async (opts) => {
+      __configureMock.setRemoveMock(async (opts: RemoveOptions) => {
         removedKeys.push(opts.key);
       });
 
@@ -319,7 +319,7 @@ describe('AuthService', () => {
 
   describe('refreshTokens', () => {
     beforeEach(fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -339,7 +339,7 @@ describe('AuthService', () => {
         refreshToken: 'new-refresh-token',
       };
 
-      __configureMock.setSetMock(async (opts) => {
+      __configureMock.setSetMock(async (opts: SetOptions) => {
         storedValues[opts.key] = opts.value;
       });
 
@@ -392,7 +392,7 @@ describe('AuthService', () => {
 
   describe('role helpers', () => {
     beforeEach(fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -424,7 +424,7 @@ describe('AuthService', () => {
 
   describe('getAccessToken', () => {
     it('should return access token when authenticated', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };

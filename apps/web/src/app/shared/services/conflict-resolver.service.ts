@@ -9,6 +9,7 @@
  */
 import { Injectable, inject, signal } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular/standalone';
+import { TranslateService } from '@ngx-translate/core';
 import { ConflictData, ConflictResolution } from '../components/conflict-dialog/conflict-dialog.component';
 
 export interface VersionedEntity {
@@ -31,6 +32,7 @@ export interface ConflictError {
 export class ConflictResolverService {
   private modalCtrl = inject(ModalController);
   private toastCtrl = inject(ToastController);
+  private translate = inject(TranslateService);
 
   // 현재 진행 중인 충돌 해결
   readonly isResolving = signal(false);
@@ -104,7 +106,7 @@ export class ConflictResolverService {
    */
   async autoResolveServerWins<T>(serverData: T): Promise<T> {
     const toast = await this.toastCtrl.create({
-      message: '다른 사용자의 변경사항으로 업데이트되었습니다.',
+      message: this.translate.instant('CONFLICT.SERVER_WINS_MESSAGE'),
       duration: 3000,
       color: 'warning',
     });

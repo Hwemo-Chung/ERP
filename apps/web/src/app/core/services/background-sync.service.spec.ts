@@ -7,7 +7,7 @@ import { NetworkService } from './network.service';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
 import { db, SyncQueueEntry, __configureDexieMock } from '@app/core/db/database';
-import { Preferences, __configureMock } from '@capacitor/preferences';
+import { Preferences, __configureMock, GetOptions } from '@capacitor/preferences';
 
 describe('BackgroundSyncService', () => {
   let service: BackgroundSyncService;
@@ -50,7 +50,7 @@ describe('BackgroundSyncService', () => {
   beforeEach(async () => {
     // Reset Capacitor Preferences mock
     __configureMock.resetMocks();
-    __configureMock.setGetMock(async (opts) => {
+    __configureMock.setGetMock(async (opts: GetOptions) => {
       if (opts.key === 'erp_access_token') {
         return { value: 'mock-access-token' };
       }
@@ -891,7 +891,7 @@ describe('BackgroundSyncService', () => {
 
   describe('getAuthToken', () => {
     it('should retrieve token from Capacitor Preferences', async () => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         if (opts.key === 'erp_access_token') {
           return { value: 'test-token-123' };
         }

@@ -232,9 +232,9 @@ export class SplitOrderPage implements OnInit {
                 })),
               }));
 
-              const success = await ordersStore.splitOrder(this.orderId, splits);
-              
-              if (success) {
+              const result = await ordersStore.splitOrder(this.orderId, splits);
+
+              if (result.success) {
                 const toast = await toastCtrl.create({
                   message: translateService.instant('ORDERS.SPLIT.TOAST.SUCCESS'),
                   duration: 2000,

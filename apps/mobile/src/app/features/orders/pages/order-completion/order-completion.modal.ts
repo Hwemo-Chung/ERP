@@ -39,7 +39,7 @@ import {
   IonSpinner,
   IonCard,
   IonCardContent,
-  IonImage,
+  IonImg,
   ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -89,7 +89,7 @@ import {
     IonSpinner,
     IonCard,
     IonCardContent,
-    IonImage,
+    IonImg,
   ],
   template: `
     <ion-header>
@@ -359,7 +359,7 @@ export class OrderCompletionModal implements OnInit {
 
     // Build form arrays based on order lines
     const serials = this.form.get('serials') as FormArray;
-    this.order.orderLines.forEach((line) => {
+    (this.order.orderLines || []).forEach((line) => {
       serials.push(
         this.fb.group({
           lineId: [line.id],
