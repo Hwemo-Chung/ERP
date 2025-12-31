@@ -850,8 +850,10 @@ describe('OrderStateMachine', () => {
         const originalPromisedDate = new Date();
         originalPromisedDate.setDate(originalPromisedDate.getDate() - 10);
 
-        const newAppointmentDate = new Date();
-        newAppointmentDate.setDate(originalPromisedDate.getDate() + 5);
+        // Create newAppointmentDate as copy of originalPromisedDate + 5 days
+        // This ensures it's within the 15-day window from originalPromisedDate
+        const newAppointmentDate = new Date(originalPromisedDate.getTime());
+        newAppointmentDate.setDate(newAppointmentDate.getDate() + 5);
 
         const result = stateMachine.canRevert(
           completedAt,

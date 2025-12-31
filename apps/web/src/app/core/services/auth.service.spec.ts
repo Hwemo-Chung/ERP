@@ -2,7 +2,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { AuthService, User, AuthTokens } from './auth.service';
-import { Preferences, __configureMock } from '@capacitor/preferences';
+import { Preferences, __configureMock, GetOptions, SetOptions, RemoveOptions } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 
 describe('AuthService', () => {
@@ -92,7 +92,7 @@ describe('AuthService', () => {
 
   describe('initialize', () => {
     it('should restore session when valid tokens exist in storage', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -119,7 +119,7 @@ describe('AuthService', () => {
     }));
 
     it('should handle corrupted user JSON gracefully', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -228,7 +228,7 @@ describe('AuthService', () => {
 
   describe('role helpers', () => {
     beforeEach(fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };
@@ -260,7 +260,7 @@ describe('AuthService', () => {
 
   describe('getAccessToken', () => {
     it('should return access token when authenticated', fakeAsync(() => {
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
           case 'erp_access_token': return { value: mockTokens.accessToken };
           case 'erp_refresh_token': return { value: mockTokens.refreshToken };

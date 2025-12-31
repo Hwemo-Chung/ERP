@@ -4,6 +4,11 @@ import { from, switchMap, catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
+  // Skip auth header for static assets (i18n, images, etc.)
+  if (req.url.includes('/assets/')) {
+    return next(req);
+  }
+
   const authService = inject(AuthService);
   const token = authService.getAccessToken();
 

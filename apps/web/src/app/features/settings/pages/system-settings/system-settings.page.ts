@@ -33,7 +33,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { createOutline, trashOutline, closeOutline, checkmarkOutline, lockOutline } from 'ionicons/icons';
+import { createOutline, trashOutline, closeOutline, checkmarkOutline, lockClosedOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { SystemUser, SystemSettings, UserRole } from './system-settings.models';
 import { AuthService } from '@app/core/services/auth.service';
@@ -513,7 +513,7 @@ export class SystemSettingsPage implements OnInit {
     private authService: AuthService,
     private toastCtrl: ToastController
   ) {
-    addIcons({ createOutline, trashOutline, closeOutline, checkmarkOutline, lockOutline });
+    addIcons({ createOutline, trashOutline, closeOutline, checkmarkOutline, lockClosedOutline });
     this.initForms();
   }
 

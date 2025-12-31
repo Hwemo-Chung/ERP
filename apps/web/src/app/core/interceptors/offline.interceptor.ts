@@ -12,6 +12,11 @@ const OFFLINE_ENDPOINTS = [
 ];
 
 export const offlineInterceptor: HttpInterceptorFn = (req, next) => {
+  // Skip interceptor for static assets (i18n, images, etc.)
+  if (req.url.includes('/assets/')) {
+    return next(req);
+  }
+
   const networkService = inject(NetworkService);
   const syncQueue = inject(SyncQueueService);
 

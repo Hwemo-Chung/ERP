@@ -389,8 +389,11 @@ export class OrdersStore extends signalStore(
 
     /**
      * Update order status
+     * @param orderId - Order ID
+     * @param status - New status
+     * @param installerId - Optional installer ID (required for ASSIGNED status)
      */
-    async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+    async updateOrderStatus(orderId: string, status: OrderStatus, installerId?: string): Promise<void> {
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
 
@@ -398,6 +401,7 @@ export class OrdersStore extends signalStore(
       const updatedOrder: Order = {
         ...order,
         status,
+        installerId: installerId ?? order.installerId,
         version: order.version + 1,
         updatedAt: Date.now(),
       };
@@ -406,11 +410,20 @@ export class OrdersStore extends signalStore(
         orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
       });
 
+      // Build request body - use expectedVersion for API
+      const body: { status: OrderStatus; expectedVersion: number; installerId?: string } = {
+        status,
+        expectedVersion: order.version,
+      };
+      if (installerId) {
+        body.installerId = installerId;
+      }
+
       // Queue for sync
       await syncQueue.enqueue({
         method: 'PATCH',
         url: `/orders/${orderId}`,
-        body: { status, version: order.version },
+        body,
       });
 
       // Save to cache

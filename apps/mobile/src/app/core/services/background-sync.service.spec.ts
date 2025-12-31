@@ -5,7 +5,7 @@ import { BackgroundSyncService, SyncOperation } from './background-sync.service'
 import { NetworkService } from './network.service';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
-import { Preferences, __configureMock } from '@capacitor/preferences';
+import { Preferences, __configureMock, GetOptions } from '@capacitor/preferences';
 import { db, __configureDexieMock } from '@app/core/db/database';
 
 describe('BackgroundSyncService', () => {
@@ -289,7 +289,7 @@ describe('BackgroundSyncService', () => {
   describe('Token Fetching', () => {
     it('should fetch auth token from Preferences', async () => {
       const mockToken = 'test-access-token';
-      __configureMock.setGetMock(async (opts) => {
+      __configureMock.setGetMock(async (opts: GetOptions) => {
         if (opts.key === 'erp_access_token') {
           return { value: mockToken };
         }

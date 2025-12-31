@@ -29,18 +29,21 @@ echo -e "${BLUE}  ERP Logistics 시스템 시작${NC}"
 echo -e "${BLUE}============================================${NC}"
 echo ""
 
-# 함수: 프로세스 종료
+# 함수: 프로세스 종료 (포트 기반)
 cleanup() {
     echo -e "\n${YELLOW}시스템 종료 중...${NC}"
-    if [ -f "$PID_FILE" ]; then
-        while read pid; do
-            if kill -0 "$pid" 2>/dev/null; then
-                kill "$pid" 2>/dev/null || true
-                echo -e "${GREEN}프로세스 $pid 종료됨${NC}"
-            fi
-        done < "$PID_FILE"
-        rm -f "$PID_FILE"
-    fi
+    
+    # 포트 기반으로 프로세스 종료
+    for port in 3000 4200 4201; do
+        pid=$(lsof -ti :$port 2>/dev/null)
+        if [ -n "$pid" ]; then
+            kill $pid 2>/dev/null || true
+            echo -e "${GREEN}포트 $port 프로세스 종료됨${NC}"
+        fi
+    done
+    
+    # PID 파일도 정리
+    rm -f "$PID_FILE"
     echo -e "${GREEN}모든 프로세스 종료 완료${NC}"
     exit 0
 }
@@ -166,29 +169,49 @@ if check_port 3000; then
     sleep 2
 fi
 
+# 빌드 후 프로덕션 모드로 실행 (watch 모드는 PID fork 문제 발생)
 cd "$PROJECT_ROOT/apps/api"
-nohup pnpm run start:dev > "$LOG_DIR/api.log" 2>&1 &
+echo -e "${YELLOW}API 빌드 중...${NC}"
+pnpm run build > /dev/null 2>&1
+nohup node --enable-source-maps dist/main.js > "$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
 echo $API_PID >> "$PID_FILE"
 cd "$PROJECT_ROOT"
 
 wait_for_service "http://localhost:3000/api/v1/health" "Backend API" 60
 
-# 6. 모바일/웹 앱 시작
-echo -e "\n${BLUE}[6/6] 모바일/웹 앱 시작${NC}"
+# 6. 웹/모바일 앱 시작
+echo -e "\n${BLUE}[6/6] 웹/모바일 앱 시작${NC}"
+
+# 웹 앱 시작 (포트 4200)
 if check_port 4200; then
     echo -e "${YELLOW}포트 4200이 이미 사용 중입니다. 기존 프로세스 종료...${NC}"
     lsof -ti :4200 | xargs kill -9 2>/dev/null || true
     sleep 2
 fi
 
+cd "$PROJECT_ROOT/apps/web"
+nohup pnpm run start > "$LOG_DIR/web.log" 2>&1 &
+WEB_PID=$!
+echo $WEB_PID >> "$PID_FILE"
+cd "$PROJECT_ROOT"
+
+wait_for_service "http://localhost:4200" "Web App" 60
+
+# 모바일 앱 시작 (포트 4201)
+if check_port 4201; then
+    echo -e "${YELLOW}포트 4201이 이미 사용 중입니다. 기존 프로세스 종료...${NC}"
+    lsof -ti :4201 | xargs kill -9 2>/dev/null || true
+    sleep 2
+fi
+
 cd "$PROJECT_ROOT/apps/mobile"
-nohup pnpm run start > "$LOG_DIR/mobile.log" 2>&1 &
+nohup pnpm ng serve --port 4201 > "$LOG_DIR/mobile.log" 2>&1 &
 MOBILE_PID=$!
 echo $MOBILE_PID >> "$PID_FILE"
 cd "$PROJECT_ROOT"
 
-wait_for_service "http://localhost:4200" "Mobile App" 60
+wait_for_service "http://localhost:4201" "Mobile App" 60
 
 # 완료 메시지
 echo ""
@@ -197,10 +220,11 @@ echo -e "${GREEN}  ✓ 모든 서비스 시작 완료!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
 echo -e "${BLUE}서비스 URL:${NC}"
-echo -e "  • 웹/모바일 앱: ${GREEN}http://localhost:4200${NC}"
-echo -e "  • API 서버:     ${GREEN}http://localhost:3000${NC}"
-echo -e "  • API 문서:     ${GREEN}http://localhost:3000/docs${NC}"
-echo -e "  • DB 관리자:    ${GREEN}http://localhost:8080${NC} (Adminer)"
+echo -e "  • 웹 앱:       ${GREEN}http://localhost:4200${NC}"
+echo -e "  • 모바일 앱:   ${GREEN}http://localhost:4201${NC}"
+echo -e "  • API 서버:    ${GREEN}http://localhost:3000${NC}"
+echo -e "  • API 문서:    ${GREEN}http://localhost:3000/docs${NC}"
+echo -e "  • DB 관리자:   ${GREEN}http://localhost:8080${NC} (Adminer)"
 echo ""
 echo -e "${BLUE}테스트 계정:${NC}"
 echo -e "  • 사용자명: ${GREEN}0001${NC}"
@@ -208,21 +232,17 @@ echo -e "  • 비밀번호: ${GREEN}test${NC}"
 echo ""
 echo -e "${BLUE}로그 파일:${NC}"
 echo -e "  • API 로그:    ${GREEN}$LOG_DIR/api.log${NC}"
+echo -e "  • Web 로그:    ${GREEN}$LOG_DIR/web.log${NC}"
 echo -e "  • Mobile 로그: ${GREEN}$LOG_DIR/mobile.log${NC}"
 echo ""
 echo -e "${YELLOW}종료하려면 Ctrl+C를 누르세요.${NC}"
 echo ""
 
-# 프로세스 유지
-while true; do
-    # 프로세스 상태 확인
-    if ! kill -0 $API_PID 2>/dev/null; then
-        echo -e "${RED}API 서버가 종료되었습니다. 로그 확인: $LOG_DIR/api.log${NC}"
-        cleanup
-    fi
-    if ! kill -0 $MOBILE_PID 2>/dev/null; then
-        echo -e "${RED}Mobile 앱이 종료되었습니다. 로그 확인: $LOG_DIR/mobile.log${NC}"
-        cleanup
-    fi
-    sleep 5
-done
+# 프로세스 유지 - 서비스 상태만 주기적으로 확인
+# 무한 루프 대신 백그라운드 프로세스가 계속 실행되도록 함
+echo -e "${BLUE}서비스가 백그라운드에서 실행 중입니다.${NC}"
+echo -e "${BLUE}종료하려면: ./stop-all.sh 또는 pkill -f 'node.*main|ng serve'${NC}"
+echo ""
+
+# 스크립트 종료 (백그라운드 프로세스는 계속 실행)
+exit 0

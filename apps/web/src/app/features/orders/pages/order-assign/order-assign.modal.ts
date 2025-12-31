@@ -31,8 +31,8 @@ import { checkmarkOutline, closeOutline } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { UIStore } from '../../../../store/ui/ui.store';
-import { Order } from '../../../../../../store/orders/orders.models';
-import { Installer } from '../../../../../../store/installers/installers.models';
+import { Order } from '../../../../store/orders/orders.models';
+import { Installer } from '../../../../store/installers/installers.models';
 
 @Component({
   selector: 'app-order-assign-modal',

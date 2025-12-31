@@ -360,45 +360,53 @@ export class OrdersStore extends signalStore(
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
 
-      const payload = {
-        status: OrderStatus.COMPLETED,
-        lines: completionData.lines,
-        waste: completionData.waste || [],
-        notes: completionData.notes,
-      };
+      try {
+        const payload = {
+          status: OrderStatus.COMPLETED,
+          lines: completionData.lines,
+          waste: completionData.waste || [],
+          notes: completionData.notes,
+        };
 
-      // Optimistic update
-      const updatedOrder: Order = {
-        ...order,
-        status: OrderStatus.COMPLETED,
-        version: order.version + 1,
-        updatedAt: Date.now(),
-      };
+        // Optimistic update
+        const updatedOrder: Order = {
+          ...order,
+          status: OrderStatus.COMPLETED,
+          version: order.version + 1,
+          updatedAt: Date.now(),
+        };
 
-      patchState(store, {
-        orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
-      });
+        patchState(store, {
+          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+        });
 
-      // Queue for sync (high priority)
-      await syncQueue.enqueue({
-        method: 'POST',
-        url: `/orders/${orderId}/complete`,
-        body: payload,
-        timestamp: Date.now(),
-        retryCount: 0,
-      });
+        // Queue for sync (high priority)
+        await syncQueue.enqueue({
+          method: 'POST',
+          url: `/orders/${orderId}/complete`,
+          body: payload,
+          timestamp: Date.now(),
+          retryCount: 0,
+        });
 
-      // Save to cache (ensure localUpdatedAt is set)
-      await db.orders.put({
-        ...updatedOrder,
-        localUpdatedAt: updatedOrder.localUpdatedAt || Date.now(),
-      });
+        // Save to cache (ensure localUpdatedAt is set)
+        await db.orders.put({
+          ...updatedOrder,
+          localUpdatedAt: updatedOrder.localUpdatedAt || Date.now(),
+        });
+      } catch (error) {
+        console.error('[OrdersStore] Failed to complete order:', error);
+        throw error;
+      }
     },
 
     /**
      * Update order status
+     * @param orderId - Order ID
+     * @param status - New status
+     * @param installerId - Optional installer ID (required for ASSIGNED status)
      */
-    async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+    async updateOrderStatus(orderId: string, status: OrderStatus, installerId?: string): Promise<void> {
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
 
@@ -406,6 +414,7 @@ export class OrdersStore extends signalStore(
       const updatedOrder: Order = {
         ...order,
         status,
+        installerId: installerId ?? order.installerId,
         version: order.version + 1,
         updatedAt: Date.now(),
       };
@@ -414,11 +423,20 @@ export class OrdersStore extends signalStore(
         orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
       });
 
+      // Build request body - use expectedVersion for API
+      const body: { status: OrderStatus; expectedVersion: number; installerId?: string } = {
+        status,
+        expectedVersion: order.version,
+      };
+      if (installerId) {
+        body.installerId = installerId;
+      }
+
       // Queue for sync
       await syncQueue.enqueue({
         method: 'PATCH',
         url: `/orders/${orderId}`,
-        body: { status, version: order.version },
+        body,
         timestamp: Date.now(),
         retryCount: 0,
       });
@@ -440,35 +458,98 @@ export class OrdersStore extends signalStore(
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
 
-      // Optimistic update
-      const updatedOrder: Order = {
-        ...order,
-        lines: order.lines?.map((line) => {
-          const update = serialUpdates.find((s) => s.lineId === line.id);
-          return update ? { ...line, serialNumber: update.serialNumber } : line;
-        }),
-        version: order.version + 1,
-        updatedAt: Date.now(),
-      };
+      try {
+        // Optimistic update
+        const updatedOrder: Order = {
+          ...order,
+          lines: order.lines?.map((line) => {
+            const update = serialUpdates.find((s) => s.lineId === line.id);
+            return update ? { ...line, serialNumber: update.serialNumber } : line;
+          }),
+          version: order.version + 1,
+          updatedAt: Date.now(),
+        };
 
-      patchState(store, {
-        orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
-      });
+        patchState(store, {
+          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+        });
 
-      // Queue for sync
-      await syncQueue.enqueue({
-        method: 'PATCH',
-        url: `/orders/${orderId}/serials`,
-        body: { serials: serialUpdates, version: order.version },
-        timestamp: Date.now(),
-        retryCount: 0,
-      });
+        // Queue for sync
+        await syncQueue.enqueue({
+          method: 'PATCH',
+          url: `/orders/${orderId}/serials`,
+          body: { serials: serialUpdates, version: order.version },
+          timestamp: Date.now(),
+          retryCount: 0,
+        });
 
-      // Save to cache
-      await db.orders.put({
-        ...updatedOrder,
-        localUpdatedAt: Date.now(),
-      });
+        // Save to cache
+        await db.orders.put({
+          ...updatedOrder,
+          localUpdatedAt: Date.now(),
+        });
+      } catch (error) {
+        console.error('[OrdersStore] Failed to update order serials:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Update order completion data (photos, notes)
+     */
+    async updateOrderCompletion(
+      orderId: string,
+      completionData: {
+        photos?: string[];
+        notes?: string[];
+        completedAt?: string;
+      }
+    ): Promise<void> {
+      const order = store.orders().find((o) => o.id === orderId);
+      if (!order) return;
+
+      try {
+        // Optimistic update
+        const updatedOrder: Order = {
+          ...order,
+          completion: {
+            ...order.completion,
+            photos: completionData.photos || order.completion?.photos,
+            notes: completionData.notes?.join('\n') || order.completion?.notes,
+            completedAt: completionData.completedAt
+              ? new Date(completionData.completedAt).getTime()
+              : order.completion?.completedAt,
+          },
+          version: order.version + 1,
+          updatedAt: Date.now(),
+        };
+
+        patchState(store, {
+          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+        });
+
+        // Queue for sync
+        await syncQueue.enqueue({
+          method: 'PATCH',
+          url: `/orders/${orderId}/completion`,
+          body: {
+            photos: completionData.photos,
+            notes: completionData.notes,
+            version: order.version,
+          },
+          timestamp: Date.now(),
+          retryCount: 0,
+        });
+
+        // Save to cache
+        await db.orders.put({
+          ...updatedOrder,
+          localUpdatedAt: Date.now(),
+        });
+      } catch (error) {
+        console.error('[OrdersStore] Failed to update order completion:', error);
+        throw error;
+      }
     },
 
     /**
@@ -481,35 +562,98 @@ export class OrdersStore extends signalStore(
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
 
-      // Optimistic update
-      const updatedOrder: Order = {
-        ...order,
-        completion: {
-          ...order.completion,
-          waste: wasteData,
-        },
-        version: order.version + 1,
-        updatedAt: Date.now(),
-      };
+      try {
+        // Optimistic update
+        const updatedOrder: Order = {
+          ...order,
+          completion: {
+            ...order.completion,
+            waste: wasteData,
+          },
+          version: order.version + 1,
+          updatedAt: Date.now(),
+        };
 
-      patchState(store, {
-        orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
-      });
+        patchState(store, {
+          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+        });
 
-      // Queue for sync
-      await syncQueue.enqueue({
-        method: 'PATCH',
-        url: `/orders/${orderId}/waste`,
-        body: { waste: wasteData, version: order.version },
-        timestamp: Date.now(),
-        retryCount: 0,
-      });
+        // Queue for sync
+        await syncQueue.enqueue({
+          method: 'PATCH',
+          url: `/orders/${orderId}/waste`,
+          body: { waste: wasteData, version: order.version },
+          timestamp: Date.now(),
+          retryCount: 0,
+        });
 
-      // Save to cache
-      await db.orders.put({
-        ...updatedOrder,
-        localUpdatedAt: Date.now(),
-      });
+        // Save to cache
+        await db.orders.put({
+          ...updatedOrder,
+          localUpdatedAt: Date.now(),
+        });
+      } catch (error) {
+        console.error('[OrdersStore] Failed to update order waste:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Update order completion data (photos, notes)
+     */
+    async updateOrderCompletion(
+      orderId: string,
+      completionData: {
+        photos?: string[];
+        notes?: string[];
+        completedAt?: string;
+      }
+    ): Promise<void> {
+      const order = store.orders().find((o) => o.id === orderId);
+      if (!order) return;
+
+      try {
+        // Optimistic update
+        const updatedOrder: Order = {
+          ...order,
+          completion: {
+            ...order.completion,
+            photos: completionData.photos || order.completion?.photos,
+            notes: completionData.notes?.join('\n') || order.completion?.notes,
+            completedAt: completionData.completedAt
+              ? new Date(completionData.completedAt).getTime()
+              : order.completion?.completedAt,
+          },
+          version: order.version + 1,
+          updatedAt: Date.now(),
+        };
+
+        patchState(store, {
+          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
+        });
+
+        // Queue for sync
+        await syncQueue.enqueue({
+          method: 'PATCH',
+          url: `/orders/${orderId}/completion`,
+          body: {
+            photos: completionData.photos,
+            notes: completionData.notes,
+            version: order.version,
+          },
+          timestamp: Date.now(),
+          retryCount: 0,
+        });
+
+        // Save to cache
+        await db.orders.put({
+          ...updatedOrder,
+          localUpdatedAt: Date.now(),
+        });
+      } catch (error) {
+        console.error('[OrdersStore] Failed to update order completion:', error);
+        throw error;
+      }
     },
 
     /**
@@ -576,9 +720,11 @@ export class OrdersStore extends signalStore(
           quantity: number;
         }>;
       }>
-    ): Promise<boolean> {
+    ): Promise<{ success: boolean; childOrders?: Order[] }> {
       const order = store.orders().find((o) => o.id === orderId);
-      if (!order) return false;
+      if (!order) return { success: false };
+
+      patchState(store, { isLoading: true, error: null });
 
       const payload = {
         orderId,
@@ -595,40 +741,63 @@ export class OrdersStore extends signalStore(
 
       try {
         const response = await firstValueFrom(
-          http.post<{ success: boolean; childOrders: Order[] }>(
+          http.post<{ success: boolean; parentOrder: Order; childOrders: Order[] }>(
             `${environment.apiUrl}/orders/${orderId}/split`,
             payload
           )
         );
 
-        if (response.success && response.childOrders) {
-          // Add child orders to store
+        if (response.success) {
+          // Update parent order and add child orders to store
+          const allOrders = [
+            ...store.orders().filter((o) => o.id !== orderId),
+            response.parentOrder,
+            ...response.childOrders,
+          ];
+
           patchState(store, {
-            orders: [...store.orders(), ...response.childOrders],
+            orders: allOrders,
+            isLoading: false,
           });
 
-          // Cache child orders
-          await db.orders.bulkPut(
-            response.childOrders.map(o => ({
+          // Cache all orders
+          await db.orders.bulkPut([
+            { ...response.parentOrder, localUpdatedAt: Date.now(), syncedAt: Date.now() },
+            ...response.childOrders.map(o => ({
               ...o,
               localUpdatedAt: Date.now(),
               syncedAt: Date.now(),
-            }))
-          );
+            })),
+          ]);
+
+          return { success: true, childOrders: response.childOrders };
         }
 
-        return true;
+        patchState(store, { isLoading: false });
+        return { success: false };
       } catch (error: any) {
+        const errorMessage = error?.error?.message || 'Failed to split order';
+        patchState(store, {
+          error: errorMessage,
+          isLoading: false,
+        });
+
         if (error?.status === 409) {
-          patchState(store, {
-            error: 'Order was modified by another user. Please refresh and try again.',
-          });
-        } else {
-          patchState(store, {
-            error: error?.error?.message || 'Failed to split order',
-          });
+          // Version conflict - reload order
+          try {
+            const fresh = await firstValueFrom(
+              http.get<Order>(`${environment.apiUrl}/orders/${orderId}`)
+            );
+            patchState(store, {
+              orders: store.orders().map((o) => (o.id === orderId ? fresh : o)),
+              error: 'Order was updated by another user. Please retry.',
+            });
+          } catch {
+            // Ignore reload error
+          }
         }
-        return false;
+
+        return { success: false };
       }
     },
 

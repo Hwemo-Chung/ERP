@@ -2,6 +2,9 @@
 import { Component, signal, inject, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '@env/environment';
+import { firstValueFrom } from 'rxjs';
 import {
   IonContent,
   IonHeader,
@@ -266,6 +269,8 @@ interface Installer {
   `],
 })
 export class BatchAssignPage implements OnInit {
+  /** @description HTTP 클라이언트 */
+  private readonly http = inject(HttpClient);
   /** @description 일괄 작업 서비스 */
   private readonly bulkOperationService = inject(BulkOperationService);
   /** @description 주문 상태 관리 스토어 */
@@ -300,18 +305,16 @@ export class BatchAssignPage implements OnInit {
       calendarOutline,
       checkmarkCircleOutline,
     });
-
-    this.loadData();
   }
 
   ngOnInit(): void {
     this.loadData();
   }
 
-  loadData(): void {
+  async loadData(): Promise<void> {
     // Load orders from store (will fetch unassigned orders)
     this.ordersStore.loadOrders();
-    
+
     // Map unassigned orders to UI model
     const unassigned = this.unassignedOrders().map((order: Order) => ({
       id: order.id,
@@ -323,13 +326,32 @@ export class BatchAssignPage implements OnInit {
     }));
     this.orders.set(unassigned);
 
-    // Load installers - use dummy data for now
-    // In production, this would call an installers API
-    this.installers.set([
-      { id: 'inst-1', name: '김기사', assignedCount: 3, capacity: 10 },
-      { id: 'inst-2', name: '이기사', assignedCount: 5, capacity: 10 },
-      { id: 'inst-3', name: '박기사', assignedCount: 2, capacity: 8 },
-    ]);
+    // Load installers from API
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{ id: string; name: string; capacityPerDay: number; isActive: boolean }[]>(
+          `${environment.apiUrl}/metadata/installers?active=true`
+        )
+      );
+
+      // Map API response to Installer interface
+      // Calculate assigned count from OrdersStore
+      const storeOrders = this.ordersStore.orders();
+      const installerList: Installer[] = response.map(inst => ({
+        id: inst.id,
+        name: inst.name,
+        assignedCount: storeOrders.filter(
+          o => o.installerId === inst.id && o.status === OrderStatus.ASSIGNED
+        ).length,
+        capacity: inst.capacityPerDay || 10,
+      }));
+
+      this.installers.set(installerList);
+    } catch (error) {
+      console.error('Failed to load installers:', error);
+      // Set empty list on error to avoid using dummy data
+      this.installers.set([]);
+    }
   }
 
   onSearch(event: CustomEvent): void {
@@ -444,8 +466,8 @@ export class BatchAssignPage implements OnInit {
     orderId: string,
     installerId: string
   ): Promise<{ orderId: string; installerId: string }> {
-    // Update order status to ASSIGNED via ordersStore
-    await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ASSIGNED);
+    // Update order status to ASSIGNED with installerId via ordersStore
+    await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ASSIGNED, installerId);
     return { orderId, installerId };
   }
 }

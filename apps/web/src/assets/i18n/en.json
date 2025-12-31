@@ -190,32 +190,6 @@
     "SETTINGS": "Settings",
     "PROFILE": "Profile"
   },
-  "PROFILE": {
-    "TITLE": "Profile",
-    "USER_INFO": "User Info",
-    "SYNC_STATUS": {
-      "TITLE": "Sync Status",
-      "PENDING": "Pending Sync",
-      "OPERATIONS": " operations",
-      "SYNC_NOW": "Sync Now"
-    },
-    "SETTINGS": {
-      "TITLE": "Settings",
-      "PUSH_NOTIFICATIONS": "Push Notifications",
-      "DARK_MODE": "Dark Mode"
-    },
-    "ABOUT": {
-      "TITLE": "About",
-      "VERSION": "Version"
-    },
-    "LOGOUT": {
-      "BUTTON": "Logout",
-      "CONFIRM_TITLE": "Logout",
-      "CONFIRM_MESSAGE": "Are you sure you want to logout?",
-      "CANCEL": "Cancel",
-      "CONFIRM": "Logout"
-    }
-  },
   "DASHBOARD": {
     "TITLE": "Dashboard",
     "LOADING_DATA": "Loading data...",
@@ -249,8 +223,6 @@
       "NEW_ORDERS": "New Orders",
       "PENDING_ASSIGNMENT": "Pending Assignment",
       "IN_DELIVERY": "In Delivery"
-    },
-      "TARGET": "Target: {{value}}%"
     },
     "RECENT_ORDERS": {
       "TITLE": "Recent Orders",
@@ -865,7 +837,16 @@
       "SEARCH_PLACEHOLDER": "Search by model code or name...",
       "TOTAL_ORDERS": "Total Orders",
       "TOTAL_QUANTITY": "Total Quantity",
-      "TOTAL_MODELS": "Total Models"
+      "TOTAL_MODELS": "Total Models",
+      "FDC_COUNT": "FDC Count",
+      "FDC_NAME": "FDC Name",
+      "MODEL_CODE": "Model Code",
+      "MODEL_NAME": "Model Name",
+      "PERIOD": "Period",
+      "PRINT_DATE": "Print Date",
+      "QUANTITY": "Quantity",
+      "TOTAL": "Total",
+      "UNIT": "Unit"
     }
   },
   "PROFILE": {
@@ -893,11 +874,18 @@
       "SYNC_COMPLETED": "Sync Completed",
       "SYNC_PENDING": "Pending"
     },
+    "SYNC_STATUS": {
+      "TITLE": "Sync Status",
+      "PENDING": "Pending Sync",
+      "OPERATIONS": " operations",
+      "SYNC_NOW": "Sync Now"
+    },
     "SETTINGS": {
       "TITLE": "Settings",
       "LANGUAGE": "Language",
       "DARK_MODE": "Dark Mode",
-      "NOTIFICATIONS": "Push Notifications"
+      "NOTIFICATIONS": "Push Notifications",
+      "PUSH_NOTIFICATIONS": "Push Notifications"
     },
     "APP_INFO": {
       "TITLE": "App Information",
@@ -905,8 +893,20 @@
       "ENVIRONMENT": "Environment",
       "ENV_PRODUCTION": "Production",
       "ENV_DEVELOPMENT": "Development"
+    },
+    "ABOUT": {
+      "TITLE": "About",
+      "VERSION": "Version"
+    },
+    "LOGOUT": {
+      "BUTTON": "Logout",
+      "CONFIRM_TITLE": "Logout",
+      "CONFIRM_MESSAGE": "Are you sure you want to logout?",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Logout"
     }
-  },  "SETTINGS": {
+  },
+  "SETTINGS": {
     "SECTION": {
       "MANAGEMENT": "Management",
       "ACCOUNT": "Account"
@@ -1214,7 +1214,8 @@
       "APPOINTMENT_SLOT": "Appointment Slot",
       "MEMO": "Memo"
     },
-    "CANCELLED": "User cancelled the operation."
+    "CANCELLED": "User cancelled the operation.",
+    "SERVER_WINS_MESSAGE": "Updated with changes from another user."
   },
   "ERRORS": {
     "NETWORK": {
@@ -1254,6 +1255,7 @@
     "EXPIRING_SOON": "Session expires in {{seconds}} seconds",
     "SECURITY_MESSAGE": "Please extend your session or log in again for security",
     "EXTEND_BUTTON": "Extend Session",
+    "EXTEND_BTN": "Extend Session",
     "EXPIRED_TITLE": "Session Expired",
     "EXPIRED_MESSAGE": "Your session has expired. Please enter your password to log in again.",
     "LOGIN_BUTTON": "Login",
@@ -1286,22 +1288,6 @@
     "P19": "Humidifier",
     "P20": "Dehumidifier",
     "P21": "Other"
-  },
-  "REPORTS": {
-    "RELEASE_SUMMARY": {
-      "TITLE": "Release Request Summary",
-      "FDC_NAME": "FDC Name",
-      "MODEL_CODE": "Model Code",
-      "MODEL_NAME": "Model Name",
-      "QUANTITY": "Quantity",
-      "TOTAL": "Total",
-      "PERIOD": "Period",
-      "PRINT_DATE": "Print Date",
-      "TOTAL_ORDERS": "Total Orders",
-      "TOTAL_QUANTITY": "Total Quantity",
-      "FDC_COUNT": "FDC Count",
-      "UNIT": "pcs"
-    }
   },
   "SIGNATURE": {
     "TITLE": "Signature",
