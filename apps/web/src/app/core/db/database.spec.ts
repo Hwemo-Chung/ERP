@@ -135,7 +135,8 @@ describe('ERPDatabase', () => {
 
   describe('SyncQueue Table', () => {
     it('should auto-increment id for sync queue entries', async () => {
-      const entry: Omit<SyncQueueEntry, 'id'> = {
+      // Create entry without id property for auto-increment
+      const createEntry = (): Omit<SyncQueueEntry, 'id'> => ({
         type: 'completion',
         method: 'POST',
         url: '/api/orders/complete',
@@ -145,10 +146,11 @@ describe('ERPDatabase', () => {
         retryCount: 0,
         maxRetries: 3,
         status: 'pending',
-      };
+      });
 
-      const id1 = await db.syncQueue.add(entry as SyncQueueEntry);
-      const id2 = await db.syncQueue.add(entry as SyncQueueEntry);
+      // Add entries separately to get auto-increment IDs
+      const id1 = await db.syncQueue.add(createEntry() as SyncQueueEntry);
+      const id2 = await db.syncQueue.add(createEntry() as SyncQueueEntry);
 
       expect(typeof id1).toBe('number');
       expect(typeof id2).toBe('number');
