@@ -358,9 +358,51 @@ export class FileAttachmentComponent {
     await actionSheet.present();
   }
 
-  private openCamera() {
-    // TODO: Capacitor Camera integration
-    console.log('Open camera');
+  private async openCamera() {
+    try {
+      // Dynamic import for tree-shaking and to avoid SSR issues
+      const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+
+      const image = await Camera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+      });
+
+      if (image.dataUrl) {
+        // Convert data URL to File object
+        const response = await fetch(image.dataUrl);
+        const blob = await response.blob();
+        const fileName = `photo_${Date.now()}.${image.format || 'jpeg'}`;
+        const file = new File([blob], fileName, { type: `image/${image.format || 'jpeg'}` });
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+          const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.SIZE_EXCEEDED', { fileName });
+          this.showToast(msg, 'warning');
+          return;
+        }
+
+        // Check max files limit
+        if (this.attachments().length >= MAX_FILES) {
+          const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', { maxFiles: MAX_FILES });
+          this.showToast(msg, 'warning');
+          return;
+        }
+
+        // Emit the file for upload
+        this.upload.emit([file]);
+      }
+    } catch (error: unknown) {
+      // User cancelled or permission denied
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (!errorMessage.includes('User cancelled') && !errorMessage.includes('cancelled')) {
+        console.error('Camera error:', error);
+        this.showToast(this.translate.instant('FILE_ATTACHMENT.ERROR.CAMERA_FAILED'), 'danger');
+      }
+    }
   }
 
   private selectFromGallery() {

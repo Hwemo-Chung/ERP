@@ -15,7 +15,9 @@ import {
   IonCardContent,
   IonSpinner,
   ToastController,
+  ModalController,
 } from '@ionic/angular/standalone';
+import { SignaturePadComponent } from '../../../../shared/components/signature-pad/signature-pad.component';
 import { addIcons } from 'ionicons';
 import {
   documentTextOutline,
@@ -284,6 +286,7 @@ export class CompletionCertificatePage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
+  private readonly modalCtrl = inject(ModalController);
   protected readonly ordersStore = inject(OrdersStore);
   private readonly authService = inject(AuthService);
 
@@ -355,9 +358,23 @@ export class CompletionCertificatePage implements OnInit {
     }
   }
 
-  openSignaturePad(type: 'customer' | 'installer'): void {
-    // TODO: Open signature pad modal
-    console.log('Open signature pad for:', type);
+  async openSignaturePad(type: 'customer' | 'installer'): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: SignaturePadComponent,
+      cssClass: 'signature-modal',
+    });
+
+    await modal.present();
+
+    // Listen for signature confirmation
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      if (type === 'customer') {
+        this.customerSignature.set(data);
+      } else {
+        this.installerSignature.set(data);
+      }
+    }
   }
 
   canIssue(): boolean {

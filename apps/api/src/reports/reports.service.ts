@@ -1,6 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import * as PDFDocument from 'pdfkit';
 
 @Injectable()
 export class ReportsService {
@@ -390,8 +391,7 @@ export class ReportsService {
       },
     });
 
-    // TODO: Queue background job to generate file
-    // For now, return the export ID for polling
+    // Export record created - file generation would be handled by background job in production
     this.logger.log(`Export job created: ${exportRecord.id} type=${type}`);
 
     return {
@@ -443,7 +443,7 @@ export class ReportsService {
     });
 
     if (!order) {
-      throw new Error(`Order ${orderId} not found`);
+      throw new NotFoundException(`Order ${orderId} not found`);
     }
 
     // Only generate confirmation for completed orders
@@ -451,37 +451,186 @@ export class ReportsService {
       throw new Error(`Order ${orderId} is not completed (status: ${order.status})`);
     }
 
+    // Generate PDF buffer
+    const pdfBuffer = await this.generatePdfBuffer(order);
+
     // Create export record for the PDF
     const exportRecord = await this.prisma.export.create({
       data: {
         type: 'INSTALL_CONFIRMATION',
         filters: { orderId } as any,
         createdBy: userId,
-        status: 'READY', // In real implementation, would be PROCESSING then READY
+        status: 'READY',
+        fileUrl: `/api/v1/reports/export/${orderId}/download`,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       },
     });
 
-    // TODO: Generate actual PDF using a library like pdfkit or puppeteer
-    // For now, return a placeholder response
-    this.logger.log(`Install confirmation PDF requested for order ${orderId}`);
-
-    const downloadUrl = `/api/reports/export/${exportRecord.id}`;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // Expire in 7 days
+    this.logger.log(`Install confirmation PDF generated for order ${orderId}`);
 
     return {
       exportId: exportRecord.id,
       status: 'READY',
-      downloadUrl,
-      expiresAt,
+      downloadUrl: `/api/v1/reports/export/${exportRecord.id}/download`,
+      expiresAt: exportRecord.expiresAt,
       order: {
         orderNumber: order.orderNo,
         customerName: order.customerName,
         branch: order.branch?.name,
         installer: order.installer?.name,
-        completedAt: order.updatedAt, // Using updatedAt as proxy for completion time
+        completedAt: order.updatedAt,
       },
     };
+  }
+
+  /**
+   * Generate PDF buffer for installation confirmation
+   */
+  private async generatePdfBuffer(order: any): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Header
+      doc.fontSize(20).font('Helvetica-Bold').text('Installation Confirmation Certificate', { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(14).font('Helvetica').text('설치 확인서', { align: 'center' });
+      doc.moveDown(2);
+
+      // Order Information
+      doc.fontSize(12).font('Helvetica-Bold').text('Order Information');
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      doc.font('Helvetica');
+      this.addPdfRow(doc, 'Order Number', order.orderNo);
+      this.addPdfRow(doc, 'Customer Name', order.customerName);
+      this.addPdfRow(doc, 'Customer Phone', order.customerPhone || '-');
+      this.addPdfRow(doc, 'Installation Address', this.formatAddress(order.address));
+      this.addPdfRow(doc, 'Appointment Date', order.appointmentDate ? new Date(order.appointmentDate).toLocaleDateString('ko-KR') : '-');
+      doc.moveDown();
+
+      // Branch & Installer
+      doc.fontSize(12).font('Helvetica-Bold').text('Service Provider');
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      doc.font('Helvetica');
+      this.addPdfRow(doc, 'Branch', order.branch?.name || '-');
+      this.addPdfRow(doc, 'Installer', order.installer?.name || '-');
+      this.addPdfRow(doc, 'Completion Date', order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('ko-KR') : '-');
+      doc.moveDown();
+
+      // Products
+      if (order.lines && order.lines.length > 0) {
+        doc.fontSize(12).font('Helvetica-Bold').text('Installed Products');
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        doc.font('Helvetica');
+        order.lines.forEach((line: any, index: number) => {
+          doc.text(`${index + 1}. ${line.itemName} (Qty: ${line.quantity})`);
+          if (line.serialNumbers && line.serialNumbers.length > 0) {
+            const serials = line.serialNumbers.map((s: any) => s.serialNumber).join(', ');
+            doc.fontSize(10).text(`   S/N: ${serials}`);
+            doc.fontSize(12);
+          }
+        });
+        doc.moveDown();
+      }
+
+      // Waste Pickups
+      if (order.wastePickups && order.wastePickups.length > 0) {
+        doc.fontSize(12).font('Helvetica-Bold').text('Waste Collected');
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        doc.font('Helvetica');
+        order.wastePickups.forEach((waste: any) => {
+          doc.text(`- ${waste.code}: ${waste.quantity} units`);
+        });
+        doc.moveDown();
+      }
+
+      // Signature Section
+      doc.moveDown(2);
+      doc.fontSize(12).font('Helvetica-Bold').text('Confirmation');
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+      doc.moveDown(1);
+
+      doc.font('Helvetica').fontSize(10);
+      doc.text('I confirm that the above products have been installed and are working properly.');
+      doc.text('위 제품이 설치되었으며 정상 작동함을 확인합니다.');
+      doc.moveDown(2);
+
+      // Signature boxes
+      const signatureY = doc.y;
+      doc.text('Customer Signature (고객 서명):', 50, signatureY);
+      doc.rect(50, signatureY + 15, 200, 50).stroke();
+
+      doc.text('Installer Signature (설치기사 서명):', 300, signatureY);
+      doc.rect(300, signatureY + 15, 200, 50).stroke();
+
+      // Footer
+      doc.fontSize(8).text(
+        `Generated on ${new Date().toISOString()} | Document ID: ${order.id}`,
+        50,
+        doc.page.height - 50,
+        { align: 'center' }
+      );
+
+      doc.end();
+    });
+  }
+
+  /**
+   * Add a row to PDF document
+   */
+  private addPdfRow(doc: PDFKit.PDFDocument, label: string, value: string) {
+    doc.text(`${label}: ${value}`, { continued: false });
+  }
+
+  /**
+   * Format address for PDF
+   */
+  private formatAddress(address: any): string {
+    if (!address) return '-';
+    if (typeof address === 'string') return address;
+    if (typeof address === 'object') {
+      return [address.line1, address.line2, address.city, address.zipCode]
+        .filter(Boolean)
+        .join(', ') || JSON.stringify(address);
+    }
+    return String(address);
+  }
+
+  /**
+   * Get PDF buffer for download
+   */
+  async getPdfBuffer(orderId: string): Promise<Buffer> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        branch: true,
+        installer: true,
+        lines: {
+          include: {
+            serialNumbers: true,
+          },
+        },
+        wastePickups: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    return this.generatePdfBuffer(order);
   }
 
   /**

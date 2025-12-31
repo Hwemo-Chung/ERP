@@ -4,11 +4,14 @@ import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ModalController } from '@ionic/angular/standalone';
 import { SessionManagerService } from './session-manager.service';
+import { AuthService } from '@core/services/auth.service';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('SessionManagerService - FR-19', () => {
   let service: SessionManagerService;
   let router: jasmine.SpyObj<Router>;
   let modalCtrl: jasmine.SpyObj<ModalController>;
+  let authService: jasmine.SpyObj<AuthService>;
 
   const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -17,6 +20,11 @@ describe('SessionManagerService - FR-19', () => {
 
     router = jasmine.createSpyObj('Router', ['navigate']);
     modalCtrl = jasmine.createSpyObj('ModalController', ['create']);
+    authService = jasmine.createSpyObj('AuthService', ['refreshTokens', 'logout']);
+
+    // Mock auth service methods
+    authService.refreshTokens.and.returnValue(Promise.resolve(true));
+    authService.logout.and.returnValue(Promise.resolve());
 
     // Mock modal create
     const mockModal = {
@@ -29,10 +37,12 @@ describe('SessionManagerService - FR-19', () => {
     modalCtrl.create.and.returnValue(Promise.resolve(mockModal as any));
 
     TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
       providers: [
         SessionManagerService,
         { provide: Router, useValue: router },
         { provide: ModalController, useValue: modalCtrl },
+        { provide: AuthService, useValue: authService },
       ],
     });
 

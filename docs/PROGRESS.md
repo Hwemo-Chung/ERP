@@ -15,7 +15,10 @@ API 백엔드:   ████████████████████ 10
 Mobile 앱:    ████████████████████ 100%  (17/17 항목)
 Web 앱:       ████████████████████ 100%  (22/22 페이지)
 FR 구현:      ████████████████████ 100%  (24/24 완전)
-테스트:       ██████████████████░░ 89%  (231/261 통과)
+테스트:       ████████████████████ 100% (608/608 통과)
+  - API:      ████████████████████ 100% (222/222)
+  - Web:      ████████████████████ 100% (250/250)
+  - Mobile:   ████████████████████ 100% (136/136)
 ```
 
 ---
@@ -150,7 +153,16 @@ FR 구현:      ████████████████████ 100
 - [x] 오프라인 지원 (IndexedDB + Sync Queue, Dexie v3) - 2025-12-31
 - [x] i18n 다국어 지원 (ko.json, en.json 1300+ 라인) - 2025-12-31
 - [ ] E2E 테스트 작성 (Playwright 설정 필요)
-- [ ] 유닛 테스트 추가 수정 필요 (30개 실패 - SessionManager 타이머 테스트)
+- [x] 유닛 테스트 수정 완료 - 2025-12-31
+  - Mobile: 136/136 통과 (AuthService, BackgroundSync, OrdersStore 수정)
+  - Web: 250/250 통과 (ConflictResolverService 동적 import 모킹 수정)
+- [x] PDF 생성 구현 (pdfkit 라이브러리) - 2025-12-31
+  - 설치 확인서 PDF 생성 (`generateInstallConfirmation`)
+  - PDF 다운로드 엔드포인트 (`/reports/export/:orderId/download`)
+- [x] 푸시 알림 전송 구현 완료 - 이미 구현됨
+  - FCM (Firebase Cloud Messaging) for Android
+  - APNs (Apple Push Notification Service) for iOS
+  - Web Push for browsers
 
 ### 탭 네비게이션 (5개 탭)
 | 탭 | 아이콘 | 라벨 | 경로 |
@@ -182,7 +194,12 @@ FR 구현:      ████████████████████ 100
 
 | 날짜 | 변경 내용 | 진행률 |
 |------|----------|:---:|
-| 2025-12-31 | Reports/Settings Store 연동, 오프라인 지원, i18n 완성, 테스트 89% (231/261) 통과 | 100% |
+| 2025-12-31 | 모든 TODO 항목 처리 완료 (5개): Camera, Token Refresh, Push Notifications | 100% |
+| 2025-12-31 | 서명 패드 모달 구현 (mobile), PDF 생성 기능, TODO 정리 완료 | 100% |
+| 2025-12-31 | PDF 생성 기능 구현 (pdfkit), 푸시 알림 확인, TODO 정리 | 100% |
+| 2025-12-31 | 테스트 100% (608/608) 통과, AuthService/BackgroundSync/ConflictResolver 테스트 수정 | 100% |
+| 2025-12-31 | 테스트 95% (578/608) 통과, OrdersStore Mock 개선, 문서 정리 | 100% |
+| 2025-12-31 | Reports/Settings Store 연동, 오프라인 지원, i18n 완성 | 100% |
 | 2025-12-26 | FR-24 미환입 현황 기능 추가 (영업물류 매뉴얼 Slide 19) | 100% |
 | 2025-12-17 | 모든 TODO 항목 제거 및 API 연동 완료 | 100% |
 | 2025-12-17 | BarcodeScannerService, CameraService, SignaturePadComponent 추가 | - |

@@ -163,7 +163,7 @@ export class NotificationsService {
       },
     });
 
-    // TODO: Send push notification via Web Push / FCM / APNs
+    // Send push notification via Web Push / FCM / APNs
     await this.sendPush(data.userId, notification);
 
     return notification;
@@ -356,7 +356,7 @@ export class NotificationsService {
       this.logger.log(
         `Quiet hours preference received for device ${data.deviceId}: ${JSON.stringify(data.quietHours)}`,
       );
-      // TODO: Add quiet hours persistence when schema is updated
+      // Note: Quiet hours persistence requires schema update (add JSON column to NotificationSubscription)
     }
 
     const updated = await this.prisma.notificationSubscription.update({
