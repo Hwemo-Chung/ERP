@@ -11,13 +11,14 @@ import {
 import { addIcons } from 'ionicons';
 import { notificationsOutline, checkmarkCircleOutline, alertCircleOutline, swapHorizontalOutline, timeOutline, trashOutline } from 'ionicons/icons';
 import { NotificationsService, Notification, NotifCategory } from '../../../../core/services/notifications.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-notification-center',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons,
+    CommonModule, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons,
     IonBackButton, IonButton, IonList, IonItem, IonLabel, IonBadge, IonIcon,
     IonSpinner, IonSegment, IonSegmentButton, IonToggle, IonCard, IonCardHeader,
     IonCardTitle, IonCardContent, IonRefresher, IonRefresherContent,

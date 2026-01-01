@@ -10,9 +10,29 @@
     "NEXT": "다음",
     "PREV": "이전",
     "LOADING": "로딩 중...",
-    "ERROR": "오류",
+    "ERROR": {
+      "TITLE": "오류",
+      "NOT_FOUND": "데이터를 찾을 수 없습니다"
+    },
     "SUCCESS": "성공",
+    "BUTTONS": {
+      "OK": "확인",
+      "CANCEL": "취소",
+      "SAVE": "저장",
+      "DELETE": "삭제",
+      "CLOSE": "닫기",
+      "CONFIRM": "확인",
+      "MARK_RETURN": "환입 처리"
+    },
+    "CANCEL_REASONS": {
+      "WRONG_ADDRESS": "주소오류",
+      "CUSTOMER_REQUEST": "고객요청",
+      "OUT_OF_STOCK": "재고부족",
+      "DUPLICATE": "중복주문",
+      "OTHER": "기타"
+    },
     "WARNING": "경고",
+    "UNIT_ITEM": "건",
     "COMPLETE": "완료",
     "ADD": "추가",
     "INFO": "정보",
@@ -58,10 +78,6 @@
     "PLACEHOLDER": {
       "SELECT": "선택하세요"
     },
-    "ERROR": {
-      "TITLE": "오류",
-      "NOT_FOUND": "데이터를 찾을 수 없습니다"
-    },
     "BUTTON": {
       "BACK_TO_LIST": "목록으로 돌아가기",
       "CANCEL": "취소",
@@ -81,7 +97,8 @@
       "THURSDAY": "목요일",
       "FRIDAY": "금요일",
       "SATURDAY": "토요일"
-    }
+    },
+    "TOTAL": "총"
   },
   "FILTER": {
     "TITLE": "필터",
@@ -237,6 +254,21 @@
     }
   },
   "ORDERS": {
+    "STATUS": {
+      "UNASSIGNED": "미배정",
+      "ASSIGNED": "배정",
+      "CONFIRMED": "배정확정",
+      "RELEASED": "출고확정",
+      "DISPATCHED": "출문",
+      "POSTPONED": "연기",
+      "ABSENT": "부재",
+      "COMPLETED": "인수",
+      "PARTIAL": "부분인수",
+      "COLLECTED": "회수",
+      "CANCELLED": "취소",
+      "REQUEST_CANCEL": "의뢰취소",
+      "REVERTED": "복원"
+    },
     "ERROR": {
       "LOAD_FAILED": "주문 로드 실패"
     },
@@ -267,6 +299,8 @@
       "ORDER_NUMBER": "주문번호",
       "ORDER_DATE": "주문일",
       "SCHEDULED_DATE": "예정일",
+      "APPOINTMENT_INFO": "예약 정보",
+      "ORDER_NOT_FOUND": "주문을 찾을 수 없습니다",
       "CUSTOMER_INFO": "고객 정보",
       "CUSTOMER_NAME": "고객명",
       "PHONE": "연락처",
@@ -540,8 +574,10 @@
       "ADDRESS": "주소",
       "CALL": "전화",
       "PRODUCT_LIST": "제품 목록",
+      "NO_PRODUCTS": "제품 정보 없음",
       "SPECIAL_NOTES": "특이사항",
       "NOT_FOUND": "배정 정보를 찾을 수 없습니다.",
+      "GO_TO_LIST": "목록으로",
       "ASSIGN_INSTALLER": "설치기사 배정",
       "CONFIRM_ASSIGNMENT": "배정 확정",
       "CHANGE_INSTALLER": "기사 변경",
@@ -727,12 +763,16 @@
     "MENU": {
       "TITLE": "리포트",
       "SUBTITLE": "진행 현황 및 데이터 분석",
+      "PROGRESS": "진행현황 대시보드",
+      "PROGRESS_DESC": "설치기사별/지점별 진행 현황",
       "PROGRESS_DASHBOARD": "진행현황 대시보드",
       "PROGRESS_DASHBOARD_DESC": "설치기사별/지점별 진행 현황",
       "CUSTOMER_HISTORY": "고객 이력 조회",
       "CUSTOMER_HISTORY_DESC": "고객별 주문/설치 이력 검색",
       "WASTE_SUMMARY": "폐가전 집계",
       "WASTE_SUMMARY_DESC": "폐가전 회수 현황 및 통계",
+      "UNRETURNED": "미반납 현황",
+      "UNRETURNED_DESC": "미반납 물품 현황 및 관리",
       "EXPORT": "데이터 내보내기",
       "EXPORT_DESC": "ECOAS, CSV, PDF 출력"
     },
@@ -759,6 +799,13 @@
       "TODAY": "오늘",
       "THIS_WEEK": "이번 주",
       "THIS_MONTH": "이번 달"
+    },
+    "PROGRESS_DASHBOARD": {
+      "GROUPBY": {
+        "INSTALLER": "설치기사별",
+        "BRANCH": "지점별",
+        "STATUS": "상태별"
+      }
     },
     "CUSTOMER": {
       "TITLE": "고객 이력 조회",
@@ -847,6 +894,66 @@
       "QUANTITY": "수량",
       "TOTAL": "합계",
       "UNIT": "단위"
+    },
+    "COMPLETION": {
+      "TITLE": "완료 처리",
+      "FILTER": {
+        "ALL": "전체",
+        "DISPATCHED": "대기",
+        "COMPLETED": "완료",
+        "WAITING": "대기중"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "진행중",
+        "COMPLETED": "완료",
+        "WAITING": "대기"
+      },
+      "CHIPS": {
+        "WAITING": "대기",
+        "IN_PROGRESS": "진행중",
+        "COMPLETED": "완료"
+      }
+    },
+    "UNRETURNED": {
+      "TITLE": "미반납 현황",
+      "NO_DATA": "미반납 항목이 없습니다"
+    },
+    "UNRETURNED_ITEMS": {
+      "TITLE": "미환입 현황",
+      "RETURNED": "환입완료",
+      "NOT_RETURNED": "미환입",
+      "FILTER": {
+        "ALL": "전체",
+        "UNRETURNED": "미환입",
+        "RETURNED": "환입완료"
+      },
+      "SEARCH_PLACEHOLDER": "주문번호, 고객명 검색",
+      "SUMMARY": {
+        "UNRETURNED": "미환입",
+        "RETURNED": "환입완료",
+        "TOTAL": "전체"
+      },
+      "LOADING": "데이터 로딩 중...",
+      "LIST_TITLE": "취소건 환입 현황",
+      "CANCEL_DATE": "취소일",
+      "DAYS_OVERDUE_SUFFIX": "일 경과",
+      "NO_DATA": "조회된 데이터가 없습니다",
+      "BRANCH_TITLE": "센터별 미환입 현황",
+      "BRANCH_UNRETURNED": "미환입",
+      "BRANCH_RETURNED": "환입",
+      "DETAIL": {
+        "PRODUCT_NAME": "품목",
+        "CANCEL_REASON": "취소사유",
+        "RETURN_STATUS": "환입상태",
+        "RETURN_DATE": "환입일"
+      },
+      "MARK_RETURN_TITLE": "환입 처리",
+      "MARK_RETURN_CONFIRM": "{{orderNo}} 건을 환입 처리하시겠습니까?",
+      "MARK_RETURN_SUCCESS": "환입 처리 완료",
+      "MARK_RETURN_FAILED": "환입 처리 실패",
+      "EXPORT_SUCCESS": "CSV 다운로드 완료",
+      "EXPORT_FAILED": "다운로드 실패",
+      "PERMISSION_DENIED": "권한이 없습니다. 관리자에게 문의하세요."
     }
   },
   "PROFILE": {

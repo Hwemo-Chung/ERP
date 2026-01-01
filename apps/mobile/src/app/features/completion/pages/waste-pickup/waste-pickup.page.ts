@@ -34,6 +34,7 @@ import {
 } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, WasteEntry } from '../../../../store/orders/orders.models';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface WasteItem {
   id: string;
@@ -75,6 +76,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,

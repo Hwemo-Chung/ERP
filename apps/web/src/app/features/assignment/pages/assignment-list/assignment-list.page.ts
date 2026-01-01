@@ -418,14 +418,14 @@ export class AssignmentListPage implements OnInit {
 
     if (query) {
       filtered = filtered.filter(o =>
-        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.orderNo.toLowerCase().includes(query) ||
         o.customerName.toLowerCase().includes(query)
       );
     }
 
     return filtered.map(o => ({
       id: o.id,
-      orderNumber: o.erpOrderNumber,
+      orderNumber: o.orderNo,
       customerName: o.customerName,
       appointmentDate: o.appointmentDate || '-',
       status: o.status,
@@ -454,7 +454,11 @@ export class AssignmentListPage implements OnInit {
     const user = this.authService.user();
     // HQ_ADMIN can see all branches, others see only their branch
     const branchCode = user?.roles?.includes('HQ_ADMIN') ? 'ALL' : user?.branchCode;
-    await this.ordersStore.loadOrders(branchCode);
+    // Load stats for accurate KPI counts, then load paginated orders
+    await Promise.all([
+      this.ordersStore.loadStats(branchCode),
+      this.ordersStore.loadOrders(branchCode),
+    ]);
   }
 
   onSearch(event: CustomEvent): void {

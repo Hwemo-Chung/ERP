@@ -7,4 +7,5 @@ export const REPORTS_ROUTES: Routes = [
   { path: 'waste-summary', loadComponent: () => import('./pages/waste-summary/waste-summary.page').then(m => m.WasteSummaryPage) },
   { path: 'export', loadComponent: () => import('./pages/export-page/export-page.page').then(m => m.ExportPagePage) },
   { path: 'release-summary', loadComponent: () => import('./pages/release-summary/release-summary.page').then(m => m.ReleaseSummaryPage) },
+  { path: 'unreturned-items', loadComponent: () => import('./pages/unreturned-items/unreturned-items.page').then(m => m.UnreturnedItemsPage) },
 ];

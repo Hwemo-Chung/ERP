@@ -9,7 +9,7 @@ import { ConflictResolverService } from '../../../shared/services/conflict-resol
 
 export interface Order {
   id: string;
-  erpOrderNumber: string;
+  orderNo: string;
   status: string;
   appointmentDate?: string;
   appointmentSlot?: string;
@@ -20,18 +20,25 @@ export interface Order {
   customerMemo?: string;
   installerId?: string;
   installerName?: string;
+  // API returns nested installer object
+  installer?: { id: string; name: string; phone?: string };
   branchId: string;
   branchCode?: string;
   version: number;
   createdAt: string;
   updatedAt: string;
+  // API returns 'lines', frontend uses 'orderLines' - support both
+  lines?: OrderLine[];
   orderLines?: OrderLine[];
 }
 
 export interface OrderLine {
   id: string;
-  productCode: string;
-  productName: string;
+  productCode?: string;
+  productName?: string;
+  // API returns itemCode/itemName from Prisma schema
+  itemCode?: string;
+  itemName?: string;
   quantity: number;
   serialNumber?: string;
 }
@@ -184,7 +191,7 @@ export class OrdersService {
   private async cacheOrders(orders: Order[]): Promise<void> {
     const offlineOrders = orders.map((order) => ({
       id: order.id,
-      erpOrderNumber: order.erpOrderNumber,
+      orderNo: order.orderNo,
       status: order.status,
       appointmentDate: order.appointmentDate,
       appointmentSlot: order.appointmentSlot,
@@ -196,7 +203,8 @@ export class OrdersService {
       version: order.version,
       localUpdatedAt: Date.now(),
       syncedAt: Date.now(),
-      orderLines: order.orderLines,
+      // API returns 'lines', store as 'orderLines' for offline use
+      orderLines: order.lines || order.orderLines,
     }));
 
     await db.orders.bulkPut(offlineOrders);
@@ -213,7 +221,7 @@ export class OrdersService {
       const search = params.search.toLowerCase();
       filtered = filtered.filter(
         (o) =>
-          o.erpOrderNumber.toLowerCase().includes(search) ||
+          o.orderNo.toLowerCase().includes(search) ||
           o.customerName.toLowerCase().includes(search)
       );
     }
@@ -248,7 +256,7 @@ export class OrdersService {
   private mapOfflineOrder(offline: any): Order {
     return {
       id: offline.id,
-      erpOrderNumber: offline.erpOrderNumber,
+      orderNo: offline.orderNo,
       status: offline.status,
       appointmentDate: offline.appointmentDate,
       appointmentSlot: offline.appointmentSlot,

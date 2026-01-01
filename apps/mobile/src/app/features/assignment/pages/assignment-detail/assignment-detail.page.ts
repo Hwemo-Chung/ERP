@@ -55,6 +55,7 @@ import {
   ORDER_STATUS_COLORS,
 } from '../../../../store/orders/orders.models';
 import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assign.modal';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-assignment-detail',
@@ -62,6 +63,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -90,7 +92,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/assignment"></ion-back-button>
         </ion-buttons>
-        <ion-title>배정 상세</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.DETAIL.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="refresh()">
             <ion-icon name="refresh-outline"></ion-icon>
@@ -109,14 +111,14 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
       @if (ordersStore.isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'ASSIGNMENT.DETAIL.LOADING' | translate }}</p>
         </div>
       } @else if (order()) {
         <!-- Status Card -->
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ order()!.erpOrderNumber }}
+              {{ order()!.orderNo }}
               <ion-badge [color]="getStatusColor(order()!.status)">
                 {{ getStatusLabel(order()!.status) }}
               </ion-badge>
@@ -129,7 +131,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
                   <div class="info-item">
                     <ion-icon name="calendar-outline"></ion-icon>
                     <div>
-                      <ion-note>약속일시</ion-note>
+                      <ion-note>{{ 'ASSIGNMENT.DETAIL.APPOINTMENT_DATE' | translate }}</ion-note>
                       <p>{{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</p>
                     </div>
                   </div>
@@ -138,8 +140,8 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
                   <div class="info-item">
                     <ion-icon name="person-outline"></ion-icon>
                     <div>
-                      <ion-note>설치기사</ion-note>
-                      <p>{{ order()!.installerName || '미배정' }}</p>
+                      <ion-note>{{ 'ASSIGNMENT.DETAIL.INSTALLER' | translate }}</ion-note>
+                      <p>{{ order()!.installer?.name || order()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
                     </div>
                   </div>
                 </ion-col>
@@ -151,34 +153,34 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
         <!-- Customer Info Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>고객 정보</ion-card-title>
+            <ion-card-title>{{ 'ASSIGNMENT.DETAIL.CUSTOMER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
               <ion-item>
                 <ion-icon name="person-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>고객명</ion-note>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.CUSTOMER_NAME' | translate }}</ion-note>
                   <p>{{ order()!.customerName }}</p>
                 </ion-label>
               </ion-item>
               <ion-item>
                 <ion-icon name="call-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>연락처</ion-note>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.CONTACT' | translate }}</ion-note>
                   <p>{{ order()!.customerPhone || '-' }}</p>
                 </ion-label>
                 @if (order()!.customerPhone) {
                   <ion-button slot="end" fill="clear" (click)="callCustomer()">
-                    전화
+                    {{ 'ASSIGNMENT.DETAIL.CALL' | translate }}
                   </ion-button>
                 }
               </ion-item>
               <ion-item>
                 <ion-icon name="location-outline" slot="start"></ion-icon>
                 <ion-label>
-                  <ion-note>주소</ion-note>
-                  <p>{{ order()!.customerAddress || order()!.address || '-' }}</p>
+                  <ion-note>{{ 'ASSIGNMENT.DETAIL.ADDRESS' | translate }}</ion-note>
+                  <p>{{ getFormattedAddress() }}</p>
                 </ion-label>
               </ion-item>
             </ion-list>
@@ -188,7 +190,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
         <!-- Products Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>제품 목록</ion-card-title>
+            <ion-card-title>{{ 'ASSIGNMENT.DETAIL.PRODUCT_LIST' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list>
@@ -196,8 +198,8 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
                 <ion-item>
                   <ion-icon name="cube-outline" slot="start"></ion-icon>
                   <ion-label>
-                    <h3>{{ line.productName }}</h3>
-                    <p>{{ line.productCode }} × {{ line.quantity }}</p>
+                    <h3>{{ line.itemName || line.productName }}</h3>
+                    <p>{{ line.itemCode || line.productCode }} × {{ line.quantity }}</p>
                     @if (line.serialNumber) {
                       <p class="serial">S/N: {{ line.serialNumber }}</p>
                     }
@@ -205,7 +207,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
                 </ion-item>
               } @empty {
                 <ion-item>
-                  <ion-label color="medium">제품 정보 없음</ion-label>
+                  <ion-label color="medium">{{ 'ASSIGNMENT.DETAIL.NO_PRODUCTS' | translate }}</ion-label>
                 </ion-item>
               }
             </ion-list>
@@ -216,7 +218,7 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
         @if (order()!.completion?.notes) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>특이사항</ion-card-title>
+              <ion-card-title>{{ 'ASSIGNMENT.DETAIL.SPECIAL_NOTES' | translate }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               <p>{{ order()!.completion!.notes }}</p>
@@ -229,42 +231,42 @@ import { OrderAssignModal } from '../../../orders/pages/order-assign/order-assig
           @if (order()!.status === OrderStatus.UNASSIGNED) {
             <ion-button expand="block" (click)="assignInstaller()">
               <ion-icon name="person-outline" slot="start"></ion-icon>
-              설치기사 배정
+              {{ 'ASSIGNMENT.DETAIL.ASSIGN_INSTALLER' | translate }}
             </ion-button>
           }
           @if (order()!.status === OrderStatus.ASSIGNED) {
             <ion-button expand="block" color="success" (click)="confirmAssignment()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              배정 확정
+              {{ 'ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT' | translate }}
             </ion-button>
             <ion-button expand="block" color="warning" (click)="changeInstaller()">
               <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
-              기사 변경
+              {{ 'ASSIGNMENT.DETAIL.CHANGE_INSTALLER' | translate }}
             </ion-button>
           }
           @if (order()!.status === OrderStatus.CONFIRMED) {
             <ion-button expand="block" color="primary" (click)="confirmRelease()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              출고 확정
+              {{ 'ASSIGNMENT.DETAIL.CONFIRM_RELEASE' | translate }}
             </ion-button>
           }
           @if (canChangeAppointment()) {
             <ion-button expand="block" color="medium" (click)="changeAppointment()">
               <ion-icon name="calendar-outline" slot="start"></ion-icon>
-              약속일 변경
+              {{ 'ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT' | translate }}
             </ion-button>
           }
           @if (canCancel()) {
             <ion-button expand="block" color="danger" fill="outline" (click)="cancelAssignment()">
               <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-              취소
+              {{ 'ASSIGNMENT.DETAIL.CANCEL' | translate }}
             </ion-button>
           }
         </div>
       } @else {
         <div class="empty-state">
-          <p>배정 정보를 찾을 수 없습니다.</p>
-          <ion-button (click)="goBack()">목록으로</ion-button>
+          <p>{{ 'ASSIGNMENT.DETAIL.NOT_FOUND' | translate }}</p>
+          <ion-button (click)="goBack()">{{ 'ASSIGNMENT.DETAIL.GO_TO_LIST' | translate }}</ion-button>
         </div>
       }
     </ion-content>
@@ -336,6 +338,7 @@ export class AssignmentDetailPage implements OnInit {
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly alertCtrl = inject(AlertController);
   private readonly modalCtrl = inject(ModalController);
+  private readonly translate = inject(TranslateService);
 
   readonly ordersStore = inject(OrdersStore);
   private readonly uiStore = inject(UIStore);
@@ -406,10 +409,45 @@ export class AssignmentDetailPage implements OnInit {
   }
 
   /**
-   * Get status display label
+   * Format address for display (handles both string and object formats)
+   */
+  getFormattedAddress(): string {
+    const o = this.order();
+    if (!o) return '-';
+
+    // If customerAddress is a string, use it directly
+    if (typeof o.customerAddress === 'string' && o.customerAddress) {
+      return o.customerAddress;
+    }
+
+    // If address is an object (API format), format it
+    const addr = (o as any).address;
+    if (addr && typeof addr === 'object') {
+      const parts = [addr.line1, addr.line2, addr.city].filter(Boolean);
+      return parts.join(' ') || '-';
+    }
+
+    // If address is a string
+    if (typeof addr === 'string' && addr) {
+      return addr;
+    }
+
+    return '-';
+  }
+
+  /**
+   * Get status display label (using i18n)
    */
   getStatusLabel(status: OrderStatus): string {
-    return ORDER_STATUS_LABELS[status] || status;
+    // Try ORDER_STATUS first (root level), fallback to ORDERS.STATUS (nested)
+    const key = `ORDER_STATUS.${status}`;
+    const translated = this.translate.instant(key);
+    if (translated !== key) return translated;
+
+    // Fallback for compatibility
+    const altKey = `ORDERS.STATUS.${status}`;
+    const altTranslated = this.translate.instant(altKey);
+    return altTranslated !== altKey ? altTranslated : status;
   }
 
   /**

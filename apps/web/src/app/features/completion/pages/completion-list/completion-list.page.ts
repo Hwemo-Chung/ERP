@@ -449,14 +449,14 @@ export class CompletionListPage implements OnInit {
 
     if (query) {
       filtered = filtered.filter(o =>
-        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.orderNo.toLowerCase().includes(query) ||
         o.customerName.toLowerCase().includes(query)
       );
     }
 
     return filtered.map(o => ({
       id: o.id,
-      orderNumber: o.erpOrderNumber,
+      orderNumber: o.orderNo,
       customerName: o.customerName,
       appointmentDate: o.appointmentDate || '-',
       status: o.status,

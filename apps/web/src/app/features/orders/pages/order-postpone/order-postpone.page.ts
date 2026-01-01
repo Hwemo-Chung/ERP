@@ -118,7 +118,7 @@ const REASON_CODES: ReasonCode[] = [
         <!-- Order Summary Card -->
         <div class="order-summary-card">
           <div class="card-header">
-            <div class="order-number">{{ order()!.erpOrderNumber }}</div>
+            <div class="order-number">{{ order()!.orderNo }}</div>
             <ion-badge [class]="'status-badge status-' + order()!.status.toLowerCase()">
               {{ getStatusLabel(order()!.status) }}
             </ion-badge>

@@ -88,13 +88,13 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
       <ion-toolbar>
         <ion-segment [value]="statusFilter()" (ionChange)="onStatusFilterChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'REPORTS.UNRETURNED_ITEMS.FILTER.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="unreturned">
-            <ion-label>미환입</ion-label>
+            <ion-label>{{ 'REPORTS.UNRETURNED_ITEMS.FILTER.UNRETURNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="returned">
-            <ion-label>환입완료</ion-label>
+            <ion-label>{{ 'REPORTS.UNRETURNED_ITEMS.FILTER.RETURNED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -102,7 +102,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
       <!-- Search -->
       <ion-toolbar>
         <ion-searchbar
-          placeholder="주문번호, 고객명 검색"
+          [placeholder]="'REPORTS.UNRETURNED_ITEMS.SEARCH_PLACEHOLDER' | translate"
           [value]="searchTerm()"
           (ionInput)="onSearch($event)"
           debounce="300"
@@ -121,21 +121,21 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
           <ion-card-content>
             <ion-icon name="alert-circle-outline"></ion-icon>
             <div class="summary-value">{{ summary().unreturnedCount }}</div>
-            <div class="summary-label">미환입</div>
+            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.UNRETURNED' | translate }}</div>
           </ion-card-content>
         </ion-card>
         <ion-card class="summary-card" color="success">
           <ion-card-content>
             <ion-icon name="checkmark-circle-outline"></ion-icon>
             <div class="summary-value">{{ summary().returnedCount }}</div>
-            <div class="summary-label">환입완료</div>
+            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.RETURNED' | translate }}</div>
           </ion-card-content>
         </ion-card>
         <ion-card class="summary-card" color="primary">
           <ion-card-content>
             <ion-icon name="return-down-back-outline"></ion-icon>
             <div class="summary-value">{{ summary().totalCount }}</div>
-            <div class="summary-label">전체</div>
+            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.TOTAL' | translate }}</div>
           </ion-card-content>
         </ion-card>
       </div>
@@ -143,16 +143,16 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
       @if (isLoading()) {
         <div class="center">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'REPORTS.UNRETURNED_ITEMS.LOADING' | translate }}</p>
         </div>
       } @else {
         <!-- Items List -->
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              취소건 환입 현황
+              {{ 'REPORTS.UNRETURNED_ITEMS.LIST_TITLE' | translate }}
               <ion-badge [color]="statusFilter() === 'unreturned' ? 'danger' : 'medium'">
-                {{ filteredItems().length }}건
+                {{ filteredItems().length }}{{ 'COMMON.UNIT_ITEM' | translate }}
               </ion-badge>
             </ion-card-title>
           </ion-card-header>
@@ -171,7 +171,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                       <h2>{{ item.orderNo }}</h2>
                       <h3>{{ item.customerName }}</h3>
                       <p>
-                        <ion-note>취소일: {{ item.cancelledAt | date:'yyyy-MM-dd' }}</ion-note>
+                        <ion-note>{{ 'REPORTS.UNRETURNED_ITEMS.CANCEL_DATE' | translate }}: {{ item.cancelledAt | date:'yyyy-MM-dd' }}</ion-note>
                       </p>
                       <p>
                         <ion-chip [color]="item.isReturned ? 'success' : 'danger'" size="small">
@@ -187,7 +187,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                         {{ item.returnedAt | date:'MM/dd' }}
                       } @else {
                         <span class="overdue" [class.critical]="isOverdue(item)">
-                          {{ getDaysOverdue(item) }}일 경과
+                          {{ getDaysOverdue(item) }}{{ 'REPORTS.UNRETURNED_ITEMS.DAYS_OVERDUE_SUFFIX' | translate }}
                         </span>
                       }
                     </ion-note>
@@ -204,7 +204,7 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
               } @empty {
                 <div class="empty">
                   <ion-icon name="return-down-back-outline"></ion-icon>
-                  <p>조회된 데이터가 없습니다</p>
+                  <p>{{ 'REPORTS.UNRETURNED_ITEMS.NO_DATA' | translate }}</p>
                 </div>
               }
             </ion-list>
@@ -215,15 +215,15 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
         @if (branchSummary().length > 0) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>센터별 미환입 현황</ion-card-title>
+              <ion-card-title>{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_TITLE' | translate }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               @for (branch of branchSummary(); track branch.branchCode) {
                 <div class="branch-item">
                   <span class="branch-name">{{ branch.branchName }}</span>
                   <div class="branch-stats">
-                    <ion-badge color="danger">미환입 {{ branch.unreturnedCount }}</ion-badge>
-                    <ion-badge color="success">환입 {{ branch.returnedCount }}</ion-badge>
+                    <ion-badge color="danger">{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_UNRETURNED' | translate }} {{ branch.unreturnedCount }}</ion-badge>
+                    <ion-badge color="success">{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_RETURNED' | translate }} {{ branch.returnedCount }}</ion-badge>
                   </div>
                   <div class="progress-bar">
                     <div
@@ -477,23 +477,42 @@ export class UnreturnedItemsPage implements OnInit {
     const markReturnBtn = await this.translate.get('COMMON.BUTTONS.MARK_RETURN').toPromise();
     const returnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.RETURNED').toPromise();
     const notReturnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED').toPromise();
-    
+    const productLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.PRODUCT_NAME').toPromise();
+    const cancelDateLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.CANCEL_DATE').toPromise();
+    const cancelReasonLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.CANCEL_REASON').toPromise();
+    const returnStatusLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_STATUS').toPromise();
+    const returnDateLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_DATE').toPromise();
+
+    // Translate cancel reason code to localized text
+    const cancelReasonKey = `COMMON.CANCEL_REASONS.${item.cancelReason}`;
+    const translatedReason = item.cancelReason
+      ? this.translate.instant(cancelReasonKey)
+      : '-';
+    // If translation not found, instant() returns the key, so fallback to original value
+    const cancelReasonValue = translatedReason === cancelReasonKey ? item.cancelReason : translatedReason;
+
+    let message = `${productLabel}: ${item.productName || '-'}\n`;
+    message += `${cancelDateLabel}: ${new Date(item.cancelledAt).toLocaleDateString('ko-KR')}\n`;
+    message += `${cancelReasonLabel}: ${cancelReasonValue}\n`;
+    message += `${returnStatusLabel}: ${item.isReturned ? returnedText : notReturnedText}`;
+    if (item.returnedAt) {
+      message += `\n${returnDateLabel}: ${new Date(item.returnedAt).toLocaleDateString('ko-KR')}`;
+    }
+
+    // Only HQ_ADMIN/BRANCH_MANAGER can mark as returned
+    const canMarkReturn = this.authService.hasAnyRole(['HQ_ADMIN', 'BRANCH_MANAGER']);
+    const showMarkReturnBtn = !item.isReturned && canMarkReturn;
+
     const alert = await this.alertCtrl.create({
       header: item.orderNo,
       subHeader: item.customerName,
-      message: `
-        <p><strong>품목:</strong> ${item.productName || '-'}</p>
-        <p><strong>취소일:</strong> ${new Date(item.cancelledAt).toLocaleDateString('ko-KR')}</p>
-        <p><strong>취소사유:</strong> ${item.cancelReason || '-'}</p>
-        <p><strong>환입상태:</strong> ${item.isReturned ? returnedText : notReturnedText}</p>
-        ${item.returnedAt ? `<p><strong>환입일:</strong> ${new Date(item.returnedAt).toLocaleDateString('ko-KR')}</p>` : ''}
-      `,
-      buttons: item.isReturned
-        ? [okBtn]
-        : [
+      message,
+      buttons: showMarkReturnBtn
+        ? [
             { text: cancelBtn, role: 'cancel' },
             { text: markReturnBtn, handler: () => this.markAsReturned(item) }
-          ],
+          ]
+        : [okBtn],
     });
     await alert.present();
   }
@@ -501,10 +520,14 @@ export class UnreturnedItemsPage implements OnInit {
   async markAsReturned(item: UnreturnedItem) {
     const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
     const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
-    
+    const header = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_TITLE').toPromise();
+    const confirmMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_CONFIRM', { orderNo: item.orderNo }).toPromise();
+    const successMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_SUCCESS').toPromise();
+    const failedMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_FAILED').toPromise();
+
     const alert = await this.alertCtrl.create({
-      header: '환입 처리',
-      message: `${item.orderNo} 건을 환입 처리하시겠습니까?`,
+      header,
+      message: confirmMsg,
       buttons: [
         { text: cancelBtn, role: 'cancel' },
         {
@@ -513,16 +536,20 @@ export class UnreturnedItemsPage implements OnInit {
             try {
               await this.reportsService.markItemAsReturned(item.orderId).toPromise();
               const toast = await this.toastCtrl.create({
-                message: '환입 처리 완료',
+                message: successMsg,
                 duration: 2000,
                 color: 'success',
               });
               await toast.present();
               this.loadData();
-            } catch {
+            } catch (error: any) {
+              const is403 = error?.status === 403;
+              const errorMsg = is403
+                ? this.translate.instant('REPORTS.UNRETURNED_ITEMS.PERMISSION_DENIED')
+                : failedMsg;
               const toast = await this.toastCtrl.create({
-                message: '환입 처리 실패',
-                duration: 2000,
+                message: errorMsg,
+                duration: 3000,
                 color: 'danger',
               });
               await toast.present();
@@ -558,14 +585,14 @@ export class UnreturnedItemsPage implements OnInit {
       URL.revokeObjectURL(url);
 
       const toast = await this.toastCtrl.create({
-        message: 'CSV 다운로드 완료',
+        message: this.translate.instant('REPORTS.UNRETURNED_ITEMS.EXPORT_SUCCESS'),
         duration: 2000,
         color: 'success',
       });
       await toast.present();
     } catch {
       const toast = await this.toastCtrl.create({
-        message: '다운로드 실패',
+        message: this.translate.instant('REPORTS.UNRETURNED_ITEMS.EXPORT_FAILED'),
         duration: 2000,
         color: 'danger',
       });

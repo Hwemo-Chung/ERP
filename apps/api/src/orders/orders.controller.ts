@@ -56,6 +56,32 @@ export class OrdersController {
     private readonly attachmentsService: AttachmentsService,
   ) {}
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Get order statistics by status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order statistics',
+    schema: {
+      type: 'object',
+      properties: {
+        total: { type: 'number', example: 1234 },
+        unassigned: { type: 'number', example: 456 },
+        assigned: { type: 'number', example: 234 },
+        confirmed: { type: 'number', example: 345 },
+        released: { type: 'number', example: 100 },
+        dispatched: { type: 'number', example: 50 },
+        completed: { type: 'number', example: 40 },
+        cancelled: { type: 'number', example: 9 },
+        pending: { type: 'number', example: 456 },
+      },
+    },
+  })
+  getStats(@Query('branchCode') branchCode: string, @CurrentUser() user: JwtPayload) {
+    // Branch-level users can only see their branch stats
+    const effectiveBranchCode = user.roles.includes(Role.HQ_ADMIN) ? branchCode : user.branchCode;
+    return this.ordersService.getStats(effectiveBranchCode);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get orders with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Orders list' })

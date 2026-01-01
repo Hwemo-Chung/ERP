@@ -194,6 +194,8 @@ FR 구현:      ████████████████████ 100
 
 | 날짜 | 변경 내용 | 진행률 |
 |------|----------|:---:|
+| 2026-01-03 | deprecated allowSignalWrites 플래그 제거, 코드 품질 개선 | 100% |
+| 2026-01-01 | Mobile 부재 처리 UI 개선 (reasonCode, notes), API 필드 정렬 | 100% |
 | 2025-12-31 | 모든 TODO 항목 처리 완료 (5개): Camera, Token Refresh, Push Notifications | 100% |
 | 2025-12-31 | 서명 패드 모달 구현 (mobile), PDF 생성 기능, TODO 정리 완료 | 100% |
 | 2025-12-31 | PDF 생성 기능 구현 (pdfkit), 푸시 알림 확인, TODO 정리 | 100% |

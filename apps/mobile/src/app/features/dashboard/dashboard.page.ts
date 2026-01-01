@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   IonContent,
   IonHeader,
@@ -52,11 +53,12 @@ interface DashboardSummary {
     IonRefresher,
     IonRefresherContent,
     IonSpinner,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Dashboard</ion-title>
+        <ion-title>{{ 'DASHBOARD.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -77,7 +79,7 @@ interface DashboardSummary {
               <ion-card class="stat-card">
                 <ion-card-content>
                   <div class="stat-value">{{ data()!.summary.total }}</div>
-                  <div class="stat-label">Total Orders</div>
+                  <div class="stat-label">{{ 'DASHBOARD.STATS.TOTAL_ORDERS' | translate }}</div>
                 </ion-card-content>
               </ion-card>
             </ion-col>
@@ -85,7 +87,7 @@ interface DashboardSummary {
               <ion-card class="stat-card success">
                 <ion-card-content>
                   <div class="stat-value">{{ data()!.summary.completed }}</div>
-                  <div class="stat-label">Completed</div>
+                  <div class="stat-label">{{ 'DASHBOARD.STATS.COMPLETED' | translate }}</div>
                 </ion-card-content>
               </ion-card>
             </ion-col>
@@ -95,7 +97,7 @@ interface DashboardSummary {
               <ion-card class="stat-card warning">
                 <ion-card-content>
                   <div class="stat-value">{{ data()!.summary.pending }}</div>
-                  <div class="stat-label">Pending</div>
+                  <div class="stat-label">{{ 'DASHBOARD.STATS.PENDING' | translate }}</div>
                 </ion-card-content>
               </ion-card>
             </ion-col>
@@ -103,7 +105,7 @@ interface DashboardSummary {
               <ion-card class="stat-card danger">
                 <ion-card-content>
                   <div class="stat-value">{{ data()!.summary.cancelled }}</div>
-                  <div class="stat-label">Cancelled</div>
+                  <div class="stat-label">{{ 'DASHBOARD.STATS.CANCELLED' | translate }}</div>
                 </ion-card-content>
               </ion-card>
             </ion-col>
@@ -113,15 +115,15 @@ interface DashboardSummary {
         <!-- KPI Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Performance</ion-card-title>
+            <ion-card-title>{{ 'DASHBOARD.KPI.TITLE' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <div class="kpi-row">
-              <span>Completion Rate</span>
+              <span>{{ 'DASHBOARD.KPI.COMPLETION_RATE' | translate }}</span>
               <span class="kpi-value success">{{ data()!.summary.completionRate }}%</span>
             </div>
             <div class="kpi-row">
-              <span>Cancellation Rate</span>
+              <span>{{ 'DASHBOARD.KPI.CANCELLATION_RATE' | translate }}</span>
               <span class="kpi-value danger">{{ data()!.summary.cancellationRate }}%</span>
             </div>
           </ion-card-content>
@@ -130,13 +132,13 @@ interface DashboardSummary {
         <!-- Status Breakdown -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Status Breakdown</ion-card-title>
+            <ion-card-title>{{ 'DASHBOARD.STATUS_BREAKDOWN.TITLE' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             @for (status of statusEntries(); track status[0]) {
               <div class="status-row">
                 <span [class]="'status-label status-' + status[0].toLowerCase()">
-                  {{ status[0] }}
+                  {{ 'ORDER_STATUS.' + status[0] | translate }}
                 </span>
                 <span class="status-count">{{ status[1] }}</span>
               </div>
@@ -230,11 +232,11 @@ export class DashboardPage implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // No date filter - show all data for comprehensive dashboard view
       const result = await firstValueFrom(
         this.http.get<DashboardSummary>(
           `${environment.apiUrl}/reports/summary`,
-          { params: { level: 'branch', dateFrom: today, dateTo: today } }
+          { params: { level: 'branch' } }
         )
       );
 

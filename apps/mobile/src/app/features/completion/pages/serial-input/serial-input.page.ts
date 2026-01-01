@@ -37,6 +37,7 @@ import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 import { BarcodeScannerService } from '../../../../core/services/barcode-scanner.service';
 import { UIStore } from '../../../../store/ui/ui.store';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ProductSerial {
   lineId: string;
@@ -54,6 +55,7 @@ interface ProductSerial {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -259,8 +261,8 @@ export class SerialInputPage implements OnInit, OnDestroy {
     if (lines) {
       this.products.set(lines.map((line: OrderLine) => ({
         lineId: line.id,
-        productCode: line.productCode,
-        productName: line.productName,
+        productCode: line.itemCode || line.productCode || '',
+        productName: line.itemName || line.productName || '',
         quantity: line.quantity,
         serialNumber: line.serialNumber || '',
         isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,

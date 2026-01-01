@@ -88,10 +88,22 @@ export interface ReportsFilters {
   vendorCode?: string;
 }
 
+// Generic progress item for different groupBy types
+export interface ProgressItem {
+  key: string;
+  label: string;
+  total: number;
+  completed: number;
+  pending: number;
+  completionRate: number;
+}
+
 export interface ReportsState {
   summary: KpiSummary | null;
   statusCounts: StatusCount[];
   branchProgress: BranchProgress[];
+  progressItems: ProgressItem[];
+  currentGroupBy: 'branch' | 'installer' | 'status' | 'date';
   wasteSummary: WasteSummaryItem[];
   customerHistory: CustomerHistoryItem[];
   releaseSummary: ReleaseSummaryItem[];

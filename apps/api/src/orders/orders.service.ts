@@ -127,6 +127,54 @@ export class OrdersService {
   }
 
   /**
+   * Get order statistics by status
+   * Returns counts for each status without loading full order data
+   */
+  async getStats(branchCode?: string) {
+    const where: Prisma.OrderWhereInput = {
+      deletedAt: null,
+    };
+
+    // Branch filter
+    if (branchCode && branchCode !== 'ALL') {
+      where.branch = { code: branchCode };
+    }
+
+    // Get counts for each status in parallel
+    const [
+      total,
+      unassigned,
+      assigned,
+      confirmed,
+      released,
+      dispatched,
+      completed,
+      cancelled,
+    ] = await Promise.all([
+      this.prisma.order.count({ where }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.UNASSIGNED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.ASSIGNED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.CONFIRMED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.RELEASED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.DISPATCHED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.COMPLETED } }),
+      this.prisma.order.count({ where: { ...where, status: OrderStatus.CANCELLED } }),
+    ]);
+
+    return {
+      total,
+      unassigned,
+      assigned,
+      confirmed,
+      released,
+      dispatched,
+      completed,
+      cancelled,
+      pending: unassigned, // Alias for frontend compatibility
+    };
+  }
+
+  /**
    * Get single order by ID
    */
   async findOne(id: string) {
@@ -254,6 +302,19 @@ export class OrdersService {
           });
         }
 
+        // Track absence retry count (FR-04)
+        if (dto.status === OrderStatus.ABSENT) {
+          const newRetryCount = existing.absenceRetryCount + 1;
+
+          // Check if max retries exceeded
+          if (newRetryCount > existing.maxAbsenceRetries) {
+            this.logger.warn(
+              `Order ${existing.orderNo} exceeded max absence retries (${newRetryCount}/${existing.maxAbsenceRetries})`,
+            );
+            // Allow but log warning - business may want to auto-escalate later
+          }
+        }
+
         // Log status change
         await tx.orderStatusHistory.create({
           data: {
@@ -289,6 +350,8 @@ export class OrdersService {
           ...(dto.status && { status: dto.status }),
           ...(dto.appointmentDate && { appointmentDate: new Date(dto.appointmentDate) }),
           ...(dto.remarks !== undefined && { remarks: dto.remarks }),
+          // Increment absence retry count when transitioning to ABSENT (FR-04)
+          ...(dto.status === OrderStatus.ABSENT && { absenceRetryCount: { increment: 1 } }),
           version: { increment: 1 },
         },
         include: {

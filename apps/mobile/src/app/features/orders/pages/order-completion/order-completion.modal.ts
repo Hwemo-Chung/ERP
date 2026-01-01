@@ -49,7 +49,7 @@ import {
   cameraOutline,
   trashOutline,
 } from 'ionicons/icons';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { OrdersStore } from '../../../../store/orders/orders.store';
@@ -94,7 +94,7 @@ import {
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>설치 완료</ion-title>
+        <ion-title>{{ 'ORDERS.COMPLETION_MODAL.TITLE' | translate }}</ion-title>
         <ion-button slot="end" fill="clear" (click)="dismiss()">
           <ion-icon name="close-outline"></ion-icon>
         </ion-button>
@@ -105,22 +105,22 @@ import {
       <form [formGroup]="form">
         <!-- Order Header -->
         <div class="order-header">
-          <h2>{{ order?.erpOrderNumber }}</h2>
+          <h2>{{ order?.orderNo }}</h2>
           <p>{{ order?.customerName }} - {{ order?.customerAddress }}</p>
         </div>
 
         <!-- Product Serial Numbers Section -->
         <div class="section">
-          <h3>상품 시리얼 번호</h3>
+          <h3>{{ 'ORDERS.COMPLETION_MODAL.SERIAL_SECTION' | translate }}</h3>
           <div formArrayName="serials">
             @for (line of orderLines(); let i = $index; track line.id) {
               <ion-item [formGroupName]="i" class="serial-item">
                 <ion-label position="stacked">
-                  {{ line.productName }} (수량: {{ line.quantity }})
+                  {{ line.itemName || line.productName }} ({{ 'ORDERS.COMPLETION_MODAL.QUANTITY' | translate }}: {{ line.quantity }})
                 </ion-label>
                 <ion-input
                   formControlName="serialNumber"
-                  placeholder="시리얼 번호 입력"
+                  [placeholder]="'ORDERS.COMPLETION_MODAL.SERIAL_PLACEHOLDER' | translate"
                   [maxlength]="20"
                 ></ion-input>
                 <span slot="end" class="count">
@@ -133,12 +133,12 @@ import {
 
         <!-- Waste Pickup Section -->
         <div class="section">
-          <h3>폐기 기기 수거</h3>
+          <h3>{{ 'ORDERS.COMPLETION_MODAL.WASTE_SECTION' | translate }}</h3>
           <div formArrayName="waste">
             @for (waste of wasteArray().controls; let i = $index; track i) {
               <ion-item [formGroupName]="i" class="waste-item">
-                <ion-label position="stacked">폐기 기기 코드</ion-label>
-                <ion-select formControlName="code" placeholder="코드 선택">
+                <ion-label position="stacked">{{ 'ORDERS.COMPLETION_MODAL.WASTE_CODE' | translate }}</ion-label>
+                <ion-select formControlName="code" [placeholder]="'ORDERS.COMPLETION_MODAL.WASTE_CODE_SELECT' | translate">
                   @for (code of wasteCodes(); track code.code) {
                     <ion-select-option [value]="code.code">
                       {{ code.code }} - {{ code.name }}
@@ -165,13 +165,13 @@ import {
             }
           </div>
           <ion-button expand="block" color="light" (click)="addWaste()">
-            폐기 기기 추가
+            {{ 'ORDERS.COMPLETION_MODAL.ADD_WASTE' | translate }}
           </ion-button>
         </div>
 
         <!-- Photos Section -->
         <div class="section">
-          <h3>설치 사진</h3>
+          <h3>{{ 'ORDERS.COMPLETION_MODAL.PHOTO_SECTION' | translate }}</h3>
           <div class="photos">
             @for (photo of photos(); track $index) {
               <div class="photo-item">
@@ -188,17 +188,17 @@ import {
           </div>
           <ion-button expand="block" (click)="capturePhoto()">
             <ion-icon name="camera-outline"></ion-icon>
-            사진 촬영
+            {{ 'ORDERS.COMPLETION_MODAL.TAKE_PHOTO' | translate }}
           </ion-button>
         </div>
 
         <!-- Notes -->
         <div class="section">
           <ion-item>
-            <ion-label position="stacked">특기사항 (선택)</ion-label>
+            <ion-label position="stacked">{{ 'ORDERS.COMPLETION_MODAL.NOTES_LABEL' | translate }}</ion-label>
             <ion-textarea
               formControlName="notes"
-              placeholder="특이사항을 입력하세요"
+              [placeholder]="'ORDERS.COMPLETION_MODAL.NOTES_PLACEHOLDER' | translate"
               rows="3"
             ></ion-textarea>
           </ion-item>
@@ -215,7 +215,7 @@ import {
     <ion-footer>
       <ion-toolbar>
         <ion-button slot="start" fill="outline" (click)="dismiss()">
-          취소
+          {{ 'COMMON.BUTTON.CANCEL' | translate }}
         </ion-button>
         <ion-button
           slot="end"
@@ -223,7 +223,7 @@ import {
           (click)="onSubmit()"
         >
           <ion-icon name="checkmark-outline"></ion-icon>
-          완료
+          {{ 'COMMON.BUTTON.COMPLETE' | translate }}
         </ion-button>
       </ion-toolbar>
     </ion-footer>
@@ -321,6 +321,7 @@ import {
 export class OrderCompletionModal implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly modalCtrl = inject(ModalController);
+  private readonly translate = inject(TranslateService);
   readonly ordersStore = inject(OrdersStore);
   readonly uiStore = inject(UIStore);
 
@@ -329,7 +330,8 @@ export class OrderCompletionModal implements OnInit {
   isSubmitting = signal(false);
   photos = signal<string[]>([]);
 
-  readonly orderLines = computed(() => this.order?.orderLines || []);
+  // Support both API response 'lines' and cached 'orderLines'
+  readonly orderLines = computed(() => this.order?.lines || this.order?.orderLines || []);
   readonly wasteCodes = signal<WasteCode[]>(WASTE_CODES);
   readonly wasteCategories = signal(WASTE_CATEGORY_LABELS);
   readonly groupedWasteCodes = signal(getGroupedWasteCodes());
@@ -357,9 +359,9 @@ export class OrderCompletionModal implements OnInit {
       return;
     }
 
-    // Build form arrays based on order lines
+    // Build form arrays based on order lines (support both API 'lines' and cached 'orderLines')
     const serials = this.form.get('serials') as FormArray;
-    (this.order.orderLines || []).forEach((line) => {
+    (this.order.lines || this.order.orderLines || []).forEach((line) => {
       serials.push(
         this.fb.group({
           lineId: [line.id],
@@ -404,7 +406,8 @@ export class OrderCompletionModal implements OnInit {
       }
     } catch (error) {
       console.error('Camera error:', error);
-      this.uiStore.showToast('카메라 접근 실패', 'danger');
+      const msg = this.translate.instant('ORDERS.COMPLETION_MODAL.ERROR.CAMERA_ACCESS');
+      this.uiStore.showToast(msg, 'danger');
     }
   }
 
@@ -416,6 +419,8 @@ export class OrderCompletionModal implements OnInit {
     if (!this.form.valid || !this.order) return;
 
     this.isSubmitting.set(true);
+    const successMsg = this.translate.instant('ORDERS.COMPLETION_MODAL.SUCCESS.COMPLETED');
+    const errorMsg = this.translate.instant('ORDERS.COMPLETION_MODAL.ERROR.SAVE_FAILED');
 
     try {
       const { serials, waste, notes } = this.form.value;
@@ -429,10 +434,10 @@ export class OrderCompletionModal implements OnInit {
         notes,
       });
 
-      this.uiStore.showToast('설치가 완료되었습니다', 'success');
+      this.uiStore.showToast(successMsg, 'success');
       await this.modalCtrl.dismiss(null, 'confirm');
     } catch (error) {
-      this.uiStore.showToast('완료 저장 실패', 'danger');
+      this.uiStore.showToast(errorMsg, 'danger');
       console.error('Completion error:', error);
     } finally {
       this.isSubmitting.set(false);

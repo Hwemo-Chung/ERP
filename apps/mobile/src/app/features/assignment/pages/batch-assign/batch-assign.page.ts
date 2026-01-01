@@ -328,7 +328,7 @@ export class BatchAssignPage implements OnInit {
     if (this.searchQuery) {
       const query = this.searchQuery.toLowerCase();
       filtered = unassigned.filter(o =>
-        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.orderNo.toLowerCase().includes(query) ||
         o.customerName.toLowerCase().includes(query)
       );
     }
@@ -336,7 +336,7 @@ export class BatchAssignPage implements OnInit {
     // Map to UI model
     const uiOrders: UnassignedOrder[] = filtered.map(o => ({
       id: o.id,
-      orderNumber: o.erpOrderNumber,
+      orderNumber: o.orderNo,
       customerName: o.customerName,
       appointmentDate: o.appointmentDate || '',
       productCount: (o.lines || o.orderLines || []).length,

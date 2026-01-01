@@ -3,56 +3,123 @@ import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Starting database seed...');
+// Korean names for realistic data
+const LAST_NAMES = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '홍'];
+const FIRST_NAMES = ['민준', '서연', '예준', '서윤', '도윤', '지우', '시우', '지민', '주원', '하은', '지호', '수아', '현우', '지아', '준서', '하윤', '예은', '유준', '수빈', '승현'];
 
-  // Create 30 branches
+// Korean cities and districts
+const CITIES = [
+  { city: '서울특별시', districts: ['강남구', '서초구', '송파구', '강동구', '마포구', '용산구', '종로구', '중구', '영등포구', '구로구'] },
+  { city: '경기도 수원시', districts: ['장안구', '권선구', '팔달구', '영통구'] },
+  { city: '경기도 성남시', districts: ['분당구', '수정구', '중원구'] },
+  { city: '인천광역시', districts: ['남동구', '부평구', '계양구', '서구', '연수구'] },
+  { city: '부산광역시', districts: ['해운대구', '수영구', '남구', '동래구', '부산진구'] },
+  { city: '대구광역시', districts: ['수성구', '달서구', '북구', '동구'] },
+  { city: '대전광역시', districts: ['유성구', '서구', '중구', '대덕구'] },
+  { city: '광주광역시', districts: ['서구', '북구', '광산구', '남구'] },
+];
+
+const STREETS = ['대로', '로', '길'];
+const BUILDINGS = ['아파트', '오피스텔', '빌라', '주택', '상가'];
+const PRODUCTS = [
+  { code: 'AC-001', name: '벽걸이 에어컨', weight: 35 },
+  { code: 'AC-002', name: '스탠드 에어컨', weight: 55 },
+  { code: 'AC-003', name: '시스템 에어컨', weight: 45 },
+  { code: 'REF-001', name: '양문형 냉장고', weight: 95 },
+  { code: 'REF-002', name: '김치냉장고', weight: 75 },
+  { code: 'REF-003', name: '미니 냉장고', weight: 25 },
+  { code: 'WM-001', name: '드럼세탁기', weight: 85 },
+  { code: 'WM-002', name: '통돌이세탁기', weight: 65 },
+  { code: 'DRY-001', name: '건조기', weight: 55 },
+  { code: 'TV-001', name: 'OLED TV 65인치', weight: 25 },
+  { code: 'TV-002', name: 'QLED TV 75인치', weight: 35 },
+  { code: 'DW-001', name: '식기세척기', weight: 45 },
+];
+
+const VENDORS = ['삼성전자', 'LG전자', '위니아', '대우전자', '캐리어'];
+const TIME_WINDOWS = ['09:00-12:00', '12:00-15:00', '15:00-18:00'];
+
+function randomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateKoreanName(): string {
+  return randomItem(LAST_NAMES) + randomItem(FIRST_NAMES);
+}
+
+function generateKoreanAddress(): { line1: string; line2: string; city: string; postal: string } {
+  const cityData = randomItem(CITIES);
+  const district = randomItem(cityData.districts);
+  const streetNum = Math.floor(Math.random() * 500) + 1;
+  const streetType = randomItem(STREETS);
+  const buildingType = randomItem(BUILDINGS);
+  const buildingNum = Math.floor(Math.random() * 30) + 1;
+  const unitNum = Math.floor(Math.random() * 2000) + 101;
+
+  return {
+    line1: `${district} ${streetNum}${streetType}`,
+    line2: `${buildingType} ${buildingNum}동 ${unitNum}호`,
+    city: cityData.city,
+    postal: String(10000 + Math.floor(Math.random() * 89999)),
+  };
+}
+
+function generatePhone(): string {
+  const prefix = ['010', '011', '016', '017', '019'][Math.floor(Math.random() * 5)];
+  const mid = String(Math.floor(Math.random() * 9000) + 1000);
+  const last = String(Math.floor(Math.random() * 9000) + 1000);
+  return `${prefix}-${mid}-${last}`;
+}
+
+async function main() {
+  console.log('🌱 Starting Korean sample data seed (1000+ orders)...');
+
+  // Create 30 branches with Korean names
   const branchData = [
-    { code: 'HQ', name: 'Headquarters', region: 'Seoul' },
-    { code: 'SEL01', name: 'Seoul Branch 1', region: 'Seoul' },
-    { code: 'SEL02', name: 'Seoul Branch 2', region: 'Seoul' },
-    { code: 'SEL03', name: 'Seoul Branch 3', region: 'Seoul' },
-    { code: 'GGN01', name: 'Gyeonggi Branch 1', region: 'Gyeonggi' },
-    { code: 'GGN02', name: 'Gyeonggi Branch 2', region: 'Gyeonggi' },
-    { code: 'GGN03', name: 'Gyeonggi Branch 3', region: 'Gyeonggi' },
-    { code: 'ICN01', name: 'Incheon Branch 1', region: 'Incheon' },
-    { code: 'ICN02', name: 'Incheon Branch 2', region: 'Incheon' },
-    { code: 'BSN01', name: 'Busan Branch 1', region: 'Busan' },
-    { code: 'BSN02', name: 'Busan Branch 2', region: 'Busan' },
-    { code: 'BSN03', name: 'Busan Branch 3', region: 'Busan' },
-    { code: 'DGU01', name: 'Daegu Branch 1', region: 'Daegu' },
-    { code: 'DGU02', name: 'Daegu Branch 2', region: 'Daegu' },
-    { code: 'GWJ01', name: 'Gwangju Branch 1', region: 'Gwangju' },
-    { code: 'GWJ02', name: 'Gwangju Branch 2', region: 'Gwangju' },
-    { code: 'DJN01', name: 'Daejeon Branch 1', region: 'Daejeon' },
-    { code: 'DJN02', name: 'Daejeon Branch 2', region: 'Daejeon' },
-    { code: 'USN01', name: 'Ulsan Branch 1', region: 'Ulsan' },
-    { code: 'USN02', name: 'Ulsan Branch 2', region: 'Ulsan' },
-    { code: 'SWN01', name: 'Suwon Branch 1', region: 'Suwon' },
-    { code: 'SWN02', name: 'Suwon Branch 2', region: 'Suwon' },
-    { code: 'CHN01', name: 'Cheonan Branch 1', region: 'Cheonan' },
-    { code: 'CHN02', name: 'Cheonan Branch 2', region: 'Cheonan' },
-    { code: 'JJU01', name: 'Jeonju Branch 1', region: 'Jeonju' },
-    { code: 'JJU02', name: 'Jeonju Branch 2', region: 'Jeonju' },
-    { code: 'CJU01', name: 'Cheongju Branch 1', region: 'Cheongju' },
-    { code: 'CJU02', name: 'Cheongju Branch 2', region: 'Cheongju' },
-    { code: 'GNJ01', name: 'Gimhae Branch 1', region: 'Gimhae' },
-    { code: 'YSN01', name: 'Yeosu Branch 1', region: 'Yeosu' },
+    { code: 'HQ', name: '본사', region: '서울' },
+    { code: 'SEL01', name: '서울 강남센터', region: '서울' },
+    { code: 'SEL02', name: '서울 서초센터', region: '서울' },
+    { code: 'SEL03', name: '서울 송파센터', region: '서울' },
+    { code: 'SEL04', name: '서울 마포센터', region: '서울' },
+    { code: 'SEL05', name: '서울 영등포센터', region: '서울' },
+    { code: 'GGN01', name: '경기 수원센터', region: '경기' },
+    { code: 'GGN02', name: '경기 성남센터', region: '경기' },
+    { code: 'GGN03', name: '경기 고양센터', region: '경기' },
+    { code: 'GGN04', name: '경기 용인센터', region: '경기' },
+    { code: 'ICN01', name: '인천 남동센터', region: '인천' },
+    { code: 'ICN02', name: '인천 부평센터', region: '인천' },
+    { code: 'BSN01', name: '부산 해운대센터', region: '부산' },
+    { code: 'BSN02', name: '부산 동래센터', region: '부산' },
+    { code: 'BSN03', name: '부산 서면센터', region: '부산' },
+    { code: 'DGU01', name: '대구 수성센터', region: '대구' },
+    { code: 'DGU02', name: '대구 달서센터', region: '대구' },
+    { code: 'GWJ01', name: '광주 서구센터', region: '광주' },
+    { code: 'GWJ02', name: '광주 북구센터', region: '광주' },
+    { code: 'DJN01', name: '대전 유성센터', region: '대전' },
+    { code: 'DJN02', name: '대전 서구센터', region: '대전' },
+    { code: 'USN01', name: '울산 남구센터', region: '울산' },
+    { code: 'SWN01', name: '수원 영통센터', region: '경기' },
+    { code: 'SWN02', name: '수원 권선센터', region: '경기' },
+    { code: 'CHN01', name: '천안 서북센터', region: '충남' },
+    { code: 'CHN02', name: '천안 동남센터', region: '충남' },
+    { code: 'JJU01', name: '전주 덕진센터', region: '전북' },
+    { code: 'CJU01', name: '청주 상당센터', region: '충북' },
+    { code: 'GNJ01', name: '김해 센터', region: '경남' },
+    { code: 'JJD01', name: '제주 센터', region: '제주' },
   ];
 
   const branches = [];
   for (const b of branchData) {
     const branch = await prisma.branch.upsert({
       where: { code: b.code },
-      update: {},
+      update: { name: b.name, region: b.region },
       create: { code: b.code, name: b.name, region: b.region, timezone: 'Asia/Seoul' },
     });
     branches.push(branch);
   }
+  console.log(`✅ Created ${branches.length} branches (Korean names)`);
 
-  console.log(`✅ Created ${branches.length} branches`);
-
-  // Create HQ Admin user
+  // Create users
   const adminPassword = await argon2.hash('admin123!');
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
@@ -60,7 +127,7 @@ async function main() {
     create: {
       username: 'admin',
       passwordHash: adminPassword,
-      fullName: 'System Admin',
+      fullName: '관리자',
       email: 'admin@erp-logistics.com',
       locale: 'ko',
       branchId: branches[0].id,
@@ -68,88 +135,40 @@ async function main() {
     },
   });
 
-  // Create admin role
   await prisma.userRole.upsert({
     where: { userId_role: { userId: admin.id, role: Role.HQ_ADMIN } },
     update: {},
     create: { userId: admin.id, role: Role.HQ_ADMIN },
   });
-
   console.log(`✅ Created admin user: ${admin.username}`);
 
-  // Create Branch Manager
+  // Create branch managers
   const managerPassword = await argon2.hash('manager123!');
-  const manager = await prisma.user.upsert({
-    where: { username: 'manager01' },
-    update: {},
-    create: {
-      username: 'manager01',
-      passwordHash: managerPassword,
-      fullName: 'Kim Branch Manager',
-      email: 'manager01@erp-logistics.com',
-      locale: 'ko',
-      branchId: branches[1].id,
-      isActive: true,
-    },
-  });
+  for (let i = 1; i <= 10; i++) {
+    const branchIdx = i % (branches.length - 1) + 1;
+    const username = `manager${String(i).padStart(2, '0')}`;
+    const manager = await prisma.user.upsert({
+      where: { username },
+      update: {},
+      create: {
+        username,
+        passwordHash: managerPassword,
+        fullName: `${generateKoreanName()} 센터장`,
+        email: `${username}@erp-logistics.com`,
+        locale: 'ko',
+        branchId: branches[branchIdx].id,
+        isActive: true,
+      },
+    });
+    await prisma.userRole.upsert({
+      where: { userId_role: { userId: manager.id, role: Role.BRANCH_MANAGER } },
+      update: {},
+      create: { userId: manager.id, role: Role.BRANCH_MANAGER },
+    });
+  }
+  console.log('✅ Created 10 branch managers');
 
-  await prisma.userRole.upsert({
-    where: { userId_role: { userId: manager.id, role: Role.BRANCH_MANAGER } },
-    update: {},
-    create: { userId: manager.id, role: Role.BRANCH_MANAGER },
-  });
-
-  console.log(`✅ Created branch manager: ${manager.username}`);
-
-  // Create Partner Coordinator
-  const coordinatorPassword = await argon2.hash('coord123!');
-  const coordinator = await prisma.user.upsert({
-    where: { username: 'coord01' },
-    update: {},
-    create: {
-      username: 'coord01',
-      passwordHash: coordinatorPassword,
-      fullName: 'Park Coordinator',
-      email: 'coord01@erp-logistics.com',
-      locale: 'ko',
-      branchId: branches[1].id,
-      isActive: true,
-    },
-  });
-
-  await prisma.userRole.upsert({
-    where: { userId_role: { userId: coordinator.id, role: Role.PARTNER_COORDINATOR } },
-    update: {},
-    create: { userId: coordinator.id, role: Role.PARTNER_COORDINATOR },
-  });
-
-  console.log(`✅ Created coordinator: ${coordinator.username}`);
-
-  // Create Installer
-  const installerPassword = await argon2.hash('inst123!');
-  const installer = await prisma.user.upsert({
-    where: { username: 'installer01' },
-    update: {},
-    create: {
-      username: 'installer01',
-      passwordHash: installerPassword,
-      fullName: 'Lee Installer',
-      email: 'installer01@erp-logistics.com',
-      locale: 'ko',
-      branchId: branches[1].id,
-      isActive: true,
-    },
-  });
-
-  await prisma.userRole.upsert({
-    where: { userId_role: { userId: installer.id, role: Role.INSTALLER } },
-    update: {},
-    create: { userId: installer.id, role: Role.INSTALLER },
-  });
-
-  console.log(`✅ Created installer: ${installer.username}`);
-
-  // Create Test User (0001 / test)
+  // Create test user
   const testPassword = await argon2.hash('test');
   const testUser = await prisma.user.upsert({
     where: { username: '0001' },
@@ -157,57 +176,24 @@ async function main() {
     create: {
       username: '0001',
       passwordHash: testPassword,
-      fullName: 'Test User',
+      fullName: '테스트 기사',
       email: 'test@erp-logistics.com',
       locale: 'ko',
       branchId: branches[1].id,
       isActive: true,
     },
   });
-
   await prisma.userRole.upsert({
     where: { userId_role: { userId: testUser.id, role: Role.INSTALLER } },
     update: {},
     create: { userId: testUser.id, role: Role.INSTALLER },
   });
+  console.log(`✅ Created test user: 0001 (password: test)`);
 
-  console.log(`✅ Created test user: ${testUser.username} (password: test)`);
-
-  // Create additional users to reach 30 total
-  const additionalUserPassword = await argon2.hash('user123!');
-  const roles = [Role.BRANCH_MANAGER, Role.PARTNER_COORDINATOR, Role.INSTALLER];
-
-  for (let i = 1; i <= 25; i++) {
-    const branchIdx = i % (branches.length - 1) + 1; // Skip HQ
-    const roleIdx = i % roles.length;
-    const username = `user${String(i).padStart(2, '0')}`;
-
-    const user = await prisma.user.upsert({
-      where: { username },
-      update: {},
-      create: {
-        username,
-        passwordHash: additionalUserPassword,
-        fullName: `User ${String(i).padStart(2, '0')}`,
-        email: `user${i}@erp-logistics.com`,
-        locale: 'ko',
-        branchId: branches[branchIdx].id,
-        isActive: i % 10 !== 0, // 10% inactive
-      },
-    });
-
-    await prisma.userRole.upsert({
-      where: { userId_role: { userId: user.id, role: roles[roleIdx] } },
-      update: {},
-      create: { userId: user.id, role: roles[roleIdx] },
-    });
-  }
-  console.log('✅ Created 25 additional users (30 total)');
-
-  // Create 30 waste codes (P01-P30)
+  // Create waste codes
   const wasteCodes = [
-    { code: 'P01', descriptionKo: '에어컨 실외기', descriptionEn: 'Air Conditioner Outdoor Unit' },
-    { code: 'P02', descriptionKo: '에어컨 실내기', descriptionEn: 'Air Conditioner Indoor Unit' },
+    { code: 'P01', descriptionKo: '에어컨 실외기', descriptionEn: 'AC Outdoor Unit' },
+    { code: 'P02', descriptionKo: '에어컨 실내기', descriptionEn: 'AC Indoor Unit' },
     { code: 'P03', descriptionKo: '냉장고', descriptionEn: 'Refrigerator' },
     { code: 'P04', descriptionKo: '세탁기', descriptionEn: 'Washing Machine' },
     { code: 'P05', descriptionKo: 'TV', descriptionEn: 'Television' },
@@ -226,229 +212,205 @@ async function main() {
     { code: 'P18', descriptionKo: '전기밥솥', descriptionEn: 'Rice Cooker' },
     { code: 'P19', descriptionKo: '정수기', descriptionEn: 'Water Purifier' },
     { code: 'P20', descriptionKo: '비데', descriptionEn: 'Bidet' },
-    { code: 'P21', descriptionKo: '오븐', descriptionEn: 'Oven' },
-    { code: 'P22', descriptionKo: '토스터', descriptionEn: 'Toaster' },
-    { code: 'P23', descriptionKo: '커피머신', descriptionEn: 'Coffee Machine' },
-    { code: 'P24', descriptionKo: '믹서기', descriptionEn: 'Blender' },
-    { code: 'P25', descriptionKo: '전기포트', descriptionEn: 'Electric Kettle' },
-    { code: 'P26', descriptionKo: '스팀다리미', descriptionEn: 'Steam Iron' },
-    { code: 'P27', descriptionKo: '로봇청소기', descriptionEn: 'Robot Vacuum' },
-    { code: 'P28', descriptionKo: '스마트워치', descriptionEn: 'Smart Watch' },
-    { code: 'P29', descriptionKo: '태블릿', descriptionEn: 'Tablet' },
-    { code: 'P30', descriptionKo: '스피커', descriptionEn: 'Speaker' },
   ];
 
   for (const wc of wasteCodes) {
     await prisma.wasteCode.upsert({
       where: { code: wc.code },
       update: {},
-      create: {
-        code: wc.code,
-        descriptionKo: wc.descriptionKo,
-        descriptionEn: wc.descriptionEn,
-        isActive: true,
-      },
+      create: { ...wc, isActive: true },
     });
   }
-
   console.log(`✅ Created ${wasteCodes.length} waste codes`);
 
-  // Create 30 reason codes
+  // Create reason codes
   const reasonCodes = [
-    { type: 'CANCEL' as const, code: 'C01', descriptionKo: '고객 요청', descriptionEn: 'Customer Request' },
+    { type: 'CANCEL' as const, code: 'C01', descriptionKo: '고객 요청 취소', descriptionEn: 'Customer Request' },
     { type: 'CANCEL' as const, code: 'C02', descriptionKo: '재고 부족', descriptionEn: 'Out of Stock' },
-    { type: 'CANCEL' as const, code: 'C03', descriptionKo: '가격 이의', descriptionEn: 'Price Dispute' },
+    { type: 'CANCEL' as const, code: 'C03', descriptionKo: '가격 문제', descriptionEn: 'Price Issue' },
     { type: 'CANCEL' as const, code: 'C04', descriptionKo: '중복 주문', descriptionEn: 'Duplicate Order' },
     { type: 'CANCEL' as const, code: 'C05', descriptionKo: '제품 불량', descriptionEn: 'Defective Product' },
-    { type: 'CANCEL' as const, code: 'C06', descriptionKo: '배송 오류', descriptionEn: 'Delivery Error' },
-    { type: 'CANCEL' as const, code: 'C07', descriptionKo: '고객 변심', descriptionEn: 'Customer Changed Mind' },
-    { type: 'CANCEL' as const, code: 'C08', descriptionKo: '결제 실패', descriptionEn: 'Payment Failed' },
-    { type: 'CANCEL' as const, code: 'C09', descriptionKo: '시스템 오류', descriptionEn: 'System Error' },
-    { type: 'CANCEL' as const, code: 'C10', descriptionKo: '기타 취소', descriptionEn: 'Other Cancellation' },
-    { type: 'POSTPONE' as const, code: 'D01', descriptionKo: '고객 일정 변경', descriptionEn: 'Customer Schedule Change' },
+    { type: 'POSTPONE' as const, code: 'D01', descriptionKo: '고객 일정 변경', descriptionEn: 'Schedule Change' },
     { type: 'POSTPONE' as const, code: 'D02', descriptionKo: '배송 지연', descriptionEn: 'Delivery Delay' },
     { type: 'POSTPONE' as const, code: 'D03', descriptionKo: '기상 악화', descriptionEn: 'Bad Weather' },
-    { type: 'POSTPONE' as const, code: 'D04', descriptionKo: '재고 입고 대기', descriptionEn: 'Waiting for Stock' },
-    { type: 'POSTPONE' as const, code: 'D05', descriptionKo: '설치 환경 미비', descriptionEn: 'Installation Not Ready' },
-    { type: 'POSTPONE' as const, code: 'D06', descriptionKo: '기사 사정', descriptionEn: 'Technician Unavailable' },
-    { type: 'POSTPONE' as const, code: 'D07', descriptionKo: '교통 상황', descriptionEn: 'Traffic Conditions' },
-    { type: 'POSTPONE' as const, code: 'D08', descriptionKo: '휴일 지정', descriptionEn: 'Holiday Designated' },
-    { type: 'POSTPONE' as const, code: 'D09', descriptionKo: '장비 고장', descriptionEn: 'Equipment Malfunction' },
-    { type: 'POSTPONE' as const, code: 'D10', descriptionKo: '기타 연기', descriptionEn: 'Other Postponement' },
-    { type: 'ABSENCE' as const, code: 'A01', descriptionKo: '부재중', descriptionEn: 'Not at Home' },
+    { type: 'POSTPONE' as const, code: 'D04', descriptionKo: '설치 환경 미비', descriptionEn: 'Not Ready' },
+    { type: 'POSTPONE' as const, code: 'D05', descriptionKo: '기사 사정', descriptionEn: 'Technician Issue' },
+    { type: 'ABSENCE' as const, code: 'A01', descriptionKo: '고객 부재', descriptionEn: 'Not at Home' },
     { type: 'ABSENCE' as const, code: 'A02', descriptionKo: '연락 불가', descriptionEn: 'Unreachable' },
     { type: 'ABSENCE' as const, code: 'A03', descriptionKo: '주소 오류', descriptionEn: 'Wrong Address' },
     { type: 'ABSENCE' as const, code: 'A04', descriptionKo: '방문 거부', descriptionEn: 'Refused Entry' },
-    { type: 'ABSENCE' as const, code: 'A05', descriptionKo: '건물 출입 제한', descriptionEn: 'Building Access Denied' },
-    { type: 'ABSENCE' as const, code: 'A06', descriptionKo: '주차 불가', descriptionEn: 'No Parking Available' },
-    { type: 'ABSENCE' as const, code: 'A07', descriptionKo: '엘리베이터 고장', descriptionEn: 'Elevator Out of Order' },
-    { type: 'ABSENCE' as const, code: 'A08', descriptionKo: '호수 확인 불가', descriptionEn: 'Unit Number Unknown' },
-    { type: 'ABSENCE' as const, code: 'A09', descriptionKo: '보안 문제', descriptionEn: 'Security Issue' },
-    { type: 'ABSENCE' as const, code: 'A10', descriptionKo: '기타 부재', descriptionEn: 'Other Absence' },
+    { type: 'ABSENCE' as const, code: 'A05', descriptionKo: '건물 출입 제한', descriptionEn: 'Access Denied' },
   ];
 
   for (const rc of reasonCodes) {
     await prisma.reasonCode.upsert({
       where: { code: rc.code },
       update: {},
-      create: {
-        type: rc.type,
-        code: rc.code,
-        descriptionKo: rc.descriptionKo,
-        descriptionEn: rc.descriptionEn,
-        isActive: true,
-      },
+      create: { ...rc, isActive: true },
     });
   }
-
   console.log(`✅ Created ${reasonCodes.length} reason codes`);
 
-  // ============================================
-  // COMPREHENSIVE TEST DATA
-  // ============================================
-
-  // Create 30 Partners
+  // Create 30 Partners with Korean names
   const partners = [];
-  const partnerTypes = ['Electronics', 'Appliances', 'HVAC', 'Home Services', 'Installation'];
-  for (let i = 1; i <= 30; i++) {
+  const partnerNames = [
+    '한국전자서비스', '대한설치', '우리홈서비스', '삼성에어컨', 'LG설치센터',
+    '스마트홈서비스', '프리미엄설치', '빠른배송설치', '전문가그룹', '홈케어서비스',
+    '에이스설치', '베스트서비스', '원스톱설치', '프로설치', '탑클래스서비스',
+    '그린설치', '블루서비스', '골드설치', '실버케어', '다이아몬드서비스',
+    '파워설치', '스피드서비스', '마스터설치', '엘리트서비스', '프라임설치',
+    '익스퍼트그룹', '테크설치', '스마트케어', '홈마스터', '설치왕'
+  ];
+
+  for (let i = 0; i < 30; i++) {
     const partner = await prisma.partner.upsert({
-      where: { code: `PTN${String(i).padStart(2, '0')}` },
-      update: {},
+      where: { code: `PTN${String(i + 1).padStart(2, '0')}` },
+      update: { name: partnerNames[i] },
       create: {
-        code: `PTN${String(i).padStart(2, '0')}`,
-        name: `${partnerTypes[i % 5]} Partner ${i}`,
-        contactName: `Partner Manager ${i}`,
-        phone: `010-${1000 + i}-${2000 + i}`,
-        email: `partner${i}@example.com`,
-        isActive: i % 10 !== 0, // 10% inactive
+        code: `PTN${String(i + 1).padStart(2, '0')}`,
+        name: partnerNames[i],
+        contactName: `${generateKoreanName()} 대표`,
+        phone: generatePhone(),
+        email: `partner${i + 1}@example.com`,
+        isActive: i % 10 !== 0,
       },
     });
     partners.push(partner);
   }
-  console.log(`✅ Created ${partners.length} partners`);
+  console.log(`✅ Created ${partners.length} partners (Korean names)`);
 
-  // Create 30 Installers (distributed across partners)
+  // Create 50 Installers with Korean names
   const installers = [];
-  const skillSets = [
-    ['AC', 'Refrigerator'],
-    ['WashingMachine', 'Dryer'],
-    ['AC', 'WashingMachine', 'Refrigerator'],
-    ['TV', 'Computer', 'Monitor'],
-    ['All'],
-  ];
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= 50; i++) {
     const partnerIdx = (i - 1) % partners.length;
-    const branchIdx = (i % (branches.length - 1)) + 1; // Exclude HQ
+    const branchIdx = (i % (branches.length - 1)) + 1;
     const inst = await prisma.installer.upsert({
       where: { id: `installer-${i}` },
-      update: {},
+      update: { name: `${generateKoreanName()} 기사` },
       create: {
         id: `installer-${i}`,
         partnerId: partners[partnerIdx].id,
         branchId: branches[branchIdx].id,
-        name: `Installer ${String(i).padStart(2, '0')}`,
-        phone: `010-3${String(i).padStart(3, '0')}-${4000 + i}`,
-        skillTags: skillSets[i % skillSets.length],
+        name: `${generateKoreanName()} 기사`,
+        phone: generatePhone(),
+        skillTags: ['에어컨', '냉장고', '세탁기'].slice(0, 1 + (i % 3)),
         capacityPerDay: 6 + (i % 6),
-        isActive: i % 15 !== 0, // ~7% inactive
+        isActive: i % 12 !== 0,
       },
     });
     installers.push(inst);
   }
-  console.log(`✅ Created ${installers.length} installers`);
+  console.log(`✅ Created ${installers.length} installers (Korean names)`);
 
-  // Create orders for each status
+  // ============================================
+  // CREATE 1000+ ORDERS
+  // ============================================
   const statuses = [
-    'UNASSIGNED',
-    'ASSIGNED',
-    'CONFIRMED',
-    'RELEASED',
-    'DISPATCHED',
-    'POSTPONED',
-    'ABSENT',
-    'COMPLETED',
-    'PARTIAL',
-    'COLLECTED',
-    'CANCELLED',
-    'REQUEST_CANCEL',
+    'UNASSIGNED', 'ASSIGNED', 'CONFIRMED', 'RELEASED', 'DISPATCHED',
+    'POSTPONED', 'ABSENT', 'COMPLETED', 'PARTIAL', 'COLLECTED',
+    'CANCELLED', 'REQUEST_CANCEL',
   ] as const;
 
   const today = new Date();
   const orders = [];
   let orderCounter = 1;
 
+  // Target: ~85 orders per status = 1020 orders
+  const ORDERS_PER_STATUS = 85;
+
+  console.log(`🔄 Creating ${statuses.length * ORDERS_PER_STATUS} orders...`);
+
   for (const status of statuses) {
-    for (let i = 1; i <= 5; i++) {
-      const orderNo = `ORD-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${String(orderCounter).padStart(4, '0')}`;
+    for (let i = 1; i <= ORDERS_PER_STATUS; i++) {
+      const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+      const orderNo = `ORD-${dateStr}-${String(orderCounter).padStart(4, '0')}`;
 
       const needsInstaller = !['UNASSIGNED'].includes(status);
+
+      // Distribute dates: -7 days to +14 days from today
+      // More orders today and near future for dashboard visibility
+      let dayOffset: number;
+      if (i <= 30) {
+        dayOffset = 0; // 30 orders today
+      } else if (i <= 50) {
+        dayOffset = 1; // 20 orders tomorrow
+      } else if (i <= 65) {
+        dayOffset = -1; // 15 orders yesterday
+      } else {
+        dayOffset = Math.floor(Math.random() * 21) - 7; // -7 to +14
+      }
+
       const appointmentDate = new Date(today);
-      appointmentDate.setDate(today.getDate() + (i % 7) - 3); // -3 to +3 days
+      appointmentDate.setDate(today.getDate() + dayOffset);
+      appointmentDate.setHours(0, 0, 0, 0);
+
+      const branchIdx = (orderCounter % (branches.length - 1)) + 1;
+      const customerName = generateKoreanName();
+      const address = generateKoreanAddress();
 
       const order = await prisma.order.upsert({
         where: { orderNo },
         update: {},
         create: {
           orderNo,
-          customerName: `Customer ${orderCounter}`,
-          customerPhone: `010-5${String(orderCounter).padStart(3, '0')}-${6000 + orderCounter}`,
-          address: {
-            line1: `${100 + orderCounter} Main Street`,
-            line2: `Apt ${orderCounter}`,
-            city: 'Seoul',
-            postal: `0${String(1000 + orderCounter).slice(1)}`,
-          },
-          vendor: ['Samsung', 'LG', 'Carrier', 'Whirlpool', 'Bosch'][orderCounter % 5],
-          branchId: branches[1].id, // SEL01
+          customerName,
+          customerPhone: generatePhone(),
+          address,
+          vendor: randomItem(VENDORS),
+          branchId: branches[branchIdx].id,
           partnerId: needsInstaller ? partners[orderCounter % partners.length].id : null,
           installerId: needsInstaller ? installers[orderCounter % installers.length].id : null,
           status: status as any,
           appointmentDate,
-          appointmentTimeWindow: ['09:00-12:00', '12:00-15:00', '15:00-18:00'][orderCounter % 3],
+          appointmentTimeWindow: randomItem(TIME_WINDOWS),
           promisedDate: appointmentDate,
-          remarks: status === 'POSTPONED' ? 'Customer requested reschedule' :
-                   status === 'ABSENT' ? 'Customer not at home' :
-                   status === 'CANCELLED' ? 'Order cancelled by customer' : null,
+          remarks: status === 'POSTPONED' ? '고객 요청으로 일정 변경' :
+                   status === 'ABSENT' ? '방문 시 고객 부재' :
+                   status === 'CANCELLED' ? '고객 취소 요청' :
+                   status === 'REQUEST_CANCEL' ? '의뢰사 취소 요청' : null,
           version: 1,
         },
       });
       orders.push(order);
 
-      // Create order lines for each order (2-4 items per order)
+      // Create order lines (2-4 items per order)
       const itemCount = 2 + (orderCounter % 3);
-      for (let j = 1; j <= itemCount; j++) {
+      for (let j = 0; j < itemCount; j++) {
+        const product = PRODUCTS[(orderCounter + j) % PRODUCTS.length];
         await prisma.orderLine.create({
           data: {
             orderId: order.id,
-            itemCode: `ITEM-${String(j).padStart(3, '0')}`,
-            itemName: ['Air Conditioner', 'Refrigerator', 'Washing Machine', 'Dryer'][j % 4],
+            itemCode: product.code,
+            itemName: product.name,
             quantity: 1 + (j % 2),
-            weight: 15.5 + (j * 5),
+            weight: String(product.weight + (j * 5)),
           },
         });
       }
 
-      // Create status history for orders
+      // Create status history
       await prisma.orderStatusHistory.create({
         data: {
           orderId: order.id,
           previousStatus: 'UNASSIGNED',
           newStatus: status as any,
           changedBy: testUser.id,
-          notes: `Status changed to ${status}`,
+          notes: `상태 변경: ${status}`,
         },
       });
 
       orderCounter++;
+
+      // Progress log every 100 orders
+      if (orderCounter % 100 === 0) {
+        console.log(`   📦 Created ${orderCounter} orders...`);
+      }
     }
   }
-  console.log(`✅ Created ${orders.length} orders with order lines and status history`);
+  console.log(`✅ Created ${orders.length} orders with order lines`);
 
-  // Create cancellation records for CANCELLED and REQUEST_CANCEL orders
-  const cancelledOrders = orders.filter(o =>
-    ['CANCELLED', 'REQUEST_CANCEL'].includes(o.status)
-  );
-
+  // Create cancellation records
+  const cancelledOrders = orders.filter(o => ['CANCELLED', 'REQUEST_CANCEL'].includes(o.status));
   for (let i = 0; i < cancelledOrders.length; i++) {
     await prisma.cancellationRecord.upsert({
       where: { orderId: cancelledOrders[i].id },
@@ -456,7 +418,7 @@ async function main() {
       create: {
         orderId: cancelledOrders[i].id,
         reason: ['CUSTOMER_REQUEST', 'OUT_OF_STOCK', 'DUPLICATE', 'WRONG_ADDRESS', 'OTHER'][i % 5],
-        note: `Cancellation reason note ${i + 1}`,
+        note: `취소 사유: ${['고객 요청', '재고 부족', '중복 주문', '주소 오류', '기타'][i % 5]}`,
         cancelledBy: testUser.id,
         previousStatus: 'ASSIGNED',
         refundAmount: 50000 + (i * 10000),
@@ -469,20 +431,12 @@ async function main() {
   }
   console.log(`✅ Created ${cancelledOrders.length} cancellation records`);
 
-  // Create waste pickups for COMPLETED orders
-  const completedOrders = orders.filter(o =>
-    ['COMPLETED', 'COLLECTED'].includes(o.status)
-  );
-
+  // Create waste pickups
+  const completedOrders = orders.filter(o => ['COMPLETED', 'COLLECTED'].includes(o.status));
   for (let i = 0; i < completedOrders.length; i++) {
     const wasteCode = wasteCodes[i % wasteCodes.length].code;
     await prisma.wastePickup.upsert({
-      where: {
-        orderId_code: {
-          orderId: completedOrders[i].id,
-          code: wasteCode,
-        }
-      },
+      where: { orderId_code: { orderId: completedOrders[i].id, code: wasteCode } },
       update: {},
       create: {
         orderId: completedOrders[i].id,
@@ -495,13 +449,12 @@ async function main() {
   }
   console.log(`✅ Created ${completedOrders.length} waste pickups`);
 
-  // Create serial numbers for COMPLETED orders
+  // Create serial numbers for completed orders
   let serialCount = 0;
-  for (let i = 0; i < completedOrders.length; i++) {
+  for (let i = 0; i < Math.min(completedOrders.length, 100); i++) {
     const orderLines = await prisma.orderLine.findMany({
       where: { orderId: completedOrders[i].id },
     });
-
     for (const line of orderLines) {
       const serialNo = `SN-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       await prisma.serialNumber.upsert({
@@ -516,11 +469,11 @@ async function main() {
       serialCount++;
     }
   }
-  console.log(`✅ Created ${serialCount} serial numbers for completed orders`);
+  console.log(`✅ Created ${serialCount} serial numbers`);
 
   // Create settlement period
   const periodStart = new Date(today);
-  periodStart.setDate(today.getDate() - today.getDay()); // Start of week
+  periodStart.setDate(today.getDate() - today.getDay());
   const periodEnd = new Date(periodStart);
   periodEnd.setDate(periodStart.getDate() + 6);
 
@@ -537,7 +490,17 @@ async function main() {
   });
   console.log(`✅ Created settlement period`);
 
-  console.log('🎉 Database seed completed!');
+  // Summary
+  console.log('\n🎉 Database seed completed!');
+  console.log('='.repeat(50));
+  console.log(`📊 Summary:`);
+  console.log(`   - ${branches.length} branches`);
+  console.log(`   - ${partners.length} partners`);
+  console.log(`   - ${installers.length} installers`);
+  console.log(`   - ${orders.length} orders (1000+)`);
+  console.log(`   - Each status: ~${ORDERS_PER_STATUS} orders`);
+  console.log(`   - Today's orders: ~${statuses.length * 30} orders`);
+  console.log('='.repeat(50));
 }
 
 main()

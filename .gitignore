@@ -205,3 +205,4 @@ manual_extract/
 .vuepress/dist
 .serverless/
 .fusebox/
+.pids/

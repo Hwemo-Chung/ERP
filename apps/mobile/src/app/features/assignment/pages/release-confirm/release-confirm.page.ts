@@ -40,6 +40,7 @@ import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { UIStore } from '../../../../store/ui/ui.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ReleaseItem {
   id: string;
@@ -58,6 +59,7 @@ interface ReleaseItem {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -299,7 +301,7 @@ export class ReleaseConfirmPage implements OnInit {
     if (this.searchQuery) {
       const query = this.searchQuery.toLowerCase();
       filtered = confirmedOrders.filter(o =>
-        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.orderNo.toLowerCase().includes(query) ||
         o.customerName.toLowerCase().includes(query) ||
         (o.installerName && o.installerName.toLowerCase().includes(query))
       );
@@ -313,7 +315,7 @@ export class ReleaseConfirmPage implements OnInit {
 
       return {
         id: o.id,
-        orderNumber: o.erpOrderNumber,
+        orderNumber: o.orderNo,
         customerName: o.customerName,
         installerName,
         productCount: (o.lines || o.orderLines || []).length,

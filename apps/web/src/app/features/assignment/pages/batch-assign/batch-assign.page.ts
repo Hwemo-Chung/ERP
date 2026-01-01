@@ -318,7 +318,7 @@ export class BatchAssignPage implements OnInit {
     // Map unassigned orders to UI model
     const unassigned = this.unassignedOrders().map((order: Order) => ({
       id: order.id,
-      orderNumber: order.erpOrderNumber || order.id,
+      orderNumber: order.orderNo || order.id,
       customerName: order.customerName,
       appointmentDate: order.appointmentDate || '-',
       productCount: order.lines?.length || order.orderLines?.length || 0,

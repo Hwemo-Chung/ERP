@@ -36,12 +36,15 @@ import {
   ReleaseSummaryItem,
   ReportsFilters,
   ExportConfig,
+  ProgressItem,
 } from './reports.models';
 
 const initialState: ReportsState = {
   summary: null,
   statusCounts: [],
   branchProgress: [],
+  progressItems: [],
+  currentGroupBy: 'branch',
   wasteSummary: [],
   customerHistory: [],
   releaseSummary: [],
@@ -150,24 +153,34 @@ export class ReportsStore extends signalStore(
     async loadProgress(filters?: ReportsFilters): Promise<void> {
       patchState(store, { isLoading: true, error: null });
 
+      const groupBy = filters?.groupBy || store.currentGroupBy() || 'branch';
+
       try {
         let params = new HttpParams();
-        // groupBy is required by the API - default to 'branch'
-        params = params.set('groupBy', filters?.groupBy || 'branch');
+        params = params.set('groupBy', groupBy);
         if (filters?.branchCode) params = params.set('branchCode', filters.branchCode);
         if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);
         if (filters?.dateTo) params = params.set('dateTo', filters.dateTo);
 
-        // Note: apiResponseInterceptor unwraps { success, data } -> data
+        // API returns structured progress data with completion stats
         const data = await firstValueFrom(
-          http.get<{
-            branches: BranchProgress[];
-          }>(`${environment.apiUrl}/reports/progress`, { params })
+          http.get<any[]>(`${environment.apiUrl}/reports/progress`, { params })
         );
 
+        // Map API response to ProgressItem[] (API already provides all needed fields)
+        const progressItems: ProgressItem[] = (data || []).map((item: any) => ({
+          key: item.key || '',
+          label: item.name || item.key || 'Unknown',
+          total: item.total || 0,
+          completed: item.completed || 0,
+          pending: item.pending || 0,
+          completionRate: item.completionRate || 0,
+        }));
+
         patchState(store, {
-          branchProgress: data.branches || [],
-          filters: filters || {},
+          progressItems,
+          currentGroupBy: groupBy,
+          filters: { ...store.filters(), ...filters, groupBy },
           isLoading: false,
           lastUpdated: Date.now(),
         });

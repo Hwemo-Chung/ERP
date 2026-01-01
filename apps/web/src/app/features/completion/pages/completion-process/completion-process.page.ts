@@ -92,7 +92,7 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
             <ion-card-title>{{ 'COMPLETION.PROCESS.ORDER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p><strong>{{ 'COMPLETION.PROCESS.ORDER_NUMBER' | translate }}:</strong> {{ order()?.erpOrderNumber || orderId() }}</p>
+            <p><strong>{{ 'COMPLETION.PROCESS.ORDER_NUMBER' | translate }}:</strong> {{ order()?.orderNo || orderId() }}</p>
             <p><strong>{{ 'COMPLETION.PROCESS.CUSTOMER_NAME' | translate }}:</strong> {{ order()?.customerName || '-' }}</p>
             <p><strong>{{ 'COMPLETION.PROCESS.INSTALLER' | translate }}:</strong> {{ order()?.installerName || '-' }}</p>
           </ion-card-content>

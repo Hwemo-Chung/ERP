@@ -236,7 +236,7 @@ import { BREAKPOINTS } from '@shared/constants';
                                  (change)="toggleOrderSelection(order.id)" />
                         </td>
                         <td class="col-order">
-                          <span class="order-number">{{ order.erpOrderNumber }}</span>
+                          <span class="order-number">{{ order.orderNo }}</span>
                         </td>
                         <td class="col-status">
                           <span [class]="'status-badge status-' + order.status.toLowerCase()">
@@ -297,7 +297,7 @@ import { BREAKPOINTS } from '@shared/constants';
                 @for (order of ordersStore.filteredOrders(); track order.id) {
                   <div class="order-card" (click)="viewOrder(order.id)">
                     <div class="card-header">
-                      <span class="order-number">{{ order.erpOrderNumber }}</span>
+                      <span class="order-number">{{ order.orderNo }}</span>
                       <span [class]="'status-badge status-' + order.status.toLowerCase()">
                         {{ getStatusLabel(order.status) }}
                       </span>
@@ -374,7 +374,7 @@ import { BREAKPOINTS } from '@shared/constants';
               <ion-item button (click)="viewOrder(order.id)" class="order-item">
                 <div class="order-content">
                   <div class="order-header">
-                    <span class="order-number">{{ order.erpOrderNumber }}</span>
+                    <span class="order-number">{{ order.orderNo }}</span>
                     <ion-badge [color]="getStatusColor(order.status)">
                       {{ getStatusLabel(order.status) }}
                     </ion-badge>
@@ -829,11 +829,13 @@ import { BREAKPOINTS } from '@shared/constants';
         }
 
         .col-order {
-          width: 140px;
+          width: 160px;
 
           .order-number {
             font-weight: 600;
+            font-size: 13px;
             color: #3b82f6;
+            white-space: nowrap;
           }
         }
 
@@ -1279,8 +1281,12 @@ export class OrderListPage implements OnInit {
   private async loadOrders(): Promise<void> {
     try {
       const branchCode = 'ALL';
-      await this.ordersStore.loadOrders(branchCode, 1, 20);
-      await this.installersStore.loadInstallers(branchCode);
+      // Load stats first (real totals), then orders (paginated)
+      await Promise.all([
+        this.ordersStore.loadStats(branchCode),
+        this.ordersStore.loadOrders(branchCode, 1, 20),
+        this.installersStore.loadInstallers(branchCode),
+      ]);
     } catch (error) {
       const msg = this.translateService.instant('ORDERS.ERROR.LOAD_FAILED');
       this.uiStore.showToast(msg, 'danger');

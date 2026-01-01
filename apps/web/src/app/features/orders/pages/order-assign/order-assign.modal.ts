@@ -73,7 +73,7 @@ import { Installer } from '../../../../store/installers/installers.models';
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <!-- Order Info (Read-only) -->
         <div class="order-info">
-          <h2>{{ order?.erpOrderNumber }}</h2>
+          <h2>{{ order?.orderNo }}</h2>
           <p>{{ order?.customerName }}</p>
           <p class="address">{{ order?.customerAddress }}</p>
         </div>

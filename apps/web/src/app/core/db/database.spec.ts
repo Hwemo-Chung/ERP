@@ -60,7 +60,7 @@ describe('ERPDatabase', () => {
     it('should store and retrieve orders by id', async () => {
       const order: OfflineOrder = {
         id: 'order-123',
-        erpOrderNumber: 'ERP-001',
+        orderNo: 'ERP-001',
         status: 'ASSIGNED',
         customerName: 'Test Customer',
         branchId: 'branch-001',
@@ -78,7 +78,7 @@ describe('ERPDatabase', () => {
       const orders: OfflineOrder[] = [
         {
           id: 'order-1',
-          erpOrderNumber: 'ERP-001',
+          orderNo: 'ERP-001',
           status: 'ASSIGNED',
           customerName: 'Customer 1',
           branchId: 'branch-001',
@@ -87,7 +87,7 @@ describe('ERPDatabase', () => {
         },
         {
           id: 'order-2',
-          erpOrderNumber: 'ERP-002',
+          orderNo: 'ERP-002',
           status: 'CONFIRMED',
           customerName: 'Customer 2',
           branchId: 'branch-001',
@@ -107,7 +107,7 @@ describe('ERPDatabase', () => {
       const orders: OfflineOrder[] = [
         {
           id: 'order-1',
-          erpOrderNumber: 'ERP-001',
+          orderNo: 'ERP-001',
           status: 'ASSIGNED',
           customerName: 'Customer 1',
           branchId: 'branch-001',
@@ -116,7 +116,7 @@ describe('ERPDatabase', () => {
         },
         {
           id: 'order-2',
-          erpOrderNumber: 'ERP-002',
+          orderNo: 'ERP-002',
           status: 'ASSIGNED',
           customerName: 'Customer 2',
           branchId: 'branch-002',

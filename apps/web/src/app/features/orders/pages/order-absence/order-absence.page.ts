@@ -152,7 +152,7 @@ const MAX_RETRY_COUNT = 3;
         <!-- Order Summary Card -->
         <div class="order-summary-card">
           <div class="card-header">
-            <div class="order-number">{{ order()!.erpOrderNumber }}</div>
+            <div class="order-number">{{ order()!.orderNo }}</div>
             <ion-badge [class]="'status-badge status-' + order()!.status.toLowerCase()">
               {{ getStatusLabel(order()!.status) }}
             </ion-badge>
@@ -780,7 +780,8 @@ export class OrderAbsencePage implements OnInit {
 
   // Constants
   readonly reasonCodes = ABSENCE_REASON_CODES;
-  readonly maxRetryCount = MAX_RETRY_COUNT;
+  private _maxRetryCount = MAX_RETRY_COUNT;
+  get maxRetryCount(): number { return this._maxRetryCount; }
 
   // Simulated retry count (in real app, would come from order data)
   // This would typically be stored in the order model
@@ -867,18 +868,15 @@ export class OrderAbsencePage implements OnInit {
 
   /**
    * Load retry count from order data
-   * In a real implementation, this would come from the order's history or a dedicated field
+   * Uses the absenceRetryCount field from the order model (FR-04)
    */
   private loadRetryCount(order: Order): void {
-    // Simulating retry count based on order status history
-    // In production, this would be tracked in the order model or via API
-    // For demo purposes, we'll use a random value or check if order was previously absent
-    if (order.status === OrderStatus.ABSENT) {
-      // If already marked absent, increment count
-      this.currentRetryCount.set(Math.min(this.currentRetryCount() + 1, this.maxRetryCount));
+    // Load actual retry count from order model
+    this.currentRetryCount.set(order.absenceRetryCount || 0);
+    // Update max retries from order if available, otherwise use default
+    if (order.maxAbsenceRetries !== undefined) {
+      this._maxRetryCount = order.maxAbsenceRetries;
     }
-    // In real implementation:
-    // this.currentRetryCount.set(order.absenceRetryCount || 0);
   }
 
   /**
@@ -965,6 +963,7 @@ export class OrderAbsencePage implements OnInit {
 
   /**
    * Process the absence action with retry scheduling
+   * Sends absence data including reason, notes, and next visit date to API (FR-04)
    */
   private async processAbsence(): Promise<void> {
     this.isSubmitting.set(true);
@@ -973,18 +972,23 @@ export class OrderAbsencePage implements OnInit {
       const orderId = this.orderId();
       const newDate = this.nextVisitDate.split('T')[0];
 
-      // Update order status to ABSENT
-      await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ABSENT);
+      // Build notes with contact attempt info
+      const noteParts: string[] = [];
+      if (this.contactAttempted) {
+        noteParts.push(this.translate.instant('ORDERS.ABSENCE.CONTACT_ATTEMPTED'));
+      }
+      if (this.notes.trim()) {
+        noteParts.push(this.notes.trim());
+      }
 
-      // In a real implementation, you would also:
-      // 1. Save the absence reason code
-      // 2. Save contact attempt flag
-      // 3. Save notes
-      // 4. Increment retry count
-      // 5. Schedule the next visit date
-      // 6. Trigger notifications
+      // Update order status to ABSENT with full absence data
+      await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ABSENT, {
+        reasonCode: this.selectedReasonCode,
+        notes: noteParts.join(' - '),
+        appointmentDate: newDate,
+      });
 
-      // Increment local retry count for demo
+      // Update local retry count (API increments it on server side)
       this.currentRetryCount.set(this.currentRetryCount() + 1);
 
       await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.SUCCESS'), 'success');

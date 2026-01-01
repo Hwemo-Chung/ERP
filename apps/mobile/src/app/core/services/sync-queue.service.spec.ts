@@ -102,7 +102,7 @@ describe('SyncQueueService', () => {
       await service.enqueue({
         method: 'POST',
         url: '/orders',
-        body: { erpOrderNumber: 'ERP-001' },
+        body: { orderNo: 'ERP-001' },
       });
 
       // Process queue
@@ -114,7 +114,7 @@ describe('SyncQueueService', () => {
       // Expect HTTP request
       const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ erpOrderNumber: 'ERP-001' });
+      expect(req.request.body).toEqual({ orderNo: 'ERP-001' });
 
       // Respond with success
       req.flush({ id: 'order-1', status: 'success' });

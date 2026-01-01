@@ -31,6 +31,7 @@ import {
   timeOutline,
   personOutline,
 } from 'ionicons/icons';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersService, Order } from '../../services/orders.service';
 import {
   OrderStatus,
@@ -122,6 +123,7 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -146,7 +148,7 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/tabs/orders"></ion-back-button>
         </ion-buttons>
-        <ion-title>Order Details</ion-title>
+        <ion-title>{{ 'ORDERS.DETAIL.TITLE' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -166,23 +168,23 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
         <!-- Order Info Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ order()!.erpOrderNumber }}</ion-card-title>
+            <ion-card-title>{{ order()!.orderNo }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
               <ion-item>
                 <ion-icon slot="start" name="time-outline"></ion-icon>
                 <ion-label>
-                  <p>Appointment</p>
+                  <p>{{ 'ORDERS.DETAIL.APPOINTMENT_INFO' | translate }}</p>
                   <h3>{{ order()!.appointmentDate | date:'yyyy-MM-dd' }} {{ order()!.appointmentSlot }}</h3>
                 </ion-label>
               </ion-item>
-              @if (order()!.installerName) {
+              @if (order()!.installer?.name || order()!.installerName) {
                 <ion-item>
                   <ion-icon slot="start" name="person-outline"></ion-icon>
                   <ion-label>
-                    <p>Installer</p>
-                    <h3>{{ order()!.installerName }}</h3>
+                    <p>{{ 'ORDERS.DETAIL.INSTALLER' | translate }}</p>
+                    <h3>{{ order()!.installer?.name || order()!.installerName }}</h3>
                   </ion-label>
                 </ion-item>
               }
@@ -193,7 +195,7 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
         <!-- Customer Info Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Customer Information</ion-card-title>
+            <ion-card-title>{{ 'ORDERS.DETAIL.CUSTOMER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
@@ -207,29 +209,29 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
             <div class="action-buttons">
               <ion-button fill="outline" size="small" (click)="callCustomer()">
                 <ion-icon slot="start" name="call-outline"></ion-icon>
-                Call
+                {{ 'ORDERS.DETAIL.CALL' | translate }}
               </ion-button>
               <ion-button fill="outline" size="small" (click)="navigateToAddress()">
                 <ion-icon slot="start" name="navigate-outline"></ion-icon>
-                Navigate
+                {{ 'ORDERS.DETAIL.NAVIGATE' | translate }}
               </ion-button>
             </div>
           </ion-card-content>
         </ion-card>
 
         <!-- Order Lines Card -->
-        @if (order()!.orderLines?.length) {
+        @if ((order()!.lines || order()!.orderLines)?.length) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>Products ({{ order()!.orderLines!.length }})</ion-card-title>
+              <ion-card-title>{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{ (order()!.lines || order()!.orderLines)!.length }})</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               <ion-list>
-                @for (line of order()!.orderLines; track line.id) {
+                @for (line of (order()!.lines || order()!.orderLines)!; track line.id) {
                   <ion-item>
                     <ion-label>
-                      <h3>{{ line.productName }}</h3>
-                      <p>{{ line.productCode }} × {{ line.quantity }}</p>
+                      <h3>{{ line.itemName || line.productName }}</h3>
+                      <p>{{ line.itemCode || line.productCode }} × {{ line.quantity }}</p>
                       @if (line.serialNumber) {
                         <p><strong>S/N:</strong> {{ line.serialNumber }}</p>
                       }
@@ -258,7 +260,7 @@ const TRANSITION_ICONS: Record<OrderStatus, string> = {
         }
       } @else {
         <div class="empty-state">
-          <h3>Order not found</h3>
+          <h3>{{ 'ORDERS.DETAIL.ORDER_NOT_FOUND' | translate }}</h3>
         </div>
       }
     </ion-content>
@@ -305,6 +307,7 @@ export class OrderDetailPage implements OnInit {
   private readonly ordersService = inject(OrdersService);
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly alertCtrl = inject(AlertController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly order = signal<Order | null>(null);
   protected readonly isLoading = signal(true);
@@ -359,13 +362,19 @@ export class OrderDetailPage implements OnInit {
   }
 
   protected async confirmStatusChange(newStatus: string): Promise<void> {
+    // Handle ABSENT status with special flow for reason and notes
+    if (newStatus === OrderStatus.ABSENT) {
+      await this.handleAbsenceStatus();
+      return;
+    }
+
     const alert = await this.alertCtrl.create({
-      header: 'Confirm Status Change',
-      message: `Change status to ${this.getStatusLabel(newStatus)}?`,
+      header: this.translate.instant('ORDERS.DETAIL.CONFIRM_STATUS_CHANGE'),
+      message: this.translate.instant('ORDERS.DETAIL.CHANGE_STATUS_TO', { status: this.getStatusLabel(newStatus) }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         {
-          text: 'Confirm',
+          text: this.translate.instant('COMMON.CONFIRM'),
           handler: () => this.updateStatus(newStatus),
         },
       ],
@@ -374,15 +383,127 @@ export class OrderDetailPage implements OnInit {
     await alert.present();
   }
 
-  private async updateStatus(newStatus: string): Promise<void> {
+  /**
+   * Handle ABSENT status with reason selection and notes
+   * Implements FR-04 absence tracking
+   */
+  private async handleAbsenceStatus(): Promise<void> {
+    const currentOrder = this.order();
+    if (!currentOrder) return;
+
+    // Show absence retry warning if applicable
+    const retryCount = currentOrder.absenceRetryCount || 0;
+    const maxRetries = currentOrder.maxAbsenceRetries || 3;
+    const retryWarning = retryCount > 0
+      ? `\n\n${this.translate.instant('ORDERS.ABSENCE.RETRY_COUNT')}: ${retryCount}/${maxRetries}`
+      : '';
+
+    const alert = await this.alertCtrl.create({
+      header: this.translate.instant('ORDERS.ABSENCE.TITLE'),
+      message: `${this.translate.instant('ORDERS.ABSENCE.REASON.TITLE')}${retryWarning}`,
+      inputs: [
+        {
+          name: 'reason',
+          type: 'radio',
+          label: this.translate.instant('ORDERS.ABSENCE.REASON.NOT_HOME'),
+          value: 'NO_RESPONSE',
+          checked: true,
+        },
+        {
+          name: 'reason',
+          type: 'radio',
+          label: this.translate.instant('ORDERS.ABSENCE.REASON.WRONG_ADDRESS'),
+          value: 'WRONG_ADDRESS',
+        },
+        {
+          name: 'reason',
+          type: 'radio',
+          label: this.translate.instant('ORDERS.ABSENCE.REASON.REFUSED'),
+          value: 'CUSTOMER_REFUSED',
+        },
+        {
+          name: 'reason',
+          type: 'radio',
+          label: this.translate.instant('ORDERS.ABSENCE.REASON.OTHER'),
+          value: 'OTHER',
+        },
+      ],
+      buttons: [
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+        {
+          text: this.translate.instant('COMMON.NEXT'),
+          handler: async (reasonCode) => {
+            await this.promptAbsenceNotes(reasonCode);
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * Prompt for absence notes after reason selection
+   */
+  private async promptAbsenceNotes(reasonCode: string): Promise<void> {
+    const notesAlert = await this.alertCtrl.create({
+      header: this.translate.instant('ORDERS.ABSENCE.MEMO.LABEL'),
+      message: this.translate.instant('ORDERS.ABSENCE.MEMO.PLACEHOLDER'),
+      inputs: [
+        {
+          name: 'notes',
+          type: 'textarea',
+          placeholder: this.translate.instant('ORDERS.ABSENCE.MEMO.PLACEHOLDER'),
+        },
+      ],
+      buttons: [
+        { text: this.translate.instant('COMMON.BUTTON.CANCEL'), handler: () => this.updateStatus(OrderStatus.ABSENT, { reasonCode }) },
+        {
+          text: this.translate.instant('COMMON.CONFIRM'),
+          handler: (data) => {
+            this.updateStatus(OrderStatus.ABSENT, {
+              reasonCode,
+              notes: data.notes,
+            });
+          },
+        },
+      ],
+    });
+
+    await notesAlert.present();
+  }
+
+  private async updateStatus(
+    newStatus: string,
+    options?: { reasonCode?: string; notes?: string; appointmentDate?: string }
+  ): Promise<void> {
     const currentOrder = this.order();
     if (!currentOrder) return;
 
     try {
-      const updated = await this.ordersService.updateStatus(currentOrder.id, {
+      const updatePayload: {
+        status: string;
+        version: number;
+        reasonCode?: string;
+        notes?: string;
+        appointmentDate?: string;
+      } = {
         status: newStatus,
         version: currentOrder.version,
-      });
+      };
+
+      // Add status-specific fields (reasonCode used for absence reason, etc.)
+      if (options?.reasonCode) {
+        updatePayload.reasonCode = options.reasonCode;
+      }
+      if (options?.notes) {
+        updatePayload.notes = options.notes;
+      }
+      if (options?.appointmentDate) {
+        updatePayload.appointmentDate = options.appointmentDate;
+      }
+
+      const updated = await this.ordersService.updateStatus(currentOrder.id, updatePayload);
 
       this.order.set(updated);
       const transitions = ALLOWED_TRANSITIONS[updated.status as OrderStatus] || [];

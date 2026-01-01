@@ -52,8 +52,7 @@ export class BackgroundSyncService {
         if (!isOffline) {
           this.onNetworkOnline();
         }
-      },
-      { allowSignalWrites: true }
+      }
     );
 
     // Handle service worker sync event
