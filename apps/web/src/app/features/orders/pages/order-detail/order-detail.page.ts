@@ -104,14 +104,14 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         <!-- Status Badge -->
         <div class="status-section">
           <ion-badge [class]="'status-badge status-' + order()!.status.toLowerCase()">
-            {{ order()!.status }}
+            {{ getStatusTranslationKey(order()!.status) | translate }}
           </ion-badge>
         </div>
 
         <!-- Order Info Card -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ order()!.erpOrderNumber }}</ion-card-title>
+            <ion-card-title>{{ order()!.orderNo }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
@@ -122,12 +122,12 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                   <h3>{{ order()!.appointmentDate | date:'yyyy-MM-dd' }} {{ order()!.appointmentSlot }}</h3>
                 </ion-label>
               </ion-item>
-              @if (order()!.installerName) {
+              @if (order()!.installer?.name || order()!.installerName) {
                 <ion-item>
                   <ion-icon slot="start" name="person-outline"></ion-icon>
                   <ion-label>
                     <p>{{ 'ORDERS.DETAIL.INSTALLER' | translate }}</p>
-                    <h3>{{ order()!.installerName }}</h3>
+                    <h3>{{ order()!.installer?.name || order()!.installerName }}</h3>
                   </ion-label>
                 </ion-item>
               }
@@ -163,18 +163,18 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         </ion-card>
 
         <!-- Order Lines Card -->
-        @if (order()!.orderLines?.length) {
+        @if ((order()!.lines || order()!.orderLines)?.length) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{ order()!.orderLines!.length }})</ion-card-title>
+              <ion-card-title>{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{ (order()!.lines || order()!.orderLines)!.length }})</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               <ion-list>
-                @for (line of order()!.orderLines; track line.id) {
+                @for (line of (order()!.lines || order()!.orderLines)!; track line.id) {
                   <ion-item>
                     <ion-label>
-                      <h3>{{ line.productName }}</h3>
-                      <p>{{ line.productCode }} × {{ line.quantity }}</p>
+                      <h3>{{ line.itemName || line.productName }}</h3>
+                      <p>{{ line.itemCode || line.productCode }} × {{ line.quantity }}</p>
                       @if (line.serialNumber) {
                         <p><strong>S/N:</strong> {{ line.serialNumber }}</p>
                       }
@@ -639,23 +639,38 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     }
   }
 
+  /** Status to i18n key mapping (uses ORDER_STATUS namespace) */
+  private readonly statusI18nKeys: Record<string, string> = {
+    UNASSIGNED: 'ORDER_STATUS.UNASSIGNED',
+    ASSIGNED: 'ORDER_STATUS.ASSIGNED',
+    CONFIRMED: 'ORDER_STATUS.CONFIRMED',
+    RELEASED: 'ORDER_STATUS.RELEASED',
+    DISPATCHED: 'ORDER_STATUS.DISPATCHED',
+    COMPLETED: 'ORDER_STATUS.COMPLETED',
+    COLLECTED: 'ORDER_STATUS.COLLECTED',
+    ABSENT: 'ORDER_STATUS.ABSENT',
+    POSTPONED: 'ORDER_STATUS.POSTPONED',
+    CANCELLED: 'ORDER_STATUS.CANCELLED',
+    REQUEST_CANCEL: 'ORDER_STATUS.REQUEST_CANCEL',
+    PARTIAL: 'ORDER_STATUS.PARTIAL',
+  };
+
   /**
-   * 상태 코드를 i18n 기반 라벨로 변환
-   * @param status - 주문 상태 코드
-   * @returns 번역된 상태 라벨
+   * Get i18n translation key for status
+   * Used with | translate pipe in template
+   */
+  protected getStatusTranslationKey(status: string): string {
+    return this.statusI18nKeys[status] || `ORDER_STATUS.${status}`;
+  }
+
+  /**
+   * Get translated status label (for programmatic use)
+   * @param status - Order status code
+   * @returns Translated status label
    */
   protected getStatusLabel(status: string): string {
-    const statusI18nKeys: Record<string, string> = {
-      CONFIRMED: 'ORDERS.STATUS.CONFIRMED',
-      DISPATCHED: 'ORDERS.STATUS.DISPATCHED',
-      COMPLETED: 'ORDERS.STATUS.COMPLETED',
-      COLLECTED: 'ORDERS.STATUS.COLLECTED',
-      ABSENT: 'ORDERS.STATUS.ABSENT',
-      POSTPONED: 'ORDERS.STATUS.POSTPONED',
-      ASSIGNED: 'ORDERS.STATUS.ASSIGNED',
-    };
-    const key = statusI18nKeys[status];
-    return key ? this.translateService.instant(key) : status;
+    const key = this.getStatusTranslationKey(status);
+    return this.translateService.instant(key);
   }
 
   protected getStatusButtonColor(status: string): string {

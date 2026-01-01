@@ -30,7 +30,7 @@ describe('OrdersStore', () => {
 
   const mockOrder1: Order = {
     id: 'order-1',
-    erpOrderNumber: 'ERP-001',
+    orderNo: 'ERP-001',
     branchId: 'branch-1',
     branchCode: 'BR001',
     status: OrderStatus.UNASSIGNED,
@@ -55,7 +55,7 @@ describe('OrdersStore', () => {
 
   const mockOrder2: Order = {
     id: 'order-2',
-    erpOrderNumber: 'ERP-002',
+    orderNo: 'ERP-002',
     branchId: 'branch-1',
     branchCode: 'BR001',
     status: OrderStatus.ASSIGNED,
@@ -71,7 +71,7 @@ describe('OrdersStore', () => {
 
   const mockOrder3: Order = {
     id: 'order-3',
-    erpOrderNumber: 'ERP-003',
+    orderNo: 'ERP-003',
     branchId: 'branch-2',
     branchCode: 'BR002',
     status: OrderStatus.COMPLETED,

@@ -331,7 +331,7 @@ export class CompletionCertificatePage implements OnInit {
   protected readonly orderInfo = computed(() => {
     const o = this.order();
     return {
-      orderNumber: o?.erpOrderNumber || '',
+      orderNumber: o?.orderNo || '',
       installDate: o?.appointmentDate || new Date().toISOString().split('T')[0],
       customerName: o?.customerName || '',
       address: o?.address || '',
@@ -343,7 +343,7 @@ export class CompletionCertificatePage implements OnInit {
     const lines = o?.lines || o?.orderLines || [];
     return lines.map((line: OrderLine) => ({
       id: line.id,
-      name: line.productName,
+      name: line.itemName || line.productName || '',
       quantity: line.quantity,
       serial: line.serialNumber || '-',
     }));

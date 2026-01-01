@@ -4,7 +4,7 @@
  */
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom, map } from 'rxjs';
 import { environment } from '@env/environment';
 
 export interface KpiSummary {
@@ -139,6 +139,7 @@ export class ReportsService {
 
   /**
    * Get Progress Report
+   * Transforms raw Prisma groupBy results into ProgressReport structure
    */
   getProgress(options: {
     groupBy: 'branch' | 'installer' | 'status' | 'date';
@@ -151,7 +152,55 @@ export class ReportsService {
     if (options.dateFrom) params = params.set('dateFrom', options.dateFrom);
     if (options.dateTo) params = params.set('dateTo', options.dateTo);
 
-    return this.http.get<ProgressReport>(`${this.baseUrl}/progress`, { params });
+    // API returns raw Prisma groupBy results, transform to ProgressReport
+    return this.http.get<any[]>(`${this.baseUrl}/progress`, { params }).pipe(
+      map((data) => {
+        console.log('[ReportsService] Raw API data:', {
+          type: typeof data,
+          isArray: Array.isArray(data),
+          length: Array.isArray(data) ? data.length : 'N/A',
+          first3: Array.isArray(data) ? data.slice(0, 3) : data,
+        });
+        return this.transformProgressData(data || [], options.groupBy);
+      })
+    );
+  }
+
+  /**
+   * Transform API progress response to ProgressReport structure
+   * API now returns pre-computed stats: { key, name, total, completed, pending, completionRate }
+   */
+  private transformProgressData(
+    data: any[],
+    _groupBy: 'branch' | 'installer' | 'status' | 'date'
+  ): ProgressReport {
+    // API already provides all needed fields - simple mapping
+    const items: ProgressItem[] = data.map((item: any) => ({
+      id: item.key || '',
+      name: item.name || item.key || 'Unknown',
+      total: item.total || 0,
+      completed: item.completed || 0,
+      pending: item.pending || 0,
+      rate: item.completionRate || 0,
+    }));
+
+    // Calculate summary from items
+    const summary: KpiSummary = {
+      total: items.reduce((sum, i) => sum + i.total, 0),
+      completed: items.reduce((sum, i) => sum + i.completed, 0),
+      pending: items.reduce((sum, i) => sum + i.pending, 0),
+      inProgress: 0,
+      cancelled: 0,
+      completionRate: 0,
+      appointmentRate: 0,
+      wastePickupRate: 0,
+      defectRate: 0,
+    };
+    summary.completionRate = summary.total > 0
+      ? Math.round((summary.completed / summary.total) * 100)
+      : 0;
+
+    return { items, summary };
   }
 
   /**

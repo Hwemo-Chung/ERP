@@ -22,6 +22,7 @@ import {
   RefresherCustomEvent,
   InfiniteScrollCustomEvent,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronForwardOutline, cloudOfflineOutline } from 'ionicons/icons';
 import { NetworkService } from '@core/services/network.service';
@@ -58,14 +59,15 @@ import {
     IonSpinner,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>주문 목록</ion-title>
+        <ion-title>{{ 'ORDERS.LIST.TITLE' | translate }}</ion-title>
         <div slot="end" class="kpi-summary">
-          <ion-badge>총 {{ ordersStore.kpiMetrics().total }}</ion-badge>
-          <ion-badge color="danger">미배정 {{ ordersStore.kpiMetrics().pending }}</ion-badge>
+          <ion-badge>{{ 'COMMON.TOTAL' | translate }} {{ ordersStore.kpiMetrics().total }}</ion-badge>
+          <ion-badge color="danger">{{ 'ORDERS.FILTER.UNASSIGNED' | translate }} {{ ordersStore.kpiMetrics().pending }}</ion-badge>
         </div>
         @if (networkService.isOffline()) {
           <ion-icon slot="end" name="cloud-offline-outline" color="warning"></ion-icon>
@@ -74,20 +76,20 @@ import {
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문 검색..."
+          [placeholder]="'ORDERS.LIST.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="currentFilter()" (ionChange)="onFilterChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="pending">
-            <ion-label>미배정</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.UNASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="assigned">
-            <ion-label>배정완료</ion-label>
+            <ion-label>{{ 'ORDERS.FILTER.ASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -105,15 +107,15 @@ import {
       } @else if (ordersStore.filteredOrders().length === 0) {
         <div class="empty-state">
           <ion-icon name="list-outline"></ion-icon>
-          <h3>주문이 없습니다</h3>
-          <p>아래로 당겨 새로고침</p>
+          <h3>{{ 'ORDERS.LIST.NO_ORDERS' | translate }}</h3>
+          <p>{{ 'ORDERS.LIST.PULL_TO_REFRESH' | translate }}</p>
         </div>
       } @else {
         <ion-list>
           @for (order of ordersStore.filteredOrders(); track order.id) {
             <ion-item button (click)="viewOrder(order.id)">
               <ion-label>
-                <h2>{{ order.erpOrderNumber }}</h2>
+                <h2>{{ order.orderNo }}</h2>
                 <h3>{{ order.customerName }}</h3>
                 <p>{{ order.customerAddress }}</p>
                 <p class="appointment">
@@ -124,7 +126,7 @@ import {
                 </p>
               </ion-label>
               <ion-badge slot="end" [color]="getStatusColor(order.status)">
-                {{ getStatusLabel(order.status) }}
+                {{ getStatusKey(order.status) | translate }}
               </ion-badge>
               <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
             </ion-item>
@@ -234,19 +236,25 @@ export class OrderListPage implements OnInit {
     return ORDER_STATUS_COLORS[status as OrderStatus] || 'medium';
   }
 
-  protected getStatusLabel(status: string): string {
+  protected getStatusKey(status: string): string {
     return ORDER_STATUS_LABELS[status as OrderStatus] || status;
   }
+
+  private readonly translate = inject(TranslateService);
 
   private async loadOrders(): Promise<void> {
     try {
       const user = this.authService.user();
       const branchCode = user?.branchCode || 'ALL';
-      await this.ordersStore.loadOrders(branchCode, 1, 20);
-      await this.installersStore.loadInstallers(branchCode);
+      // Load stats for accurate KPI counts, then load paginated orders
+      await Promise.all([
+        this.ordersStore.loadStats(branchCode),
+        this.ordersStore.loadOrders(branchCode, 1, 20),
+        this.installersStore.loadInstallers(branchCode),
+      ]);
     } catch (error) {
       console.error('[OrderList] Failed to load orders:', error);
-      this.uiStore.showToast('주문 로드 실패', 'danger');
+      this.uiStore.showToast(this.translate.instant('ORDERS.ERROR.LOAD_FAILED'), 'danger');
     }
   }
 }

@@ -24,6 +24,7 @@ import {
   RefresherCustomEvent,
   ModalController,
 } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 import { OrderFilterModal, FilterContext } from '../../../../shared/components/order-filter/order-filter.modal';
 import { addIcons } from 'ionicons';
 import {
@@ -63,6 +64,7 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
     IonRefresherContent,
     IonSpinner,
     IonChip,
+    TranslateModule,
   ],
   template: `
     <ion-header>
@@ -142,7 +144,7 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
                 </div>
               </ion-label>
               <ion-badge slot="end" [color]="getStatusColor(item.status)">
-                {{ getStatusLabel(item.status) }}
+                {{ getStatusLabel(item.status) | translate }}
               </ion-badge>
             </ion-item>
           } @empty {
@@ -227,7 +229,7 @@ export class CompletionListPage implements OnInit {
 
     if (query) {
       filtered = filtered.filter(o =>
-        o.erpOrderNumber.toLowerCase().includes(query) ||
+        o.orderNo.toLowerCase().includes(query) ||
         o.customerName.toLowerCase().includes(query)
       );
     }
@@ -236,7 +238,7 @@ export class CompletionListPage implements OnInit {
       const lines = o.lines || o.orderLines || [];
       return {
         id: o.id,
-        orderNumber: o.erpOrderNumber,
+        orderNumber: o.orderNo,
         customerName: o.customerName,
         appointmentDate: o.appointmentDate || '-',
         status: o.status,

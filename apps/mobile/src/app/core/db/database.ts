@@ -3,7 +3,7 @@ import Dexie, { Table } from 'dexie';
 // Order interface for offline storage
 export interface OfflineOrder {
   id: string;
-  erpOrderNumber: string;
+  orderNo: string;
   status: string;
   appointmentDate?: string;
   appointmentSlot?: string;
@@ -16,11 +16,13 @@ export interface OfflineOrder {
   version: number;
   localUpdatedAt: number;
   syncedAt?: number;
-  // Nested data
+  // Nested data - supports both API field names (itemCode/itemName) and legacy (productCode/productName)
   orderLines?: Array<{
     id: string;
-    productCode: string;
-    productName: string;
+    productCode?: string;
+    productName?: string;
+    itemCode?: string;
+    itemName?: string;
     quantity: number;
   }>;
 }
@@ -60,14 +62,14 @@ class ERPDatabase extends Dexie {
 
     // Version 1: Initial schema
     this.version(1).stores({
-      orders: 'id, erpOrderNumber, status, appointmentDate, installerId, branchId, localUpdatedAt',
+      orders: 'id, orderNo, status, appointmentDate, installerId, branchId, localUpdatedAt',
       syncQueue: '++id, timestamp, method',
       metadata: 'key, updatedAt',
     });
 
     // Version 2: Added status and priority to syncQueue for background sync
     this.version(2).stores({
-      orders: 'id, erpOrderNumber, status, appointmentDate, installerId, branchId, localUpdatedAt',
+      orders: 'id, orderNo, status, appointmentDate, installerId, branchId, localUpdatedAt',
       syncQueue: '++id, timestamp, method, status, priority',
       metadata: 'key, updatedAt',
     });

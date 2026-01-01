@@ -57,9 +57,12 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 
 export interface OrderLine {
   id: string;
-  lineNumber: number;
-  productCode: string;
-  productName: string;
+  lineNumber?: number;
+  productCode?: string;
+  productName?: string;
+  // API returns itemCode/itemName from Prisma schema
+  itemCode?: string;
+  itemName?: string;
   quantity: number;
   serialNumber?: string;
 }
@@ -84,7 +87,7 @@ export interface CompletionData {
 
 export interface Order {
   id: string;
-  erpOrderNumber: string;
+  orderNo: string;
   branchId: string;
   branchCode: string;
   branchName?: string;
@@ -94,10 +97,16 @@ export interface Order {
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
-  address?: string;
+  address?: string | { line1?: string; line2?: string; city?: string; postal?: string };
   installerId?: string;
   installerName?: string;
+  // API returns nested installer object
+  installer?: { id: string; name: string; phone?: string };
   version: number;
+
+  // Absence tracking (FR-04)
+  absenceRetryCount?: number;
+  maxAbsenceRetries?: number;
 
   // Nested data - support both 'lines' and 'orderLines' for compatibility
   lines?: OrderLine[];

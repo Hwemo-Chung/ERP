@@ -425,6 +425,63 @@ function analyzeDocs(): { items: Array<{ name: string; exists: boolean }>; compl
   return { items: analyzed, complete };
 }
 
+// Test file definitions for each app
+interface TestCheck {
+  app: string;
+  path: string;
+}
+
+const TEST_FILES: TestCheck[] = [
+  // API tests
+  { app: 'api', path: 'apps/api/src/auth/auth.service.spec.ts' },
+  { app: 'api', path: 'apps/api/src/orders/orders.service.spec.ts' },
+  { app: 'api', path: 'apps/api/src/orders/order-state-machine.spec.ts' },
+  { app: 'api', path: 'apps/api/src/completion/completion.service.spec.ts' },
+  { app: 'api', path: 'apps/api/src/settlement/settlement.service.spec.ts' },
+  // Web tests
+  { app: 'web', path: 'apps/web/src/app/app.component.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/store/orders/orders.store.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/core/services/auth.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/core/services/background-sync.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/core/services/sync-queue.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/core/services/biometric.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/core/db/database.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/shared/services/bulk-operation.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/shared/services/conflict-resolver.service.spec.ts' },
+  { app: 'web', path: 'apps/web/src/app/shared/services/session-manager.service.spec.ts' },
+  // Mobile tests
+  { app: 'mobile', path: 'apps/mobile/src/app/store/orders/orders.store.spec.ts' },
+  { app: 'mobile', path: 'apps/mobile/src/app/core/services/auth.service.spec.ts' },
+  { app: 'mobile', path: 'apps/mobile/src/app/core/services/background-sync.service.spec.ts' },
+  { app: 'mobile', path: 'apps/mobile/src/app/core/services/sync-queue.service.spec.ts' },
+  { app: 'mobile', path: 'apps/mobile/src/app/core/db/database.spec.ts' },
+];
+
+function analyzeTests(): {
+  items: Array<TestCheck & { exists: boolean }>;
+  complete: number;
+  byApp: Record<string, { total: number; complete: number }>;
+} {
+  let complete = 0;
+  const byApp: Record<string, { total: number; complete: number }> = {
+    api: { total: 0, complete: 0 },
+    web: { total: 0, complete: 0 },
+    mobile: { total: 0, complete: 0 },
+  };
+
+  const analyzed = TEST_FILES.map((item) => {
+    const exists = fileExists(item.path);
+    byApp[item.app].total++;
+    if (exists) {
+      complete++;
+      byApp[item.app].complete++;
+    }
+    return { ...item, exists };
+  });
+
+  return { items: analyzed, complete, byApp };
+}
+
 // Main generation
 function generateProgressMd(): string {
   const now = new Date().toISOString().split('T')[0];
@@ -433,15 +490,16 @@ function generateProgressMd(): string {
   const moduleAnalysis = analyzeModules();
   const mobileAnalysis = analyzeMobile();
   const docAnalysis = analyzeDocs();
+  const testAnalysis = analyzeTests();
 
   // Calculate overall progress
   const docProgress = Math.round((docAnalysis.complete / DOC_FILES.length) * 100);
   const apiProgress = Math.round((moduleAnalysis.complete / API_MODULES.length) * 100);
   const mobileProgress = Math.round((mobileAnalysis.complete / MOBILE_CHECKS.length) * 100);
   const frProgress = Math.round((frAnalysis.complete / FR_MAPPINGS.length) * 100);
-  const testProgress = 0; // TODO: Implement test analysis
+  const testProgress = Math.round((testAnalysis.complete / TEST_FILES.length) * 100);
 
-  const overallProgress = Math.round((docProgress + apiProgress + mobileProgress + frProgress) / 4);
+  const overallProgress = Math.round((docProgress + apiProgress + mobileProgress + frProgress + testProgress) / 5);
 
   // Generate markdown
   let md = `# Logistics ERP 프로젝트 진행 상황
@@ -460,7 +518,7 @@ function generateProgressMd(): string {
 API 백엔드:   ${progressBar(apiProgress)} ${apiProgress}%  (${moduleAnalysis.complete}/${API_MODULES.length} 모듈 완전)
 Mobile 앱:    ${progressBar(mobileProgress)} ${mobileProgress}%  (${mobileAnalysis.complete}/${MOBILE_CHECKS.length} 항목)
 FR 구현:      ${progressBar(frProgress)} ${frProgress}%  (${frAnalysis.complete}/${FR_MAPPINGS.length} 완전)
-테스트:       ${progressBar(testProgress)} ${testProgress}%   (테스트 파일 분석 필요)
+테스트:       ${progressBar(testProgress)} ${testProgress}%  (${testAnalysis.complete}/${TEST_FILES.length} 테스트 파일)
 \`\`\`
 
 ---
@@ -603,6 +661,7 @@ function printSummary(): void {
   const moduleAnalysis = analyzeModules();
   const mobileAnalysis = analyzeMobile();
   const docAnalysis = analyzeDocs();
+  const testAnalysis = analyzeTests();
 
   console.log('\n' + colors.bold + colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset);
   console.log(colors.bold + '           Logistics ERP - Progress Report' + colors.reset);
@@ -632,22 +691,42 @@ function printSummary(): void {
     `${colors.blue}📋 FR Complete:${colors.reset}   ${colors.green}${frAnalysis.complete}/${FR_MAPPINGS.length}${colors.reset} (${frPercent}%)`
   );
 
+  // Tests
+  const testPercent = Math.round((testAnalysis.complete / TEST_FILES.length) * 100);
+  console.log(
+    `${colors.blue}🧪 Tests:${colors.reset}         ${colors.green}${testAnalysis.complete}/${TEST_FILES.length}${colors.reset} (${testPercent}%)`
+  );
+  console.log(
+    `   ${colors.cyan}API: ${testAnalysis.byApp.api.complete}/${testAnalysis.byApp.api.total}, Web: ${testAnalysis.byApp.web.complete}/${testAnalysis.byApp.web.total}, Mobile: ${testAnalysis.byApp.mobile.complete}/${testAnalysis.byApp.mobile.total}${colors.reset}`
+  );
+
   // Critical issues
   console.log('\n' + colors.bold + colors.red + '🚨 Critical Issues:' + colors.reset);
+
+  let hasIssues = false;
 
   const settlementMod = moduleAnalysis.modules.find((m) => m.name === 'settlement');
   if (settlementMod && !settlementMod.exists.module) {
     console.log(colors.red + '   • Settlement module incomplete' + colors.reset);
+    hasIssues = true;
   }
 
   const completionMod = moduleAnalysis.modules.find((m) => m.name === 'completion');
   if (completionMod && completionMod.exists.module && !completionMod.appImported) {
     console.log(colors.red + '   • CompletionModule not imported in AppModule' + colors.reset);
+    hasIssues = true;
   }
 
-  const hasAnyTests = moduleAnalysis.modules.some((m) => m.exists.test);
-  if (!hasAnyTests) {
-    console.log(colors.yellow + '   • Test coverage is 0%' + colors.reset);
+  if (testAnalysis.complete === 0) {
+    console.log(colors.yellow + '   • No test files found' + colors.reset);
+    hasIssues = true;
+  } else if (testPercent < 50) {
+    console.log(colors.yellow + `   • Test coverage low (${testPercent}%)` + colors.reset);
+    hasIssues = true;
+  }
+
+  if (!hasIssues) {
+    console.log(colors.green + '   ✅ No critical issues found' + colors.reset);
   }
 
   console.log('\n' + colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset);

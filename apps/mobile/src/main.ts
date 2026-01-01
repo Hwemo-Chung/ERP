@@ -3,14 +3,16 @@ import {
   isDevMode,
   provideExperimentalZonelessChangeDetection,
   importProvidersFrom,
+  APP_INITIALIZER,
 } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withPreloading, PreloadAllModules, RouteReuseStrategy } from '@angular/router';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateModule, TranslateLoader, TranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { firstValueFrom } from 'rxjs';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
@@ -24,6 +26,17 @@ import { environment } from './environments/environment';
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+/**
+ * Translation Initializer Factory
+ * Loads translations before app bootstrap to prevent untranslated keys from showing
+ */
+export function initializeTranslations(translate: TranslateService): () => Promise<void> {
+  return async (): Promise<void> => {
+    translate.setDefaultLang('ko');
+    await firstValueFrom(translate.use('ko'));
+  };
 }
 
 if (environment.production) {
@@ -56,6 +69,7 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(
       TranslateModule.forRoot({
         defaultLanguage: 'ko',
+        useDefaultLang: true, // Use default lang when key not found
         loader: {
           provide: TranslateLoader,
           useFactory: HttpLoaderFactory,
@@ -63,5 +77,12 @@ bootstrapApplication(AppComponent, {
         },
       })
     ),
+    // Load translations before app bootstrap
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeTranslations,
+      deps: [TranslateService],
+      multi: true,
+    },
   ],
 }).catch((err) => console.error('Bootstrap error:', err));

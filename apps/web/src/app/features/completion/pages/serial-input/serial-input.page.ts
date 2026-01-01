@@ -256,8 +256,8 @@ export class SerialInputPage implements OnInit {
     if (lines) {
       this.products.set(lines.map((line: OrderLine) => ({
         lineId: line.id,
-        productCode: line.productCode,
-        productName: line.productName,
+        productCode: line.itemCode || line.productCode || '',
+        productName: line.itemName || line.productName || '',
         quantity: line.quantity,
         serialNumber: line.serialNumber || '',
         isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,

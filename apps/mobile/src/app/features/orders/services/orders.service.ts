@@ -7,7 +7,7 @@ import { NetworkService } from '@core/services/network.service';
 
 export interface Order {
   id: string;
-  erpOrderNumber: string;
+  orderNo: string;
   status: string;
   appointmentDate?: string;
   appointmentSlot?: string;
@@ -18,18 +18,28 @@ export interface Order {
   customerMemo?: string;
   installerId?: string;
   installerName?: string;
+  // API returns nested installer object
+  installer?: { id: string; name: string; phone?: string };
   branchId: string;
   branchCode?: string;
   version: number;
   createdAt: string;
   updatedAt: string;
+  // API returns 'lines', frontend uses 'orderLines' - support both
+  lines?: OrderLine[];
   orderLines?: OrderLine[];
+  // Absence tracking (FR-04)
+  absenceRetryCount?: number;
+  maxAbsenceRetries?: number;
 }
 
 export interface OrderLine {
   id: string;
-  productCode: string;
-  productName: string;
+  productCode?: string;
+  productName?: string;
+  // API returns itemCode/itemName from Prisma schema
+  itemCode?: string;
+  itemName?: string;
   quantity: number;
   serialNumber?: string;
 }
@@ -57,6 +67,10 @@ export interface UpdateStatusDto {
   status: string;
   version: number;
   memo?: string;
+  // Status change fields (FR-04)
+  reasonCode?: string;  // Reason code for status change (e.g., absence reason)
+  notes?: string;
+  appointmentDate?: string;
 }
 
 @Injectable({
@@ -143,7 +157,7 @@ export class OrdersService {
   private async cacheOrders(orders: Order[]): Promise<void> {
     const offlineOrders = orders.map((order) => ({
       id: order.id,
-      erpOrderNumber: order.erpOrderNumber,
+      orderNo: order.orderNo,
       status: order.status,
       appointmentDate: order.appointmentDate,
       appointmentSlot: order.appointmentSlot,
@@ -155,7 +169,11 @@ export class OrdersService {
       version: order.version,
       localUpdatedAt: Date.now(),
       syncedAt: Date.now(),
-      orderLines: order.orderLines,
+      // API returns 'lines', store as 'orderLines' for offline use
+      orderLines: order.lines || order.orderLines,
+      // Absence tracking (FR-04)
+      absenceRetryCount: order.absenceRetryCount,
+      maxAbsenceRetries: order.maxAbsenceRetries,
     }));
 
     await db.orders.bulkPut(offlineOrders);
@@ -172,7 +190,7 @@ export class OrdersService {
       const search = params.search.toLowerCase();
       filtered = filtered.filter(
         (o) =>
-          o.erpOrderNumber.toLowerCase().includes(search) ||
+          o.orderNo.toLowerCase().includes(search) ||
           o.customerName.toLowerCase().includes(search)
       );
     }
@@ -207,7 +225,7 @@ export class OrdersService {
   private mapOfflineOrder(offline: any): Order {
     return {
       id: offline.id,
-      erpOrderNumber: offline.erpOrderNumber,
+      orderNo: offline.orderNo,
       status: offline.status,
       appointmentDate: offline.appointmentDate,
       appointmentSlot: offline.appointmentSlot,
@@ -220,6 +238,9 @@ export class OrdersService {
       createdAt: '',
       updatedAt: '',
       orderLines: offline.orderLines,
+      // Absence tracking (FR-04)
+      absenceRetryCount: offline.absenceRetryCount,
+      maxAbsenceRetries: offline.maxAbsenceRetries,
     };
   }
 }

@@ -69,6 +69,7 @@ import {
   toggleAllNotifications,
 } from '@shared/constants/notification-categories';
 import { SyncConflictListModal } from '@shared/components/sync-conflict/sync-conflict-list.modal';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SyncStatus {
   labelKey: string;
@@ -82,6 +83,7 @@ interface SyncStatus {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,

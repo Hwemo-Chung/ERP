@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
 import { TranslateModule } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline } from 'ionicons/icons';
+import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline, returnDownBackOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-reports-menu',
@@ -58,6 +58,18 @@ import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevro
           <div class="card-content">
             <h3>{{ 'REPORTS.MENU.WASTE_SUMMARY' | translate }}</h3>
             <p>{{ 'REPORTS.MENU.WASTE_SUMMARY_DESC' | translate }}</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+        </a>
+
+        <!-- 미환입 현황 메뉴 -->
+        <a class="menu-card" routerLink="unreturned-items">
+          <div class="card-icon danger">
+            <ion-icon name="return-down-back-outline"></ion-icon>
+          </div>
+          <div class="card-content">
+            <h3>{{ 'REPORTS.MENU.UNRETURNED_ITEMS' | translate }}</h3>
+            <p>{{ 'REPORTS.MENU.UNRETURNED_ITEMS_DESC' | translate }}</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
         </a>
@@ -147,6 +159,10 @@ import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevro
       &.secondary {
         background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       }
+
+      &.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
     }
 
     .card-content {
@@ -175,5 +191,5 @@ import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevro
   `],
 })
 export class ReportsMenuPage {
-  constructor() { addIcons({ statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline }); }
+  constructor() { addIcons({ statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline, returnDownBackOutline }); }
 }

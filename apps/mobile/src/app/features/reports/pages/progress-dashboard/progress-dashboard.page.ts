@@ -1,4 +1,4 @@
-// apps/web/src/app/features/reports/pages/progress-dashboard/progress-dashboard.page.ts
+// apps/mobile/src/app/features/reports/pages/progress-dashboard/progress-dashboard.page.ts
 import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -7,8 +7,10 @@ import {
   IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
   IonRefresher, IonRefresherContent, IonProgressBar,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReportsService, KpiSummary, ProgressItem } from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { UserRole } from '../../../../shared/constants/roles';
 
 type ViewType = 'installer' | 'branch' | 'status';
 
@@ -17,7 +19,8 @@ type ViewType = 'installer' | 'branch' | 'status';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    CommonModule, TranslateModule,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
     IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
     IonRefresher, IonRefresherContent, IonProgressBar,
@@ -26,13 +29,13 @@ type ViewType = 'installer' | 'branch' | 'status';
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
-        <ion-title>진행현황</ion-title>
+        <ion-title>{{ 'REPORTS.PROGRESS.TITLE' | translate }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="viewType()" (ionChange)="onViewTypeChange($any($event).detail.value)">
-          <ion-segment-button value="installer"><ion-label>기사별</ion-label></ion-segment-button>
-          <ion-segment-button value="branch"><ion-label>지점별</ion-label></ion-segment-button>
-          <ion-segment-button value="status"><ion-label>상태별</ion-label></ion-segment-button>
+          <ion-segment-button value="installer"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_INSTALLER' | translate }}</ion-label></ion-segment-button>
+          <ion-segment-button value="branch"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_BRANCH' | translate }}</ion-label></ion-segment-button>
+          <ion-segment-button value="status"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_STATUS' | translate }}</ion-label></ion-segment-button>
         </ion-segment>
       </ion-toolbar>
     </ion-header>
@@ -105,25 +108,29 @@ type ViewType = 'installer' | 'branch' | 'status';
         <!-- Progress List -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ viewTypeLabel() }} 현황</ion-card-title>
+            <ion-card-title>{{ viewTypeLabel() | translate }} 현황</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list>
               @for (item of progressItems(); track item.id) {
                 <ion-item>
                   <ion-label>
-                    <h3>{{ item.name }}</h3>
-                    <ion-progress-bar [value]="item.rate / 100"></ion-progress-bar>
+                    <h3>{{ getItemLabel(item, viewType()) }}</h3>
+                    @if (viewType() !== 'status') {
+                      <ion-progress-bar [value]="item.rate / 100"></ion-progress-bar>
+                    }
                   </ion-label>
                   <div slot="end" class="progress-stats">
-                    <span>{{ item.completed }}/{{ item.total }}</span>
-                    <ion-badge [color]="item.rate >= 80 ? 'success' : item.rate >= 50 ? 'warning' : 'danger'">
-                      {{ item.rate }}%
-                    </ion-badge>
+                    <span>{{ getItemStats(item, viewType()) }}</span>
+                    @if (viewType() !== 'status') {
+                      <ion-badge [color]="item.rate >= 80 ? 'success' : item.rate >= 50 ? 'warning' : 'danger'">
+                        {{ item.rate }}%
+                      </ion-badge>
+                    }
                   </div>
                 </ion-item>
               } @empty {
-                <div class="empty">데이터가 없습니다</div>
+                <div class="empty">{{ 'COMMON.NO_DATA' | translate }}</div>
               }
             </ion-list>
           </ion-card-content>
@@ -147,6 +154,7 @@ type ViewType = 'installer' | 'branch' | 'status';
 export class ProgressDashboardPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
   private readonly authService = inject(AuthService);
+  private readonly translate = inject(TranslateService);
 
   protected readonly viewType = signal<ViewType>('installer');
   protected readonly isLoading = signal(false);
@@ -155,9 +163,9 @@ export class ProgressDashboardPage implements OnInit {
 
   protected readonly viewTypeLabel = computed(() => {
     const labels: Record<ViewType, string> = {
-      installer: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.INSTALLER',
-      branch: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.BRANCH',
-      status: 'REPORTS.PROGRESS_DASHBOARD.GROUPBY.STATUS',
+      installer: 'REPORTS.PROGRESS.VIEW_BY_INSTALLER',
+      branch: 'REPORTS.PROGRESS.VIEW_BY_BRANCH',
+      status: 'REPORTS.PROGRESS.VIEW_BY_STATUS',
     };
     return labels[this.viewType()];
   });
@@ -166,7 +174,10 @@ export class ProgressDashboardPage implements OnInit {
 
   async loadData() {
     this.isLoading.set(true);
-    const branchCode = this.authService.user()?.branchCode;
+    // HQ_ADMIN sees all data, others see only their branch
+    const branchCode = this.authService.hasRole(UserRole.HQ_ADMIN)
+      ? undefined
+      : this.authService.user()?.branchCode;
 
     try {
       // Load summary
@@ -177,8 +188,18 @@ export class ProgressDashboardPage implements OnInit {
 
       // Load progress
       this.reportsService.getProgress({ groupBy: this.viewType(), branchCode }).subscribe({
-        next: (data) => this.progressItems.set(data.items || []),
-        error: () => this.progressItems.set([]),
+        next: (data) => {
+          console.log('[ProgressDashboard] Received progress data:', {
+            viewType: this.viewType(),
+            itemCount: data.items?.length,
+            firstItems: data.items?.slice(0, 3).map(i => ({ name: i.name, total: i.total })),
+          });
+          this.progressItems.set(data.items || []);
+        },
+        error: (err) => {
+          console.error('[ProgressDashboard] Error loading progress:', err);
+          this.progressItems.set([]);
+        },
       });
     } finally {
       this.isLoading.set(false);
@@ -193,5 +214,30 @@ export class ProgressDashboardPage implements OnInit {
   async onRefresh(event: any) {
     await this.loadData();
     event.target.complete();
+  }
+
+  /**
+   * Get translated label for progress item
+   * For status view, translate using ORDER_STATUS keys
+   */
+  getItemLabel(item: { name?: string; key?: string }, currentViewType: ViewType): string {
+    if (currentViewType === 'status') {
+      const statusKey = item.key || item.name || '';
+      const translationKey = `ORDER_STATUS.${statusKey}`;
+      const translated = this.translate.instant(translationKey);
+      return translated !== translationKey ? translated : (item.name || statusKey);
+    }
+    return item.name || '';
+  }
+
+  /**
+   * Get stats display for progress item
+   * For status view, show just total count
+   */
+  getItemStats(item: { total?: number; completed?: number }, currentViewType: ViewType): string {
+    if (currentViewType === 'status') {
+      return `${item.total || 0}${this.translate.instant('REPORTS.PROGRESS.ITEMS_SUFFIX')}`;
+    }
+    return `${item.completed || 0}/${item.total || 0}`;
   }
 }

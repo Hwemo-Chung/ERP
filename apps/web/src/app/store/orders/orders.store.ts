@@ -38,7 +38,52 @@ import { db } from '@app/core/db/database';
 import { NetworkService } from '../../core/services/network.service';
 import { SyncQueueService } from '../../core/services/sync-queue.service';
 
-const initialState: OrdersState = {
+/** Address object from API */
+interface AddressObject {
+  city?: string;
+  line1?: string;
+  line2?: string;
+  postal?: string;
+}
+
+/**
+ * Format address object to display string
+ */
+function formatAddress(address: AddressObject | string | undefined | null): string {
+  if (!address) return '';
+  if (typeof address === 'string') return address;
+  const parts = [address.line1, address.line2, address.city].filter(Boolean);
+  return parts.join(' ');
+}
+
+/**
+ * Transform API order data to include customerAddress string
+ */
+function transformOrder(order: any): Order {
+  return {
+    ...order,
+    customerAddress: formatAddress(order.address),
+  };
+}
+
+/** Server-side KPI statistics */
+interface ServerStats {
+  total: number;
+  unassigned: number;
+  assigned: number;
+  confirmed: number;
+  released: number;
+  dispatched: number;
+  completed: number;
+  cancelled: number;
+  pending: number;
+}
+
+interface ExtendedOrdersState extends OrdersState {
+  serverStats: ServerStats | null;
+}
+
+const initialState: ExtendedOrdersState = {
   orders: [],
   selectedOrder: null,
   filters: {},
@@ -53,6 +98,7 @@ const initialState: OrdersState = {
   error: null,
   lastSyncTime: undefined,
   syncStatus: 'idle',
+  serverStats: null,
 };
 
 /**
@@ -61,67 +107,81 @@ const initialState: OrdersState = {
  */
 @Injectable({ providedIn: 'root' })
 export class OrdersStore extends signalStore(
-  withState<OrdersState>(initialState),
+  withState<ExtendedOrdersState>(initialState),
 
-  withComputed(({ orders, filters, selectedOrder, pagination }) => ({
-    // Computed: filtered orders
-    filteredOrders: computed(() => {
-      let filtered = orders();
+  withComputed((state) => {
+    // Type-safe access to extended state
+    const orders = state.orders;
+    const filters = state.filters;
+    const pagination = state.pagination;
+    const serverStats = state.serverStats as ReturnType<typeof signal<ServerStats | null>>;
 
-      const f = filters();
-      if (f.status?.length) {
-        filtered = filtered.filter((o) => f.status!.includes(o.status));
-      }
-      if (f.branchCode) {
-        filtered = filtered.filter((o) => o.branchCode === f.branchCode);
-      }
-      if (f.installerId) {
-        filtered = filtered.filter((o) => o.installerId === f.installerId);
-      }
-      if (f.appointmentDate) {
-        filtered = filtered.filter((o) => o.appointmentDate === f.appointmentDate);
-      }
-      if (f.customerName) {
-        const query = f.customerName.toLowerCase();
-        filtered = filtered.filter((o) =>
-          o.customerName.toLowerCase().includes(query)
-        );
-      }
+    return {
+      // Computed: filtered orders
+      filteredOrders: computed(() => {
+        let filtered = orders();
 
-      return filtered;
-    }),
-
-    // Computed: grouped by status
-    ordersByStatus: computed(() => {
-      const groups = new Map<OrderStatus, Order[]>();
-      orders().forEach((o) => {
-        const status = o.status;
-        if (!groups.has(status)) {
-          groups.set(status, []);
+        const f = filters();
+        if (f.status?.length) {
+          filtered = filtered.filter((o) => f.status!.includes(o.status));
         }
-        groups.get(status)!.push(o);
-      });
-      return groups;
-    }),
+        if (f.branchCode) {
+          filtered = filtered.filter((o) => o.branchCode === f.branchCode);
+        }
+        if (f.installerId) {
+          filtered = filtered.filter((o) => o.installerId === f.installerId);
+        }
+        if (f.appointmentDate) {
+          filtered = filtered.filter((o) => o.appointmentDate === f.appointmentDate);
+        }
+        if (f.customerName) {
+          const query = f.customerName.toLowerCase();
+          filtered = filtered.filter((o) =>
+            o.customerName.toLowerCase().includes(query)
+          );
+        }
 
-    // Computed: KPI metrics
-    kpiMetrics: computed(() => {
-      const all = orders();
-      return {
-        total: all.length,
-        pending: all.filter((o) => o.status === OrderStatus.UNASSIGNED).length,
-        assigned: all.filter((o) => o.status === OrderStatus.ASSIGNED).length,
-        confirmed: all.filter((o) => o.status === OrderStatus.CONFIRMED).length,
-        released: all.filter((o) => o.status === OrderStatus.RELEASED).length,
-        dispatched: all.filter((o) => o.status === OrderStatus.DISPATCHED).length,
-        completed: all.filter((o) => o.status === OrderStatus.COMPLETED).length,
-        cancelled: all.filter((o) => o.status === OrderStatus.CANCELLED).length,
-      };
-    }),
+        return filtered;
+      }),
 
-    // Computed: UI state
-    isLoaded: computed(() => pagination().total > 0 || orders().length > 0),
-  })),
+      // Computed: grouped by status
+      ordersByStatus: computed(() => {
+        const groups = new Map<OrderStatus, Order[]>();
+        orders().forEach((o) => {
+          const status = o.status;
+          if (!groups.has(status)) {
+            groups.set(status, []);
+          }
+          groups.get(status)!.push(o);
+        });
+        return groups;
+      }),
+
+      // Computed: KPI metrics (uses serverStats if available, otherwise local count)
+      kpiMetrics: computed(() => {
+        const stats = serverStats();
+        if (stats) {
+          return stats;
+        }
+        // Fallback to local orders count (for offline or before stats load)
+        const all = orders();
+        return {
+          total: all.length,
+          pending: all.filter((o) => o.status === OrderStatus.UNASSIGNED).length,
+          unassigned: all.filter((o) => o.status === OrderStatus.UNASSIGNED).length,
+          assigned: all.filter((o) => o.status === OrderStatus.ASSIGNED).length,
+          confirmed: all.filter((o) => o.status === OrderStatus.CONFIRMED).length,
+          released: all.filter((o) => o.status === OrderStatus.RELEASED).length,
+          dispatched: all.filter((o) => o.status === OrderStatus.DISPATCHED).length,
+          completed: all.filter((o) => o.status === OrderStatus.COMPLETED).length,
+          cancelled: all.filter((o) => o.status === OrderStatus.CANCELLED).length,
+        };
+      }),
+
+      // Computed: UI state
+      isLoaded: computed(() => pagination().total > 0 || orders().length > 0),
+    };
+  }),
 
   withMethods((store, http = inject(HttpClient), networkService = inject(NetworkService), syncQueue = inject(SyncQueueService)) => ({
     /**
@@ -145,7 +205,8 @@ export class OrdersStore extends signalStore(
         );
 
         // After interceptor: response = { data: Order[], pagination: {...} }
-        const orders = response.data;
+        // Transform address object to customerAddress string
+        const orders = response.data.map(transformOrder);
         const pagination: PaginationInfo = {
           page,
           limit,
@@ -193,12 +254,37 @@ export class OrdersStore extends signalStore(
           orders = orders.filter((o) => o.branchCode === branchCode);
         }
 
+        // Transform cached orders to ensure customerAddress is set
+        const transformedOrders = orders.map(transformOrder);
         patchState(store, {
-          orders: orders as Order[],
+          orders: transformedOrders,
           isLoading: false,
         });
       } catch (error) {
         console.error('Failed to load from cache:', error);
+      }
+    },
+
+    /**
+     * Load order statistics from API (server-side counts)
+     * These are the real totals, not affected by pagination
+     */
+    async loadStats(branchCode?: string): Promise<void> {
+      try {
+        const params = new URLSearchParams();
+        if (branchCode && branchCode !== 'ALL') {
+          params.append('branchCode', branchCode);
+        }
+
+        const stats = await firstValueFrom(
+          http.get<ServerStats>(`${environment.apiUrl}/orders/stats?${params}`)
+        );
+
+        patchState(store, { serverStats: stats });
+      } catch (error: any) {
+        console.warn('[OrdersStore] Failed to load stats:', error);
+        // Don't set error state - stats are supplementary to orders list
+        // kpiMetrics will fall back to local order count
       }
     },
 
@@ -401,20 +487,36 @@ export class OrdersStore extends signalStore(
     },
 
     /**
-     * Update order status
+     * Update order status with optional additional data
      * @param orderId - Order ID
      * @param status - New status
-     * @param installerId - Optional installer ID (required for ASSIGNED status)
+     * @param options - Optional parameters (installerId, reasonCode, notes, appointmentDate)
      */
-    async updateOrderStatus(orderId: string, status: OrderStatus, installerId?: string): Promise<void> {
+    async updateOrderStatus(
+      orderId: string,
+      status: OrderStatus,
+      options?: string | {
+        installerId?: string;
+        reasonCode?: string;
+        notes?: string;
+        appointmentDate?: string;
+      }
+    ): Promise<void> {
       const order = store.orders().find((o) => o.id === orderId);
       if (!order) return;
+
+      // Handle backward compatibility: if options is a string, treat as installerId
+      const opts = typeof options === 'string' ? { installerId: options } : options;
 
       // Optimistic update
       const updatedOrder: Order = {
         ...order,
         status,
-        installerId: installerId ?? order.installerId,
+        installerId: opts?.installerId ?? order.installerId,
+        // Increment absence retry count when transitioning to ABSENT (FR-04)
+        absenceRetryCount: status === OrderStatus.ABSENT
+          ? (order.absenceRetryCount || 0) + 1
+          : order.absenceRetryCount,
         version: order.version + 1,
         updatedAt: Date.now(),
       };
@@ -424,12 +526,28 @@ export class OrdersStore extends signalStore(
       });
 
       // Build request body - use expectedVersion for API
-      const body: { status: OrderStatus; expectedVersion: number; installerId?: string } = {
+      const body: {
+        status: OrderStatus;
+        expectedVersion: number;
+        installerId?: string;
+        reasonCode?: string;
+        notes?: string;
+        appointmentDate?: string;
+      } = {
         status,
         expectedVersion: order.version,
       };
-      if (installerId) {
-        body.installerId = installerId;
+      if (opts?.installerId) {
+        body.installerId = opts.installerId;
+      }
+      if (opts?.reasonCode) {
+        body.reasonCode = opts.reasonCode;
+      }
+      if (opts?.notes) {
+        body.notes = opts.notes;
+      }
+      if (opts?.appointmentDate) {
+        body.appointmentDate = opts.appointmentDate;
       }
 
       // Queue for sync
@@ -594,64 +712,6 @@ export class OrdersStore extends signalStore(
         });
       } catch (error) {
         console.error('[OrdersStore] Failed to update order waste:', error);
-        throw error;
-      }
-    },
-
-    /**
-     * Update order completion data (photos, notes)
-     */
-    async updateOrderCompletion(
-      orderId: string,
-      completionData: {
-        photos?: string[];
-        notes?: string[];
-        completedAt?: string;
-      }
-    ): Promise<void> {
-      const order = store.orders().find((o) => o.id === orderId);
-      if (!order) return;
-
-      try {
-        // Optimistic update
-        const updatedOrder: Order = {
-          ...order,
-          completion: {
-            ...order.completion,
-            photos: completionData.photos || order.completion?.photos,
-            notes: completionData.notes?.join('\n') || order.completion?.notes,
-            completedAt: completionData.completedAt
-              ? new Date(completionData.completedAt).getTime()
-              : order.completion?.completedAt,
-          },
-          version: order.version + 1,
-          updatedAt: Date.now(),
-        };
-
-        patchState(store, {
-          orders: store.orders().map((o) => (o.id === orderId ? updatedOrder : o)),
-        });
-
-        // Queue for sync
-        await syncQueue.enqueue({
-          method: 'PATCH',
-          url: `/orders/${orderId}/completion`,
-          body: {
-            photos: completionData.photos,
-            notes: completionData.notes,
-            version: order.version,
-          },
-          timestamp: Date.now(),
-          retryCount: 0,
-        });
-
-        // Save to cache
-        await db.orders.put({
-          ...updatedOrder,
-          localUpdatedAt: Date.now(),
-        });
-      } catch (error) {
-        console.error('[OrdersStore] Failed to update order completion:', error);
         throw error;
       }
     },
@@ -843,8 +903,7 @@ export class OrdersStore extends signalStore(
         if (!isOffline) {
           this.syncPending();
         }
-      },
-      { allowSignalWrites: true }
+      }
     );
   }
 }

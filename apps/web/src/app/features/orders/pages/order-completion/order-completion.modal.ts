@@ -104,7 +104,7 @@ interface WasteCode {
       <form [formGroup]="form">
         <!-- Order Header -->
         <div class="order-header">
-          <h2>{{ order?.erpOrderNumber }}</h2>
+          <h2>{{ order?.orderNo }}</h2>
           <p>{{ order?.customerName }} - {{ order?.customerAddress }}</p>
         </div>
 
@@ -115,7 +115,7 @@ interface WasteCode {
             @for (line of orderLines(); let i = $index; track line.id) {
               <ion-item [formGroupName]="i" class="serial-item">
                 <ion-label position="stacked">
-                  {{ line.productName }} ({{ 'ORDERS.COMPLETION_MODAL.QUANTITY' | translate }}: {{ line.quantity }})
+                  {{ line.itemName || line.productName }} ({{ 'ORDERS.COMPLETION_MODAL.QUANTITY' | translate }}: {{ line.quantity }})
                 </ion-label>
                 <ion-input
                   formControlName="serialNumber"
@@ -329,7 +329,8 @@ export class OrderCompletionModal implements OnInit {
   isSubmitting = signal(false);
   photos = signal<string[]>([]);
 
-  readonly orderLines = computed(() => this.order?.orderLines || []);
+  // Support both API response 'lines' and cached 'orderLines'
+  readonly orderLines = computed(() => this.order?.lines || this.order?.orderLines || []);
   readonly wasteCodes = signal<WasteCode[]>([
     { code: 'P01', name: '', labelKey: 'WASTE_CODES.P01' },
     { code: 'P02', name: '', labelKey: 'WASTE_CODES.P02' },
@@ -361,9 +362,9 @@ export class OrderCompletionModal implements OnInit {
       return;
     }
 
-    // Build form arrays based on order lines
+    // Build form arrays based on order lines (support both API 'lines' and cached 'orderLines')
     const serials = this.form.get('serials') as FormArray;
-    (this.order.orderLines || []).forEach((line) => {
+    (this.order.lines || this.order.orderLines || []).forEach((line) => {
       serials.push(
         this.fb.group({
           lineId: [line.id],

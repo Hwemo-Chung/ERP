@@ -136,7 +136,7 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                 (ionChange)="toggleSelection(order.id)"
               ></ion-checkbox>
               <ion-label>
-                <h2>{{ order.erpOrderNumber }}</h2>
+                <h2>{{ order.orderNo }}</h2>
                 <h3>{{ order.customerName }}</h3>
                 <p>
                   <ion-icon name="cube-outline"></ion-icon>
@@ -265,7 +265,7 @@ export class ReleaseConfirmPage implements OnInit {
     if (!query) return orders;
     
     return orders.filter(o =>
-      o.erpOrderNumber?.toLowerCase().includes(query) ||
+      o.orderNo?.toLowerCase().includes(query) ||
       o.customerName?.toLowerCase().includes(query) ||
       o.installerName?.toLowerCase().includes(query)
     );

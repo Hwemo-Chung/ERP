@@ -17,6 +17,7 @@ import {
 import { addIcons } from 'ionicons';
 import { eyeOutline, eyeOffOutline, logInOutline, cubeOutline } from 'ionicons/icons';
 import { AuthService } from '@core/services/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
@@ -24,6 +25,7 @@ import { AuthService } from '@core/services/auth.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    TranslateModule,
     IonContent,
     IonList,
     IonItem,
@@ -40,8 +42,8 @@ import { AuthService } from '@core/services/auth.service';
       <div class="login-container">
         <div class="logo-section">
           <ion-icon name="cube-outline" class="logo-icon"></ion-icon>
-          <h1>Logistics ERP</h1>
-          <p>Order Management System</p>
+          <h1>{{ 'BRAND.TITLE' | translate }}</h1>
+          <p>{{ 'BRAND.SUBTITLE' | translate }}</p>
         </div>
 
         <ion-card>
@@ -52,9 +54,9 @@ import { AuthService } from '@core/services/auth.service';
                   <ion-input
                     formControlName="username"
                     type="text"
-                    label="Username"
+                    [label]="'AUTH.LOGIN.USERNAME' | translate"
                     labelPlacement="floating"
-                    placeholder="Enter your username"
+                    [placeholder]="'AUTH.LOGIN.USERNAME_PLACEHOLDER' | translate"
                     autocapitalize="off"
                     autocomplete="username"
                   ></ion-input>
@@ -64,9 +66,9 @@ import { AuthService } from '@core/services/auth.service';
                   <ion-input
                     formControlName="password"
                     [type]="showPassword() ? 'text' : 'password'"
-                    label="Password"
+                    [label]="'AUTH.LOGIN.PASSWORD' | translate"
                     labelPlacement="floating"
-                    placeholder="Enter your password"
+                    [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate"
                     autocomplete="current-password"
                   ></ion-input>
                   <ion-button
@@ -98,7 +100,7 @@ import { AuthService } from '@core/services/auth.service';
                   <ion-spinner name="crescent"></ion-spinner>
                 } @else {
                   <ion-icon slot="start" name="log-in-outline"></ion-icon>
-                  Login
+                  {{ 'AUTH.LOGIN.SIGN_IN' | translate }}
                 }
               </ion-button>
             </form>

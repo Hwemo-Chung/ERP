@@ -2,6 +2,7 @@
 // FR-17: Conflict Resolver Service Unit Tests
 import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { ModalController, ToastController } from '@ionic/angular/standalone';
+import { TranslateModule } from '@ngx-translate/core';
 import { ConflictResolverService, VersionedEntity, ConflictError } from './conflict-resolver.service';
 
 // Mock component to avoid dynamic import issues
@@ -41,6 +42,7 @@ describe('ConflictResolverService - FR-17', () => {
     const toastSpy = jasmine.createSpyObj('ToastController', ['create']);
 
     TestBed.configureTestingModule({
+      imports: [TranslateModule.forRoot()],
       providers: [
         ConflictResolverService,
         { provide: ModalController, useValue: modalSpy },
@@ -321,7 +323,7 @@ describe('ConflictResolverService - FR-17', () => {
 
       expect(toastCtrl.create).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          message: '다른 사용자의 변경사항으로 업데이트되었습니다.',
+          message: 'CONFLICT.SERVER_WINS_MESSAGE',
           duration: 3000,
           color: 'warning',
         })

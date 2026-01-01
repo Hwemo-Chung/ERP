@@ -71,6 +71,47 @@ export interface ExportResult {
   error?: string;
 }
 
+// Branch interface for dropdown
+export interface BranchOption {
+  code: string;
+  name: string;
+  region?: string;
+}
+
+// Unreturned Items interfaces
+export interface UnreturnedItem {
+  orderId: string;
+  orderNo: string;
+  customerName: string;
+  customerPhone?: string;
+  productName?: string;
+  cancelledAt: string;
+  cancelReason?: string;
+  isReturned: boolean;
+  returnedAt?: string;
+  branchCode?: string;
+  branchName?: string;
+}
+
+export interface UnreturnedSummary {
+  totalCount: number;
+  unreturnedCount: number;
+  returnedCount: number;
+}
+
+export interface UnreturnedItemsResponse {
+  items: UnreturnedItem[];
+  totalCount: number;
+  unreturnedCount: number;
+  returnedCount: number;
+  byBranch?: {
+    branchCode: string;
+    branchName: string;
+    unreturnedCount: number;
+    returnedCount: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
   private readonly http = inject(HttpClient);
@@ -172,5 +213,39 @@ export class ReportsService {
     return this.http.get(`${this.baseUrl}/export/${exportId}/download`, {
       responseType: 'blob',
     });
+  }
+
+  /**
+   * Get unreturned items (cancelled orders with pending item returns)
+   */
+  getUnreturnedItems(options: {
+    branchCode?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }): Observable<UnreturnedItemsResponse> {
+    let params = new HttpParams();
+    if (options.branchCode) params = params.set('branchCode', options.branchCode);
+    if (options.dateFrom) params = params.set('dateFrom', options.dateFrom);
+    if (options.dateTo) params = params.set('dateTo', options.dateTo);
+
+    return this.http.get<UnreturnedItemsResponse>(`${this.baseUrl}/unreturned`, { params });
+  }
+
+  /**
+   * Mark an unreturned item as returned
+   * Requires HQ_ADMIN or BRANCH_MANAGER role
+   */
+  markItemAsReturned(orderId: string): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(
+      `${this.baseUrl}/unreturned/${orderId}/return`,
+      {}
+    );
+  }
+
+  /**
+   * Get branches list for filtering
+   */
+  getBranches(): Observable<BranchOption[]> {
+    return this.http.get<BranchOption[]>(`${environment.apiUrl}/metadata/branches`);
   }
 }

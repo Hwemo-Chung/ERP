@@ -17,7 +17,7 @@ describe('ERPDatabase', () => {
     it('should add an order', async () => {
       const order: OfflineOrder = {
         id: 'order-1',
-        erpOrderNumber: 'ERP-001',
+        orderNo: 'ERP-001',
         status: 'ASSIGNED',
         customerName: 'Test Customer',
         branchId: 'branch-1',
@@ -30,14 +30,14 @@ describe('ERPDatabase', () => {
 
       const retrieved = await db.orders.get('order-1');
       expect(retrieved).toBeDefined();
-      expect(retrieved?.erpOrderNumber).toBe('ERP-001');
+      expect(retrieved?.orderNo).toBe('ERP-001');
       expect(retrieved?.customerName).toBe('Test Customer');
     });
 
     it('should update an order', async () => {
       const order: OfflineOrder = {
         id: 'order-2',
-        erpOrderNumber: 'ERP-002',
+        orderNo: 'ERP-002',
         status: 'ASSIGNED',
         customerName: 'Original Name',
         branchId: 'branch-1',
@@ -56,7 +56,7 @@ describe('ERPDatabase', () => {
     it('should delete an order', async () => {
       const order: OfflineOrder = {
         id: 'order-3',
-        erpOrderNumber: 'ERP-003',
+        orderNo: 'ERP-003',
         status: 'ASSIGNED',
         customerName: 'Delete Me',
         branchId: 'branch-1',
@@ -75,7 +75,7 @@ describe('ERPDatabase', () => {
       const orders: OfflineOrder[] = [
         {
           id: 'order-4',
-          erpOrderNumber: 'ERP-004',
+          orderNo: 'ERP-004',
           status: 'ASSIGNED',
           customerName: 'Customer 4',
           branchId: 'branch-1',
@@ -84,7 +84,7 @@ describe('ERPDatabase', () => {
         },
         {
           id: 'order-5',
-          erpOrderNumber: 'ERP-005',
+          orderNo: 'ERP-005',
           status: 'COMPLETED',
           customerName: 'Customer 5',
           branchId: 'branch-1',
@@ -93,7 +93,7 @@ describe('ERPDatabase', () => {
         },
         {
           id: 'order-6',
-          erpOrderNumber: 'ERP-006',
+          orderNo: 'ERP-006',
           status: 'ASSIGNED',
           customerName: 'Customer 6',
           branchId: 'branch-1',
@@ -115,7 +115,7 @@ describe('ERPDatabase', () => {
       const orders: OfflineOrder[] = [
         {
           id: 'order-7',
-          erpOrderNumber: 'ERP-007',
+          orderNo: 'ERP-007',
           status: 'ASSIGNED',
           customerName: 'Customer 7',
           branchId: 'branch-1',
@@ -124,7 +124,7 @@ describe('ERPDatabase', () => {
         },
         {
           id: 'order-8',
-          erpOrderNumber: 'ERP-008',
+          orderNo: 'ERP-008',
           status: 'ASSIGNED',
           customerName: 'Customer 8',
           branchId: 'branch-1',

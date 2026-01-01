@@ -89,7 +89,7 @@ import { UIStore } from '../../../../store/ui/ui.store';
             <ion-card-title>주문 정보</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p><strong>주문번호:</strong> {{ order()?.erpOrderNumber || orderId() }}</p>
+            <p><strong>주문번호:</strong> {{ order()?.orderNo || orderId() }}</p>
             <p><strong>고객명:</strong> {{ order()?.customerName || '-' }}</p>
             <p><strong>설치기사:</strong> {{ order()?.installerName || '-' }}</p>
           </ion-card-content>

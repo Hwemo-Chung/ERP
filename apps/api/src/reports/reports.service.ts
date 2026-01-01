@@ -95,6 +95,7 @@ export class ReportsService {
 
   /**
    * Get progress report by grouping
+   * Returns total, completed, pending counts with names for each group
    */
   async getProgress(filters: {
     groupBy: 'branch' | 'installer' | 'status' | 'date';
@@ -113,40 +114,74 @@ export class ReportsService {
       if (filters.dateTo) where.appointmentDate.lte = new Date(filters.dateTo);
     }
 
-    // Different grouping based on parameter
-    switch (filters.groupBy) {
-      case 'branch':
-        return this.prisma.order.groupBy({
-          by: ['branchId'],
-          where,
-          _count: { id: true },
-        });
+    // Completed statuses per OrderStatus enum
+    const completedStatuses: OrderStatus[] = [
+      OrderStatus.COMPLETED,
+      OrderStatus.COLLECTED,
+      OrderStatus.PARTIAL,
+    ];
 
-      case 'installer':
-        return this.prisma.order.groupBy({
-          by: ['installerId'],
-          where,
-          _count: { id: true },
-        });
+    // Get orders with related data for aggregation
+    const orders = await this.prisma.order.findMany({
+      where,
+      select: {
+        id: true,
+        status: true,
+        branchId: true,
+        installerId: true,
+        appointmentDate: true,
+        branch: { select: { id: true, code: true, name: true } },
+        installer: { select: { id: true, name: true } },
+      },
+    });
 
-      case 'status':
-        return this.prisma.order.groupBy({
-          by: ['status'],
-          where,
-          _count: { id: true },
-        });
+    // Aggregate based on groupBy type
+    const aggregateMap = new Map<string, {
+      key: string;
+      name: string;
+      total: number;
+      completed: number;
+    }>();
 
-      case 'date':
-        return this.prisma.order.groupBy({
-          by: ['appointmentDate'],
-          where,
-          _count: { id: true },
-          orderBy: { appointmentDate: 'asc' },
-        });
+    orders.forEach((order) => {
+      let key: string;
+      let name: string;
 
-      default:
-        return [];
-    }
+      switch (filters.groupBy) {
+        case 'branch':
+          key = order.branchId || 'unknown';
+          name = order.branch?.name || order.branch?.code || 'Unknown Branch';
+          break;
+        case 'installer':
+          key = order.installerId || 'unassigned';
+          name = order.installer?.name || order.installerId || 'Unassigned';
+          break;
+        case 'status':
+          key = order.status;
+          name = order.status;
+          break;
+        case 'date':
+          key = order.appointmentDate?.toISOString().split('T')[0] || 'unknown';
+          name = key;
+          break;
+        default:
+          return;
+      }
+
+      const existing = aggregateMap.get(key) || { key, name, total: 0, completed: 0 };
+      existing.total++;
+      if (completedStatuses.includes(order.status)) {
+        existing.completed++;
+      }
+      aggregateMap.set(key, existing);
+    });
+
+    // Convert to array and add computed fields
+    return Array.from(aggregateMap.values()).map((item) => ({
+      ...item,
+      pending: item.total - item.completed,
+      completionRate: item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0,
+    }));
   }
 
   /**

@@ -34,6 +34,7 @@ import { gitBranchOutline, addOutline, removeOutline, saveOutline, checkmarkCirc
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SplitAssignment {
   installerId: string;
@@ -56,6 +57,7 @@ interface SplitLineItem {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -96,7 +98,7 @@ interface SplitLineItem {
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <p><strong>주문번호:</strong> {{ order()?.erpOrderNumber || orderId }}</p>
+          <p><strong>주문번호:</strong> {{ order()?.orderNo || orderId }}</p>
           <p><strong>고객명:</strong> {{ order()?.customerName || '-' }}</p>
           <p class="hint">다중 제품 주문을 여러 설치기사에게 분할 배정합니다.</p>
         </ion-card-content>
@@ -330,8 +332,8 @@ export class SplitOrderPage implements OnInit {
     this.splitLines.set(
       lines.map((line: OrderLine) => ({
         lineId: line.id,
-        productCode: line.productCode,
-        productName: line.productName,
+        productCode: line.itemCode || line.productCode || '',
+        productName: line.itemName || line.productName || '',
         totalQuantity: line.quantity,
         assignments: [
           {

@@ -144,7 +144,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
           @for (order of assignmentOrders(); track order.id) {
             <ion-item [routerLink]="['detail', order.id]" detail>
               <ion-label>
-                <h2>{{ order.erpOrderNumber }}</h2>
+                <h2>{{ order.orderNo }}</h2>
                 <h3>{{ order.customerName }}</h3>
                 <p>
                   <ion-icon name="calendar-outline"></ion-icon>
@@ -155,12 +155,12 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
                 </p>
                 <p>
                   <ion-icon name="person-outline"></ion-icon>
-                  {{ order.installerName || ('ASSIGNMENT.UNASSIGNED' | translate) }}
+                  {{ order.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}
                 </p>
                 <p class="product-summary">{{ order.customerAddress }}</p>
               </ion-label>
               <ion-badge slot="end" [color]="getStatusColor(order.status)">
-                {{ getStatusLabel(order.status) }}
+                {{ getStatusLabel(order.status) | translate }}
               </ion-badge>
             </ion-item>
           } @empty {
@@ -277,23 +277,23 @@ export class AssignmentListPage implements OnInit {
     return filtered;
   });
 
+  // Use server stats for accurate counts (not affected by lazy loading)
   protected readonly totalCount = computed(() => {
-    const orders = this.ordersStore.orders();
-    return orders.filter(o =>
-      [OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, OrderStatus.CONFIRMED].includes(o.status)
-    ).length;
+    const stats = this.ordersStore.kpiMetrics();
+    // Assignment tab total = unassigned + assigned + confirmed
+    return stats.unassigned + stats.assigned + stats.confirmed;
   });
 
   protected readonly unassignedCount = computed(() => {
-    return this.ordersStore.orders().filter(o => o.status === OrderStatus.UNASSIGNED).length;
+    return this.ordersStore.kpiMetrics().unassigned;
   });
 
   protected readonly assignedCount = computed(() => {
-    return this.ordersStore.orders().filter(o => o.status === OrderStatus.ASSIGNED).length;
+    return this.ordersStore.kpiMetrics().assigned;
   });
 
   protected readonly confirmedCount = computed(() => {
-    return this.ordersStore.orders().filter(o => o.status === OrderStatus.CONFIRMED).length;
+    return this.ordersStore.kpiMetrics().confirmed;
   });
 
   constructor() {
@@ -315,7 +315,11 @@ export class AssignmentListPage implements OnInit {
     try {
       const user = this.authService.user();
       const branchCode = user?.branchCode || 'ALL';
-      await this.ordersStore.loadOrders(branchCode, 1, 100);
+      // Load stats first for accurate KPI counts, then load paginated orders
+      await Promise.all([
+        this.ordersStore.loadStats(branchCode),
+        this.ordersStore.loadOrders(branchCode, 1, 100),
+      ]);
     } catch (error) {
       console.error('[AssignmentList] Failed to load orders:', error);
       this.uiStore.showToast('배정 데이터 로드 실패', 'danger');
@@ -373,11 +377,11 @@ export class AssignmentListPage implements OnInit {
 
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
-      [OrderStatus.UNASSIGNED]: 'ASSIGNMENT.STATUS.UNASSIGNED',
-      [OrderStatus.ASSIGNED]: 'ASSIGNMENT.STATUS.ASSIGNED',
-      [OrderStatus.CONFIRMED]: 'ASSIGNMENT.STATUS.CONFIRMED',
+      [OrderStatus.UNASSIGNED]: 'ORDER_STATUS.UNASSIGNED',
+      [OrderStatus.ASSIGNED]: 'ORDER_STATUS.ASSIGNED',
+      [OrderStatus.CONFIRMED]: 'ORDER_STATUS.CONFIRMED',
     };
-    return labels[status] || status;
+    return labels[status] || `ORDER_STATUS.${status}`;
   }
 
   formatDate(dateStr: string): string {

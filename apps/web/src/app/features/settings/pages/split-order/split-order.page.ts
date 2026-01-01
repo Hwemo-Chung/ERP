@@ -56,7 +56,7 @@ interface SplitItem {
         </ion-card-header>
         <ion-card-content>
           @if (order()) {
-            <p><strong>{{ 'ORDERS.SPLIT.ORDER_NUMBER' | translate }}</strong> {{ order()!.erpOrderNumber }}</p>
+            <p><strong>{{ 'ORDERS.SPLIT.ORDER_NUMBER' | translate }}</strong> {{ order()!.orderNo }}</p>
             <p><strong>{{ 'ORDERS.SPLIT.CUSTOMER_NAME' | translate }}</strong> {{ order()!.customerName }}</p>
             <p><strong>{{ 'ORDERS.SPLIT.APPOINTMENT_DATE' | translate }}</strong> {{ order()!.appointmentDate || '-' }}</p>
           } @else {
@@ -167,8 +167,8 @@ export class SplitOrderPage implements OnInit {
       const lines = order.lines || order.orderLines || [];
       this.items.set(lines.map((line: OrderLine) => ({
         lineId: line.id,
-        productName: line.productName,
-        productCode: line.productCode,
+        productName: line.itemName || line.productName || '',
+        productCode: line.itemCode || line.productCode || '',
         totalQty: line.quantity,
         splits: [{ installerId: '', installerName: order.installerName || '', qty: line.quantity }],
       })));

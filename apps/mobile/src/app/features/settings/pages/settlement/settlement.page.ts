@@ -44,7 +44,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
             <div class="center"><ion-spinner name="crescent"></ion-spinner></div>
           } @else if (currentPeriod()) {
             <p><strong>기간:</strong> {{ formatDate(currentPeriod()!.periodStart) }} ~ {{ formatDate(currentPeriod()!.periodEnd) }}</p>
-            <p><strong>{{ 'SETTLEMENT.STATUS.LABEL' | translate }}:</strong> <ion-badge [color]="currentPeriod()!.status === 'OPEN' ? 'success' : 'danger'">{{ currentPeriod()!.status === 'OPEN' ? ('SETTLEMENT.STATUS.OPEN' | translate) : ('SETTLEMENT.STATUS.CLOSED' | translate) }}</ion-badge></p>
+            <p><strong>{{ 'SETTINGS.SETTLEMENT.STATUS.LABEL' | translate }}:</strong> <ion-badge [color]="currentPeriod()!.status === 'OPEN' ? 'success' : 'danger'">{{ currentPeriod()!.status === 'OPEN' ? ('SETTINGS.SETTLEMENT.STATUS.OPEN' | translate) : ('SETTINGS.SETTLEMENT.STATUS.LOCKED' | translate) }}</ion-badge></p>
             @if (currentPeriod()!.orderCount !== undefined) { <p><strong>주문 수:</strong> {{ currentPeriod()!.orderCount }}건</p> }
             @if (currentPeriod()!.lockedAt) { <p class="sub"><ion-icon name="lock-closed-outline"></ion-icon> {{ formatDateTime(currentPeriod()!.lockedAt!) }} 마감</p> }
             @if (currentPeriod()!.status === 'OPEN' && canManage()) {

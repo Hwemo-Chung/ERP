@@ -109,7 +109,7 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
         <ion-card>
           <ion-card-header>
             <ion-card-title>
-              {{ assignment()!.erpOrderNumber }}
+              {{ assignment()!.orderNo }}
               <ion-badge [color]="getStatusColor(assignment()!.status)">
                 {{ getStatusLabel(assignment()!.status) }}
               </ion-badge>
@@ -132,7 +132,7 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                     <ion-icon name="person-outline"></ion-icon>
                     <div>
                       <ion-note>{{ 'ASSIGNMENT.DETAIL.INSTALLER' | translate }}</ion-note>
-                      <p>{{ assignment()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
+                      <p>{{ assignment()!.installer?.name || assignment()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
                     </div>
                   </div>
                 </ion-col>
@@ -169,7 +169,7 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                 <ion-icon name="location-outline" slot="start"></ion-icon>
                 <ion-label>
                   <ion-note>{{ 'ASSIGNMENT.DETAIL.ADDRESS' | translate }}</ion-note>
-                  <p>{{ assignment()!.customerAddress }}</p>
+                  <p>{{ getFormattedAddress() }}</p>
                 </ion-label>
               </ion-item>
             </ion-list>
@@ -187,8 +187,8 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                 <ion-item>
                   <ion-icon name="cube-outline" slot="start"></ion-icon>
                   <ion-label>
-                    <h3>{{ line.productName }}</h3>
-                    <p>{{ line.productCode }} × {{ line.quantity }}</p>
+                    <h3>{{ line.itemName || line.productName }}</h3>
+                    <p>{{ line.itemCode || line.productCode }} × {{ line.quantity }}</p>
                     @if (line.serialNumber) {
                       <p class="serial">S/N: {{ line.serialNumber }}</p>
                     }
@@ -397,9 +397,43 @@ export class AssignmentDetailPage implements OnInit {
    * @returns 번역된 상태 라벨
    */
   getStatusLabel(status: OrderStatus | string): string {
-    const statusKey = `ORDERS.STATUS.${status}`;
-    const translated = this.translateService.instant(statusKey);
-    return translated !== statusKey ? translated : status;
+    // Try ORDER_STATUS first (root level), fallback to ORDERS.STATUS (nested)
+    const key = `ORDER_STATUS.${status}`;
+    const translated = this.translateService.instant(key);
+    if (translated !== key) return translated;
+
+    // Fallback for compatibility
+    const altKey = `ORDERS.STATUS.${status}`;
+    const altTranslated = this.translateService.instant(altKey);
+    return altTranslated !== altKey ? altTranslated : status;
+  }
+
+  /**
+   * @description 주소 포맷팅 (객체/문자열 모두 지원)
+   * @returns 포맷된 주소 문자열
+   */
+  getFormattedAddress(): string {
+    const o = this.assignment();
+    if (!o) return '-';
+
+    // If customerAddress is a string, use it directly
+    if (typeof o.customerAddress === 'string' && o.customerAddress) {
+      return o.customerAddress;
+    }
+
+    // If address is an object (API format), format it
+    const addr = (o as any).address;
+    if (addr && typeof addr === 'object') {
+      const parts = [addr.line1, addr.line2, addr.city].filter(Boolean);
+      return parts.join(' ') || '-';
+    }
+
+    // If address is a string
+    if (typeof addr === 'string' && addr) {
+      return addr;
+    }
+
+    return '-';
   }
 
   /**
@@ -473,7 +507,7 @@ export class AssignmentDetailPage implements OnInit {
         type: 'release',
         format: 'pdf',
       });
-      this.reportsStore.downloadFile(blob, `${this.translateService.instant('ASSIGNMENT.DETAIL.TITLE')}_${this.assignment()?.erpOrderNumber || this.orderId}.pdf`);
+      this.reportsStore.downloadFile(blob, `${this.translateService.instant('ASSIGNMENT.DETAIL.TITLE')}_${this.assignment()?.orderNo || this.orderId}.pdf`);
     } catch (error) {
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('ASSIGNMENT.DETAIL.PRINT_FAILED'),

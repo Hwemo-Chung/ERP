@@ -3,6 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Platform, PushProvider, NotificationStatus } from '@prisma/client';
 import { PushProviderFactory, PushPayload } from './push-providers';
 
+/**
+ * Quiet hours configuration structure
+ */
+export interface QuietHoursConfig {
+  enabled: boolean;
+  start: string;  // HH:mm format, e.g., "22:00"
+  end: string;    // HH:mm format, e.g., "07:00"
+  timezone: string; // e.g., "Asia/Seoul"
+}
+
+/**
+ * Categories that bypass quiet hours (urgent notifications)
+ */
+const URGENT_CATEGORIES = ['settlement_locked', 'system_alert', 'emergency'];
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -170,6 +185,50 @@ export class NotificationsService {
   }
 
   /**
+   * Check if current time is within quiet hours
+   */
+  private isWithinQuietHours(quietHours: QuietHoursConfig | null): boolean {
+    if (!quietHours || !quietHours.enabled) {
+      return false;
+    }
+
+    try {
+      const timezone = quietHours.timezone || 'Asia/Seoul';
+      const now = new Date();
+
+      // Get current time in the specified timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      const parts = formatter.formatToParts(now);
+      const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+      const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+      const currentMinutes = currentHour * 60 + currentMinute;
+
+      // Parse start and end times
+      const [startHour, startMin] = quietHours.start.split(':').map(Number);
+      const [endHour, endMin] = quietHours.end.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+
+      // Handle overnight quiet hours (e.g., 22:00 - 07:00)
+      if (startMinutes > endMinutes) {
+        // Quiet period spans midnight
+        return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+      } else {
+        // Quiet period within same day
+        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+      }
+    } catch (error) {
+      this.logger.warn('Error checking quiet hours:', error);
+      return false;
+    }
+  }
+
+  /**
    * Send push notification to user's devices
    */
   private async sendPush(userId: string, notification: any) {
@@ -186,12 +245,26 @@ export class NotificationsService {
       return;
     }
 
+    // Check if this is an urgent notification that bypasses quiet hours
+    const isUrgent = URGENT_CATEGORIES.includes(notification.category);
+
     // Build push payload from notification
     const payload = this.buildPushPayload(notification);
 
     // Send to each subscription
     const sendPromises = subscriptions.map(async (sub) => {
       try {
+        // Check quiet hours for this subscription (unless urgent)
+        if (!isUrgent) {
+          const quietHours = sub.quietHours as QuietHoursConfig | null;
+          if (this.isWithinQuietHours(quietHours)) {
+            this.logger.debug(
+              `Skipping push to device ${sub.deviceId} - within quiet hours`,
+            );
+            return;
+          }
+        }
+
         // Get appropriate provider for this subscription
         const provider = this.pushProviderFactory.getProvider(sub.pushProvider);
 
@@ -313,8 +386,7 @@ export class NotificationsService {
       platform: subscription.platform,
       categoriesEnabled: subscription.categoriesEnabled,
       isActive: subscription.isActive,
-      // Note: quietHours would be stored in a JSON field if implemented
-      quietHours: null,
+      quietHours: subscription.quietHours as QuietHoursConfig | null,
     };
   }
 
@@ -350,13 +422,29 @@ export class NotificationsService {
       updateData.categoriesEnabled = data.categoriesEnabled;
     }
 
-    // Note: To fully implement quiet hours, add a JSON column to NotificationSubscription
-    // For now, we log the quiet hours but don't persist them
-    if (data.quietHours) {
-      this.logger.log(
-        `Quiet hours preference received for device ${data.deviceId}: ${JSON.stringify(data.quietHours)}`,
-      );
-      // Note: Quiet hours persistence requires schema update (add JSON column to NotificationSubscription)
+    // Save quiet hours configuration to database
+    if (data.quietHours !== undefined) {
+      if (data.quietHours && data.quietHours.enabled) {
+        // Validate quiet hours format
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        if (!timeRegex.test(data.quietHours.start || '') || !timeRegex.test(data.quietHours.end || '')) {
+          this.logger.warn(`Invalid quiet hours format for device ${data.deviceId}`);
+        } else {
+          updateData.quietHours = {
+            enabled: true,
+            start: data.quietHours.start,
+            end: data.quietHours.end,
+            timezone: data.quietHours.timezone || 'Asia/Seoul',
+          };
+          this.logger.log(
+            `Quiet hours enabled for device ${data.deviceId}: ${data.quietHours.start} - ${data.quietHours.end}`,
+          );
+        }
+      } else {
+        // Disable quiet hours
+        updateData.quietHours = null;
+        this.logger.log(`Quiet hours disabled for device ${data.deviceId}`);
+      }
     }
 
     const updated = await this.prisma.notificationSubscription.update({
@@ -369,7 +457,7 @@ export class NotificationsService {
       platform: updated.platform,
       categoriesEnabled: updated.categoriesEnabled,
       isActive: updated.isActive,
-      quietHours: data.quietHours || null,
+      quietHours: updated.quietHours as QuietHoursConfig | null,
     };
   }
 }

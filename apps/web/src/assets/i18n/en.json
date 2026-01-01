@@ -12,7 +12,17 @@
     "LOADING": "Loading...",
     "ERROR": "Error",
     "SUCCESS": "Success",
+    "BUTTONS": {
+      "OK": "OK",
+      "CANCEL": "Cancel",
+      "SAVE": "Save",
+      "DELETE": "Delete",
+      "CLOSE": "Close",
+      "CONFIRM": "Confirm",
+      "MARK_RETURN": "Mark as Returned"
+    },
     "WARNING": "Warning",
+    "UNIT_ITEM": " items",
     "COMPLETE": "Complete",
     "ADD": "Add",
     "INFO": "Information",
@@ -81,6 +91,15 @@
       "THURSDAY": "Thursday",
       "FRIDAY": "Friday",
       "SATURDAY": "Saturday"
+    },
+    "CANCEL_REASONS": {
+      "WRONG_ADDRESS": "Wrong Address",
+      "CUSTOMER_REQUEST": "Customer Request",
+      "OUT_OF_STOCK": "Out of Stock",
+      "DUPLICATE": "Duplicate Order",
+      "DUPLICATE_ORDER": "Duplicate Order",
+      "PRICE_CHANGE": "Price Change",
+      "OTHER": "Other"
     }
   },
   "FILTER": {
@@ -237,6 +256,21 @@
     }
   },
   "ORDERS": {
+    "STATUS": {
+      "UNASSIGNED": "Unassigned",
+      "ASSIGNED": "Assigned",
+      "CONFIRMED": "Confirmed",
+      "RELEASED": "Released",
+      "DISPATCHED": "Dispatched",
+      "POSTPONED": "Postponed",
+      "ABSENT": "Absent",
+      "COMPLETED": "Completed",
+      "PARTIAL": "Partial",
+      "COLLECTED": "Collected",
+      "CANCELLED": "Cancelled",
+      "REQUEST_CANCEL": "Cancellation Requested",
+      "REVERTED": "Reverted"
+    },
     "ERROR": {
       "LOAD_FAILED": "Failed to load orders"
     },
@@ -540,8 +574,10 @@
       "ADDRESS": "Address",
       "CALL": "Call",
       "PRODUCT_LIST": "Product List",
+      "NO_PRODUCTS": "No product information",
       "SPECIAL_NOTES": "Special Notes",
       "NOT_FOUND": "Assignment information not found.",
+      "GO_TO_LIST": "Go to List",
       "ASSIGN_INSTALLER": "Assign Installer",
       "CONFIRM_ASSIGNMENT": "Confirm Assignment",
       "CHANGE_INSTALLER": "Change Installer",
@@ -727,12 +763,18 @@
     "MENU": {
       "TITLE": "Reports",
       "SUBTITLE": "Progress tracking and data analysis",
+      "PROGRESS": "Progress Dashboard",
+      "PROGRESS_DESC": "Progress by installer/branch",
       "PROGRESS_DASHBOARD": "Progress Dashboard",
       "PROGRESS_DASHBOARD_DESC": "Progress by installer/branch",
       "CUSTOMER_HISTORY": "Customer History",
       "CUSTOMER_HISTORY_DESC": "Search customer order history",
       "WASTE_SUMMARY": "Waste Summary",
       "WASTE_SUMMARY_DESC": "Waste collection stats",
+      "UNRETURNED": "Unreturned Items",
+      "UNRETURNED_DESC": "Unreturned items management",
+      "UNRETURNED_ITEMS": "Unreturned Items",
+      "UNRETURNED_ITEMS_DESC": "Manage cancelled order returns",
       "EXPORT": "Data Export",
       "EXPORT_DESC": "ECOAS, CSV, PDF export"
     },
@@ -759,6 +801,13 @@
       "TODAY": "Today",
       "THIS_WEEK": "This Week",
       "THIS_MONTH": "This Month"
+    },
+    "PROGRESS_DASHBOARD": {
+      "GROUPBY": {
+        "INSTALLER": "By Installer",
+        "BRANCH": "By Branch",
+        "STATUS": "By Status"
+      }
     },
     "CUSTOMER": {
       "TITLE": "Customer History",
@@ -847,6 +896,87 @@
       "QUANTITY": "Quantity",
       "TOTAL": "Total",
       "UNIT": "Unit"
+    },
+    "COMPLETION": {
+      "TITLE": "Completion",
+      "FILTER": {
+        "ALL": "All",
+        "DISPATCHED": "Waiting",
+        "COMPLETED": "Completed",
+        "WAITING": "Waiting"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "In Progress",
+        "COMPLETED": "Completed",
+        "WAITING": "Waiting"
+      },
+      "CHIPS": {
+        "WAITING": "Waiting",
+        "IN_PROGRESS": "In Progress",
+        "COMPLETED": "Completed"
+      }
+    },
+    "UNRETURNED": {
+      "TITLE": "Unreturned Items",
+      "NO_DATA": "No unreturned items"
+    },
+    "UNRETURNED_ITEMS": {
+      "TITLE": "Unreturned Items",
+      "SUBTITLE": "Manage cancelled order item returns",
+      "BRANCH": "Branch",
+      "ALL_BRANCHES": "All Branches",
+      "OVERDUE": "7+ days overdue",
+      "RETURNED": "Returned",
+      "NOT_RETURNED": "Not Returned",
+      "FILTER": {
+        "ALL": "All",
+        "UNRETURNED": "Unreturned",
+        "RETURNED": "Returned"
+      },
+      "SEARCH_PLACEHOLDER": "Search by order no, customer, product",
+      "SUMMARY": {
+        "UNRETURNED": "Unreturned",
+        "RETURNED": "Returned",
+        "TOTAL": "Total"
+      },
+      "LOADING": "Loading data...",
+      "LIST_TITLE": "Cancelled Order Returns",
+      "CANCEL_DATE": "Cancel Date",
+      "DAYS_OVERDUE_SUFFIX": " days overdue",
+      "NO_DATA": "No data found",
+      "BRANCH_TITLE": "Unreturned by Branch",
+      "BRANCH_UNRETURNED": "Unreturned",
+      "BRANCH_RETURNED": "Returned",
+      "DATE_FROM": "Start Date",
+      "DATE_TO": "End Date",
+      "STATUS_FILTER": "Return Status",
+      "BRANCH_NAME": "Branch",
+      "RETURN_RATE": "Return Rate",
+      "PERIOD": "Period",
+      "PRINT_DATE": "Print Date",
+      "TABLE": {
+        "STATUS": "Status",
+        "ORDER_NO": "Order No.",
+        "CUSTOMER": "Customer",
+        "PRODUCT": "Product",
+        "CANCEL_REASON": "Cancel Reason",
+        "DAYS_OVERDUE": "Days/Return Date",
+        "ACTION": "Action",
+        "RETURN_DATE": "Return Date"
+      },
+      "DETAIL": {
+        "PRODUCT_NAME": "Product",
+        "CANCEL_REASON": "Cancel Reason",
+        "RETURN_STATUS": "Return Status",
+        "RETURN_DATE": "Return Date"
+      },
+      "MARK_RETURN_TITLE": "Mark as Returned",
+      "MARK_RETURN_CONFIRM": "Mark order {{orderNo}} as returned?",
+      "MARK_RETURN_SUCCESS": "Successfully marked as returned",
+      "MARK_RETURN_FAILED": "Failed to mark as returned",
+      "EXPORT_SUCCESS": "CSV download complete",
+      "EXPORT_FAILED": "Download failed",
+      "PERMISSION_DENIED": "Permission denied. Please contact administrator."
     }
   },
   "PROFILE": {

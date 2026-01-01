@@ -19,6 +19,7 @@ import {
 } from 'ionicons/icons';
 import { ReportsStore } from '../../../../store/reports/reports.store';
 import { AuthService } from '../../../../core/services/auth.service';
+import { USER_ROLES } from '../../../../shared/constants/app.constants';
 
 type ViewType = 'installer' | 'branch' | 'status';
 
@@ -140,31 +141,33 @@ type ViewType = 'installer' | 'branch' | 'status';
         <div class="section">
           <h3 class="section-title">
             <ion-icon [name]="viewTypeIcon()"></ion-icon>
-            {{ viewTypeLabel() }}
+            {{ viewTypeLabel() | translate }}
           </h3>
-          @if (reportsStore.branchProgress().length > 0) {
+          @if (reportsStore.progressItems().length > 0) {
             <div class="progress-list">
-              @for (item of reportsStore.branchProgress(); track item.branchCode) {
+              @for (item of reportsStore.progressItems(); track item.key) {
                 <div class="progress-item">
                   <div class="item-header">
-                    <span class="item-name">{{ item.branchName }}</span>
-                    <span class="item-stats">{{ item.completed }}/{{ item.total }}</span>
+                    <span class="item-name">{{ getItemLabel(item, viewType()) }}</span>
+                    <span class="item-stats">{{ getItemStats(item, viewType()) }}</span>
                   </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" 
-                         [class.success]="item.completionRate >= 80"
-                         [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
-                         [class.danger]="item.completionRate < 50"
-                         [style.width.%]="item.completionRate"></div>
-                  </div>
-                  <div class="item-footer">
-                    <span class="rate-badge" 
-                          [class.success]="item.completionRate >= 80"
-                          [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
-                          [class.danger]="item.completionRate < 50">
-                      {{ item.completionRate | number:'1.0-0' }}%
-                    </span>
-                  </div>
+                  @if (viewType() !== 'status') {
+                    <div class="progress-bar">
+                      <div class="progress-fill"
+                           [class.success]="item.completionRate >= 80"
+                           [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                           [class.danger]="item.completionRate < 50"
+                           [style.width.%]="item.completionRate"></div>
+                    </div>
+                    <div class="item-footer">
+                      <span class="rate-badge"
+                            [class.success]="item.completionRate >= 80"
+                            [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                            [class.danger]="item.completionRate < 50">
+                        {{ item.completionRate | number:'1.0-0' }}%
+                      </span>
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -297,12 +300,12 @@ export class ProgressDashboardPage implements OnInit {
     return `${formatDate(from)} - ${formatDate(to)}`;
   });
 
-  // 뷰 타입 라벨 (i18n 적용)
+  // 뷰 타입 라벨 (i18n key - translated in template)
   protected readonly viewTypeLabel = computed(() => {
     const labels: Record<ViewType, string> = {
-      installer: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_INSTALLER'),
-      branch: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_BRANCH'),
-      status: this.translate.instant('REPORTS.PROGRESS.VIEW_BY_STATUS'),
+      installer: 'REPORTS.PROGRESS.VIEW_BY_INSTALLER',
+      branch: 'REPORTS.PROGRESS.VIEW_BY_BRANCH',
+      status: 'REPORTS.PROGRESS.VIEW_BY_STATUS',
     };
     return labels[this.viewType()];
   });
@@ -331,13 +334,18 @@ export class ProgressDashboardPage implements OnInit {
   }
 
   loadData() {
-    const branchCode = this.authService.user()?.branchCode;
+    // HQ_ADMIN sees all data, others see only their branch
+    const branchCode = this.authService.hasRole(USER_ROLES.HQ_ADMIN)
+      ? undefined
+      : this.authService.user()?.branchCode;
+
     const filters = {
       dateFrom: this.dateFrom.split('T')[0],
       dateTo: this.dateTo.split('T')[0],
       branchCode,
+      groupBy: this.viewType() as 'branch' | 'installer' | 'status',
     };
-    
+
     this.reportsStore.setFilters(filters);
     this.reportsStore.loadSummary();
     this.reportsStore.loadProgress(filters);
@@ -345,8 +353,17 @@ export class ProgressDashboardPage implements OnInit {
 
   onViewTypeChange(type: ViewType) {
     this.viewType.set(type);
-    // ViewType은 UI 표시용이므로 기존 filters를 사용
-    this.reportsStore.loadProgress();
+    // Load progress with the new groupBy parameter
+    const branchCode = this.authService.hasRole(USER_ROLES.HQ_ADMIN)
+      ? undefined
+      : this.authService.user()?.branchCode;
+
+    this.reportsStore.loadProgress({
+      dateFrom: this.dateFrom.split('T')[0],
+      dateTo: this.dateTo.split('T')[0],
+      branchCode,
+      groupBy: type as 'branch' | 'installer' | 'status',
+    });
   }
 
   async onRefresh(event: any) {
@@ -376,5 +393,35 @@ export class ProgressDashboardPage implements OnInit {
         this.dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
         break;
     }
+  }
+
+  /**
+   * Get translated label for progress item
+   * For status view, translate using ORDER_STATUS keys
+   * Note: viewType passed explicitly for OnPush change detection
+   */
+  getItemLabel(item: { key: string; label: string }, currentViewType: ViewType): string {
+    if (currentViewType === 'status') {
+      // Translate status key using ORDER_STATUS translations
+      const translationKey = `ORDER_STATUS.${item.key}`;
+      const translated = this.translate.instant(translationKey);
+      // If no translation found, return original label
+      return translated !== translationKey ? translated : item.label;
+    }
+    return item.label;
+  }
+
+  /**
+   * Get stats display for progress item
+   * For status view, show just total count (completion rate doesn't apply)
+   * For other views, show completed/total
+   * Note: viewType passed explicitly for OnPush change detection
+   */
+  getItemStats(item: { total: number; completed: number }, currentViewType: ViewType): string {
+    if (currentViewType === 'status') {
+      // For status view, show total count with suffix (completion rate doesn't apply)
+      return `${item.total}${this.translate.instant('REPORTS.PROGRESS.ITEMS_SUFFIX')}`;
+    }
+    return `${item.completed}/${item.total}`;
   }
 }
