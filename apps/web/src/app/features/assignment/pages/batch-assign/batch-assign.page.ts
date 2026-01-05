@@ -1,5 +1,12 @@
 // apps/web/src/app/features/assignment/pages/batch-assign/batch-assign.page.ts
-import { Component, signal, inject, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  inject,
+  ChangeDetectionStrategy,
+  computed,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -34,11 +41,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  peopleOutline,
-  calendarOutline,
-  checkmarkCircleOutline,
-} from 'ionicons/icons';
+import { peopleOutline, calendarOutline, checkmarkCircleOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BulkOperationService } from '@app/shared/services/bulk-operation.service';
 import { BulkOperationResult } from '@app/shared/components/bulk-operation-result/bulk-operation-result.component';
@@ -163,16 +166,22 @@ interface Installer {
       <!-- 미배정 주문 선택 카드 -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>{{ 'ASSIGNMENT.BATCH_ASSIGN.UNASSIGNED_SELECT_TITLE' | translate }}</ion-card-title>
+          <ion-card-title>{{
+            'ASSIGNMENT.BATCH_ASSIGN.UNASSIGNED_SELECT_TITLE' | translate
+          }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="summary-row">
             <span>{{ 'ASSIGNMENT.BATCH_ASSIGN.UNASSIGNED_COUNT' | translate }}:</span>
-            <strong>{{ orders().length }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong>
+            <strong
+              >{{ orders().length }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong
+            >
           </div>
           <div class="summary-row">
             <span>{{ 'ASSIGNMENT.BATCH_ASSIGN.SELECTED_COUNT' | translate }}:</span>
-            <strong>{{ selectedCount() }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong>
+            <strong
+              >{{ selectedCount() }}{{ 'ASSIGNMENT.BATCH_ASSIGN.ITEMS_SUFFIX' | translate }}</strong
+            >
           </div>
         </ion-card-content>
       </ion-card>
@@ -204,7 +213,10 @@ interface Installer {
               <ion-label>
                 <h2>{{ order.orderNumber }}</h2>
                 <h3>{{ order.customerName }}</h3>
-                <p>{{ order.appointmentDate }} | {{ order.productCount }}{{ 'ASSIGNMENT.BATCH_ASSIGN.PRODUCTS_SUFFIX' | translate }}</p>
+                <p>
+                  {{ order.appointmentDate }} | {{ order.productCount
+                  }}{{ 'ASSIGNMENT.BATCH_ASSIGN.PRODUCTS_SUFFIX' | translate }}
+                </p>
               </ion-label>
             </ion-item>
           } @empty {
@@ -219,54 +231,73 @@ interface Installer {
       <!-- 배정 버튼 -->
       @if (selectedCount() > 0 && selectedInstallerId) {
         <div class="confirm-button">
-          <ion-button expand="block" (click)="batchAssign()">
+          <ion-button (click)="batchAssign()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            {{ 'ASSIGNMENT.BATCH_ASSIGN.ASSIGN_BTN' | translate:{ count: selectedCount() } }}
+            {{ 'ASSIGNMENT.BATCH_ASSIGN.ASSIGN_BTN' | translate: { count: selectedCount() } }}
           </ion-button>
         </div>
       }
     </ion-content>
   `,
-  styles: [`
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--ion-color-light);
-
-      &:last-child {
-        border-bottom: none;
+  styles: [
+    `
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-    }
 
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-    }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--ion-color-light);
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
+        &:last-child {
+          border-bottom: none;
+        }
+      }
 
-    .confirm-button {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 16px;
-      background: var(--ion-background-color);
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    }
-  `],
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+
+      .confirm-button {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px;
+        background: var(--ion-background-color);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 160px;
+          max-width: 280px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class BatchAssignPage implements OnInit {
   /** @description HTTP 클라이언트 */
@@ -277,7 +308,7 @@ export class BatchAssignPage implements OnInit {
   protected readonly ordersStore = inject(OrdersStore);
   /** @description 다국어 번역 서비스 */
   private readonly translateService = inject(TranslateService);
-  
+
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
   protected readonly orders = signal<UnassignedOrder[]>([]);
   protected readonly installers = signal<Installer[]>([]);
@@ -286,9 +317,7 @@ export class BatchAssignPage implements OnInit {
 
   // Computed: Filter unassigned orders from store
   protected readonly unassignedOrders = computed(() => {
-    return this.ordersStore.orders().filter(
-      (o: Order) => o.status === OrderStatus.UNASSIGNED
-    );
+    return this.ordersStore.orders().filter((o: Order) => o.status === OrderStatus.UNASSIGNED);
   });
 
   selectedInstallerId: string | null = null;
@@ -298,7 +327,7 @@ export class BatchAssignPage implements OnInit {
 
   constructor(
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
   ) {
     addIcons({
       peopleOutline,
@@ -330,18 +359,18 @@ export class BatchAssignPage implements OnInit {
     try {
       const response = await firstValueFrom(
         this.http.get<{ id: string; name: string; capacityPerDay: number; isActive: boolean }[]>(
-          `${environment.apiUrl}/metadata/installers?active=true`
-        )
+          `${environment.apiUrl}/metadata/installers?active=true`,
+        ),
       );
 
       // Map API response to Installer interface
       // Calculate assigned count from OrdersStore
       const storeOrders = this.ordersStore.orders();
-      const installerList: Installer[] = response.map(inst => ({
+      const installerList: Installer[] = response.map((inst) => ({
         id: inst.id,
         name: inst.name,
         assignedCount: storeOrders.filter(
-          o => o.installerId === inst.id && o.status === OrderStatus.ASSIGNED
+          (o) => o.installerId === inst.id && o.status === OrderStatus.ASSIGNED,
         ).length,
         capacity: inst.capacityPerDay || 10,
       }));
@@ -361,20 +390,18 @@ export class BatchAssignPage implements OnInit {
 
   isAllSelected(): boolean {
     const allOrders = this.orders();
-    return allOrders.length > 0 && allOrders.every(o => o.selected);
+    return allOrders.length > 0 && allOrders.every((o) => o.selected);
   }
 
   isIndeterminate(): boolean {
     const allOrders = this.orders();
-    const selectedOrders = allOrders.filter(o => o.selected);
+    const selectedOrders = allOrders.filter((o) => o.selected);
     return selectedOrders.length > 0 && selectedOrders.length < allOrders.length;
   }
 
   toggleSelectAll(event: CustomEvent): void {
     const checked = event.detail.checked;
-    this.orders.update(orders =>
-      orders.map(order => ({ ...order, selected: checked }))
-    );
+    this.orders.update((orders) => orders.map((order) => ({ ...order, selected: checked })));
     this.updateSelectedCount();
   }
 
@@ -383,9 +410,7 @@ export class BatchAssignPage implements OnInit {
   }
 
   updateSelectedCount(): void {
-    this.selectedCount.set(
-      this.orders().filter(o => o.selected).length
-    );
+    this.selectedCount.set(this.orders().filter((o) => o.selected).length);
   }
 
   /**
@@ -393,9 +418,9 @@ export class BatchAssignPage implements OnInit {
    * @returns Promise<void>
    */
   async batchAssign(): Promise<void> {
-    const selectedOrders = this.orders().filter(o => o.selected);
-    const installer = this.installers().find(i => i.id === this.selectedInstallerId);
-    
+    const selectedOrders = this.orders().filter((o) => o.selected);
+    const installer = this.installers().find((i) => i.id === this.selectedInstallerId);
+
     if (!installer || selectedOrders.length === 0) {
       return;
     }
@@ -404,7 +429,7 @@ export class BatchAssignPage implements OnInit {
       header: this.translateService.instant('ASSIGNMENT.BATCH_ASSIGN.TITLE'),
       message: this.translateService.instant('ASSIGNMENT.BATCH_ASSIGN.CONFIRM_MESSAGE', {
         count: this.selectedCount(),
-        installer: installer.name
+        installer: installer.name,
       }),
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
@@ -424,10 +449,7 @@ export class BatchAssignPage implements OnInit {
    * @param orders 배정할 주문 목록
    * @param installer 대상 설치기사
    */
-  private async executeBatchAssign(
-    orders: UnassignedOrder[],
-    installer: Installer
-  ): Promise<void> {
+  private async executeBatchAssign(orders: UnassignedOrder[], installer: Installer): Promise<void> {
     // BulkOperationService로 실행
     const result = await this.bulkOperationService.execute({
       items: orders,
@@ -440,31 +462,29 @@ export class BatchAssignPage implements OnInit {
 
     // 결과 다이얼로그 표시
     const action = await this.bulkOperationService.showResultDialog(result);
-    
+
     // 재시도 요청 시
     if (action === 'retry' && result.failedCount > 0) {
       const failedIds = new Set(
-        result.items.filter(item => !item.success).map(item => item.id)
+        result.items.filter((item) => !item.success).map((item) => item.id),
       );
-      const failedOrders = orders.filter(o => failedIds.has(o.id));
+      const failedOrders = orders.filter((o) => failedIds.has(o.id));
       await this.executeBatchAssign(failedOrders, installer);
     }
 
     // 성공한 주문들은 목록에서 제거
     if (result.successCount > 0) {
       const successIds = new Set(
-        result.items.filter(item => item.success).map(item => item.id)
+        result.items.filter((item) => item.success).map((item) => item.id),
       );
-      this.orders.update(currentOrders => 
-        currentOrders.filter(o => !successIds.has(o.id))
-      );
+      this.orders.update((currentOrders) => currentOrders.filter((o) => !successIds.has(o.id)));
       this.updateSelectedCount();
     }
   }
 
   private async assignOrderToInstaller(
     orderId: string,
-    installerId: string
+    installerId: string,
   ): Promise<{ orderId: string; installerId: string }> {
     // Update order status to ASSIGNED with installerId via ordersStore
     await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ASSIGNED, installerId);

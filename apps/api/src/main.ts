@@ -13,10 +13,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     cors: {
-      origin: ['http://localhost:4200', 'http://localhost:4300'],
+      origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300'],
       credentials: true,
       methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-App-Version', 'X-Device-Id', 'X-Platform', 'X-Idempotency-Key', 'X-Correlation-Id'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-App-Version',
+        'X-Device-Id',
+        'X-Platform',
+        'X-Idempotency-Key',
+        'X-Correlation-Id',
+      ],
     },
   });
 
@@ -46,8 +54,8 @@ async function bootstrap() {
   // Global Interceptors
   // Order matters: Timeout -> Logging -> Transform
   app.useGlobalInterceptors(
-    new TimeoutInterceptor(),   // 30s default timeout
-    new LoggingInterceptor(),   // Request/Response logging
+    new TimeoutInterceptor(), // 30s default timeout
+    new LoggingInterceptor(), // Request/Response logging
     new TransformInterceptor(), // Standardized response format
   );
 
@@ -67,18 +75,9 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
-    .addApiKey(
-      { type: 'apiKey', name: 'X-App-Version', in: 'header' },
-      'app-version',
-    )
-    .addApiKey(
-      { type: 'apiKey', name: 'X-Device-Id', in: 'header' },
-      'device-id',
-    )
-    .addApiKey(
-      { type: 'apiKey', name: 'X-Platform', in: 'header' },
-      'platform',
-    )
+    .addApiKey({ type: 'apiKey', name: 'X-App-Version', in: 'header' }, 'app-version')
+    .addApiKey({ type: 'apiKey', name: 'X-Device-Id', in: 'header' }, 'device-id')
+    .addApiKey({ type: 'apiKey', name: 'X-Platform', in: 'header' }, 'platform')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

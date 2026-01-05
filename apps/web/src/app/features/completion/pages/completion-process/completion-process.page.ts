@@ -3,7 +3,14 @@
  * 주문 완료 처리를 위한 단계별 진행 화면
  * - 시리얼 입력, 폐가전 회수, 사진 첨부, 확인서 발행 단계 표시
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -92,9 +99,18 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
             <ion-card-title>{{ 'COMPLETION.PROCESS.ORDER_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p><strong>{{ 'COMPLETION.PROCESS.ORDER_NUMBER' | translate }}:</strong> {{ order()?.orderNo || orderId() }}</p>
-            <p><strong>{{ 'COMPLETION.PROCESS.CUSTOMER_NAME' | translate }}:</strong> {{ order()?.customerName || '-' }}</p>
-            <p><strong>{{ 'COMPLETION.PROCESS.INSTALLER' | translate }}:</strong> {{ order()?.installerName || '-' }}</p>
+            <p>
+              <strong>{{ 'COMPLETION.PROCESS.ORDER_NUMBER' | translate }}:</strong>
+              {{ order()?.orderNo || orderId() }}
+            </p>
+            <p>
+              <strong>{{ 'COMPLETION.PROCESS.CUSTOMER_NAME' | translate }}:</strong>
+              {{ order()?.customerName || '-' }}
+            </p>
+            <p>
+              <strong>{{ 'COMPLETION.PROCESS.INSTALLER' | translate }}:</strong>
+              {{ order()?.installerName || '-' }}
+            </p>
           </ion-card-content>
         </ion-card>
 
@@ -113,9 +129,13 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
                   <p>{{ 'COMPLETION.PROCESS.SERIAL_INPUT_DESC' | translate }}</p>
                 </ion-label>
                 @if (serialCompleted()) {
-                  <ion-badge slot="end" color="success">{{ 'COMPLETION.STATUS.COMPLETED' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="success">{{
+                    'COMPLETION.STATUS.COMPLETED' | translate
+                  }}</ion-badge>
                 } @else {
-                  <ion-badge slot="end" color="warning">{{ 'COMPLETION.STATUS.NOT_COMPLETED' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="warning">{{
+                    'COMPLETION.STATUS.NOT_COMPLETED' | translate
+                  }}</ion-badge>
                 }
               </ion-item>
 
@@ -127,9 +147,13 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
                   <p>{{ 'COMPLETION.PROCESS.WASTE_PICKUP_DESC' | translate }}</p>
                 </ion-label>
                 @if (wasteCompleted()) {
-                  <ion-badge slot="end" color="success">{{ 'COMPLETION.STATUS.COMPLETED' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="success">{{
+                    'COMPLETION.STATUS.COMPLETED' | translate
+                  }}</ion-badge>
                 } @else {
-                  <ion-badge slot="end" color="medium">{{ 'COMPLETION.STATUS.OPTIONAL' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="medium">{{
+                    'COMPLETION.STATUS.OPTIONAL' | translate
+                  }}</ion-badge>
                 }
               </ion-item>
 
@@ -140,7 +164,9 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
                   <h2>{{ 'COMPLETION.PROCESS.PHOTO_UPLOAD' | translate }}</h2>
                   <p>{{ 'COMPLETION.PROCESS.PHOTO_UPLOAD_DESC' | translate }}</p>
                 </ion-label>
-                <ion-badge slot="end" color="medium">{{ 'COMPLETION.PHOTO.COUNT' | translate:{ count: photoCount() } }}</ion-badge>
+                <ion-badge slot="end" color="medium">{{
+                  'COMPLETION.PHOTO.COUNT' | translate: { count: photoCount() }
+                }}</ion-badge>
               </ion-item>
 
               <!-- Step 4: Certificate -->
@@ -151,9 +177,13 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
                   <p>{{ 'COMPLETION.PROCESS.CERTIFICATE_DESC' | translate }}</p>
                 </ion-label>
                 @if (certificateIssued()) {
-                  <ion-badge slot="end" color="success">{{ 'COMPLETION.STATUS.ISSUED' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="success">{{
+                    'COMPLETION.STATUS.ISSUED' | translate
+                  }}</ion-badge>
                 } @else {
-                  <ion-badge slot="end" color="warning">{{ 'COMPLETION.STATUS.NOT_ISSUED' | translate }}</ion-badge>
+                  <ion-badge slot="end" color="warning">{{
+                    'COMPLETION.STATUS.NOT_ISSUED' | translate
+                  }}</ion-badge>
                 }
               </ion-item>
             </ion-list>
@@ -174,12 +204,7 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
 
         <!-- Complete Button -->
         <div class="action-buttons">
-          <ion-button 
-            expand="block" 
-            color="success"
-            [disabled]="!canComplete()"
-            (click)="completeOrder()"
-          >
+          <ion-button color="success" [disabled]="!canComplete()" (click)="completeOrder()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
             {{ 'COMPLETION.PROCESS.COMPLETE_BTN' | translate }}
           </ion-button>
@@ -187,30 +212,49 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      font-size: 16px;
-    }
-
-    ion-item {
-      --padding-start: 0;
-
-      ion-icon[slot="start"] {
-        font-size: 24px;
-        margin-right: 16px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
-    }
 
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+      ion-card-title {
+        font-size: 16px;
+      }
+
+      ion-item {
+        --padding-start: 0;
+
+        ion-icon[slot='start'] {
+          font-size: 24px;
+          margin-right: 16px;
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 160px;
+          max-width: 220px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class CompletionProcessPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -279,10 +323,10 @@ export class CompletionProcessPage implements OnInit {
    */
   async uploadPhoto(): Promise<void> {
     const photo = await this.cameraService.capturePhoto();
-    
+
     if (photo) {
-      this.photos.update(photos => [...photos, photo]);
-      
+      this.photos.update((photos) => [...photos, photo]);
+
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('COMPLETION.PHOTO.ADDED'),
         duration: 1500,
@@ -323,7 +367,7 @@ export class CompletionProcessPage implements OnInit {
           text: addText,
           handler: (data) => {
             if (data.note?.trim()) {
-              notes.update(n => [...n, data.note.trim()]);
+              notes.update((n) => [...n, data.note.trim()]);
             }
           },
         },

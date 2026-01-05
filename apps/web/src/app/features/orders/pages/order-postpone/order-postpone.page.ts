@@ -99,10 +99,7 @@ const REASON_CODES: ReasonCode[] = [
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button
-            [defaultHref]="'/orders/' + orderId()"
-            text=""
-          ></ion-back-button>
+          <ion-back-button [defaultHref]="'/orders/' + orderId()" text=""></ion-back-button>
         </ion-buttons>
         <ion-title>{{ 'ORDERS.POSTPONE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
@@ -136,13 +133,18 @@ const REASON_CODES: ReasonCode[] = [
 
           <div class="info-row">
             <ion-icon name="calendar-outline"></ion-icon>
-            <span>{{ 'ORDERS.POSTPONE.CURRENT_APPOINTMENT' | translate }}: {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span>
+            <span
+              >{{ 'ORDERS.POSTPONE.CURRENT_APPOINTMENT' | translate }}:
+              {{ order()!.appointmentDate }} {{ order()!.appointmentSlot || '' }}</span
+            >
           </div>
 
           @if (order()!.installerName) {
             <div class="info-row">
               <ion-icon name="time-outline"></ion-icon>
-              <span>{{ 'ORDERS.POSTPONE.INSTALLER' | translate }}: {{ order()!.installerName }}</span>
+              <span
+                >{{ 'ORDERS.POSTPONE.INSTALLER' | translate }}: {{ order()!.installerName }}</span
+              >
             </div>
           }
         </div>
@@ -153,7 +155,10 @@ const REASON_CODES: ReasonCode[] = [
 
           <!-- Reason Code Select -->
           <div class="form-group">
-            <label class="form-label">{{ 'ORDERS.POSTPONE.REASON.TITLE' | translate }} <span class="required">*</span></label>
+            <label class="form-label"
+              >{{ 'ORDERS.POSTPONE.REASON.TITLE' | translate }}
+              <span class="required">*</span></label
+            >
             <ion-item class="custom-select" lines="none">
               <ion-select
                 [(ngModel)]="selectedReasonCode"
@@ -172,7 +177,10 @@ const REASON_CODES: ReasonCode[] = [
 
           <!-- New Appointment Date -->
           <div class="form-group">
-            <label class="form-label">{{ 'ORDERS.POSTPONE.NEW_DATE.TITLE' | translate }} <span class="required">*</span></label>
+            <label class="form-label"
+              >{{ 'ORDERS.POSTPONE.NEW_DATE.TITLE' | translate }}
+              <span class="required">*</span></label
+            >
             <div class="date-picker-container">
               <ion-datetime
                 [(ngModel)]="selectedDate"
@@ -221,7 +229,6 @@ const REASON_CODES: ReasonCode[] = [
         <!-- Submit Button -->
         <div class="submit-section">
           <ion-button
-            expand="block"
             [disabled]="!isFormValid() || isSubmitting()"
             (click)="submitPostpone()"
             class="submit-button"
@@ -245,306 +252,325 @@ const REASON_CODES: ReasonCode[] = [
       }
     </ion-content>
   `,
-  styles: [`
-    :host {
-      --primary-color: #3b82f6;
-      --success-color: #10b981;
-      --warning-color: #f59e0b;
-      --danger-color: #ef4444;
-      --border-radius: 12px;
-      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
+  styles: [
+    `
+      :host {
+        --primary-color: #3b82f6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --border-radius: 12px;
+        --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
 
-    ion-toolbar {
-      --background: #ffffff;
-      --border-color: #e5e7eb;
-    }
+      ion-toolbar {
+        --background: #ffffff;
+        --border-color: #e5e7eb;
+      }
 
-    ion-title {
-      font-weight: 600;
-      font-size: 17px;
-    }
+      ion-title {
+        font-weight: 600;
+        font-size: 17px;
+      }
 
-    ion-content {
-      --background: #f9fafb;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 60vh;
-      gap: 12px;
-      color: #6b7280;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 60vh;
-      gap: 16px;
-      color: #6b7280;
-      text-align: center;
-    }
-
-    /* Order Summary Card */
-    .order-summary-card {
-      background: #ffffff;
-      border-radius: var(--border-radius);
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: var(--card-shadow);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .order-number {
-      font-size: 16px;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .status-badge {
-      font-size: 12px;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-
-    .status-dispatched {
-      --background: #dbeafe;
-      --color: #1d4ed8;
-    }
-
-    .status-assigned,
-    .status-confirmed {
-      --background: #fef3c7;
-      --color: #d97706;
-    }
-
-    .status-completed {
-      --background: #d1fae5;
-      --color: #059669;
-    }
-
-    .status-postponed {
-      --background: #fee2e2;
-      --color: #dc2626;
-    }
-
-    .info-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      color: #4b5563;
-      font-size: 14px;
-    }
-
-    .info-row ion-icon {
-      color: #9ca3af;
-      font-size: 18px;
-      min-width: 18px;
-    }
-
-    /* Form Section */
-    .form-section {
-      background: #ffffff;
-      border-radius: var(--border-radius);
-      padding: 20px 16px;
-      margin-bottom: 20px;
-      box-shadow: var(--card-shadow);
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 20px 0;
-    }
-
-    .form-group {
-      margin-bottom: 24px;
-    }
-
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 8px;
-    }
-
-    .required {
-      color: var(--danger-color);
-    }
-
-    .custom-select {
-      --background: #f9fafb;
-      --border-radius: 10px;
-      --padding-start: 14px;
-      --padding-end: 14px;
-      --min-height: 48px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-    }
-
-    .custom-select ion-select {
-      width: 100%;
-      --placeholder-color: #9ca3af;
-      --placeholder-opacity: 1;
-    }
-
-    .date-picker-container {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .custom-datetime {
-      --background: transparent;
-      width: 100%;
-    }
-
-    .custom-datetime::part(calendar-day active),
-    .custom-datetime::part(calendar-day):focus {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    .date-hint {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    .date-hint ion-icon {
-      font-size: 14px;
-    }
-
-    .custom-textarea {
-      --background: #f9fafb;
-      --border-radius: 10px;
-      --padding-start: 14px;
-      --padding-end: 14px;
-      --padding-top: 12px;
-      --padding-bottom: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-    }
-
-    .custom-textarea ion-textarea {
-      --placeholder-color: #9ca3af;
-      --placeholder-opacity: 1;
-      font-size: 14px;
-    }
-
-    .char-count {
-      text-align: right;
-      font-size: 12px;
-      color: #9ca3af;
-      margin-top: 6px;
-    }
-
-    /* Notification Info */
-    .notification-info {
-      display: flex;
-      gap: 12px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: var(--border-radius);
-      padding: 14px 16px;
-      margin-bottom: 24px;
-    }
-
-    .notification-info ion-icon {
-      color: var(--primary-color);
-      font-size: 22px;
-      min-width: 22px;
-      margin-top: 2px;
-    }
-
-    .notification-info strong {
-      display: block;
-      font-size: 14px;
-      color: #1e40af;
-      margin-bottom: 4px;
-    }
-
-    .notification-info p {
-      font-size: 13px;
-      color: #3b82f6;
-      margin: 0;
-      line-height: 1.4;
-    }
-
-    /* Submit Section */
-    .submit-section {
-      padding-bottom: 20px;
-    }
-
-    .submit-button {
-      --background: var(--primary-color);
-      --background-hover: #2563eb;
-      --background-activated: #1d4ed8;
-      --border-radius: 10px;
-      --box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-      font-weight: 600;
-      font-size: 16px;
-      height: 52px;
-    }
-
-    .submit-button[disabled] {
-      --background: #d1d5db;
-      --box-shadow: none;
-    }
-
-    .button-spinner {
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
-    }
-
-    /* Responsive adjustments */
-    @media (min-width: 768px) {
       ion-content {
-        --padding-start: 24px;
-        --padding-end: 24px;
+        --background: #f9fafb;
       }
 
-      .order-summary-card,
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 60vh;
+        gap: 12px;
+        color: #6b7280;
+      }
+
+      .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 60vh;
+        gap: 16px;
+        color: #6b7280;
+        text-align: center;
+      }
+
+      /* Order Summary Card */
+      .order-summary-card {
+        background: #ffffff;
+        border-radius: var(--border-radius);
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: var(--card-shadow);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .order-number {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .status-badge {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 20px;
+      }
+
+      .status-dispatched {
+        --background: #dbeafe;
+        --color: #1d4ed8;
+      }
+
+      .status-assigned,
+      .status-confirmed {
+        --background: #fef3c7;
+        --color: #d97706;
+      }
+
+      .status-completed {
+        --background: #d1fae5;
+        --color: #059669;
+      }
+
+      .status-postponed {
+        --background: #fee2e2;
+        --color: #dc2626;
+      }
+
+      .info-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        color: #4b5563;
+        font-size: 14px;
+      }
+
+      .info-row ion-icon {
+        color: #9ca3af;
+        font-size: 18px;
+        min-width: 18px;
+      }
+
+      /* Form Section */
       .form-section {
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
+        background: #ffffff;
+        border-radius: var(--border-radius);
+        padding: 20px 16px;
+        margin-bottom: 20px;
+        box-shadow: var(--card-shadow);
       }
 
-      .notification-info,
-      .submit-section {
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
+      .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 20px 0;
       }
-    }
-  `],
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+
+      .required {
+        color: var(--danger-color);
+      }
+
+      .custom-select {
+        --background: #f9fafb;
+        --border-radius: 10px;
+        --padding-start: 14px;
+        --padding-end: 14px;
+        --min-height: 48px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+      }
+
+      .custom-select ion-select {
+        width: 100%;
+        --placeholder-color: #9ca3af;
+        --placeholder-opacity: 1;
+      }
+
+      .date-picker-container {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .custom-datetime {
+        --background: transparent;
+        width: 100%;
+      }
+
+      .custom-datetime::part(calendar-day active),
+      .custom-datetime::part(calendar-day):focus {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .date-hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      .date-hint ion-icon {
+        font-size: 14px;
+      }
+
+      .custom-textarea {
+        --background: #f9fafb;
+        --border-radius: 10px;
+        --padding-start: 14px;
+        --padding-end: 14px;
+        --padding-top: 12px;
+        --padding-bottom: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+      }
+
+      .custom-textarea ion-textarea {
+        --placeholder-color: #9ca3af;
+        --placeholder-opacity: 1;
+        font-size: 14px;
+      }
+
+      .char-count {
+        text-align: right;
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 6px;
+      }
+
+      /* Notification Info */
+      .notification-info {
+        display: flex;
+        gap: 12px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: var(--border-radius);
+        padding: 14px 16px;
+        margin-bottom: 24px;
+      }
+
+      .notification-info ion-icon {
+        color: var(--primary-color);
+        font-size: 22px;
+        min-width: 22px;
+        margin-top: 2px;
+      }
+
+      .notification-info strong {
+        display: block;
+        font-size: 14px;
+        color: #1e40af;
+        margin-bottom: 4px;
+      }
+
+      .notification-info p {
+        font-size: 13px;
+        color: #3b82f6;
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      /* Submit Section */
+      .submit-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-bottom: 20px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 160px;
+          max-width: 220px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+
+      .submit-button {
+        --background: var(--primary-color);
+        --background-hover: #2563eb;
+        --background-activated: #1d4ed8;
+        --border-radius: 10px;
+        --box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        font-weight: 600;
+        font-size: 16px;
+        height: 52px;
+      }
+
+      .submit-button[disabled] {
+        --background: #d1d5db;
+        --box-shadow: none;
+      }
+
+      .button-spinner {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+      }
+
+      /* Responsive adjustments */
+      @media (min-width: 768px) {
+        ion-content {
+          --padding-start: 24px;
+          --padding-end: 24px;
+        }
+
+        .order-summary-card,
+        .form-section {
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .notification-info,
+        .submit-section {
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+    `,
+  ],
 })
 export class OrderPostponePage implements OnInit {
   private route = inject(ActivatedRoute);
@@ -625,7 +651,7 @@ export class OrderPostponePage implements OnInit {
         // If not in store, the order might need to be loaded
         // For now, we'll check the orders array
         const storeOrders = this.ordersStore.orders();
-        const foundOrder = storeOrders.find(o => o.id === orderId);
+        const foundOrder = storeOrders.find((o) => o.id === orderId);
         if (foundOrder) {
           this.order.set(foundOrder);
         }
@@ -753,7 +779,7 @@ export class OrderPostponePage implements OnInit {
    */
   private async showToast(
     message: string,
-    color: 'success' | 'danger' | 'warning' = 'success'
+    color: 'success' | 'danger' | 'warning' = 'success',
   ): Promise<void> {
     const toast = await this.toastController.create({
       message,

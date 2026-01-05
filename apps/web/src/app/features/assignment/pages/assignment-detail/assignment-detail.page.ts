@@ -1,5 +1,12 @@
 // apps/web/src/app/features/assignment/pages/assignment-detail/assignment-detail.page.ts
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -132,7 +139,13 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
                     <ion-icon name="person-outline"></ion-icon>
                     <div>
                       <ion-note>{{ 'ASSIGNMENT.DETAIL.INSTALLER' | translate }}</ion-note>
-                      <p>{{ assignment()!.installer?.name || assignment()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
+                      <p>
+                        {{
+                          assignment()!.installer?.name ||
+                            assignment()!.installerName ||
+                            ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate)
+                        }}
+                      </p>
                     </div>
                   </div>
                 </ion-col>
@@ -214,32 +227,32 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
         <!-- 액션 버튼 -->
         <div class="action-buttons">
           @if (assignment()!.status === OrderStatus.UNASSIGNED) {
-            <ion-button expand="block" (click)="assignInstaller()">
+            <ion-button (click)="assignInstaller()">
               <ion-icon name="person-outline" slot="start"></ion-icon>
               {{ 'ASSIGNMENT.DETAIL.ASSIGN_INSTALLER' | translate }}
             </ion-button>
           }
           @if (assignment()!.status === OrderStatus.ASSIGNED) {
-            <ion-button expand="block" color="success" (click)="confirmAssignment()">
+            <ion-button color="success" (click)="confirmAssignment()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
               {{ 'ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT' | translate }}
             </ion-button>
-            <ion-button expand="block" color="warning" (click)="changeInstaller()">
+            <ion-button color="warning" (click)="changeInstaller()">
               <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
               {{ 'ASSIGNMENT.DETAIL.CHANGE_INSTALLER' | translate }}
             </ion-button>
           }
           @if (assignment()!.status === OrderStatus.CONFIRMED) {
-            <ion-button expand="block" color="primary" (click)="confirmRelease()">
+            <ion-button color="primary" (click)="confirmRelease()">
               <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
               {{ 'ASSIGNMENT.DETAIL.CONFIRM_RELEASE' | translate }}
             </ion-button>
           }
-          <ion-button expand="block" color="medium" (click)="changeAppointment()">
+          <ion-button color="medium" (click)="changeAppointment()">
             <ion-icon name="calendar-outline" slot="start"></ion-icon>
             {{ 'ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT' | translate }}
           </ion-button>
-          <ion-button expand="block" color="danger" fill="outline" (click)="cancelAssignment()">
+          <ion-button color="danger" fill="outline" (click)="cancelAssignment()">
             <ion-icon name="close-circle-outline" slot="start"></ion-icon>
             {{ 'ASSIGNMENT.DETAIL.CANCEL' | translate }}
           </ion-button>
@@ -252,66 +265,82 @@ import { ReportsStore } from '../../../../store/reports/reports.store';
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 50vh;
-      color: var(--ion-color-medium);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 16px;
-      color: var(--ion-color-medium);
-    }
-
-    .info-item {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-
-      ion-icon {
-        font-size: 20px;
-        color: var(--ion-color-primary);
-        margin-top: 2px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 50vh;
+        color: var(--ion-color-medium);
       }
 
-      ion-note {
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+        color: var(--ion-color-medium);
+      }
+
+      .info-item {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+
+        ion-icon {
+          font-size: 20px;
+          color: var(--ion-color-primary);
+          margin-top: 2px;
+        }
+
+        ion-note {
+          font-size: 12px;
+        }
+
+        p {
+          margin: 4px 0 0;
+          font-weight: 500;
+        }
+      }
+
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .serial {
+        font-family: monospace;
         font-size: 12px;
+        color: var(--ion-color-medium);
       }
 
-      p {
-        margin: 4px 0 0;
-        font-weight: 500;
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 160px;
+          max-width: 220px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
       }
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .serial {
-      font-family: monospace;
-      font-size: 12px;
-      color: var(--ion-color-medium);
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-  `],
+    `,
+  ],
 })
 export class AssignmentDetailPage implements OnInit {
   /** @description 라우트 정보 접근 */
@@ -368,7 +397,7 @@ export class AssignmentDetailPage implements OnInit {
     try {
       // Select this order in store (loads if not present)
       this.ordersStore.selectOrder(this.orderId);
-      
+
       // If not in store, load from API
       if (!this.assignment()) {
         await this.ordersStore.loadOrders(undefined, 1, 100);
@@ -447,48 +476,48 @@ export class AssignmentDetailPage implements OnInit {
 
     // 상태에 따른 액션 버튼 구성
     if (order.status === OrderStatus.UNASSIGNED) {
-      buttons.push({ 
-        text: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN_INSTALLER'), 
-        handler: () => this.assignInstaller() 
+      buttons.push({
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN_INSTALLER'),
+        handler: () => this.assignInstaller(),
       });
     }
     if (order.status === OrderStatus.ASSIGNED) {
-      buttons.push({ 
-        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT'), 
-        handler: () => this.confirmAssignment() 
+      buttons.push({
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT'),
+        handler: () => this.confirmAssignment(),
       });
-      buttons.push({ 
-        text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_INSTALLER'), 
-        handler: () => this.changeInstaller() 
+      buttons.push({
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_INSTALLER'),
+        handler: () => this.changeInstaller(),
       });
     }
     if (order.status === OrderStatus.CONFIRMED) {
-      buttons.push({ 
-        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE'), 
-        handler: () => this.confirmRelease() 
+      buttons.push({
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE'),
+        handler: () => this.confirmRelease(),
       });
     }
 
-    buttons.push({ 
-      text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT'), 
-      handler: () => this.changeAppointment() 
+    buttons.push({
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT'),
+      handler: () => this.changeAppointment(),
     });
-    buttons.push({ 
-      text: this.translateService.instant('ASSIGNMENT.DETAIL.ADD_NOTE'), 
-      handler: () => this.addNote() 
+    buttons.push({
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.ADD_NOTE'),
+      handler: () => this.addNote(),
     });
-    
+
     if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.CANCELLED) {
-      buttons.push({ 
-        text: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REQUEST'), 
-        role: 'destructive', 
-        handler: () => this.cancelAssignment() 
+      buttons.push({
+        text: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REQUEST'),
+        role: 'destructive',
+        handler: () => this.cancelAssignment(),
       });
     }
 
-    buttons.push({ 
-      text: this.translateService.instant('ASSIGNMENT.DETAIL.CLOSE'), 
-      role: 'cancel' 
+    buttons.push({
+      text: this.translateService.instant('ASSIGNMENT.DETAIL.CLOSE'),
+      role: 'cancel',
     });
 
     const actionSheet = await this.actionSheetCtrl.create({
@@ -507,7 +536,10 @@ export class AssignmentDetailPage implements OnInit {
         type: 'release',
         format: 'pdf',
       });
-      this.reportsStore.downloadFile(blob, `${this.translateService.instant('ASSIGNMENT.DETAIL.TITLE')}_${this.assignment()?.orderNo || this.orderId}.pdf`);
+      this.reportsStore.downloadFile(
+        blob,
+        `${this.translateService.instant('ASSIGNMENT.DETAIL.TITLE')}_${this.assignment()?.orderNo || this.orderId}.pdf`,
+      );
     } catch (error) {
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('ASSIGNMENT.DETAIL.PRINT_FAILED'),
@@ -532,16 +564,26 @@ export class AssignmentDetailPage implements OnInit {
    * @description 설치기사 배정 알림창
    */
   async assignInstaller(): Promise<void> {
-    const installerAssignedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_ASSIGNED');
+    const installerAssignedMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.INSTALLER_ASSIGNED',
+    );
     const ordersStore = this.ordersStore;
     const toastController = this.toastCtrl;
     const orderId = this.orderId;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGN_INSTALLER'),
       inputs: [
-        { name: 'installerName', type: 'text', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_NAME') },
-        { name: 'appointmentDate', type: 'date', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_DATE_INPUT') },
+        {
+          name: 'installerName',
+          type: 'text',
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_NAME'),
+        },
+        {
+          name: 'appointmentDate',
+          type: 'date',
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_DATE_INPUT'),
+        },
       ],
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
@@ -552,7 +594,7 @@ export class AssignmentDetailPage implements OnInit {
               await ordersStore.assignOrder(
                 orderId,
                 '', // installerId - would come from installer selection
-                data.appointmentDate
+                data.appointmentDate,
               );
               const toast = await toastController.create({
                 message: installerAssignedMsg,
@@ -572,11 +614,13 @@ export class AssignmentDetailPage implements OnInit {
    * @description 배정 확정 알림창
    */
   async confirmAssignment(): Promise<void> {
-    const assignmentConfirmedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.ASSIGNMENT_CONFIRMED');
+    const assignmentConfirmedMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.ASSIGNMENT_CONFIRMED',
+    );
     const ordersStore = this.ordersStore;
     const toastController = this.toastCtrl;
     const orderId = this.orderId;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT'),
       message: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_ASSIGNMENT_MSG'),
@@ -603,16 +647,22 @@ export class AssignmentDetailPage implements OnInit {
    * @description 설치기사 변경 알림창
    */
   async changeInstaller(): Promise<void> {
-    const installerChangedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.INSTALLER_CHANGED');
+    const installerChangedMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.INSTALLER_CHANGED',
+    );
     const ordersStore = this.ordersStore;
     const toastController = this.toastCtrl;
     const orderId = this.orderId;
     const assignment = this.assignment;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_INSTALLER'),
       inputs: [
-        { name: 'installerName', type: 'text', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_INSTALLER_NAME') },
+        {
+          name: 'installerName',
+          type: 'text',
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_INSTALLER_NAME'),
+        },
       ],
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
@@ -625,7 +675,7 @@ export class AssignmentDetailPage implements OnInit {
                 await ordersStore.assignOrder(
                   orderId,
                   '', // new installerId
-                  order.appointmentDate || ''
+                  order.appointmentDate || '',
                 );
                 const toast = await toastController.create({
                   message: installerChangedMsg,
@@ -646,11 +696,13 @@ export class AssignmentDetailPage implements OnInit {
    * @description 출고 확정 알림창
    */
   async confirmRelease(): Promise<void> {
-    const releaseConfirmedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.RELEASE_CONFIRMED');
+    const releaseConfirmedMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.RELEASE_CONFIRMED',
+    );
     const ordersStore = this.ordersStore;
     const toastController = this.toastCtrl;
     const orderId = this.orderId;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE'),
       message: this.translateService.instant('ASSIGNMENT.DETAIL.CONFIRM_RELEASE_MSG'),
@@ -678,20 +730,24 @@ export class AssignmentDetailPage implements OnInit {
    */
   async changeAppointment(): Promise<void> {
     const order = this.assignment();
-    const appointmentDateLimitMsg = this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_DATE_LIMIT');
-    const appointmentChangedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.APPOINTMENT_CHANGED');
+    const appointmentDateLimitMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.APPOINTMENT_DATE_LIMIT',
+    );
+    const appointmentChangedMsg = this.translateService.instant(
+      'ASSIGNMENT.DETAIL.APPOINTMENT_CHANGED',
+    );
     const ordersStore = this.ordersStore;
     const toastController = this.toastCtrl;
     const orderId = this.orderId;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.CHANGE_APPOINTMENT'),
       inputs: [
-        { 
-          name: 'appointmentDate', 
-          type: 'date', 
+        {
+          name: 'appointmentDate',
+          type: 'date',
           value: order?.appointmentDate || '',
-          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_APPOINTMENT')
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NEW_APPOINTMENT'),
         },
       ],
       buttons: [
@@ -704,7 +760,7 @@ export class AssignmentDetailPage implements OnInit {
               const newDate = new Date(data.appointmentDate);
               const today = new Date();
               const maxDate = new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000);
-              
+
               if (newDate > maxDate) {
                 const toast = await toastController.create({
                   message: appointmentDateLimitMsg,
@@ -715,11 +771,7 @@ export class AssignmentDetailPage implements OnInit {
                 return;
               }
 
-              await ordersStore.assignOrder(
-                orderId,
-                order.installerId || '',
-                data.appointmentDate
-              );
+              await ordersStore.assignOrder(orderId, order.installerId || '', data.appointmentDate);
               const toast = await toastController.create({
                 message: appointmentChangedMsg,
                 duration: 2000,
@@ -740,11 +792,15 @@ export class AssignmentDetailPage implements OnInit {
   async addNote(): Promise<void> {
     const noteAddedMsg = this.translateService.instant('ASSIGNMENT.DETAIL.NOTE_ADDED');
     const toastController = this.toastCtrl;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.ADD_NOTE'),
       inputs: [
-        { name: 'note', type: 'textarea', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NOTE_PLACEHOLDER') },
+        {
+          name: 'note',
+          type: 'textarea',
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.NOTE_PLACEHOLDER'),
+        },
       ],
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
@@ -776,12 +832,16 @@ export class AssignmentDetailPage implements OnInit {
     const toastController = this.toastCtrl;
     const router = this.router;
     const orderId = this.orderId;
-    
+
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_CONFIRM_HEADER'),
       message: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_CONFIRM_MSG'),
       inputs: [
-        { name: 'reason', type: 'textarea', placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REASON') },
+        {
+          name: 'reason',
+          type: 'textarea',
+          placeholder: this.translateService.instant('ASSIGNMENT.DETAIL.CANCEL_REASON'),
+        },
       ],
       buttons: [
         { text: this.translateService.instant('ASSIGNMENT.DETAIL.NO'), role: 'cancel' },

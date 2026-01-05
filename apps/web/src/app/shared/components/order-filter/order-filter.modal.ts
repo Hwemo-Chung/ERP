@@ -224,53 +224,77 @@ export interface BranchOption {
 
     <ion-footer>
       <ion-toolbar>
-        <ion-button expand="block" (click)="apply()">
-          <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-          {{ 'FILTER.APPLY' | translate }}
-        </ion-button>
+        <div class="footer-actions">
+          <ion-button (click)="apply()">
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            {{ 'FILTER.APPLY' | translate }}
+          </ion-button>
+        </div>
       </ion-toolbar>
     </ion-footer>
   `,
-  styles: [`
-    .filter-section {
-      margin-bottom: 24px;
+  styles: [
+    `
+      .filter-section {
+        margin-bottom: 24px;
 
-      h3 {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ion-color-medium);
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        padding-left: 4px;
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ion-color-medium);
+          text-transform: uppercase;
+          margin-bottom: 12px;
+          padding-left: 4px;
 
-        ion-icon {
-          font-size: 18px;
+          ion-icon {
+            font-size: 18px;
+          }
         }
       }
-    }
 
-    .status-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .active-filters {
-      text-align: center;
-      margin-top: 16px;
-
-      ion-note {
-        color: var(--ion-color-primary);
+      .status-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
-    }
 
-    ion-footer ion-toolbar {
-      padding: 8px 16px;
-    }
-  `],
+      .active-filters {
+        text-align: center;
+        margin-top: 16px;
+
+        ion-note {
+          color: var(--ion-color-primary);
+        }
+      }
+
+      ion-footer ion-toolbar {
+        padding: 8px 16px;
+      }
+
+      .footer-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 120px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class OrderFilterModal implements OnInit {
   private readonly modalController = inject(ModalController);
@@ -363,7 +387,7 @@ export class OrderFilterModal implements OnInit {
   toggleStatus(status: OrderStatus): void {
     const current = this.selectedStatuses();
     if (current.includes(status)) {
-      this.selectedStatuses.set(current.filter(s => s !== status));
+      this.selectedStatuses.set(current.filter((s) => s !== status));
     } else {
       this.selectedStatuses.set([...current, status]);
     }

@@ -4,17 +4,17 @@
  */
 
 export enum OrderStatus {
-  UNASSIGNED = 'UNASSIGNED',       // 미배정
-  ASSIGNED = 'ASSIGNED',           // 배정
-  CONFIRMED = 'CONFIRMED',         // 배정확정
-  RELEASED = 'RELEASED',           // 출고확정
-  DISPATCHED = 'DISPATCHED',       // 출문
-  POSTPONED = 'POSTPONED',         // 연기
-  ABSENT = 'ABSENT',               // 부재
-  COMPLETED = 'COMPLETED',         // 인수
-  PARTIAL = 'PARTIAL',             // 부분인수
-  COLLECTED = 'COLLECTED',         // 회수
-  CANCELLED = 'CANCELLED',         // 취소
+  UNASSIGNED = 'UNASSIGNED', // 미배정
+  ASSIGNED = 'ASSIGNED', // 배정
+  CONFIRMED = 'CONFIRMED', // 배정확정
+  RELEASED = 'RELEASED', // 출고확정
+  DISPATCHED = 'DISPATCHED', // 출문
+  POSTPONED = 'POSTPONED', // 연기
+  ABSENT = 'ABSENT', // 부재
+  COMPLETED = 'COMPLETED', // 인수
+  PARTIAL = 'PARTIAL', // 부분인수
+  COLLECTED = 'COLLECTED', // 회수
+  CANCELLED = 'CANCELLED', // 취소
   REQUEST_CANCEL = 'REQUEST_CANCEL', // 의뢰취소
 }
 
@@ -39,20 +39,21 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 /**
  * UI colors for order statuses
+ * NOTE: Must be synchronized with web/src/app/store/orders/orders.models.ts
  */
 export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  [OrderStatus.UNASSIGNED]: 'warning',
-  [OrderStatus.ASSIGNED]: 'primary',
-  [OrderStatus.CONFIRMED]: 'secondary',
-  [OrderStatus.RELEASED]: 'tertiary',
+  [OrderStatus.UNASSIGNED]: 'danger',
+  [OrderStatus.ASSIGNED]: 'warning',
+  [OrderStatus.CONFIRMED]: 'success',
+  [OrderStatus.RELEASED]: 'primary',
   [OrderStatus.DISPATCHED]: 'tertiary',
   [OrderStatus.POSTPONED]: 'warning',
-  [OrderStatus.ABSENT]: 'danger',
+  [OrderStatus.ABSENT]: 'medium',
   [OrderStatus.COMPLETED]: 'success',
-  [OrderStatus.PARTIAL]: 'warning',
+  [OrderStatus.PARTIAL]: 'secondary',
   [OrderStatus.COLLECTED]: 'success',
   [OrderStatus.CANCELLED]: 'medium',
-  [OrderStatus.REQUEST_CANCEL]: 'danger',
+  [OrderStatus.REQUEST_CANCEL]: 'warning',
 };
 
 export interface OrderLine {

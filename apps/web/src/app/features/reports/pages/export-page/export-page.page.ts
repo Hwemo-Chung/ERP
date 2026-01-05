@@ -4,16 +4,37 @@ import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-  IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
-  IonDatetimeButton, IonModal, IonDatetime,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonButton,
+  IonIcon,
+  IonRadioGroup,
+  IonRadio,
+  IonSpinner,
+  IonDatetimeButton,
+  IonModal,
+  IonDatetime,
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { downloadOutline, documentOutline, gridOutline, calendarOutline } from 'ionicons/icons';
-import { ReportsService, ExportRequest, ExportResult } from '../../../../core/services/reports.service';
+import {
+  ReportsService,
+  ExportRequest,
+  ExportResult,
+} from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
 type ExportType = 'ecoas' | 'completed' | 'pending' | 'waste' | 'raw';
@@ -24,16 +45,37 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TranslateModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-    IonLabel, IonButton, IonIcon, IonRadioGroup, IonRadio, IonSpinner,
-    IonDatetimeButton, IonModal, IonDatetime,
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonButton,
+    IonIcon,
+    IonRadioGroup,
+    IonRadio,
+    IonSpinner,
+    IonDatetimeButton,
+    IonModal,
+    IonDatetime,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
+        <ion-buttons slot="start"
+          ><ion-back-button defaultHref="/tabs/reports"></ion-back-button
+        ></ion-buttons>
         <!-- 데이터 내보내기 타이틀 -->
         <ion-title>{{ 'REPORTS.EXPORT.TITLE' | translate }}</ion-title>
       </ion-toolbar>
@@ -42,7 +84,11 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
     <ion-content class="ion-padding">
       <!-- Date Range - 기간 선택 -->
       <ion-card>
-        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.DATE_SELECT' | translate }}</ion-card-title></ion-card-header>
+        <ion-card-header
+          ><ion-card-title>{{
+            'REPORTS.EXPORT.DATE_SELECT' | translate
+          }}</ion-card-title></ion-card-header
+        >
         <ion-card-content>
           <div class="date-range">
             <ion-datetime-button datetime="exportStartDate"></ion-datetime-button>
@@ -51,12 +97,22 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
           </div>
           <ion-modal [keepContentsMounted]="true">
             <ng-template>
-              <ion-datetime id="exportStartDate" presentation="date" [value]="dateFrom()" (ionChange)="dateFrom.set($any($event).detail.value)"></ion-datetime>
+              <ion-datetime
+                id="exportStartDate"
+                presentation="date"
+                [value]="dateFrom()"
+                (ionChange)="dateFrom.set($any($event).detail.value)"
+              ></ion-datetime>
             </ng-template>
           </ion-modal>
           <ion-modal [keepContentsMounted]="true">
             <ng-template>
-              <ion-datetime id="exportEndDate" presentation="date" [value]="dateTo()" (ionChange)="dateTo.set($any($event).detail.value)"></ion-datetime>
+              <ion-datetime
+                id="exportEndDate"
+                presentation="date"
+                [value]="dateTo()"
+                (ionChange)="dateTo.set($any($event).detail.value)"
+              ></ion-datetime>
             </ng-template>
           </ion-modal>
         </ion-card-content>
@@ -64,28 +120,50 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
 
       <!-- Export Type - 내보내기 유형 -->
       <ion-card>
-        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.TYPE_SELECT' | translate }}</ion-card-title></ion-card-header>
+        <ion-card-header
+          ><ion-card-title>{{
+            'REPORTS.EXPORT.TYPE_SELECT' | translate
+          }}</ion-card-title></ion-card-header
+        >
         <ion-card-content>
-          <ion-radio-group [value]="selectedType()" (ionChange)="selectedType.set($any($event).detail.value)">
+          <ion-radio-group
+            [value]="selectedType()"
+            (ionChange)="selectedType.set($any($event).detail.value)"
+          >
             <ion-item>
               <ion-radio value="ecoas" slot="start"></ion-radio>
-              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_ECOAS' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_ECOAS_DESC' | translate }}</p></ion-label>
+              <ion-label
+                ><h3>{{ 'REPORTS.EXPORT.TYPE_ECOAS' | translate }}</h3>
+                <p>{{ 'REPORTS.EXPORT.TYPE_ECOAS_DESC' | translate }}</p></ion-label
+              >
             </ion-item>
             <ion-item>
               <ion-radio value="completed" slot="start"></ion-radio>
-              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_COMPLETED' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_COMPLETED_DESC' | translate }}</p></ion-label>
+              <ion-label
+                ><h3>{{ 'REPORTS.EXPORT.TYPE_COMPLETED' | translate }}</h3>
+                <p>{{ 'REPORTS.EXPORT.TYPE_COMPLETED_DESC' | translate }}</p></ion-label
+              >
             </ion-item>
             <ion-item>
               <ion-radio value="pending" slot="start"></ion-radio>
-              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_PENDING' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_PENDING_DESC' | translate }}</p></ion-label>
+              <ion-label
+                ><h3>{{ 'REPORTS.EXPORT.TYPE_PENDING' | translate }}</h3>
+                <p>{{ 'REPORTS.EXPORT.TYPE_PENDING_DESC' | translate }}</p></ion-label
+              >
             </ion-item>
             <ion-item>
               <ion-radio value="waste" slot="start"></ion-radio>
-              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_WASTE' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_WASTE_DESC' | translate }}</p></ion-label>
+              <ion-label
+                ><h3>{{ 'REPORTS.EXPORT.TYPE_WASTE' | translate }}</h3>
+                <p>{{ 'REPORTS.EXPORT.TYPE_WASTE_DESC' | translate }}</p></ion-label
+              >
             </ion-item>
             <ion-item>
               <ion-radio value="raw" slot="start"></ion-radio>
-              <ion-label><h3>{{ 'REPORTS.EXPORT.TYPE_RAW' | translate }}</h3><p>{{ 'REPORTS.EXPORT.TYPE_RAW_DESC' | translate }}</p></ion-label>
+              <ion-label
+                ><h3>{{ 'REPORTS.EXPORT.TYPE_RAW' | translate }}</h3>
+                <p>{{ 'REPORTS.EXPORT.TYPE_RAW_DESC' | translate }}</p></ion-label
+              >
             </ion-item>
           </ion-radio-group>
         </ion-card-content>
@@ -93,9 +171,16 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
 
       <!-- File Format - 파일 형식 -->
       <ion-card>
-        <ion-card-header><ion-card-title>{{ 'REPORTS.EXPORT.FORMAT_SELECT' | translate }}</ion-card-title></ion-card-header>
+        <ion-card-header
+          ><ion-card-title>{{
+            'REPORTS.EXPORT.FORMAT_SELECT' | translate
+          }}</ion-card-title></ion-card-header
+        >
         <ion-card-content>
-          <ion-radio-group [value]="fileFormat()" (ionChange)="fileFormat.set($any($event).detail.value)">
+          <ion-radio-group
+            [value]="fileFormat()"
+            (ionChange)="fileFormat.set($any($event).detail.value)"
+          >
             <ion-item>
               <ion-radio value="csv" slot="start"></ion-radio>
               <ion-label>CSV</ion-label>
@@ -113,43 +198,72 @@ type FileFormat = 'csv' | 'xlsx' | 'pdf';
       </ion-card>
 
       <!-- Export Button - 내보내기 버튼 -->
-      <ion-button expand="block" [disabled]="isExporting()" (click)="exportData()">
-        @if (isExporting()) {
-          <ion-spinner name="crescent" slot="start"></ion-spinner>
-          {{ 'REPORTS.EXPORT.PROCESSING' | translate }}
-        } @else {
-          <ion-icon name="download-outline" slot="start"></ion-icon>
-          {{ 'REPORTS.EXPORT.EXPORT_BTN' | translate }}
-        }
-      </ion-button>
+      <div class="export-buttons">
+        <ion-button [disabled]="isExporting()" (click)="exportData()">
+          @if (isExporting()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            {{ 'REPORTS.EXPORT.PROCESSING' | translate }}
+          } @else {
+            <ion-icon name="download-outline" slot="start"></ion-icon>
+            {{ 'REPORTS.EXPORT.EXPORT_BTN' | translate }}
+          }
+        </ion-button>
+      </div>
 
       <!-- Export Status - 내보내기 상태 -->
       @if (exportResult()) {
-        <ion-card [color]="exportResult()!.status === 'completed' ? 'success' : exportResult()!.status === 'error' ? 'danger' : 'warning'">
+        <ion-card
+          [color]="
+            exportResult()!.status === 'completed'
+              ? 'success'
+              : exportResult()!.status === 'error'
+                ? 'danger'
+                : 'warning'
+          "
+        >
           <ion-card-content>
             @switch (exportResult()!.status) {
-              @case ('pending') { <p>⏳ {{ 'REPORTS.EXPORT.STATUS_PENDING' | translate }}</p> }
-              @case ('processing') { <p>🔄 {{ 'REPORTS.EXPORT.STATUS_PROCESSING' | translate }}</p> }
+              @case ('pending') {
+                <p>⏳ {{ 'REPORTS.EXPORT.STATUS_PENDING' | translate }}</p>
+              }
+              @case ('processing') {
+                <p>🔄 {{ 'REPORTS.EXPORT.STATUS_PROCESSING' | translate }}</p>
+              }
               @case ('completed') {
                 <p>✅ {{ 'REPORTS.EXPORT.STATUS_COMPLETED' | translate }}</p>
                 @if (exportResult()!.downloadUrl) {
-                  <ion-button expand="block" fill="outline" (click)="downloadFile()">
-                    <ion-icon name="download-outline" slot="start"></ion-icon>
-                    {{ exportResult()!.fileName || ('REPORTS.EXPORT.DOWNLOAD' | translate) }}
-                  </ion-button>
+                  <div class="download-button">
+                    <ion-button fill="outline" (click)="downloadFile()">
+                      <ion-icon name="download-outline" slot="start"></ion-icon>
+                      {{ exportResult()!.fileName || ('REPORTS.EXPORT.DOWNLOAD' | translate) }}
+                    </ion-button>
+                  </div>
                 }
               }
-              @case ('error') { <p>❌ {{ 'REPORTS.EXPORT.STATUS_ERROR' | translate }}: {{ exportResult()!.error }}</p> }
+              @case ('error') {
+                <p>
+                  ❌ {{ 'REPORTS.EXPORT.STATUS_ERROR' | translate }}: {{ exportResult()!.error }}
+                </p>
+              }
             }
           </ion-card-content>
         </ion-card>
       }
     </ion-content>
   `,
-  styles: [`
-    .date-range { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    ion-card-title { font-size: 16px; }
-  `],
+  styles: [
+    `
+      .date-range {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      ion-card-title {
+        font-size: 16px;
+      }
+    `,
+  ],
 })
 export class ExportPagePage {
   private readonly reportsService = inject(ReportsService);
