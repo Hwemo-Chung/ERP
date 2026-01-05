@@ -1,7 +1,7 @@
 /**
  * FR-18: Bulk Operation Result Component
  * PRD: 일괄 작업 부분 실패 처리 - 항목별 성공/실패 표시
- * 
+ *
  * 기능:
  * - 일괄 작업 결과 요약 표시
  * - 성공/실패 항목 목록
@@ -29,9 +29,9 @@ import {
   IonCardContent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  checkmarkCircleOutline, 
-  closeCircleOutline, 
+import {
+  checkmarkCircleOutline,
+  closeCircleOutline,
   refreshOutline,
   closeOutline,
   alertCircleOutline,
@@ -81,7 +81,10 @@ export interface BulkOperationResult {
       <ng-template>
         <ion-header>
           <ion-toolbar>
-            <ion-title>{{ result()?.operation || ('BULK.DEFAULT_OPERATION' | translate) }} {{ 'BULK.RESULT' | translate }}</ion-title>
+            <ion-title
+              >{{ result()?.operation || ('BULK.DEFAULT_OPERATION' | translate) }}
+              {{ 'BULK.RESULT' | translate }}</ion-title
+            >
             <ion-buttons slot="end">
               <ion-button (click)="onClose()">
                 <ion-icon name="close-outline"></ion-icon>
@@ -107,9 +110,10 @@ export interface BulkOperationResult {
                     <span class="label">{{ 'BULK.FAILED' | translate }}</span>
                   </div>
                 </div>
-                <ion-progress-bar 
-                  [value]="successRate()" 
-                  [color]="r.failedCount > 0 ? 'warning' : 'success'">
+                <ion-progress-bar
+                  [value]="successRate()"
+                  [color]="r.failedCount > 0 ? 'warning' : 'success'"
+                >
                 </ion-progress-bar>
                 <p class="summary-text">
                   {{ 'BULK.SUMMARY' | translate: { total: r.totalCount, success: r.successCount } }}
@@ -148,7 +152,11 @@ export interface BulkOperationResult {
                 <ion-list>
                   @for (item of successItems(); track item.id) {
                     <ion-item>
-                      <ion-icon name="checkmark-circle-outline" color="success" slot="start"></ion-icon>
+                      <ion-icon
+                        name="checkmark-circle-outline"
+                        color="success"
+                        slot="start"
+                      ></ion-icon>
                       <ion-label>{{ item.label }}</ion-label>
                     </ion-item>
                   }
@@ -159,12 +167,12 @@ export interface BulkOperationResult {
             <!-- 액션 버튼 -->
             <div class="action-buttons">
               @if (r.failedCount > 0) {
-                <ion-button expand="block" color="primary" (click)="retryFailed()">
+                <ion-button color="primary" (click)="retryFailed()">
                   <ion-icon name="refresh-outline" slot="start"></ion-icon>
                   {{ 'BULK.RETRY_FAILED' | translate: { count: r.failedCount } }}
                 </ion-button>
               }
-              <ion-button expand="block" fill="outline" (click)="onClose()">
+              <ion-button fill="outline" (click)="onClose()">
                 {{ 'COMMON.CLOSE' | translate }}
               </ion-button>
             </div>
@@ -173,63 +181,88 @@ export interface BulkOperationResult {
       </ng-template>
     </ion-modal>
   `,
-  styles: [`
-    .summary {
-      display: flex;
-      justify-content: center;
-      gap: 48px;
-      padding: 16px 0;
-    }
+  styles: [
+    `
+      .summary {
+        display: flex;
+        justify-content: center;
+        gap: 48px;
+        padding: 16px 0;
+      }
 
-    .stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
 
-    .stat ion-icon {
-      font-size: 32px;
-    }
+      .stat ion-icon {
+        font-size: 32px;
+      }
 
-    .stat.success ion-icon { color: var(--ion-color-success); }
-    .stat.failed ion-icon { color: var(--ion-color-danger); }
+      .stat.success ion-icon {
+        color: var(--ion-color-success);
+      }
+      .stat.failed ion-icon {
+        color: var(--ion-color-danger);
+      }
 
-    .stat .count {
-      font-size: 28px;
-      font-weight: 700;
-    }
+      .stat .count {
+        font-size: 28px;
+        font-weight: 700;
+      }
 
-    .stat .label {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-    }
+      .stat .label {
+        font-size: 14px;
+        color: var(--ion-color-medium);
+      }
 
-    .summary-text {
-      text-align: center;
-      margin-top: 12px;
-      color: var(--ion-color-medium);
-    }
+      .summary-text {
+        text-align: center;
+        margin-top: 12px;
+        color: var(--ion-color-medium);
+      }
 
-    .failed-section, .success-section {
-      margin-top: 16px;
-    }
+      .failed-section,
+      .success-section {
+        margin-top: 16px;
+      }
 
-    .failed-section h3, .success-section h3 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
+      .failed-section h3,
+      .success-section h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
 
-    .action-buttons {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-  `]
+      .action-buttons {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+          align-items: center;
+
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class BulkOperationResultComponent {
   isOpen = input<boolean>(false);
@@ -244,18 +277,14 @@ export class BulkOperationResultComponent {
     return r.successCount / r.totalCount;
   });
 
-  failedItems = computed(() => 
-    this.result()?.items.filter(i => !i.success) || []
-  );
+  failedItems = computed(() => this.result()?.items.filter((i) => !i.success) || []);
 
-  successItems = computed(() => 
-    this.result()?.items.filter(i => i.success) || []
-  );
+  successItems = computed(() => this.result()?.items.filter((i) => i.success) || []);
 
   constructor() {
-    addIcons({ 
-      checkmarkCircleOutline, 
-      closeCircleOutline, 
+    addIcons({
+      checkmarkCircleOutline,
+      closeCircleOutline,
       refreshOutline,
       closeOutline,
       alertCircleOutline,
@@ -263,7 +292,7 @@ export class BulkOperationResultComponent {
   }
 
   retryFailed() {
-    const failedIds = this.failedItems().map(i => i.id);
+    const failedIds = this.failedItems().map((i) => i.id);
     this.retry.emit(failedIds);
   }
 

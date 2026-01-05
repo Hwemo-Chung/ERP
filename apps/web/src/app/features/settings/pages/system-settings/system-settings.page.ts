@@ -1,6 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import {
@@ -33,7 +39,13 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { createOutline, trashOutline, closeOutline, checkmarkOutline, lockClosedOutline } from 'ionicons/icons';
+import {
+  createOutline,
+  trashOutline,
+  closeOutline,
+  checkmarkOutline,
+  lockClosedOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { SystemUser, SystemSettings, UserRole } from './system-settings.models';
 import { AuthService } from '@app/core/services/auth.service';
@@ -84,9 +96,15 @@ import { AuthService } from '@app/core/services/auth.service';
     <ion-content class="ion-padding">
       <!-- Tab Selection -->
       <ion-segment [(ngModel)]="activeTab" (ionChange)="onTabChange()" class="tab-segment">
-        <ion-segment-button value="system">{{ 'SETTINGS.SYSTEM.TAB.SYSTEM' | translate }}</ion-segment-button>
-        <ion-segment-button value="users">{{ 'SETTINGS.SYSTEM.TAB.USERS' | translate }}</ion-segment-button>
-        <ion-segment-button value="roles">{{ 'SETTINGS.SYSTEM.TAB.ROLES' | translate }}</ion-segment-button>
+        <ion-segment-button value="system">{{
+          'SETTINGS.SYSTEM.TAB.SYSTEM' | translate
+        }}</ion-segment-button>
+        <ion-segment-button value="users">{{
+          'SETTINGS.SYSTEM.TAB.USERS' | translate
+        }}</ion-segment-button>
+        <ion-segment-button value="roles">{{
+          'SETTINGS.SYSTEM.TAB.ROLES' | translate
+        }}</ion-segment-button>
       </ion-segment>
 
       <!-- System Settings Tab -->
@@ -98,16 +116,26 @@ import { AuthService } from '@app/core/services/auth.service';
           <ion-card-content>
             <form [formGroup]="systemForm" (ngSubmit)="saveSystemSettings()">
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.NOTIFICATION_FREQUENCY' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.SYSTEM.NOTIFICATION_FREQUENCY' | translate
+                }}</ion-label>
                 <ion-select formControlName="notificationFrequency">
-                  <ion-select-option value="instant">{{ 'SETTINGS.SYSTEM.FREQUENCY.INSTANT' | translate }}</ion-select-option>
-                  <ion-select-option value="batch">{{ 'SETTINGS.SYSTEM.FREQUENCY.BATCH' | translate }}</ion-select-option>
-                  <ion-select-option value="off">{{ 'SETTINGS.SYSTEM.FREQUENCY.OFF' | translate }}</ion-select-option>
+                  <ion-select-option value="instant">{{
+                    'SETTINGS.SYSTEM.FREQUENCY.INSTANT' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="batch">{{
+                    'SETTINGS.SYSTEM.FREQUENCY.BATCH' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="off">{{
+                    'SETTINGS.SYSTEM.FREQUENCY.OFF' | translate
+                  }}</ion-select-option>
                 </ion-select>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('notificationFrequency')?.value === 'batch'">
-                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.BATCH_SCHEDULE_HOUR' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.SYSTEM.BATCH_SCHEDULE_HOUR' | translate
+                }}</ion-label>
                 <ion-input
                   type="number"
                   formControlName="batchScheduleHour"
@@ -123,24 +151,39 @@ import { AuthService } from '@app/core/services/auth.service';
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('autoLockSettlement')?.value">
-                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.AUTO_LOCK_DAY' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.SYSTEM.AUTO_LOCK_DAY' | translate
+                }}</ion-label>
                 <ion-select formControlName="autoLockDay">
-                  <ion-select-option value="0">{{ 'COMMON.WEEKDAY.SUNDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="1">{{ 'COMMON.WEEKDAY.MONDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="2">{{ 'COMMON.WEEKDAY.TUESDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="3">{{ 'COMMON.WEEKDAY.WEDNESDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="4">{{ 'COMMON.WEEKDAY.THURSDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="5">{{ 'COMMON.WEEKDAY.FRIDAY' | translate }}</ion-select-option>
-                  <ion-select-option value="6">{{ 'COMMON.WEEKDAY.SATURDAY' | translate }}</ion-select-option>
+                  <ion-select-option value="0">{{
+                    'COMMON.WEEKDAY.SUNDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="1">{{
+                    'COMMON.WEEKDAY.MONDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="2">{{
+                    'COMMON.WEEKDAY.TUESDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="3">{{
+                    'COMMON.WEEKDAY.WEDNESDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="4">{{
+                    'COMMON.WEEKDAY.THURSDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="5">{{
+                    'COMMON.WEEKDAY.FRIDAY' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="6">{{
+                    'COMMON.WEEKDAY.SATURDAY' | translate
+                  }}</ion-select-option>
                 </ion-select>
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('autoLockSettlement')?.value">
-                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.AUTO_LOCK_TIME' | translate }}</ion-label>
-                <ion-input
-                  type="time"
-                  formControlName="autoLockTime"
-                ></ion-input>
+                <ion-label position="stacked">{{
+                  'SETTINGS.SYSTEM.AUTO_LOCK_TIME' | translate
+                }}</ion-label>
+                <ion-input type="time" formControlName="autoLockTime"></ion-input>
               </ion-item>
 
               <ion-item>
@@ -149,7 +192,9 @@ import { AuthService } from '@app/core/services/auth.service';
               </ion-item>
 
               <ion-item *ngIf="systemForm.get('maintenanceMode')?.value">
-                <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.MAINTENANCE_MESSAGE' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.SYSTEM.MAINTENANCE_MESSAGE' | translate
+                }}</ion-label>
                 <ion-input
                   formControlName="maintenanceMessage"
                   [placeholder]="'SETTINGS.SYSTEM.MAINTENANCE_MESSAGE_PLACEHOLDER' | translate"
@@ -157,10 +202,10 @@ import { AuthService } from '@app/core/services/auth.service';
               </ion-item>
 
               <div class="form-actions">
-                <ion-button expand="block" (click)="resetSystemForm()">
+                <ion-button (click)="resetSystemForm()">
                   {{ 'COMMON.BUTTON.RESET' | translate }}
                 </ion-button>
-                <ion-button expand="block" (click)="saveSystemSettings()" [disabled]="isSaving">
+                <ion-button (click)="saveSystemSettings()" [disabled]="isSaving">
                   <ion-spinner *ngIf="isSaving" slot="start"></ion-spinner>
                   {{ 'COMMON.BUTTON.SAVE' | translate }}
                 </ion-button>
@@ -173,7 +218,7 @@ import { AuthService } from '@app/core/services/auth.service';
       <!-- Users Tab -->
       <div *ngIf="activeTab === 'users'" class="settings-section">
         <div class="section-actions">
-          <ion-button expand="block" (click)="openAddUserModal()">
+          <ion-button (click)="openAddUserModal()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
             {{ 'SETTINGS.SYSTEM.USER.ADD' | translate }}
           </ion-button>
@@ -197,16 +242,22 @@ import { AuthService } from '@app/core/services/auth.service';
               </div>
               <div class="user-details">
                 <p *ngIf="user.branchName">
-                  <strong>{{ 'SETTINGS.SYSTEM.USER.BRANCH' | translate }}:</strong> {{ user.branchName }}
+                  <strong>{{ 'SETTINGS.SYSTEM.USER.BRANCH' | translate }}:</strong>
+                  {{ user.branchName }}
                 </p>
                 <p>
                   <strong>{{ 'SETTINGS.SYSTEM.USER.STATUS' | translate }}:</strong>
                   <ion-badge [color]="user.isActive ? 'success' : 'danger'">
-                    {{ user.isActive ? ('SETTINGS.SYSTEM.USER.ACTIVE' | translate) : ('SETTINGS.SYSTEM.USER.INACTIVE' | translate) }}
+                    {{
+                      user.isActive
+                        ? ('SETTINGS.SYSTEM.USER.ACTIVE' | translate)
+                        : ('SETTINGS.SYSTEM.USER.INACTIVE' | translate)
+                    }}
                   </ion-badge>
                 </p>
                 <p *ngIf="user.lastLogin">
-                  <strong>{{ 'SETTINGS.SYSTEM.USER.LAST_LOGIN' | translate }}:</strong> {{ user.lastLogin | date: 'yyyy.MM.dd HH:mm' }}
+                  <strong>{{ 'SETTINGS.SYSTEM.USER.LAST_LOGIN' | translate }}:</strong>
+                  {{ user.lastLogin | date: 'yyyy.MM.dd HH:mm' }}
                 </p>
               </div>
               <div class="user-actions">
@@ -220,8 +271,15 @@ import { AuthService } from '@app/core/services/auth.service';
                   [color]="user.isActive ? 'warning' : 'success'"
                   (click)="toggleUserStatus(user)"
                 >
-                  <ion-icon slot="start" [name]="user.isActive ? 'lock-outline' : 'checkmark-outline'"></ion-icon>
-                  {{ user.isActive ? ('SETTINGS.SYSTEM.USER.DEACTIVATE' | translate) : ('SETTINGS.SYSTEM.USER.ACTIVATE' | translate) }}
+                  <ion-icon
+                    slot="start"
+                    [name]="user.isActive ? 'lock-outline' : 'checkmark-outline'"
+                  ></ion-icon>
+                  {{
+                    user.isActive
+                      ? ('SETTINGS.SYSTEM.USER.DEACTIVATE' | translate)
+                      : ('SETTINGS.SYSTEM.USER.ACTIVATE' | translate)
+                  }}
                 </ion-button>
               </div>
             </ion-card-content>
@@ -234,15 +292,15 @@ import { AuthService } from '@app/core/services/auth.service';
         </div>
 
         <!-- User Modal -->
-        <ion-modal
-          #userModal
-          [isOpen]="showUserModal"
-          (ionModalDidDismiss)="showUserModal = false"
-        >
+        <ion-modal #userModal [isOpen]="showUserModal" (ionModalDidDismiss)="showUserModal = false">
           <ng-template>
             <ion-header>
               <ion-toolbar>
-                <ion-title>{{ isEditingUser ? ('SETTINGS.SYSTEM.USER.EDIT_TITLE' | translate) : ('SETTINGS.SYSTEM.USER.ADD_TITLE' | translate) }}</ion-title>
+                <ion-title>{{
+                  isEditingUser
+                    ? ('SETTINGS.SYSTEM.USER.EDIT_TITLE' | translate)
+                    : ('SETTINGS.SYSTEM.USER.ADD_TITLE' | translate)
+                }}</ion-title>
                 <ion-buttons slot="end">
                   <ion-button (click)="closeUserModal()">
                     <ion-icon name="close-outline"></ion-icon>
@@ -253,12 +311,19 @@ import { AuthService } from '@app/core/services/auth.service';
             <ion-content class="ion-padding">
               <form [formGroup]="userForm" (ngSubmit)="saveUser()">
                 <ion-item>
-                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.NAME' | translate }} *</ion-label>
-                  <ion-input formControlName="name" [placeholder]="'SETTINGS.SYSTEM.USER.NAME' | translate"></ion-input>
+                  <ion-label position="stacked"
+                    >{{ 'SETTINGS.SYSTEM.USER.NAME' | translate }} *</ion-label
+                  >
+                  <ion-input
+                    formControlName="name"
+                    [placeholder]="'SETTINGS.SYSTEM.USER.NAME' | translate"
+                  ></ion-input>
                 </ion-item>
 
                 <ion-item>
-                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.EMAIL' | translate }} *</ion-label>
+                  <ion-label position="stacked"
+                    >{{ 'SETTINGS.SYSTEM.USER.EMAIL' | translate }} *</ion-label
+                  >
                   <ion-input
                     type="email"
                     formControlName="email"
@@ -268,28 +333,37 @@ import { AuthService } from '@app/core/services/auth.service';
                 </ion-item>
 
                 <ion-item>
-                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.ROLE' | translate }} *</ion-label>
+                  <ion-label position="stacked"
+                    >{{ 'SETTINGS.SYSTEM.USER.ROLE' | translate }} *</ion-label
+                  >
                   <ion-select formControlName="role">
-                    <ion-select-option value="HQ_ADMIN">{{ 'SETTINGS.SYSTEM.ROLE.HQ_ADMIN' | translate }}</ion-select-option>
-                    <ion-select-option value="BRANCH_MANAGER">{{ 'SETTINGS.SYSTEM.ROLE.BRANCH_MANAGER' | translate }}</ion-select-option>
-                    <ion-select-option value="INSTALLER">{{ 'SETTINGS.SYSTEM.ROLE.INSTALLER' | translate }}</ion-select-option>
+                    <ion-select-option value="HQ_ADMIN">{{
+                      'SETTINGS.SYSTEM.ROLE.HQ_ADMIN' | translate
+                    }}</ion-select-option>
+                    <ion-select-option value="BRANCH_MANAGER">{{
+                      'SETTINGS.SYSTEM.ROLE.BRANCH_MANAGER' | translate
+                    }}</ion-select-option>
+                    <ion-select-option value="INSTALLER">{{
+                      'SETTINGS.SYSTEM.ROLE.INSTALLER' | translate
+                    }}</ion-select-option>
                   </ion-select>
                 </ion-item>
 
                 <ion-item *ngIf="userForm.get('role')?.value === 'BRANCH_MANAGER'">
-                  <ion-label position="stacked">{{ 'SETTINGS.SYSTEM.USER.BRANCH' | translate }}</ion-label>
-                  <ion-input formControlName="branchCode" [placeholder]="'SETTINGS.SYSTEM.USER.BRANCH_CODE' | translate"></ion-input>
+                  <ion-label position="stacked">{{
+                    'SETTINGS.SYSTEM.USER.BRANCH' | translate
+                  }}</ion-label>
+                  <ion-input
+                    formControlName="branchCode"
+                    [placeholder]="'SETTINGS.SYSTEM.USER.BRANCH_CODE' | translate"
+                  ></ion-input>
                 </ion-item>
 
                 <div class="modal-actions">
-                  <ion-button expand="block" (click)="closeUserModal()" fill="outline">
+                  <ion-button (click)="closeUserModal()" fill="outline">
                     {{ 'COMMON.BUTTON.CANCEL' | translate }}
                   </ion-button>
-                  <ion-button
-                    expand="block"
-                    (click)="saveUser()"
-                    [disabled]="!userForm.valid || isSaving"
-                  >
+                  <ion-button (click)="saveUser()" [disabled]="!userForm.valid || isSaving">
                     <ion-spinner *ngIf="isSaving" slot="start"></ion-spinner>
                     {{ 'COMMON.BUTTON.SAVE' | translate }}
                   </ion-button>
@@ -335,165 +409,207 @@ import { AuthService } from '@app/core/services/auth.service';
       ></ion-alert>
     </ion-content>
   `,
-  styles: [`
-    .tab-segment {
-      margin-bottom: 16px;
-    }
-
-    .settings-section {
-      animation: slideIn 0.3s ease-in-out;
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
+  styles: [
+    `
+      .tab-segment {
+        margin-bottom: 16px;
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
+
+      .settings-section {
+        animation: slideIn 0.3s ease-in-out;
       }
-    }
 
-    .section-actions {
-      margin-bottom: 16px;
-    }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-    .form-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 24px;
-    }
+      .section-actions {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
 
-    .form-actions ion-button {
-      flex: 1;
-    }
+        ion-button {
+          min-width: 140px;
+          max-width: 200px;
+        }
 
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
+        @media (max-width: 767px) {
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
 
-    .users-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+      .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
 
-    .user-card {
-      margin-bottom: 0;
-    }
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 100px;
+          max-width: 160px;
+        }
 
-    .user-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
+        @media (max-width: 767px) {
+          flex-direction: column;
+          align-items: center;
 
-    .user-info h3 {
-      margin: 0;
-      font-size: 16px;
-      color: #0f172a;
-    }
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
 
-    .user-email {
-      margin: 4px 0 0;
-      font-size: 13px;
-      color: #64748b;
-    }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
 
-    ion-badge {
-      font-size: 11px;
-      padding: 4px 8px;
-    }
+      .users-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-    .user-details {
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: #475569;
-    }
+      .user-card {
+        margin-bottom: 0;
+      }
 
-    .user-details p {
-      margin: 6px 0;
-    }
+      .user-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
 
-    .user-details strong {
-      color: #0f172a;
-      font-weight: 600;
-    }
+      .user-info h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #0f172a;
+      }
 
-    .user-actions {
-      display: flex;
-      gap: 8px;
-    }
+      .user-email {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #64748b;
+      }
 
-    .user-actions ion-button {
-      flex: 1;
-    }
+      ion-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 64px 24px;
-      text-align: center;
-      color: #94a3b8;
-    }
+      .user-details {
+        margin-bottom: 12px;
+        font-size: 13px;
+        color: #475569;
+      }
 
-    .empty-state ion-icon {
-      font-size: 48px;
-      color: #cbd5e1;
-      margin-bottom: 16px;
-    }
+      .user-details p {
+        margin: 6px 0;
+      }
 
-    .empty-state h3 {
-      margin: 0;
-      color: #475569;
-      font-size: 18px;
-    }
+      .user-details strong {
+        color: #0f172a;
+        font-weight: 600;
+      }
 
-    .roles-info {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      .user-actions {
+        display: flex;
+        gap: 8px;
+      }
 
-    .role-item {
-      padding: 12px;
-      background: #f8fafc;
-      border-left: 4px solid #3b82f6;
-      border-radius: 6px;
-    }
+      .user-actions ion-button {
+        flex: 1;
+      }
 
-    .role-item h4 {
-      margin: 0 0 6px;
-      font-size: 14px;
-      color: #0f172a;
-    }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 64px 24px;
+        text-align: center;
+        color: #94a3b8;
+      }
 
-    .role-item p {
-      margin: 0;
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.4;
-    }
+      .empty-state ion-icon {
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+      }
 
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 24px;
-    }
+      .empty-state h3 {
+        margin: 0;
+        color: #475569;
+        font-size: 18px;
+      }
 
-    .modal-actions ion-button {
-      flex: 1;
-    }
-  `],
+      .roles-info {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .role-item {
+        padding: 12px;
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        border-radius: 6px;
+      }
+
+      .role-item h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        color: #0f172a;
+      }
+
+      .role-item p {
+        margin: 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.4;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 100px;
+          max-width: 160px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+          align-items: center;
+
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class SystemSettingsPage implements OnInit {
   private readonly translate = inject(TranslateService);
-  
+
   systemForm!: FormGroup;
   userForm!: FormGroup;
 
@@ -511,7 +627,7 @@ export class SystemSettingsPage implements OnInit {
     private http: HttpClient,
     private fb: FormBuilder,
     private authService: AuthService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
   ) {
     addIcons({ createOutline, trashOutline, closeOutline, checkmarkOutline, lockClosedOutline });
     this.initForms();
@@ -551,9 +667,7 @@ export class SystemSettingsPage implements OnInit {
 
   async loadSystemSettings() {
     try {
-      const settings = await firstValueFrom(
-        this.http.get<SystemSettings>(`${this.apiUrl}/system`)
-      );
+      const settings = await firstValueFrom(this.http.get<SystemSettings>(`${this.apiUrl}/system`));
       this.systemForm.patchValue(settings);
     } catch (error) {
       console.error('Failed to load system settings');
@@ -563,12 +677,11 @@ export class SystemSettingsPage implements OnInit {
   async loadUsers() {
     this.isLoading = true;
     try {
-      const response = await firstValueFrom(
-        this.http.get<SystemUser[]>(`${this.apiUrl}/users`)
-      );
+      const response = await firstValueFrom(this.http.get<SystemUser[]>(`${this.apiUrl}/users`));
       this.users = response;
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || this.translate.instant('SETTINGS.SYSTEM.ERROR.LOAD_USERS_FAILED');
+      this.errorMessage =
+        error?.error?.message || this.translate.instant('SETTINGS.SYSTEM.ERROR.LOAD_USERS_FAILED');
     } finally {
       this.isLoading = false;
     }
@@ -581,11 +694,9 @@ export class SystemSettingsPage implements OnInit {
     // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
     const translateService = this.translate;
     const toastController = this.toastCtrl;
-    
+
     try {
-      await firstValueFrom(
-        this.http.put(`${this.apiUrl}/system`, this.systemForm.value)
-      );
+      await firstValueFrom(this.http.put(`${this.apiUrl}/system`, this.systemForm.value));
 
       const toast = await toastController.create({
         message: translateService.instant('SETTINGS.SYSTEM.SUCCESS.SAVED'),
@@ -594,7 +705,8 @@ export class SystemSettingsPage implements OnInit {
       });
       await toast.present();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
+      this.errorMessage =
+        error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -627,16 +739,16 @@ export class SystemSettingsPage implements OnInit {
     // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
     const translateService = this.translate;
     const toastController = this.toastCtrl;
-    
+
     try {
       const data = this.userForm.value;
       await firstValueFrom(
         this.isEditingUser
           ? this.http.put(`${this.apiUrl}/users/${data.email}`, data)
-          : this.http.post(`${this.apiUrl}/users`, data)
+          : this.http.post(`${this.apiUrl}/users`, data),
       );
 
-      const message = this.isEditingUser 
+      const message = this.isEditingUser
         ? translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_UPDATED')
         : translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_CREATED');
       const toast = await toastController.create({
@@ -649,7 +761,8 @@ export class SystemSettingsPage implements OnInit {
       this.closeUserModal();
       this.loadUsers();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
+      this.errorMessage =
+        error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -659,15 +772,15 @@ export class SystemSettingsPage implements OnInit {
     // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
     const translateService = this.translate;
     const toastController = this.toastCtrl;
-    
+
     try {
       await firstValueFrom(
         this.http.patch(`${this.apiUrl}/users/${user.id}/status`, {
           isActive: !user.isActive,
-        })
+        }),
       );
 
-      const message = user.isActive 
+      const message = user.isActive
         ? translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_DEACTIVATED')
         : translateService.instant('SETTINGS.SYSTEM.SUCCESS.USER_ACTIVATED');
       const toast = await toastController.create({
@@ -679,7 +792,9 @@ export class SystemSettingsPage implements OnInit {
 
       this.loadUsers();
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.STATUS_CHANGE_FAILED');
+      this.errorMessage =
+        error?.error?.message ||
+        translateService.instant('SETTINGS.SYSTEM.ERROR.STATUS_CHANGE_FAILED');
     }
   }
 

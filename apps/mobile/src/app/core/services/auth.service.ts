@@ -174,29 +174,29 @@ export class AuthService {
     this._state.update((s) => ({ ...s, isLoading: true, error: null }));
 
     try {
-      const response = await firstValueFrom(
+      const data = await firstValueFrom(
         this.http.post<{ accessToken: string; refreshToken: string; user: User }>(
           `${environment.apiUrl}/auth/login`,
-          credentials
-        )
+          credentials,
+        ),
       );
 
       const tokens: AuthTokens = {
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
       };
 
       // Save to storage
       await Promise.all([
         Preferences.set({ key: this.STORAGE_KEYS.ACCESS_TOKEN, value: tokens.accessToken }),
         Preferences.set({ key: this.STORAGE_KEYS.REFRESH_TOKEN, value: tokens.refreshToken }),
-        Preferences.set({ key: this.STORAGE_KEYS.USER, value: JSON.stringify(response.user) }),
+        Preferences.set({ key: this.STORAGE_KEYS.USER, value: JSON.stringify(data.user) }),
       ]);
 
       this._state.update((s) => ({
         ...s,
         tokens,
-        user: response.user,
+        user: data.user,
         isLoading: false,
       }));
 
@@ -215,15 +215,13 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
-    // Prevent concurrent logout calls
     if (this._isLoggingOut) {
       return;
     }
     this._isLoggingOut = true;
 
     try {
-      // Clear local state FIRST to prevent 401 loops
-      const hadTokens = !!this._state().tokens;
+      const currentToken = this._state().tokens?.accessToken;
 
       this._state.set({
         user: null,
@@ -238,11 +236,14 @@ export class AuthService {
         Preferences.remove({ key: this.STORAGE_KEYS.USER }),
       ]);
 
-      // Only call logout API if we had valid tokens
-      if (hadTokens) {
+      if (currentToken) {
         try {
           await firstValueFrom(
-            this.http.post(`${environment.apiUrl}/auth/logout`, {})
+            this.http.post(
+              `${environment.apiUrl}/auth/logout`,
+              {},
+              { headers: { Authorization: `Bearer ${currentToken}` } },
+            ),
           );
         } catch {
           // Ignore logout API errors
@@ -284,16 +285,16 @@ export class AuthService {
 
   private async _doRefresh(refreshToken: string): Promise<boolean> {
     try {
-      const response = await firstValueFrom(
+      const data = await firstValueFrom(
         this.http.post<{ accessToken: string; refreshToken: string }>(
           `${environment.apiUrl}/auth/refresh`,
-          { refreshToken }
-        )
+          { refreshToken },
+        ),
       );
 
       const tokens: AuthTokens = {
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
       };
 
       await Promise.all([

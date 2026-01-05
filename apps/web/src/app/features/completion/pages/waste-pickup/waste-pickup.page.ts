@@ -2,7 +2,14 @@
  * 폐가전 회수 페이지 컴포넌트
  * PRD 명시된 폐가전 코드(P01~P21) 기반 회수 정보 입력
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,12 +38,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  trashOutline,
-  addOutline,
-  removeOutline,
-  saveOutline,
-} from 'ionicons/icons';
+import { trashOutline, addOutline, removeOutline, saveOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, WasteEntry } from '../../../../store/orders/orders.models';
@@ -108,7 +110,9 @@ const WASTE_CODES: { code: string; labelKey: string }[] = [
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>{{ 'COMPLETION.WASTE.TITLE' | translate }}</ion-title>
       </ion-toolbar>
@@ -169,7 +173,11 @@ const WASTE_CODES: { code: string; labelKey: string }[] = [
         <!-- Selected Items -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ 'COMPLETION.WASTE.ITEMS_TITLE' | translate }} ({{ 'COMPLETION.WASTE.ITEMS_COUNT' | translate:{ count: totalItems() } }})</ion-card-title>
+            <ion-card-title
+              >{{ 'COMPLETION.WASTE.ITEMS_TITLE' | translate }} ({{
+                'COMPLETION.WASTE.ITEMS_COUNT' | translate: { count: totalItems() }
+              }})</ion-card-title
+            >
           </ion-card-header>
           <ion-card-content>
             @if (items().length > 0) {
@@ -201,7 +209,7 @@ const WASTE_CODES: { code: string; labelKey: string }[] = [
 
         <!-- Save Button -->
         <div class="action-buttons">
-          <ion-button expand="block" (click)="saveWastePickup()">
+          <ion-button (click)="saveWastePickup()">
             <ion-icon name="save-outline" slot="start"></ion-icon>
             {{ 'COMPLETION.WASTE.SAVE_BTN' | translate }}
           </ion-button>
@@ -209,58 +217,77 @@ const WASTE_CODES: { code: string; labelKey: string }[] = [
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-    }
-
-    .instruction {
-      color: var(--ion-color-medium);
-      font-size: 14px;
-    }
-
-    .add-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-
-      ion-input {
-        flex: 1;
-        max-width: 100px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
-    }
 
-    .quantity-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+      }
 
-      .quantity {
-        min-width: 24px;
+      .instruction {
+        color: var(--ion-color-medium);
+        font-size: 14px;
+      }
+
+      .add-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+
+        ion-input {
+          flex: 1;
+          max-width: 100px;
+        }
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .quantity {
+          min-width: 24px;
+          text-align: center;
+          font-weight: 600;
+        }
+      }
+
+      .empty-state {
         text-align: center;
-        font-weight: 600;
+        padding: 24px;
+        color: var(--ion-color-medium);
       }
-    }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
 
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class WastePickupPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -300,13 +327,16 @@ export class WastePickupPage implements OnInit {
   loadExistingWaste(): void {
     const order = this.order();
     if (order?.completion?.waste?.length) {
-      this.items.set(order.completion.waste.map((w: WasteEntry) => ({
-        id: crypto.randomUUID(),
-        code: w.code,
-        labelKey: WASTE_CODES.find(wc => wc.code === w.code)?.labelKey || `WASTE_CODES.${w.code}`,
-        quantity: w.quantity,
-        selected: true,
-      })));
+      this.items.set(
+        order.completion.waste.map((w: WasteEntry) => ({
+          id: crypto.randomUUID(),
+          code: w.code,
+          labelKey:
+            WASTE_CODES.find((wc) => wc.code === w.code)?.labelKey || `WASTE_CODES.${w.code}`,
+          quantity: w.quantity,
+          selected: true,
+        })),
+      );
     }
   }
 
@@ -317,16 +347,14 @@ export class WastePickupPage implements OnInit {
   addItem(): void {
     if (!this.selectedCode) return;
 
-    const waste = WASTE_CODES.find(w => w.code === this.selectedCode);
+    const waste = WASTE_CODES.find((w) => w.code === this.selectedCode);
     if (!waste) return;
 
-    this.items.update(items => {
-      const existing = items.find(i => i.code === this.selectedCode);
+    this.items.update((items) => {
+      const existing = items.find((i) => i.code === this.selectedCode);
       if (existing) {
-        return items.map(i =>
-          i.code === this.selectedCode
-            ? { ...i, quantity: i.quantity + this.selectedQuantity }
-            : i
+        return items.map((i) =>
+          i.code === this.selectedCode ? { ...i, quantity: i.quantity + this.selectedQuantity } : i,
         );
       }
       return [
@@ -346,21 +374,17 @@ export class WastePickupPage implements OnInit {
   }
 
   increaseQuantity(item: WasteItem): void {
-    this.items.update(items =>
-      items.map(i =>
-        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-      )
+    this.items.update((items) =>
+      items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)),
     );
   }
 
   decreaseQuantity(item: WasteItem): void {
-    this.items.update(items => {
+    this.items.update((items) => {
       if (item.quantity <= 1) {
-        return items.filter(i => i.id !== item.id);
+        return items.filter((i) => i.id !== item.id);
       }
-      return items.map(i =>
-        i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i
-      );
+      return items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i));
     });
   }
 
@@ -369,12 +393,12 @@ export class WastePickupPage implements OnInit {
    */
   async saveWastePickup(): Promise<void> {
     try {
-      const wasteData = this.items().map(i => ({
+      const wasteData = this.items().map((i) => ({
         code: i.code,
         quantity: i.quantity,
       }));
       await this.ordersStore.updateOrderWaste(this.orderId(), wasteData);
-      
+
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('COMPLETION.WASTE.SAVE_SUCCESS'),
         duration: 2000,

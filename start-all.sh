@@ -34,7 +34,7 @@ cleanup() {
     echo -e "\n${YELLOW}시스템 종료 중...${NC}"
     
     # 포트 기반으로 프로세스 종료
-    for port in 3000 4200 4201; do
+    for port in 3000 4300 4201; do
         pid=$(lsof -ti :$port 2>/dev/null)
         if [ -n "$pid" ]; then
             kill $pid 2>/dev/null || true
@@ -183,10 +183,10 @@ wait_for_service "http://localhost:3000/api/v1/health" "Backend API" 60
 # 6. 웹/모바일 앱 시작
 echo -e "\n${BLUE}[6/6] 웹/모바일 앱 시작${NC}"
 
-# 웹 앱 시작 (포트 4200)
-if check_port 4200; then
-    echo -e "${YELLOW}포트 4200이 이미 사용 중입니다. 기존 프로세스 종료...${NC}"
-    lsof -ti :4200 | xargs kill -9 2>/dev/null || true
+# 웹 앱 시작 (포트 4300)
+if check_port 4300; then
+    echo -e "${YELLOW}포트 4300이 이미 사용 중입니다. 기존 프로세스 종료...${NC}"
+    lsof -ti :4300 | xargs kill -9 2>/dev/null || true
     sleep 2
 fi
 
@@ -196,7 +196,7 @@ WEB_PID=$!
 echo $WEB_PID >> "$PID_FILE"
 cd "$PROJECT_ROOT"
 
-wait_for_service "http://localhost:4200" "Web App" 60
+wait_for_service "http://localhost:4300" "Web App" 60
 
 # 모바일 앱 시작 (포트 4201)
 if check_port 4201; then
@@ -220,7 +220,7 @@ echo -e "${GREEN}  ✓ 모든 서비스 시작 완료!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
 echo -e "${BLUE}서비스 URL:${NC}"
-echo -e "  • 웹 앱:       ${GREEN}http://localhost:4200${NC}"
+echo -e "  • 웹 앱:       ${GREEN}http://localhost:4300${NC}"
 echo -e "  • 모바일 앱:   ${GREEN}http://localhost:4201${NC}"
 echo -e "  • API 서버:    ${GREEN}http://localhost:3000${NC}"
 echo -e "  • API 문서:    ${GREEN}http://localhost:3000/docs${NC}"

@@ -2,7 +2,14 @@
  * 시리얼 번호 입력 페이지 컴포넌트
  * 제품별 시리얼 번호(10-20자리 영숫자) 입력 및 바코드 스캔 기능
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,12 +35,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  barcodeOutline,
-  scanOutline,
-  checkmarkCircleOutline,
-  saveOutline,
-} from 'ionicons/icons';
+import { barcodeOutline, scanOutline, checkmarkCircleOutline, saveOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
@@ -79,7 +81,9 @@ interface ProductSerial {
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>{{ 'COMPLETION.SERIAL.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
@@ -135,7 +139,9 @@ interface ProductSerial {
                 @if (product.isValid) {
                   <ion-badge color="success">{{ 'COMPLETION.SERIAL.VALID' | translate }}</ion-badge>
                 } @else if (product.serialNumber) {
-                  <ion-badge color="danger">{{ 'COMPLETION.SERIAL.FORMAT_ERROR' | translate }}</ion-badge>
+                  <ion-badge color="danger">{{
+                    'COMPLETION.SERIAL.FORMAT_ERROR' | translate
+                  }}</ion-badge>
                 }
               </ion-card-content>
             </ion-card>
@@ -148,11 +154,7 @@ interface ProductSerial {
 
         <!-- Save Button -->
         <div class="action-buttons">
-          <ion-button 
-            expand="block" 
-            [disabled]="!allValid()"
-            (click)="saveSerials()"
-          >
+          <ion-button [disabled]="!allValid()" (click)="saveSerials()">
             <ion-icon name="save-outline" slot="start"></ion-icon>
             {{ 'COMPLETION.SERIAL.SAVE_BTN' | translate }}
           </ion-button>
@@ -160,62 +162,81 @@ interface ProductSerial {
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-    }
-
-    .instruction {
-      color: var(--ion-color-medium);
-      font-size: 14px;
-    }
-
-    .product-info {
-      margin-bottom: 12px;
-
-      h3 {
-        margin: 0;
-        font-weight: 600;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      p {
-        margin: 4px 0 0;
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+      }
+
+      .instruction {
         color: var(--ion-color-medium);
-        font-size: 13px;
+        font-size: 14px;
       }
-    }
 
-    ion-item {
-      --padding-start: 0;
-    }
+      .product-info {
+        margin-bottom: 12px;
 
-    ion-input.valid {
-      --color: var(--ion-color-success);
-    }
+        h3 {
+          margin: 0;
+          font-weight: 600;
+        }
 
-    ion-input.invalid {
-      --color: var(--ion-color-danger);
-    }
+        p {
+          margin: 4px 0 0;
+          color: var(--ion-color-medium);
+          font-size: 13px;
+        }
+      }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
+      ion-item {
+        --padding-start: 0;
+      }
 
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+      ion-input.valid {
+        --color: var(--ion-color-success);
+      }
+
+      ion-input.invalid {
+        --color: var(--ion-color-danger);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class SerialInputPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -254,22 +275,24 @@ export class SerialInputPage implements OnInit {
     const order = this.order();
     const lines = order?.lines || order?.orderLines;
     if (lines) {
-      this.products.set(lines.map((line: OrderLine) => ({
-        lineId: line.id,
-        productCode: line.itemCode || line.productCode || '',
-        productName: line.itemName || line.productName || '',
-        quantity: line.quantity,
-        serialNumber: line.serialNumber || '',
-        isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,
-      })));
+      this.products.set(
+        lines.map((line: OrderLine) => ({
+          lineId: line.id,
+          productCode: line.itemCode || line.productCode || '',
+          productName: line.itemName || line.productName || '',
+          quantity: line.quantity,
+          serialNumber: line.serialNumber || '',
+          isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,
+        })),
+      );
     }
   }
 
   async openScanner(): Promise<void> {
     // Scan for first product without serial
     const products = this.products();
-    const emptyIndex = products.findIndex(p => !p.serialNumber);
-    
+    const emptyIndex = products.findIndex((p) => !p.serialNumber);
+
     if (emptyIndex >= 0) {
       await this.scanSerial(emptyIndex);
     } else if (products.length > 0) {
@@ -285,9 +308,9 @@ export class SerialInputPage implements OnInit {
   async scanSerial(index: number): Promise<void> {
     try {
       const result = await this.scannerService.scan();
-      
+
       if (result.hasContent) {
-        this.products.update(products => {
+        this.products.update((products) => {
           const updated = [...products];
           updated[index].serialNumber = result.content;
           updated[index].isValid = /^[A-Za-z0-9]{10,20}$/.test(result.content);
@@ -295,7 +318,9 @@ export class SerialInputPage implements OnInit {
         });
 
         const toast = await this.toastCtrl.create({
-          message: this.translateService.instant('COMPLETION.SERIAL.SCAN_SUCCESS', { content: result.content }),
+          message: this.translateService.instant('COMPLETION.SERIAL.SCAN_SUCCESS', {
+            content: result.content,
+          }),
           duration: 1500,
           color: 'success',
         });
@@ -316,7 +341,7 @@ export class SerialInputPage implements OnInit {
    * @param index 대상 제품 인덱스
    */
   onSerialInput(index: number): void {
-    this.products.update(products => {
+    this.products.update((products) => {
       const updated = [...products];
       const serial = updated[index].serialNumber;
       // Validate: alphanumeric, 10-20 chars
@@ -330,7 +355,7 @@ export class SerialInputPage implements OnInit {
    */
   allValid(): boolean {
     const prods = this.products();
-    return prods.length > 0 && prods.every(p => p.isValid);
+    return prods.length > 0 && prods.every((p) => p.isValid);
   }
 
   /**
@@ -338,12 +363,12 @@ export class SerialInputPage implements OnInit {
    */
   async saveSerials(): Promise<void> {
     try {
-      const serialUpdates = this.products().map(p => ({
+      const serialUpdates = this.products().map((p) => ({
         lineId: p.lineId,
         serialNumber: p.serialNumber,
       }));
       await this.ordersStore.updateOrderSerials(this.orderId(), serialUpdates);
-      
+
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('COMPLETION.SERIAL.SAVE_SUCCESS'),
         duration: 2000,

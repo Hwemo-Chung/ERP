@@ -2,7 +2,14 @@
  * FR-22: Biometric Settings Page
  * PRD: Device-level biometric authentication preferences
  */
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -91,8 +98,8 @@ import { AuthService } from '../../../../core/services/auth.service';
           <ion-card-content>
             <p>{{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE' | translate }}</p>
             <ion-note>
-              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.WEB_BROWSER' | translate }}<br>
-              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.NATIVE_ONLY' | translate }}<br>
+              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.WEB_BROWSER' | translate }}<br />
+              • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.NATIVE_ONLY' | translate }}<br />
               • {{ 'SETTINGS.BIOMETRIC.NOT_AVAILABLE_NOTES.MUST_REGISTER' | translate }}
             </ion-note>
           </ion-card-content>
@@ -108,13 +115,18 @@ import { AuthService } from '../../../../core/services/auth.service';
           </ion-card-header>
           <ion-card-content>
             <p>{{ 'SETTINGS.BIOMETRIC.QUICK_SECURE' | translate }}</p>
-            
+
             <ion-list lines="none">
               <ion-item>
                 <ion-icon slot="start" name="shield-checkmark-outline" color="primary"></ion-icon>
                 <ion-label>
                   <h3>{{ 'SETTINGS.BIOMETRIC.ENABLE_LABEL' | translate }}</h3>
-                  <p>{{ 'SETTINGS.BIOMETRIC.ENABLE_NEXT_LOGIN' | translate:{ type: biometryTypeName() } }}</p>
+                  <p>
+                    {{
+                      'SETTINGS.BIOMETRIC.ENABLE_NEXT_LOGIN'
+                        | translate: { type: biometryTypeName() }
+                    }}
+                  </p>
                 </ion-label>
                 <ion-toggle
                   [checked]="isEnabled()"
@@ -126,7 +138,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 
             @if (isEnabled() && lastUsedAt()) {
               <ion-note class="last-used">
-                {{ 'SETTINGS.BIOMETRIC.LAST_USED' | translate }}: {{ formatLastUsed(lastUsedAt()!) }}
+                {{ 'SETTINGS.BIOMETRIC.LAST_USED' | translate }}:
+                {{ formatLastUsed(lastUsedAt()!) }}
               </ion-note>
             }
           </ion-card-content>
@@ -135,7 +148,9 @@ import { AuthService } from '../../../../core/services/auth.service';
         <!-- Security Info - 보안 정보 -->
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ 'SETTINGS.BIOMETRIC.SECURITY_INFO.TITLE' | translate }}</ion-card-title>
+            <ion-card-title>{{
+              'SETTINGS.BIOMETRIC.SECURITY_INFO.TITLE' | translate
+            }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
@@ -165,55 +180,79 @@ import { AuthService } from '../../../../core/services/auth.service';
         </ion-card>
 
         @if (isEnabled()) {
-          <ion-button
-            expand="block"
-            fill="outline"
-            color="danger"
-            (click)="testBiometric()"
-            [disabled]="isProcessing()"
-          >
-            <ion-icon slot="start" name="finger-print-outline"></ion-icon>
-            {{ 'SETTINGS.BIOMETRIC.TEST_BUTTON' | translate }}
-          </ion-button>
+          <div class="action-buttons">
+            <ion-button
+              fill="outline"
+              color="danger"
+              (click)="testBiometric()"
+              [disabled]="isProcessing()"
+            >
+              <ion-icon slot="start" name="finger-print-outline"></ion-icon>
+              {{ 'SETTINGS.BIOMETRIC.TEST_BUTTON' | translate }}
+            </ion-button>
+          </div>
         }
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 200px;
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      ion-icon {
-        font-size: 24px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
       }
-    }
 
-    ion-note.last-used {
-      display: block;
-      margin-top: 12px;
-      padding: 8px;
-      background: var(--ion-color-light);
-      border-radius: 4px;
-    }
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
 
-    ion-item {
-      --padding-start: 0;
-      margin-bottom: 8px;
-    }
+        ion-icon {
+          font-size: 24px;
+        }
+      }
 
-    ion-button {
-      margin-top: 16px;
-    }
-  `],
+      ion-note.last-used {
+        display: block;
+        margin-top: 12px;
+        padding: 8px;
+        background: var(--ion-color-light);
+        border-radius: 4px;
+      }
+
+      ion-item {
+        --padding-start: 0;
+        margin-bottom: 8px;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 16px;
+
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+          margin-top: 0;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+          align-items: center;
+
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
+    `,
+  ],
 })
 export class BiometricSettingsPage implements OnInit, OnDestroy {
   private readonly biometricService = inject(BiometricService);
@@ -269,12 +308,10 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
    * Subscribe to biometric config changes
    */
   private subscribeToBiometricConfig(): void {
-    this.biometricService.config$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((config) => {
-        this.isEnabled.set(config.enabled);
-        this.lastUsedAt.set(config.lastUsedAt);
-      });
+    this.biometricService.config$.pipe(takeUntil(this.destroy$)).subscribe((config) => {
+      this.isEnabled.set(config.enabled);
+      this.lastUsedAt.set(config.lastUsedAt);
+    });
   }
 
   /**
@@ -305,7 +342,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
       }
 
       await this.biometricService.enableBiometric(user.id, refreshToken);
-      
+
       // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
       const translateService = this.translate;
 
@@ -320,7 +357,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
 
       // Revert toggle
       this.isEnabled.set(false);
-      
+
       const translateService = this.translate;
 
       const toast = await this.toastCtrl.create({
@@ -341,7 +378,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   private async disableBiometric(): Promise<void> {
     // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
     const translateService = this.translate;
-    
+
     const alert = await this.alertCtrl.create({
       header: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.TITLE'),
       message: translateService.instant('SETTINGS.BIOMETRIC.CONFIRM_DISABLE.MESSAGE'),
@@ -440,10 +477,13 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return this.translate.instant('COMMON.TIME_AGO.JUST_NOW');
-    if (diffMins < 60) return this.translate.instant('COMMON.TIME_AGO.MINUTES_AGO', { count: diffMins });
-    if (diffHours < 24) return this.translate.instant('COMMON.TIME_AGO.HOURS_AGO', { count: diffHours });
-    if (diffDays < 7) return this.translate.instant('COMMON.TIME_AGO.DAYS_AGO', { count: diffDays });
-    
+    if (diffMins < 60)
+      return this.translate.instant('COMMON.TIME_AGO.MINUTES_AGO', { count: diffMins });
+    if (diffHours < 24)
+      return this.translate.instant('COMMON.TIME_AGO.HOURS_AGO', { count: diffHours });
+    if (diffDays < 7)
+      return this.translate.instant('COMMON.TIME_AGO.DAYS_AGO', { count: diffDays });
+
     // 7일 이상이면 locale에 맞게 날짜 표시
     const lang = this.translate.currentLang || 'ko';
     return date.toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US');

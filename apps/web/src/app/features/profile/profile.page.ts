@@ -94,7 +94,9 @@ import { environment } from '@env/environment';
               <ion-icon slot="start" name="refresh-outline"></ion-icon>
               <ion-label>
                 <h3>{{ 'PROFILE.SYNC_STATUS.PENDING' | translate }}</h3>
-                <p>{{ syncQueue.pendingCount() }}{{ 'PROFILE.SYNC_STATUS.OPERATIONS' | translate }}</p>
+                <p>
+                  {{ syncQueue.pendingCount() }}{{ 'PROFILE.SYNC_STATUS.OPERATIONS' | translate }}
+                </p>
               </ion-label>
               @if (syncQueue.pendingCount() > 0) {
                 <ion-button
@@ -152,68 +154,67 @@ import { environment } from '@env/environment';
       </ion-card>
 
       <!-- Logout Button - 로그아웃 버튼 -->
-      <ion-button
-        expand="block"
-        color="danger"
-        fill="outline"
-        (click)="confirmLogout()"
-      >
-        <ion-icon slot="start" name="log-out-outline"></ion-icon>
-        {{ 'PROFILE.LOGOUT.BUTTON' | translate }}
-      </ion-button>
+      <div class="logout-section">
+        <ion-button color="danger" fill="outline" (click)="confirmLogout()">
+          <ion-icon slot="start" name="log-out-outline"></ion-icon>
+          {{ 'PROFILE.LOGOUT.BUTTON' | translate }}
+        </ion-button>
+      </div>
     </ion-content>
   `,
-  styles: [`
-    .user-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+  styles: [
+    `
+      .user-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
 
-      ion-avatar {
-        width: 64px;
-        height: 64px;
+        ion-avatar {
+          width: 64px;
+          height: 64px;
 
-        ion-icon {
-          width: 100%;
-          height: 100%;
-          color: var(--ion-color-primary);
+          ion-icon {
+            width: 100%;
+            height: 100%;
+            color: var(--ion-color-primary);
+          }
+        }
+
+        .user-info {
+          h2 {
+            margin: 0 0 4px 0;
+            font-size: 18px;
+            font-weight: 600;
+          }
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--ion-color-medium);
+          }
+
+          .roles {
+            margin-top: 8px;
+          }
+
+          .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 4px;
+            background: var(--ion-color-primary-tint);
+            color: var(--ion-color-primary);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+          }
         }
       }
 
-      .user-info {
-        h2 {
-          margin: 0 0 4px 0;
-          font-size: 18px;
-          font-weight: 600;
-        }
-
-        p {
-          margin: 0;
-          font-size: 14px;
-          color: var(--ion-color-medium);
-        }
-
-        .roles {
-          margin-top: 8px;
-        }
-
-        .role-badge {
-          display: inline-block;
-          padding: 2px 8px;
-          margin-right: 4px;
-          background: var(--ion-color-primary-tint);
-          color: var(--ion-color-primary);
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 500;
-        }
+      ion-button[expand='block'] {
+        margin-top: 24px;
       }
-    }
-
-    ion-button[expand="block"] {
-      margin-top: 24px;
-    }
-  `],
+    `,
+  ],
 })
 export class ProfilePage {
   protected readonly authService = inject(AuthService);
@@ -249,7 +250,7 @@ export class ProfilePage {
   protected async confirmLogout(): Promise<void> {
     // async 핸들러 내에서 this 참조 문제 방지를 위해 캡처
     const translateService = this.translate;
-    
+
     const alert = await this.alertCtrl.create({
       header: translateService.instant('PROFILE.LOGOUT.CONFIRM_TITLE'),
       message: translateService.instant('PROFILE.LOGOUT.CONFIRM_MESSAGE'),

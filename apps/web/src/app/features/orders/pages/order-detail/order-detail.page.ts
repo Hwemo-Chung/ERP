@@ -46,7 +46,10 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersService, Order } from '../../services/orders.service';
-import { FileAttachmentComponent, FileAttachment } from '../../../../shared/components/file-attachment/file-attachment.component';
+import {
+  FileAttachmentComponent,
+  FileAttachment,
+} from '../../../../shared/components/file-attachment/file-attachment.component';
 import { FileAttachmentService } from './file-attachment.service';
 
 // Valid transitions per status
@@ -119,7 +122,10 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                 <ion-icon slot="start" name="time-outline"></ion-icon>
                 <ion-label>
                   <p>{{ 'ORDERS.DETAIL.SCHEDULED_DATE' | translate }}</p>
-                  <h3>{{ order()!.appointmentDate | date:'yyyy-MM-dd' }} {{ order()!.appointmentSlot }}</h3>
+                  <h3>
+                    {{ order()!.appointmentDate | date: 'yyyy-MM-dd' }}
+                    {{ order()!.appointmentSlot }}
+                  </h3>
                 </ion-label>
               </ion-item>
               @if (order()!.installer?.name || order()!.installerName) {
@@ -166,7 +172,11 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
         @if ((order()!.lines || order()!.orderLines)?.length) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{ (order()!.lines || order()!.orderLines)!.length }})</ion-card-title>
+              <ion-card-title
+                >{{ 'ORDERS.DETAIL.PRODUCTS' | translate }} ({{
+                  (order()!.lines || order()!.orderLines)!.length
+                }})</ion-card-title
+              >
             </ion-card-header>
             <ion-card-content>
               <ion-list>
@@ -257,12 +267,8 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
             <!-- Upload Progress -->
             @if (isUploading()) {
               <div class="upload-progress">
-                <progress
-                  class="progress-bar"
-                  [value]="uploadProgress()"
-                  max="100"
-                ></progress>
-                <p>{{ 'ORDERS.DETAIL.UPLOADING' | translate:{ progress: uploadProgress() } }}</p>
+                <progress class="progress-bar" [value]="uploadProgress()" max="100"></progress>
+                <p>{{ 'ORDERS.DETAIL.UPLOADING' | translate: { progress: uploadProgress() } }}</p>
               </div>
             }
 
@@ -277,10 +283,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                     <div class="attachment-info">
                       @if (attachment.isImage) {
                         <div class="attachment-thumbnail">
-                          <img
-                            [src]="attachment.thumbnailUrl"
-                            alt="{{ attachment.fileName }}"
-                          />
+                          <img [src]="attachment.thumbnailUrl" alt="{{ attachment.fileName }}" />
                         </div>
                       } @else {
                         <div class="attachment-icon">
@@ -290,7 +293,9 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
                       <div class="attachment-details">
                         <h4>{{ attachment.fileName }}</h4>
                         <p class="file-size">{{ formatFileSize(attachment.fileSize ?? 0) }}</p>
-                        <p class="file-date">{{ attachment.uploadedAt ? formatDate(attachment.uploadedAt) : '-' }}</p>
+                        <p class="file-date">
+                          {{ attachment.uploadedAt ? formatDate(attachment.uploadedAt) : '-' }}
+                        </p>
                       </div>
                     </div>
                     <div class="attachment-actions">
@@ -323,7 +328,6 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
             @for (status of allowedTransitions(); track status) {
               <ion-button
                 [color]="getStatusButtonColor(status)"
-                expand="block"
                 (click)="confirmStatusChange(status)"
               >
                 <ion-icon slot="start" [name]="getStatusIcon(status)"></ion-icon>
@@ -339,167 +343,182 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    .status-section {
-      text-align: center;
-      margin-bottom: 16px;
-
-      ion-badge {
-        font-size: 16px;
-        padding: 8px 24px;
-      }
-    }
-
-    ion-card {
-      margin-bottom: 16px;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .status-actions {
-      margin-top: 24px;
-
-      ion-button {
-        margin-bottom: 8px;
-      }
-    }
-
-    /* File Attachment Styles */
-    .file-action-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-
-      ion-button {
-        flex: 1;
-        min-width: 100px;
-      }
-    }
-
-    .upload-progress {
-      margin: 16px 0;
-
-      ion-progress-bar {
-        margin-bottom: 8px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      p {
+      .status-section {
         text-align: center;
-        font-size: 12px;
-        color: #666;
-      }
-    }
+        margin-bottom: 16px;
 
-    .attachments-list {
-      margin-top: 16px;
-
-      .list-header {
-        font-weight: 600;
-        margin: 12px 0 8px;
-        color: #333;
-      }
-    }
-
-    .attachment-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px;
-      margin-bottom: 8px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background: #f9f9f9;
-
-      &:hover {
-        background: #f0f0f0;
-      }
-    }
-
-    .attachment-info {
-      display: flex;
-      gap: 12px;
-      flex: 1;
-      align-items: center;
-    }
-
-    .attachment-thumbnail {
-      width: 60px;
-      height: 60px;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #eee;
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-    }
-
-    .attachment-icon {
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      background: #f0f0f0;
-      font-size: 32px;
-      color: #999;
-    }
-
-    .attachment-details {
-      flex: 1;
-
-      h4 {
-        margin: 0 0 4px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #333;
-        word-break: break-word;
-      }
-
-      p {
-        margin: 0;
-        font-size: 12px;
-        color: #999;
-
-        &.file-size {
-          font-weight: 500;
+        ion-badge {
+          font-size: 16px;
+          padding: 8px 24px;
         }
       }
-    }
 
-    .attachment-actions {
-      display: flex;
-      gap: 4px;
-
-      ion-button {
-        margin: 0;
+      ion-card {
+        margin-bottom: 16px;
       }
-    }
 
-    .empty-state {
-      text-align: center;
-      padding: 48px 16px;
-      color: #999;
-
-      h3 {
-        margin: 0;
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
       }
-    }
-  `],
+
+      .status-actions {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
+      }
+
+      /* File Attachment Styles */
+      .file-action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+
+        ion-button {
+          flex: 1;
+          min-width: 100px;
+        }
+      }
+
+      .upload-progress {
+        margin: 16px 0;
+
+        ion-progress-bar {
+          margin-bottom: 8px;
+        }
+
+        p {
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+        }
+      }
+
+      .attachments-list {
+        margin-top: 16px;
+
+        .list-header {
+          font-weight: 600;
+          margin: 12px 0 8px;
+          color: #333;
+        }
+      }
+
+      .attachment-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #f9f9f9;
+
+        &:hover {
+          background: #f0f0f0;
+        }
+      }
+
+      .attachment-info {
+        display: flex;
+        gap: 12px;
+        flex: 1;
+        align-items: center;
+      }
+
+      .attachment-thumbnail {
+        width: 60px;
+        height: 60px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #eee;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      .attachment-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background: #f0f0f0;
+        font-size: 32px;
+        color: #999;
+      }
+
+      .attachment-details {
+        flex: 1;
+
+        h4 {
+          margin: 0 0 4px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+          word-break: break-word;
+        }
+
+        p {
+          margin: 0;
+          font-size: 12px;
+          color: #999;
+
+          &.file-size {
+            font-weight: 500;
+          }
+        }
+      }
+
+      .attachment-actions {
+        display: flex;
+        gap: 4px;
+
+        ion-button {
+          margin: 0;
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 48px 16px;
+        color: #999;
+
+        h3 {
+          margin: 0;
+        }
+      }
+    `,
+  ],
 })
 export class OrderDetailPage implements OnInit, OnDestroy {
   /** 라우트 파라미터 접근용 서비스 */
@@ -609,7 +628,9 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     const statusLabel = this.getStatusLabel(newStatus);
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ORDERS.DETAIL.CONFIRM_STATUS_CHANGE'),
-      message: this.translateService.instant('ORDERS.DETAIL.CHANGE_STATUS_TO', { status: statusLabel }),
+      message: this.translateService.instant('ORDERS.DETAIL.CHANGE_STATUS_TO', {
+        status: statusLabel,
+      }),
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
@@ -716,43 +737,51 @@ export class OrderDetailPage implements OnInit, OnDestroy {
         uploadedAt: new Date(),
         uploadProgress: 0,
       };
-      
-      this.attachments.update(list => [...list, tempAttachment]);
+
+      this.attachments.update((list) => [...list, tempAttachment]);
 
       try {
         // Upload file via ordersStore
         // Note: File upload requires S3 presigned URL from API
         // Currently simulating upload with progress updates
-        
+
         // Simulate upload progress
         for (let progress = 0; progress <= 100; progress += 20) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          this.attachments.update(list =>
-            list.map(a => a.id === tempId ? { ...a, uploadProgress: progress } : a)
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          this.attachments.update((list) =>
+            list.map((a) => (a.id === tempId ? { ...a, uploadProgress: progress } : a)),
           );
         }
 
         // Update with final attachment info
-        this.attachments.update(list =>
-          list.map(a => a.id === tempId ? { 
-            ...a, 
-            id: `file-${Date.now()}`,
-            uploadProgress: undefined 
-          } : a)
+        this.attachments.update((list) =>
+          list.map((a) =>
+            a.id === tempId
+              ? {
+                  ...a,
+                  id: `file-${Date.now()}`,
+                  uploadProgress: undefined,
+                }
+              : a,
+          ),
         );
 
         const toast = await this.toastCtrl.create({
-          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_SUCCESS', { fileName: file.name }),
+          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_SUCCESS', {
+            fileName: file.name,
+          }),
           duration: 2000,
           color: 'success',
         });
         await toast.present();
       } catch (error) {
         // Remove failed upload
-        this.attachments.update(list => list.filter(a => a.id !== tempId));
-        
+        this.attachments.update((list) => list.filter((a) => a.id !== tempId));
+
         const toast = await this.toastCtrl.create({
-          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_FAILED', { fileName: file.name }),
+          message: this.translateService.instant('ORDERS.DETAIL.UPLOAD_FAILED', {
+            fileName: file.name,
+          }),
           duration: 2000,
           color: 'danger',
         });
@@ -774,8 +803,8 @@ export class OrderDetailPage implements OnInit, OnDestroy {
             try {
               // Delete attachment from order
               // Note: API call would be ordersStore.deleteAttachment(orderId, fileId)
-              this.attachments.update(list => list.filter(a => a.id !== fileId));
-              
+              this.attachments.update((list) => list.filter((a) => a.id !== fileId));
+
               const toast = await this.toastCtrl.create({
                 message: this.translateService.instant('ORDERS.DETAIL.FILE_DELETED'),
                 duration: 2000,
@@ -863,7 +892,9 @@ export class OrderDetailPage implements OnInit, OnDestroy {
       if (result.success && result.base64Data) {
         attachment.base64Data = result.base64Data;
         const toast = await this.toastCtrl.create({
-          message: this.translateService.instant('ORDERS.DETAIL.COMPRESSION_SUCCESS', { ratio: result.compressionRatio }),
+          message: this.translateService.instant('ORDERS.DETAIL.COMPRESSION_SUCCESS', {
+            ratio: result.compressionRatio,
+          }),
           duration: 2000,
           color: 'success',
         });
@@ -881,14 +912,14 @@ export class OrderDetailPage implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.fileService.addAttachment(attachment);
-            this.attachments.update(list => [...list, attachment]);
+            this.attachments.update((list) => [...list, attachment]);
             this.isUploading.set(false);
             const toast = this.toastCtrl.create({
               message: this.translateService.instant('ORDERS.DETAIL.FILE_UPLOADED'),
               duration: 2000,
               color: 'success',
             });
-            toast.then(t => t.present());
+            toast.then((t) => t.present());
           },
           error: (err) => {
             this.isUploading.set(false);
@@ -897,7 +928,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
               duration: 2000,
               color: 'danger',
             });
-            toast.then(t => t.present());
+            toast.then((t) => t.present());
           },
         });
     }
@@ -926,7 +957,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
               duration: 2000,
               color: 'danger',
             })
-            .then(t => t.present());
+            .then((t) => t.present());
         },
       });
   }
@@ -934,7 +965,9 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   protected async deleteAttachment(attachment: FileAttachment): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE'),
-      message: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE_NAME_CONFIRM', { fileName: attachment.name }),
+      message: this.translateService.instant('ORDERS.DETAIL.DELETE_FILE_NAME_CONFIRM', {
+        fileName: attachment.name,
+      }),
       buttons: [
         { text: this.translateService.instant('COMMON.CANCEL'), role: 'cancel' },
         {
@@ -948,14 +981,14 @@ export class OrderDetailPage implements OnInit, OnDestroy {
                 .pipe(takeUntil(this.destroy$))
                 .subscribe({
                   next: () => {
-                    this.attachments.update(list => list.filter(a => a.id !== attachment.id));
+                    this.attachments.update((list) => list.filter((a) => a.id !== attachment.id));
                     this.toastCtrl
                       .create({
                         message: this.translateService.instant('ORDERS.DETAIL.FILE_DELETED'),
                         duration: 2000,
                         color: 'success',
                       })
-                      .then(t => t.present());
+                      .then((t) => t.present());
                   },
                 });
             }

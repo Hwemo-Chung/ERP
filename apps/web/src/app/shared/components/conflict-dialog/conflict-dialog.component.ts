@@ -1,7 +1,7 @@
 /**
  * FR-17: Conflict Dialog Component
  * PRD: 동시 편집 보호 - Optimistic Locking 충돌 시 표시
- * 
+ *
  * 기능:
  * - 버전 불일치 감지 시 충돌 다이얼로그 표시
  * - 서버 값 vs 로컬 값 비교 표시
@@ -27,10 +27,10 @@ import {
   IonBadge,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  warningOutline, 
-  refreshOutline, 
-  saveOutline, 
+import {
+  warningOutline,
+  refreshOutline,
+  saveOutline,
   closeOutline,
   gitCompareOutline,
 } from 'ionicons/icons';
@@ -95,8 +95,7 @@ export type ConflictResolution = 'overwrite' | 'refresh' | 'cancel';
         <ion-content class="ion-padding">
           <div class="conflict-info">
             <p class="conflict-message">
-              다른 사용자가 이 데이터를 수정했습니다. 
-              변경 사항을 검토하고 처리 방법을 선택하세요.
+              다른 사용자가 이 데이터를 수정했습니다. 변경 사항을 검토하고 처리 방법을 선택하세요.
             </p>
 
             <!-- 충돌 필드 비교 -->
@@ -125,91 +124,110 @@ export type ConflictResolution = 'overwrite' | 'refresh' | 'cancel';
 
             @if (data()) {
               <div class="version-info">
-                <p>내 버전: v{{ data()!.localVersion }} • 서버 버전: v{{ data()!.serverVersion }}</p>
+                <p>
+                  내 버전: v{{ data()!.localVersion }} • 서버 버전: v{{ data()!.serverVersion }}
+                </p>
               </div>
             }
           </div>
 
           <!-- 액션 버튼 -->
           <div class="action-buttons">
-            <ion-button expand="block" color="danger" (click)="overwrite()">
+            <ion-button color="danger" (click)="overwrite()">
               <ion-icon name="save-outline" slot="start"></ion-icon>
               내 변경으로 덮어쓰기
             </ion-button>
-            <ion-button expand="block" color="primary" (click)="refresh()">
+            <ion-button color="primary" (click)="refresh()">
               <ion-icon name="refresh-outline" slot="start"></ion-icon>
               서버 값으로 새로고침
             </ion-button>
-            <ion-button expand="block" fill="outline" (click)="cancel()">
-              취소
-            </ion-button>
+            <ion-button fill="outline" (click)="cancel()"> 취소 </ion-button>
           </div>
         </ion-content>
       </ng-template>
     </ion-modal>
   `,
-  styles: [`
-    .conflict-message {
-      text-align: center;
-      color: var(--ion-color-medium);
-      margin-bottom: 16px;
-    }
+  styles: [
+    `
+      .conflict-message {
+        text-align: center;
+        color: var(--ion-color-medium);
+        margin-bottom: 16px;
+      }
 
-    .conflict-card {
-      margin: 8px 0;
-    }
+      .conflict-card {
+        margin: 8px 0;
+      }
 
-    .comparison {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+      .comparison {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
 
-    .value-box {
-      flex: 1;
-      padding: 12px;
-      border-radius: 8px;
-      background: var(--ion-color-light);
-    }
+      .value-box {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        background: var(--ion-color-light);
+      }
 
-    .value-box.local {
-      border-left: 4px solid var(--ion-color-primary);
-    }
+      .value-box.local {
+        border-left: 4px solid var(--ion-color-primary);
+      }
 
-    .value-box.server {
-      border-left: 4px solid var(--ion-color-warning);
-    }
+      .value-box.server {
+        border-left: 4px solid var(--ion-color-warning);
+      }
 
-    .value {
-      font-weight: 500;
-      margin-top: 8px;
-    }
+      .value {
+        font-weight: 500;
+        margin-top: 8px;
+      }
 
-    .meta {
-      font-size: 12px;
-      color: var(--ion-color-medium);
-      margin-top: 4px;
-    }
+      .meta {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        margin-top: 4px;
+      }
 
-    .compare-icon {
-      font-size: 24px;
-      color: var(--ion-color-medium);
-    }
+      .compare-icon {
+        font-size: 24px;
+        color: var(--ion-color-medium);
+      }
 
-    .action-buttons {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+      .action-buttons {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
 
-    .version-info {
-      text-align: center;
-      font-size: 12px;
-      color: var(--ion-color-medium);
-      margin-top: 16px;
-    }
-  `]
+        ion-button {
+          flex: 0 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+          align-items: center;
+
+          ion-button {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+      }
+
+      .version-info {
+        text-align: center;
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        margin-top: 16px;
+      }
+    `,
+  ],
 })
 export class ConflictDialogComponent {
   // Inputs
@@ -220,10 +238,10 @@ export class ConflictDialogComponent {
   resolved = output<ConflictResolution>();
 
   constructor() {
-    addIcons({ 
-      warningOutline, 
-      refreshOutline, 
-      saveOutline, 
+    addIcons({
+      warningOutline,
+      refreshOutline,
+      saveOutline,
       closeOutline,
       gitCompareOutline,
     });

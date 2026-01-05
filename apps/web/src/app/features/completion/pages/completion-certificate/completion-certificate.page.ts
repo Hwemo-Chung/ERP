@@ -4,7 +4,16 @@
  * - 주문 정보, 설치 제품 목록, 서명란 표시
  * - 고객/설치기사 서명 후 확인서 발행
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, ElementRef, ViewChild, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  ElementRef,
+  ViewChild,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -64,7 +73,9 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>{{ 'COMPLETION.CERTIFICATE.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
@@ -140,9 +151,14 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
                   <p>{{ 'COMPLETION.SIGNATURE.CUSTOMER_SIGNATURE' | translate }}</p>
                   <div class="signature-area" (click)="openSignaturePad('customer')">
                     @if (customerSignature()) {
-                      <img [src]="customerSignature()" [alt]="'COMPLETION.CERTIFICATE.CUSTOMER_SIGNATURE_ALT' | translate" />
+                      <img
+                        [src]="customerSignature()"
+                        [alt]="'COMPLETION.CERTIFICATE.CUSTOMER_SIGNATURE_ALT' | translate"
+                      />
                     } @else {
-                      <p class="placeholder">{{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}</p>
+                      <p class="placeholder">
+                        {{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}
+                      </p>
                     }
                   </div>
                 </div>
@@ -150,9 +166,14 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
                   <p>{{ 'COMPLETION.SIGNATURE.INSTALLER_SIGNATURE' | translate }}</p>
                   <div class="signature-area" (click)="openSignaturePad('installer')">
                     @if (installerSignature()) {
-                      <img [src]="installerSignature()" [alt]="'COMPLETION.CERTIFICATE.INSTALLER_SIGNATURE_ALT' | translate" />
+                      <img
+                        [src]="installerSignature()"
+                        [alt]="'COMPLETION.CERTIFICATE.INSTALLER_SIGNATURE_ALT' | translate"
+                      />
                     } @else {
-                      <p class="placeholder">{{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}</p>
+                      <p class="placeholder">
+                        {{ 'COMPLETION.SIGNATURE.TAP_TO_SIGN' | translate }}
+                      </p>
                     }
                   </div>
                 </div>
@@ -168,15 +189,11 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <ion-button expand="block" fill="outline" (click)="printCertificate()">
+          <ion-button fill="outline" (click)="printCertificate()">
             <ion-icon name="print-outline" slot="start"></ion-icon>
             {{ 'COMPLETION.CERTIFICATE.PRINT_BTN' | translate }}
           </ion-button>
-          <ion-button 
-            expand="block" 
-            [disabled]="!canIssue()"
-            (click)="issueCertificate()"
-          >
+          <ion-button [disabled]="!canIssue()" (click)="issueCertificate()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
             {{ 'COMPLETION.CERTIFICATE.ISSUE_BTN' | translate }}
           </ion-button>
@@ -184,10 +201,7 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
       }
 
       <!-- Signature Pad Modal -->
-      <ion-modal 
-        [isOpen]="isSignatureModalOpen()"
-        (didDismiss)="closeSignatureModal()"
-      >
+      <ion-modal [isOpen]="isSignatureModalOpen()" (didDismiss)="closeSignatureModal()">
         <ng-template>
           <app-signature-pad
             (confirmed)="onSignatureConfirmed($event)"
@@ -197,114 +211,131 @@ import { SignaturePadComponent } from '../../../../shared/components/signature-p
       </ion-modal>
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    .certificate-card {
-      background: white;
-    }
-
-    .certificate {
-      padding: 16px;
-      font-size: 14px;
-
-      h1 {
-        text-align: center;
-        font-size: 20px;
-        margin-bottom: 24px;
-        border-bottom: 2px solid #333;
-        padding-bottom: 12px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      h3 {
+      .certificate-card {
+        background: white;
+      }
+
+      .certificate {
+        padding: 16px;
         font-size: 14px;
-        margin: 16px 0 8px;
-        color: #333;
+
+        h1 {
+          text-align: center;
+          font-size: 20px;
+          margin-bottom: 24px;
+          border-bottom: 2px solid #333;
+          padding-bottom: 12px;
+        }
+
+        h3 {
+          font-size: 14px;
+          margin: 16px 0 8px;
+          color: #333;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+
+          td,
+          th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+
+          th {
+            background: #f5f5f5;
+          }
+
+          td:first-child {
+            width: 100px;
+            font-weight: 500;
+            background: #fafafa;
+          }
+        }
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
+      .cert-section {
+        margin-bottom: 20px;
+      }
 
-        td, th {
-          border: 1px solid #ddd;
-          padding: 8px;
-          text-align: left;
-        }
+      .signature-section {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+      }
 
-        th {
-          background: #f5f5f5;
-        }
+      .signature-box {
+        flex: 1;
+        text-align: center;
 
-        td:first-child {
-          width: 100px;
+        p {
+          margin-bottom: 8px;
           font-weight: 500;
-          background: #fafafa;
         }
       }
-    }
 
-    .cert-section {
-      margin-bottom: 20px;
-    }
+      .signature-area {
+        border: 1px dashed #ccc;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        cursor: pointer;
 
-    .signature-section {
-      display: flex;
-      gap: 16px;
-      margin-top: 24px;
-    }
+        img {
+          max-width: 100%;
+          max-height: 100%;
+        }
 
-    .signature-box {
-      flex: 1;
-      text-align: center;
-
-      p {
-        margin-bottom: 8px;
-        font-weight: 500;
-      }
-    }
-
-    .signature-area {
-      border: 1px dashed #ccc;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fafafa;
-      cursor: pointer;
-
-      img {
-        max-width: 100%;
-        max-height: 100%;
+        .placeholder {
+          color: #999;
+          font-size: 12px;
+        }
       }
 
-      .placeholder {
-        color: #999;
-        font-size: 12px;
+      .cert-footer {
+        margin-top: 24px;
+        text-align: center;
+
+        .date {
+          margin-top: 8px;
+          font-weight: 500;
+        }
       }
-    }
 
-    .cert-footer {
-      margin-top: 24px;
-      text-align: center;
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
 
-      .date {
-        margin-top: 8px;
-        font-weight: 500;
+        ion-button {
+          flex: 1 1 auto;
+          min-width: 140px;
+          max-width: 200px;
+        }
+
+        @media (max-width: 767px) {
+          flex-direction: column;
+
+          ion-button {
+            max-width: 100%;
+          }
+        }
       }
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-  `],
+    `,
+  ],
 })
 export class CompletionCertificatePage implements OnInit {
   @ViewChild('certificateContent') certificateContent!: ElementRef;
@@ -425,7 +456,7 @@ export class CompletionCertificatePage implements OnInit {
         customerSignature: this.customerSignature(),
         installerSignature: this.installerSignature(),
       });
-      
+
       const toast = await this.toastCtrl.create({
         message: this.translateService.instant('COMPLETION.CERTIFICATE.ISSUED_SUCCESS'),
         duration: 2000,

@@ -40,12 +40,20 @@ else
     echo -e "${GREEN}✓ 포트 3000 사용 중인 프로세스 없음${NC}"
 fi
 
-echo -e "\n${YELLOW}포트 4200 (Mobile/Web) 프로세스 종료...${NC}"
-if lsof -ti :4200 >/dev/null 2>&1; then
-    lsof -ti :4200 | xargs kill -9 2>/dev/null || true
-    echo -e "${GREEN}✓ 포트 4200 프로세스 종료됨${NC}"
+echo -e "\n${YELLOW}포트 4300 (Web) 프로세스 종료...${NC}"
+if lsof -ti :4300 >/dev/null 2>&1; then
+    lsof -ti :4300 | xargs kill -9 2>/dev/null || true
+    echo -e "${GREEN}✓ 포트 4300 프로세스 종료됨${NC}"
 else
-    echo -e "${GREEN}✓ 포트 4200 사용 중인 프로세스 없음${NC}"
+    echo -e "${GREEN}✓ 포트 4300 사용 중인 프로세스 없음${NC}"
+fi
+
+echo -e "\n${YELLOW}포트 4201 (Mobile) 프로세스 종료...${NC}"
+if lsof -ti :4201 >/dev/null 2>&1; then
+    lsof -ti :4201 | xargs kill -9 2>/dev/null || true
+    echo -e "${GREEN}✓ 포트 4201 프로세스 종료됨${NC}"
+else
+    echo -e "${GREEN}✓ 포트 4201 사용 중인 프로세스 없음${NC}"
 fi
 
 # 3. Docker 컨테이너 종료 옵션
