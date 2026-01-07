@@ -21,6 +21,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { Installer, InstallersState } from './installers.models';
 import { db } from '@app/core/db/database';
+import { getErrorMessage } from '../../core/utils/error.util';
 
 const initialState: InstallersState = {
   installers: [],
@@ -95,8 +96,8 @@ export class InstallersStore extends signalStore(
           isLoading: false,
           lastSyncTime: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load installers';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to load installers';
         patchState(store, {
           error: errorMessage,
           isLoading: false,

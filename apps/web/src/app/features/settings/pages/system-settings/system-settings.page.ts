@@ -22,7 +22,6 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonList,
   IonItem,
   IonLabel,
   IonInput,
@@ -34,6 +33,7 @@ import {
   IonBadge,
   IonSegment,
   IonSegmentButton,
+  IonModal,
   ToastController,
   AlertController,
 } from '@ionic/angular/standalone';
@@ -70,7 +70,6 @@ import { AuthService } from '@app/core/services/auth.service';
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonList,
     IonItem,
     IonLabel,
     IonInput,
@@ -82,6 +81,7 @@ import { AuthService } from '@app/core/services/auth.service';
     IonBadge,
     IonSegment,
     IonSegmentButton,
+    IonModal,
   ],
   template: `
     <ion-header>
@@ -405,7 +405,8 @@ import { AuthService } from '@app/core/services/auth.service';
         [isOpen]="!!errorMessage"
         [header]="'COMMON.ERROR.TITLE' | translate"
         [message]="errorMessage"
-        [buttons]="[{ text: ('COMMON.BUTTON.CONFIRM' | translate), handler: () => errorMessage = null }]"
+        [buttons]="errorAlertButtons"
+        (didDismiss)="clearError()"
       ></ion-alert>
     </ion-content>
   `,
@@ -620,6 +621,16 @@ export class SystemSettingsPage implements OnInit {
   isEditingUser = false;
   showUserModal = false;
   errorMessage: string | null = null;
+
+  /** Alert buttons for error message */
+  get errorAlertButtons(): string[] {
+    return [this.translate.instant('COMMON.BUTTON.CONFIRM')];
+  }
+
+  /** Clear the error message */
+  clearError(): void {
+    this.errorMessage = null;
+  }
 
   private apiUrl = `${environment.apiUrl}/settings`;
 

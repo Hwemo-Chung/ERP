@@ -4,6 +4,7 @@ import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStateMachine } from './order-state-machine';
 import { OrderStatus } from '@prisma/client';
+import { SyncOperationType, BatchSyncItemDto } from './dto/batch-sync.dto';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -1791,6 +1792,250 @@ describe('OrdersService', () => {
 
       expect(result.success).toBe(true);
       expect(statusHistoryCreated).toBe(true);
+    });
+  });
+
+  describe('processBatchSync', () => {
+    const mockOrderForSync = {
+      id: 'order-sync-123',
+      orderNo: 'ORD-2024-SYNC',
+      customerName: 'Sync Customer',
+      status: OrderStatus.UNASSIGNED,
+      version: 1,
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should process batch sync items and return aggregated results', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-001',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-002',
+          payload: { status: OrderStatus.DISPATCHED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+      ];
+
+      // Mock successful updates
+      mockTx.order.findFirst.mockResolvedValue(mockOrder);
+      mockTx.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.COMPLETED });
+      mockTx.auditLog.create.mockResolvedValue({});
+      stateMachine.validateTransition.mockReturnValue({ valid: true });
+
+      (prisma.executeTransaction as jest.Mock).mockImplementation(async (callback) => {
+        return callback(mockTx);
+      });
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.totalProcessed).toBe(2);
+      expect(result.successCount).toBe(2);
+      expect(result.failureCount).toBe(0);
+      expect(result.results).toHaveLength(2);
+    });
+
+    it('should return partial success when some items fail', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-001',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-nonexistent',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+      ];
+
+      let callCount = 0;
+      (prisma.executeTransaction as jest.Mock).mockImplementation(async (callback) => {
+        callCount++;
+        if (callCount === 1) {
+          mockTx.order.findFirst.mockResolvedValue(mockOrder);
+          mockTx.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.COMPLETED });
+          mockTx.auditLog.create.mockResolvedValue({});
+          stateMachine.validateTransition.mockReturnValue({ valid: true });
+          return callback(mockTx);
+        } else {
+          mockTx.order.findFirst.mockResolvedValue(null);
+          return callback(mockTx);
+        }
+      });
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.totalProcessed).toBe(2);
+      expect(result.successCount).toBe(1);
+      expect(result.failureCount).toBe(1);
+      expect(result.results[1].success).toBe(false);
+      expect(result.results[1].error).toBe('E2001');
+    });
+
+    it('should return E2006 error with serverState on version conflict', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-001',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1, // Client expects version 1
+        },
+      ];
+
+      const serverOrder = { ...mockOrder, version: 3 }; // Server has version 3
+
+      (prisma.executeTransaction as jest.Mock).mockImplementation(async (callback) => {
+        mockTx.order.findFirst.mockResolvedValue(serverOrder);
+        return callback(mockTx);
+      });
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.failureCount).toBe(1);
+      expect(result.results[0].success).toBe(false);
+      expect(result.results[0].error).toBe('E2006');
+      expect(result.results[0].serverState).toBeDefined();
+    });
+
+    it('should handle DELETE operations', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.DELETE,
+          entityId: 'order-to-delete',
+          payload: {},
+          clientTimestamp: Date.now(),
+        },
+      ];
+
+      (prisma.order.findFirst as jest.Mock).mockResolvedValue(mockOrder);
+      (prisma.order.update as jest.Mock).mockResolvedValue({ ...mockOrder, deletedAt: new Date() });
+      (prisma.auditLog.create as jest.Mock).mockResolvedValue({});
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.totalProcessed).toBe(1);
+      expect(result.successCount).toBe(1);
+      expect(result.results[0].entityId).toBe('order-to-delete');
+    });
+
+    it('should handle empty items array', async () => {
+      const items: BatchSyncItemDto[] = [];
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.totalProcessed).toBe(0);
+      expect(result.successCount).toBe(0);
+      expect(result.failureCount).toBe(0);
+      expect(result.results).toHaveLength(0);
+    });
+
+    it('should continue processing after individual item failure', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-001',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-fail',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+        {
+          type: SyncOperationType.UPDATE,
+          entityId: 'order-003',
+          payload: { status: OrderStatus.COMPLETED },
+          clientTimestamp: Date.now(),
+          expectedVersion: 1,
+        },
+      ];
+
+      let callCount = 0;
+      (prisma.executeTransaction as jest.Mock).mockImplementation(async (callback) => {
+        callCount++;
+        if (callCount === 2) {
+          // Fail on second item
+          throw new Error('Database connection error');
+        }
+        mockTx.order.findFirst.mockResolvedValue(mockOrder);
+        mockTx.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.COMPLETED });
+        mockTx.auditLog.create.mockResolvedValue({});
+        stateMachine.validateTransition.mockReturnValue({ valid: true });
+        return callback(mockTx);
+      });
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      // Should have processed all 3 items
+      expect(result.totalProcessed).toBe(3);
+      expect(result.successCount).toBe(2);
+      expect(result.failureCount).toBe(1);
+
+      // First and third should succeed
+      expect(result.results[0].success).toBe(true);
+      expect(result.results[2].success).toBe(true);
+
+      // Second should fail
+      expect(result.results[1].success).toBe(false);
+    });
+
+    it('should handle CREATE operations', async () => {
+      const items: BatchSyncItemDto[] = [
+        {
+          type: SyncOperationType.CREATE,
+          entityId: 'temp-client-id',
+          payload: {
+            orderNo: 'ORD-2024-NEW',
+            customerName: 'New Customer',
+            customerPhone: '010-1234-5678',
+            address: { city: 'Seoul', detail: '123 Street' },
+            vendor: 'VENDOR_A',
+            branchId: 'branch-001',
+            appointmentDate: '2024-12-20',
+            lines: [{ itemCode: 'ITEM001', itemName: 'Test', quantity: 1, weight: 10 }],
+          },
+          clientTimestamp: Date.now(),
+        },
+      ];
+
+      const createdOrder = {
+        id: 'new-server-uuid',
+        orderNo: 'ORD-2024-NEW',
+        customerName: 'New Customer',
+      };
+
+      mockTx.order.create.mockResolvedValue(createdOrder);
+      mockTx.auditLog.create.mockResolvedValue({});
+
+      (prisma.executeTransaction as jest.Mock).mockImplementation(async (callback) => {
+        return callback(mockTx);
+      });
+
+      const result = await service.processBatchSync(items, 'user-123');
+
+      expect(result.totalProcessed).toBe(1);
+      expect(result.successCount).toBe(1);
+      // CREATE returns new server ID, not client's temp ID
+      expect(result.results[0].entityId).toBe('new-server-uuid');
     });
   });
 });

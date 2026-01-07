@@ -37,6 +37,7 @@ import {
 import { db } from '@app/core/db/database';
 import { NetworkService } from '../../core/services/network.service';
 import { SyncQueueService } from '../../core/services/sync-queue.service';
+import { getErrorMessage, isHttpError, hasMessage } from '../../core/utils/error.util';
 
 /** Address object from API */
 interface AddressObject {
@@ -57,12 +58,16 @@ function formatAddress(address: AddressObject | string | undefined | null): stri
 }
 
 /**
- * Transform API order data to include customerAddress string
+ * Transform API/cached order data to include customerAddress string
+ * Works with both API Order responses and cached OfflineOrder data
+ * Note: Input uses flexible type to support both Order and OfflineOrder schemas
+ *       (OfflineOrder.status is string, Order.status is OrderStatus enum)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function transformOrder(order: any): Order {
   return {
     ...order,
-    customerAddress: formatAddress(order.address),
+    customerAddress: order.customerAddress || formatAddress(order.address),
   };
 }
 
@@ -230,10 +235,10 @@ export class OrdersStore extends signalStore(
           lastSyncTime: Date.now(),
           syncStatus: 'idle',
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load orders';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
         patchState(store, {
-          error: errorMessage,
+          error: errorMessage || 'Failed to load orders',
           isLoading: false,
           syncStatus: 'error',
         });
@@ -281,7 +286,7 @@ export class OrdersStore extends signalStore(
         );
 
         patchState(store, { serverStats: stats });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn('[OrdersStore] Failed to load stats:', error);
         // Don't set error state - stats are supplementary to orders list
         // kpiMetrics will fall back to local order count
@@ -402,8 +407,8 @@ export class OrdersStore extends signalStore(
             ...serverOrder,
             localUpdatedAt: serverOrder.localUpdatedAt || Date.now(),
           });
-        } catch (error: any) {
-          if (error?.status === 409) {
+        } catch (error: unknown) {
+          if (isHttpError(error) && error.status === 409) {
             // Version conflict - revert optimistic update and notify user
             patchState(store, {
               orders: store.orders().map((o) => (o.id === orderId ? order : o)),
@@ -835,14 +840,14 @@ export class OrdersStore extends signalStore(
 
         patchState(store, { isLoading: false });
         return { success: false };
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to split order';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to split order';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
         });
 
-        if (error?.status === 409) {
+        if (isHttpError(error) && error.status === 409) {
           // Version conflict - reload order
           try {
             const fresh = await firstValueFrom(

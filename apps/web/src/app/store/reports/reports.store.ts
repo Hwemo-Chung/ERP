@@ -38,6 +38,17 @@ import {
   ExportConfig,
   ProgressItem,
 } from './reports.models';
+import { getErrorMessage } from '../../core/utils/error.util';
+
+/** API response for progress items */
+interface ProgressApiItem {
+  key?: string;
+  name?: string;
+  total?: number;
+  completed?: number;
+  pending?: number;
+  completionRate?: number;
+}
 
 const initialState: ReportsState = {
   summary: null,
@@ -137,8 +148,8 @@ export class ReportsStore extends signalStore(
           isLoading: false,
           lastUpdated: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load summary';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to load summary';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -164,11 +175,11 @@ export class ReportsStore extends signalStore(
 
         // API returns structured progress data with completion stats
         const data = await firstValueFrom(
-          http.get<any[]>(`${environment.apiUrl}/reports/progress`, { params })
+          http.get<ProgressApiItem[]>(`${environment.apiUrl}/reports/progress`, { params })
         );
 
         // Map API response to ProgressItem[] (API already provides all needed fields)
-        const progressItems: ProgressItem[] = (data || []).map((item: any) => ({
+        const progressItems: ProgressItem[] = (data || []).map((item: ProgressApiItem) => ({
           key: item.key || '',
           label: item.name || item.key || 'Unknown',
           total: item.total || 0,
@@ -184,8 +195,8 @@ export class ReportsStore extends signalStore(
           isLoading: false,
           lastUpdated: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load progress';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to load progress';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -218,8 +229,8 @@ export class ReportsStore extends signalStore(
           isLoading: false,
           lastUpdated: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load waste summary';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to load waste summary';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -253,8 +264,8 @@ export class ReportsStore extends signalStore(
           isLoading: false,
           lastUpdated: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to search customer history';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to search customer history';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -286,8 +297,8 @@ export class ReportsStore extends signalStore(
           isLoading: false,
           lastUpdated: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load release summary';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to load release summary';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -317,8 +328,8 @@ export class ReportsStore extends signalStore(
         );
 
         return response;
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to export data';
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error) || 'Failed to export data';
         patchState(store, { error: errorMessage });
         throw error;
       }

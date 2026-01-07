@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 
 interface WsMessage {
   type: string;
-  payload: any;
+  payload: unknown;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -78,7 +78,7 @@ export class WebSocketService {
   /**
    * Listen for specific message types
    */
-  onMessage<T = any>(type: string): Observable<T> {
+  onMessage<T = unknown>(type: string): Observable<T> {
     return this.messages$.asObservable().pipe(
       filter(msg => msg.type === type),
       map(msg => msg.payload as T),
@@ -88,7 +88,7 @@ export class WebSocketService {
   /**
    * Send message to server
    */
-  send(type: string, payload: any): void {
+  send(type: string, payload: unknown): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, payload }));
     } else {

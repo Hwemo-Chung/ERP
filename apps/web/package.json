@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@angular/animations": "^19.0.5",
+    "@angular/cdk": "^19.0.0",
     "@angular/common": "^19.0.5",
     "@angular/compiler": "^19.0.5",
     "@angular/core": "^19.0.5",
@@ -34,6 +35,8 @@
     "@ngrx/signals": "^19.0.0",
     "@ngx-translate/core": "^16.0.0",
     "@ngx-translate/http-loader": "^16.0.0",
+    "@sentry/angular": "^10.32.1",
+    "@sentry/browser": "^10.32.1",
     "capacitor-native-biometric": "^4.2.2",
     "dexie": "^4.0.10",
     "rxjs": "~7.8.1",

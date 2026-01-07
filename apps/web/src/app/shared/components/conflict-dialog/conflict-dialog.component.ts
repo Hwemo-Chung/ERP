@@ -22,8 +22,6 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  IonItem,
-  IonLabel,
   IonBadge,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -71,8 +69,6 @@ export type ConflictResolution = 'overwrite' | 'refresh' | 'cancel';
     IonCardHeader,
     IonCardTitle,
     IonCardContent,
-    IonItem,
-    IonLabel,
     IonBadge,
   ],
   template: `

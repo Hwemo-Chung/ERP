@@ -203,3 +203,32 @@ ion-refresher {
     font-size: 14px;
   }
 }
+
+/* ============================================
+   CDK Virtual Scrolling Styles
+   ============================================ */
+
+cdk-virtual-scroll-viewport {
+  contain: strict;
+  display: block;
+
+  .cdk-virtual-scroll-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+ion-content cdk-virtual-scroll-viewport {
+  height: 100%;
+  width: 100%;
+}
+
+.cdk-virtual-scroll-spacer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1px;
+  width: 1px;
+  transform-origin: 0 0;
+}
