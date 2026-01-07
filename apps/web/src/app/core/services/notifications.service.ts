@@ -55,7 +55,7 @@ export class NotificationsService {
   }
 
   private initWebSocketListener(): void {
-    this.wsService.onMessage('notification').subscribe((data: Notification) => {
+    this.wsService.onMessage<Notification>('notification').subscribe((data) => {
       this._notifications.update(list => [data, ...list]);
     });
   }

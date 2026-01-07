@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, IonTitle, IonIcon, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -14,7 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-settings-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton, TranslateModule],
+  imports: [CommonModule, RouterLink, IonContent, IonHeader, IonToolbar, IonTitle, IonIcon, IonBadge, TranslateModule],
   template: `
     <ion-header>
       <ion-toolbar>

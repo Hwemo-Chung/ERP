@@ -38,6 +38,7 @@ import { CancelOrderDto } from './dto/cancel-order.dto';
 import { RevertOrderDto } from './dto/revert-order.dto';
 import { ReassignOrderDto } from './dto/reassign-order.dto';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
+import { BatchSyncDto, BatchSyncResponseDto } from './dto/batch-sync.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -129,6 +130,34 @@ export class OrdersController {
   @ApiResponse({ status: 202, description: 'Bulk update processed' })
   bulkStatusUpdate(@Body() dto: BulkStatusDto, @CurrentUser() user: JwtPayload) {
     return this.ordersService.bulkStatusUpdate(dto, user.sub);
+  }
+
+  @Post('batch-sync')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Batch sync offline operations',
+    description: `Process multiple offline sync operations (CREATE, UPDATE, DELETE) in a single request.
+    Each item is processed independently - failures do not rollback other items.
+    Returns individual results for each operation including version conflict handling.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Batch sync processed',
+    type: BatchSyncResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request payload',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  async batchSync(
+    @Body() dto: BatchSyncDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<BatchSyncResponseDto> {
+    return this.ordersService.processBatchSync(dto.items, user.sub);
   }
 
   @Post(':id/split')

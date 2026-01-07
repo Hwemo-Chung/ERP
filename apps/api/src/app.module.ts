@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bull';
+import { CommonModule } from './common/common.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -37,6 +39,18 @@ import configuration from './config/configuration';
         limit: 5,
       },
     ]),
+
+    // BullMQ for async job processing
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        url: configService.get<string>('redis.url'),
+      }),
+    }),
+
+    // Common module (Redis, distributed lock)
+    CommonModule,
 
     // Core modules
     PrismaModule,

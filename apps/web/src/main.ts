@@ -8,14 +8,17 @@
  * - HTTP 인터셉터 (인증, 오류 처리, 오프라인 지원)
  * - 서비스 워커 (PWA)
  * - 다국어 지원 (i18n) - 한국어 기본
+ * - 전역 에러 핸들러
+ * - Sentry 에러 모니터링
  */
-import { enableProdMode, importProvidersFrom, isDevMode, APP_INITIALIZER } from '@angular/core';
+import { enableProdMode, importProvidersFrom, isDevMode, APP_INITIALIZER, ErrorHandler } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
 import { RouteReuseStrategy } from '@angular/router';
+import * as Sentry from '@sentry/angular';
 
 // i18n (다국어 지원) 설정
 import { TranslateModule, TranslateLoader, TranslateService } from '@ngx-translate/core';
@@ -28,8 +31,28 @@ import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 import { apiResponseInterceptor } from './app/core/interceptors/api-response.interceptor';
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { offlineInterceptor } from './app/core/interceptors/offline.interceptor';
+import { GlobalErrorHandler } from './app/core/error/global-error-handler';
 
 import { environment } from './environments/environment';
+
+/**
+ * Initialize Sentry for error monitoring
+ * Only enabled in production with valid DSN
+ */
+if (environment.production && environment.sentryDsn) {
+  Sentry.init({
+    dsn: environment.sentryDsn,
+    environment: 'production',
+    release: `erp-web@${environment.appVersion}`,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+    ],
+    // Performance monitoring sample rate (adjust based on traffic)
+    tracesSampleRate: 0.1,
+    // Only report errors from our domain
+    allowUrls: [/https?:\/\/[^/]*\.your-domain\.com/],
+  });
+}
 
 /**
  * HTTP 로더 팩토리 함수
@@ -63,6 +86,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideIonicAngular({
       mode: 'ios', // iOS 스타일로 일관된 UI 제공
       animated: true,

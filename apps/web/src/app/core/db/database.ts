@@ -54,7 +54,7 @@ export interface BackgroundSyncTask {
   id?: string;
   dataType: string;
   operation: string;
-  data: any;
+  data: unknown;
   retries: number;
   maxRetries: number;
   lastAttempt?: number;

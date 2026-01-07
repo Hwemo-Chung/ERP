@@ -1,7 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { PrismaService } from '../prisma/prisma.service';
 import { Platform, PushProvider, NotificationStatus } from '@prisma/client';
 import { PushProviderFactory, PushPayload } from './push-providers';
+import { PushJobPayload } from './notifications.processor';
 
 /**
  * Quiet hours configuration structure
@@ -25,6 +28,7 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pushProviderFactory: PushProviderFactory,
+    @InjectQueue('notifications') private readonly notificationQueue: Queue<PushJobPayload>,
   ) {}
 
   /**
@@ -162,6 +166,7 @@ export class NotificationsService {
 
   /**
    * Create and send notification
+   * Push notification is sent asynchronously via BullMQ queue
    */
   async createNotification(data: {
     userId: string;
@@ -178,10 +183,44 @@ export class NotificationsService {
       },
     });
 
-    // Send push notification via Web Push / FCM / APNs
-    await this.sendPush(data.userId, notification);
+    // Queue push notification for async processing
+    await this.queuePushNotification({
+      userId: data.userId,
+      notificationId: notification.id,
+      category: data.category,
+    });
 
     return notification;
+  }
+
+  /**
+   * Queue push notification job for async processing
+   */
+  private async queuePushNotification(payload: PushJobPayload): Promise<void> {
+    try {
+      const job = await this.notificationQueue.add('send-push', payload, {
+        priority: this.getJobPriority(payload.category),
+      });
+      this.logger.debug(
+        `Queued push notification job ${job.id} for user ${payload.userId}`,
+      );
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Failed to queue push notification for user ${payload.userId}: ${errorMessage}`,
+      );
+    }
+  }
+
+  /**
+   * Get job priority based on notification category
+   * Lower number = higher priority
+   */
+  private getJobPriority(category: string): number {
+    if (URGENT_CATEGORIES.includes(category)) {
+      return 1; // High priority for urgent notifications
+    }
+    return 10; // Normal priority
   }
 
   /**

@@ -27,7 +27,6 @@ import {
   IonTitle,
   IonContent,
   IonButton,
-  IonButtons,
   IonIcon,
   IonItem,
   IonLabel,
@@ -53,7 +52,6 @@ import { AuthService } from '../../../core/services/auth.service';
     IonTitle,
     IonContent,
     IonButton,
-    IonButtons,
     IonIcon,
     IonItem,
     IonLabel,
@@ -275,7 +273,7 @@ export class SessionTimeoutModalComponent implements OnInit, OnDestroy {
   protected readonly currentUsername = computed(() => this.authService.user()?.loginId ?? '');
 
   private remainingTime = signal(300);
-  private intervalId: any;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   remainingMinutes = () =>
     Math.floor(this.remainingTime() / 60)

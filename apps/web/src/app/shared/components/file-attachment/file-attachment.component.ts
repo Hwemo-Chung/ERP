@@ -11,11 +11,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  IonButton,
   IonIcon,
   IonSpinner,
   IonBadge,
-  IonImg,
   ActionSheetController,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -54,11 +52,9 @@ const MAX_FILES = 10;
   imports: [
     CommonModule,
     TranslateModule,
-    IonButton,
     IonIcon,
     IonSpinner,
     IonBadge,
-    IonImg,
   ],
   template: `
     <div class="file-attachment-container">

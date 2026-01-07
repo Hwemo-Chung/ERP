@@ -10,7 +10,10 @@
     "NEXT": "Next",
     "PREV": "Previous",
     "LOADING": "Loading...",
-    "ERROR": "Error",
+    "ERROR": {
+      "TITLE": "Error",
+      "NOT_FOUND": "Data not found"
+    },
     "SUCCESS": "Success",
     "BUTTONS": {
       "OK": "OK",
@@ -67,10 +70,6 @@
     },
     "PLACEHOLDER": {
       "SELECT": "Select..."
-    },
-    "ERROR": {
-      "TITLE": "Error",
-      "NOT_FOUND": "Data not found"
     },
     "BUTTON": {
       "BACK_TO_LIST": "Back to list",
@@ -257,18 +256,21 @@
   },
   "ORDERS": {
     "STATUS": {
+      "PENDING": "Pending",
       "UNASSIGNED": "Unassigned",
       "ASSIGNED": "Assigned",
       "CONFIRMED": "Confirmed",
       "RELEASED": "Released",
       "DISPATCHED": "Dispatched",
-      "POSTPONED": "Postponed",
-      "ABSENT": "Absent",
+      "IN_PROGRESS": "In Progress",
       "COMPLETED": "Completed",
       "PARTIAL": "Partial",
-      "COLLECTED": "Collected",
       "CANCELLED": "Cancelled",
-      "REQUEST_CANCEL": "Cancellation Requested",
+      "POSTPONED": "Postponed",
+      "ABSENCE": "Absence",
+      "ABSENT": "Absent",
+      "REQUEST_CANCEL": "Cancel Requested",
+      "COLLECTED": "Collected",
       "REVERTED": "Reverted"
     },
     "ERROR": {
@@ -335,24 +337,6 @@
       "FILE_UPLOADED": "File uploaded successfully",
       "FILE_UPLOAD_FAILED": "File upload failed",
       "DOWNLOAD_FAILED": "File download failed"
-    },
-    "STATUS": {
-      "PENDING": "Pending",
-      "UNASSIGNED": "Unassigned",
-      "ASSIGNED": "Assigned",
-      "CONFIRMED": "Confirmed",
-      "RELEASED": "Released",
-      "DISPATCHED": "Dispatched",
-      "IN_PROGRESS": "In Progress",
-      "COMPLETED": "Completed",
-      "PARTIAL": "Partial",
-      "CANCELLED": "Cancelled",
-      "POSTPONED": "Postponed",
-      "ABSENCE": "Absence",
-      "ABSENT": "Absent",
-      "REQUEST_CANCEL": "Cancel Requested",
-      "COLLECTED": "Collected",
-      "REVERTED": "Reverted"
     },
     "ACTIONS": {
       "ASSIGN": "Assign",
@@ -1298,7 +1282,8 @@
     },
     "DEFAULT_USER": "User",
     "APP_VERSION": "App Version"
-  },  "ROLES": {
+  },
+  "ROLES": {
     "HQ_ADMIN": "HQ Administrator",
     "BRANCH_MANAGER": "Branch Manager",
     "PARTNER_COORDINATOR": "Partner Coordinator",
@@ -1364,7 +1349,19 @@
       "INTERNAL_ERROR": "Server error occurred",
       "NOT_FOUND": "Requested data not found",
       "FORBIDDEN": "Access denied"
-    }
+    },
+    "E1001": "Invalid username or password.",
+    "E1002": "Session has expired. Please login again.",
+    "E2001": "Invalid state transition.",
+    "E2002": "Settlement is locked. Cannot modify.",
+    "E2006": "Modified by another user. Please refresh and try again.",
+    "unauthorized": "Login required.",
+    "forbidden": "Access denied.",
+    "not_found": "Requested resource not found.",
+    "conflict": "Conflict occurred.",
+    "server_error": "Server error occurred.",
+    "network_error": "Network error occurred.",
+    "unknown": "An unknown error occurred."
   },
   "APP": {
     "OFFLINE_MODE": "Offline Mode - Will sync automatically when online",

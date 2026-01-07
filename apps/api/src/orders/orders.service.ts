@@ -17,6 +17,12 @@ import { CreateOrderEventDto } from './dto/create-order-event.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { RevertOrderDto } from './dto/revert-order.dto';
 import { ReassignOrderDto } from './dto/reassign-order.dto';
+import {
+  BatchSyncItemDto,
+  BatchSyncResultDto,
+  BatchSyncResponseDto,
+  SyncOperationType,
+} from './dto/batch-sync.dto';
 
 @Injectable()
 export class OrdersService {
@@ -1275,5 +1281,187 @@ export class OrdersService {
         reason: dto.reason,
       };
     });
+  }
+
+  /**
+   * Process batch sync operations for offline-first synchronization
+   * Each item is processed independently - failures do not rollback other items
+   * Implements SDD 5.2 Batch Sync API
+   */
+  async processBatchSync(
+    items: BatchSyncItemDto[],
+    userId: string,
+  ): Promise<BatchSyncResponseDto> {
+    const results: BatchSyncResultDto[] = [];
+
+    for (const item of items) {
+      const result = await this.processSyncItem(item, userId);
+      results.push(result);
+    }
+
+    return this.buildBatchResponse(results);
+  }
+
+  /**
+   * Process a single sync item based on operation type
+   */
+  private async processSyncItem(
+    item: BatchSyncItemDto,
+    userId: string,
+  ): Promise<BatchSyncResultDto> {
+    try {
+      switch (item.type) {
+        case SyncOperationType.CREATE:
+          return await this.handleCreateOperation(item, userId);
+        case SyncOperationType.UPDATE:
+          return await this.handleUpdateOperation(item, userId);
+        case SyncOperationType.DELETE:
+          return await this.handleDeleteOperation(item, userId);
+        default:
+          return this.createErrorResult(
+            item.entityId,
+            'E2030',
+            `Unknown operation type: ${item.type}`,
+          );
+      }
+    } catch (error) {
+      return this.handleSyncError(item.entityId, error);
+    }
+  }
+
+  /**
+   * Handle CREATE operation for batch sync
+   */
+  private async handleCreateOperation(
+    item: BatchSyncItemDto,
+    userId: string,
+  ): Promise<BatchSyncResultDto> {
+    const payload = item.payload as unknown as CreateOrderDto;
+
+    try {
+      const order = await this.create(payload, userId);
+      this.logger.log(`Batch sync CREATE: ${order.orderNo}`);
+
+      return {
+        entityId: order.id,
+        success: true,
+      };
+    } catch (error) {
+      return this.handleSyncError(item.entityId, error);
+    }
+  }
+
+  /**
+   * Handle UPDATE operation for batch sync with version conflict detection
+   */
+  private async handleUpdateOperation(
+    item: BatchSyncItemDto,
+    userId: string,
+  ): Promise<BatchSyncResultDto> {
+    const payload = item.payload as UpdateOrderDto;
+
+    // Add expected version from sync item if provided
+    if (item.expectedVersion !== undefined) {
+      payload.expectedVersion = item.expectedVersion;
+    }
+
+    try {
+      const order = await this.update(item.entityId, payload, userId);
+      this.logger.log(`Batch sync UPDATE: ${order.orderNo}`);
+
+      return {
+        entityId: item.entityId,
+        success: true,
+      };
+    } catch (error) {
+      return this.handleSyncError(item.entityId, error);
+    }
+  }
+
+  /**
+   * Handle DELETE operation for batch sync
+   */
+  private async handleDeleteOperation(
+    item: BatchSyncItemDto,
+    userId: string,
+  ): Promise<BatchSyncResultDto> {
+    try {
+      await this.remove(item.entityId, userId);
+      this.logger.log(`Batch sync DELETE: ${item.entityId}`);
+
+      return {
+        entityId: item.entityId,
+        success: true,
+      };
+    } catch (error) {
+      return this.handleSyncError(item.entityId, error);
+    }
+  }
+
+  /**
+   * Handle errors during sync and extract appropriate error codes
+   */
+  private handleSyncError(entityId: string, error: unknown): BatchSyncResultDto {
+    if (error instanceof ConflictException) {
+      const response = error.getResponse() as Record<string, unknown>;
+      return {
+        entityId,
+        success: false,
+        error: 'E2006',
+        message: 'Version conflict - order was modified by another user',
+        serverState: response.serverState || response,
+      };
+    }
+
+    if (error instanceof NotFoundException) {
+      return this.createErrorResult(entityId, 'E2001', 'Order not found');
+    }
+
+    if (error instanceof BadRequestException) {
+      const response = error.getResponse() as Record<string, unknown>;
+      return {
+        entityId,
+        success: false,
+        error: (response.error as string) || 'E2000',
+        message: (response.message as string) || 'Bad request',
+      };
+    }
+
+    // Unknown error
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    this.logger.error(`Batch sync error for ${entityId}: ${message}`);
+
+    return this.createErrorResult(entityId, 'E5000', message);
+  }
+
+  /**
+   * Create a standardized error result
+   */
+  private createErrorResult(
+    entityId: string,
+    error: string,
+    message: string,
+  ): BatchSyncResultDto {
+    return {
+      entityId,
+      success: false,
+      error,
+      message,
+    };
+  }
+
+  /**
+   * Build the batch response from individual results
+   */
+  private buildBatchResponse(results: BatchSyncResultDto[]): BatchSyncResponseDto {
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    return {
+      totalProcessed: results.length,
+      successCount,
+      failureCount,
+      results,
+    };
   }
 }
