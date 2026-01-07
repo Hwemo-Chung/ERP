@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
+  IonSearchbar, IonBadge, IonSpinner,
   IonButton, IonIcon, IonRefresher, IonRefresherContent, IonChip,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -27,7 +27,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
   imports: [
     CommonModule, FormsModule, TranslateModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
+    IonSearchbar, IonBadge, IonSpinner,
     IonButton, IonIcon, IonRefresher, IonRefresherContent, IonChip,
   ],
   template: `

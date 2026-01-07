@@ -5,9 +5,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
-  IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
-  IonRefresher, IonRefresherContent, IonProgressBar, IonIcon, IonButton,
+  IonSegment, IonSegmentButton, IonSpinner,
+  IonRefresher, IonRefresherContent, IonIcon, IonButton,
   IonDatetime, IonModal, IonDatetimeButton,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -30,9 +29,8 @@ type ViewType = 'installer' | 'branch' | 'status';
   imports: [
     CommonModule, FormsModule, TranslateModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
-    IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
-    IonRefresher, IonRefresherContent, IonProgressBar, IonIcon, IonButton,
+    IonSegment, IonSegmentButton, IonSpinner,
+    IonRefresher, IonRefresherContent, IonIcon, IonButton,
     IonDatetime, IonModal, IonDatetimeButton,
   ],
   template: `

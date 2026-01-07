@@ -22,7 +22,6 @@ import {
   Validators,
 } from '@angular/forms';
 import {
-  IonModal,
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -37,8 +36,6 @@ import {
   IonTextarea,
   IonIcon,
   IonSpinner,
-  IonCard,
-  IonCardContent,
   IonImg,
   ModalController,
 } from '@ionic/angular/standalone';
@@ -71,7 +68,6 @@ interface WasteCode {
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    IonModal,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -86,8 +82,6 @@ interface WasteCode {
     IonTextarea,
     IonIcon,
     IonSpinner,
-    IonCard,
-    IonCardContent,
     IonImg,
   ],
   template: `
@@ -140,7 +134,7 @@ interface WasteCode {
                 <ion-select formControlName="code" [placeholder]="'ORDERS.COMPLETION_MODAL.WASTE_CODE_SELECT' | translate">
                   @for (code of wasteCodes(); track code.code) {
                     <ion-select-option [value]="code.code">
-                      {{ code.code }} - {{ code.labelKey | translate }}
+                      {{ code.code }} - {{ code.labelKey ? (code.labelKey | translate) : code.name }}
                     </ion-select-option>
                   }
                 </ion-select>
@@ -174,7 +168,7 @@ interface WasteCode {
           <div class="photos">
             @for (photo of photos(); track $index) {
               <div class="photo-item">
-                <ion-image [src]="photo"></ion-image>
+                <ion-img [src]="photo"></ion-img>
                 <ion-button
                   fill="clear"
                   color="danger"

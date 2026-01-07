@@ -3,7 +3,7 @@
  * 1920x1080 해상도 최적화 웹 전용 레이아웃
  */
 
-@import './breakpoints';
+@use './breakpoints' as *;
 
 // 웹 전용 사이드바 레이아웃
 .web-layout {
