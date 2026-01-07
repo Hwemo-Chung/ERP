@@ -43,7 +43,6 @@ import { addIcons } from 'ionicons';
 import { peopleOutline, calendarOutline, checkmarkCircleOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BulkOperationService } from '@app/shared/services/bulk-operation.service';
-import { BulkOperationResult } from '@app/shared/components/bulk-operation-result/bulk-operation-result.component';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus, Order } from '../../../../store/orders/orders.models';
 

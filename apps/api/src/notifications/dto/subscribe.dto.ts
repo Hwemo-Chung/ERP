@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEnum, IsArray, IsObject } from 'class-validator';
 import { Platform, PushProvider } from '@prisma/client';
 

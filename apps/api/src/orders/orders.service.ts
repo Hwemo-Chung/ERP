@@ -531,7 +531,6 @@ export class OrdersService {
 
         for (const assignment of splitLine.assignments) {
           // Generate unique order number for child
-          const timestamp = Date.now();
           const random = Math.random().toString(36).substring(2, 8).toUpperCase();
           const childOrderNo = `${parentOrder.orderNo}-SPLIT-${random}`;
 
@@ -1000,7 +999,7 @@ export class OrdersService {
       }
 
       // Update order status
-      const updatedOrder = await tx.order.update({
+      await tx.order.update({
         where: { id },
         data: {
           status: targetStatus,
@@ -1218,7 +1217,7 @@ export class OrdersService {
       }
 
       // Update order
-      const updatedOrder = await tx.order.update({
+      await tx.order.update({
         where: { id },
         data: updateData,
       });

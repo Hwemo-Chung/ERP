@@ -1,6 +1,6 @@
 // apps/web/src/app/features/reports/pages/waste-summary/waste-summary.page.ts
 // PRD FR-07 - Waste appliance collection summary per category
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {

@@ -959,10 +959,8 @@ export class OrderAbsencePage implements OnInit {
       return;
     }
 
-    // 비동기 핸들러를 위한 변수 캡처
+    // Capture translateService for async handler callback
     const translateService = this.translate;
-    const nextRetryCount = this.currentRetryCount() + 1;
-    const formattedDate = this.formatDate(this.nextVisitDate);
 
     const alert = await this.alertController.create({
       header: translateService.instant('ORDERS.ABSENCE.CONFIRM.TITLE'),

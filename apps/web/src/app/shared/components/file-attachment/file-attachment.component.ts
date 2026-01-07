@@ -8,7 +8,7 @@
  * - 삭제/재정렬
  * - S3 업로드 연동
  */
-import { Component, ChangeDetectionStrategy, inject, signal, input, output, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonIcon,

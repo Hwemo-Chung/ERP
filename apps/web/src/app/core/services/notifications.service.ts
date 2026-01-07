@@ -4,7 +4,7 @@
  */
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '@env/environment';
 import { WebSocketService } from './websocket.service';
 

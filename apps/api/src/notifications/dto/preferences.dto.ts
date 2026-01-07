@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsArray, IsOptional, IsBoolean, IsIn, Matches } from 'class-validator';
+import { IsString, IsArray, IsOptional, IsBoolean, Matches } from 'class-validator';
 
 export class QuietHoursDto {
   @ApiProperty({ description: 'Enable or disable quiet hours' })

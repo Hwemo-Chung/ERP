@@ -35,7 +35,6 @@ import {
   IonSegmentButton,
   IonModal,
   ToastController,
-  AlertController,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';

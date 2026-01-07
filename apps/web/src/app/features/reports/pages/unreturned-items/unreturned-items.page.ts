@@ -12,7 +12,6 @@ import { ToastController, AlertController } from '@ionic/angular/standalone';
 import {
   ReportsService,
   UnreturnedItem,
-  UnreturnedItemsResponse,
   BranchOption,
 } from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';

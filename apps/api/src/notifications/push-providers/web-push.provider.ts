@@ -97,7 +97,7 @@ export class WebPushProvider implements IPushProvider {
       });
 
       // Send push notification
-      const result = await webpush.sendNotification(
+      await webpush.sendNotification(
         subscription,
         notificationPayload,
         {

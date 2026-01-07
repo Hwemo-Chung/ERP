@@ -1,6 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export enum ReportLevel {
   NATION = 'nation',

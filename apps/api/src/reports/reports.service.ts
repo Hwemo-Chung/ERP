@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, StreamableFile } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
@@ -258,7 +258,7 @@ export class ReportsService {
       aggregateMap.set(code, existing);
     });
 
-    const items = Array.from(aggregateMap.values()).map(({ orderIds, ...rest }) => rest);
+    const items = Array.from(aggregateMap.values()).map(({ orderIds: _orderIds, ...rest }) => rest);
 
     return items.sort((a, b) => b.quantity - a.quantity);
   }
@@ -486,8 +486,8 @@ export class ReportsService {
       throw new Error(`Order ${orderId} is not completed (status: ${order.status})`);
     }
 
-    // Generate PDF buffer
-    const pdfBuffer = await this.generatePdfBuffer(order);
+    // Generate PDF buffer (currently generates to verify, actual download handled separately)
+    const _pdfBuffer = await this.generatePdfBuffer(order);
 
     // Create export record for the PDF
     const exportRecord = await this.prisma.export.create({
