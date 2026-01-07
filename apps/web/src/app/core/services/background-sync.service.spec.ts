@@ -2,12 +2,12 @@ import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BackgroundSyncService, SyncOperation } from './background-sync.service';
+import { BackgroundSyncService } from './background-sync.service';
 import { NetworkService } from './network.service';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
 import { db, SyncQueueEntry, __configureDexieMock } from '@app/core/db/database';
-import { Preferences, __configureMock, GetOptions } from '@capacitor/preferences';
+import { __configureMock, GetOptions } from '@capacitor/preferences';
 
 describe('BackgroundSyncService', () => {
   let service: BackgroundSyncService;

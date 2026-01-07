@@ -316,7 +316,7 @@ describe('BulkOperationService - FR-18', () => {
 
     it('should handle unknown error types', async () => {
       const operation = jasmine.createSpy('operation').and.callFake(() => {
-        // eslint-disable-next-line prefer-promise-reject-errors
+         
         return Promise.reject('String error');
       });
 

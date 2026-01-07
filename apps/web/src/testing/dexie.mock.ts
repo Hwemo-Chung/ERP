@@ -9,10 +9,10 @@ import type { OfflineOrder, SyncQueueEntry, MetadataCache, BackgroundSyncTask } 
 export type { OfflineOrder, SyncQueueEntry, MetadataCache, BackgroundSyncTask };
 
 // Mock storage
-let mockOrders: Map<string, OfflineOrder> = new Map();
-let mockSyncQueue: Map<number, SyncQueueEntry> = new Map();
-let mockMetadata: Map<string, MetadataCache> = new Map();
-let mockBackgroundSyncQueue: Map<string, BackgroundSyncTask> = new Map();
+const mockOrders: Map<string, OfflineOrder> = new Map();
+const mockSyncQueue: Map<number, SyncQueueEntry> = new Map();
+const mockMetadata: Map<string, MetadataCache> = new Map();
+const mockBackgroundSyncQueue: Map<string, BackgroundSyncTask> = new Map();
 let syncQueueIdCounter = 1;
 
 // Generic mock table operations with configurable primary key

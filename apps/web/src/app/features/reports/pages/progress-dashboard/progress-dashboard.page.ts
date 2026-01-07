@@ -380,12 +380,13 @@ export class ProgressDashboardPage implements OnInit {
         this.dateFrom = now.toISOString();
         this.dateTo = now.toISOString();
         break;
-      case 'week':
+      case 'week': {
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
         this.dateFrom = startOfWeek.toISOString();
         this.dateTo = now.toISOString();
         break;
+      }
       case 'month':
         this.dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         this.dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();

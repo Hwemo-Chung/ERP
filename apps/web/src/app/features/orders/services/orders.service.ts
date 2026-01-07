@@ -211,7 +211,7 @@ export class OrdersService {
   }
 
   private async getOrdersOffline(params: OrderListParams): Promise<PaginatedResponse<Order>> {
-    let query = db.orders.orderBy('appointmentDate');
+    const query = db.orders.orderBy('appointmentDate');
 
     // Apply filters
     const allOrders = await query.toArray();
