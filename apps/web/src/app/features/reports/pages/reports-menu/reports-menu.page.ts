@@ -3,7 +3,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, IonTitle, IonIcon } from '@ionic/angular/standalone';
 import { TranslateModule } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevronForwardOutline, returnDownBackOutline } from 'ionicons/icons';
@@ -11,7 +11,7 @@ import { statsChartOutline, peopleOutline, trashOutline, downloadOutline, chevro
 @Component({
   selector: 'app-reports-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonList, IonItem, IonLabel, IonIcon],
+  imports: [CommonModule, RouterLink, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonIcon],
   template: `
     <ion-header>
       <ion-toolbar>

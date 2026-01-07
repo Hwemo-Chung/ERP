@@ -12,11 +12,6 @@ import {
   IonBackButton,
   IonButton,
   IonIcon,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonList,
   IonItem,
   IonLabel,
   IonInput,
@@ -28,6 +23,7 @@ import {
   IonFabButton,
   IonBadge,
   IonSearchbar,
+  IonModal,
   ToastController,
   AlertController,
   ModalController,
@@ -54,11 +50,6 @@ import { CustomerContact, PaginatedResponse, CustomerContactFilter } from './cus
     IonBackButton,
     IonButton,
     IonIcon,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
-    IonList,
     IonItem,
     IonLabel,
     IonInput,
@@ -70,6 +61,7 @@ import { CustomerContact, PaginatedResponse, CustomerContactFilter } from './cus
     IonFabButton,
     IonBadge,
     IonSearchbar,
+    IonModal,
   ],
   template: `
     <ion-header>
@@ -310,7 +302,8 @@ import { CustomerContact, PaginatedResponse, CustomerContactFilter } from './cus
         [isOpen]="!!errorMessage"
         [header]="'COMMON.ERROR.TITLE' | translate"
         [message]="errorMessage"
-        [buttons]="[{ text: ('COMMON.BUTTON.CONFIRM' | translate), handler: () => errorMessage = null }]"
+        [buttons]="errorAlertButtons"
+        (didDismiss)="clearError()"
       ></ion-alert>
     </ion-content>
   `,
@@ -477,6 +470,16 @@ export class CustomerContactPage implements OnInit {
   showModal = false;
   hasMore = false;
   errorMessage: string | null = null;
+
+  /** Alert buttons for error message */
+  get errorAlertButtons(): string[] {
+    return [this.translate.instant('COMMON.BUTTON.CONFIRM')];
+  }
+
+  /** Clear the error message */
+  clearError(): void {
+    this.errorMessage = null;
+  }
 
   private page = 1;
   private apiUrl = `${environment.apiUrl}/settings/customer-contact`;

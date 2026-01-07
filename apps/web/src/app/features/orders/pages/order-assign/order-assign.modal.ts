@@ -7,7 +7,6 @@ import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
-  IonModal,
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -43,7 +42,6 @@ import { Installer } from '../../../../store/installers/installers.models';
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    IonModal,
     IonHeader,
     IonToolbar,
     IonTitle,

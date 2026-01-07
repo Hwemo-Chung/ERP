@@ -5,8 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-  IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
+  IonSpinner, IonButton, IonIcon,
   IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -26,8 +25,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   imports: [
     CommonModule, FormsModule, TranslateModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-    IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
+    IonSpinner, IonButton, IonIcon,
     IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
   ],
   template: `

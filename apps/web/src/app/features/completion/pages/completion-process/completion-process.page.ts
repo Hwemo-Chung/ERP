@@ -31,8 +31,6 @@ import {
   IonLabel,
   IonBadge,
   IonSpinner,
-  IonNote,
-  IonCheckbox,
   AlertController,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -74,8 +72,6 @@ import { CameraService, CapturedPhoto } from '../../../../core/services/camera.s
     IonLabel,
     IonBadge,
     IonSpinner,
-    IonNote,
-    IonCheckbox,
   ],
   template: `
     <ion-header>

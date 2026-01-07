@@ -29,7 +29,6 @@ import {
   IonSpinner,
   IonIcon,
   IonButton,
-  IonBadge,
   RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -88,7 +87,6 @@ interface DashboardSummary {
     IonSpinner,
     IonIcon,
     IonButton,
-    IonBadge,
     TranslateModule,
   ],
   template: `

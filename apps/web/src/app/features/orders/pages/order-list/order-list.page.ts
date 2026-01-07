@@ -13,6 +13,7 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import {
   IonContent,
   IonHeader,
@@ -21,7 +22,6 @@ import {
   IonList,
   IonItem,
   IonLabel,
-  IonButton,
   IonIcon,
   IonRefresher,
   IonRefresherContent,
@@ -32,9 +32,6 @@ import {
   IonSpinner,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonSelect,
-  IonSelectOption,
-  IonCheckbox,
   RefresherCustomEvent,
   InfiniteScrollCustomEvent,
 } from '@ionic/angular/standalone';
@@ -55,12 +52,12 @@ import {
   reorderFourOutline,
   personOutline
 } from 'ionicons/icons';
+import { NetworkService } from '../../../../core/services/network.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NetworkService } from '@core/services/network.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { UIStore } from '../../../../store/ui/ui.store';
-import { OrderStatus } from '../../../../store/orders/orders.models';
+import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 import { BREAKPOINTS } from '@shared/constants';
 
 @Component({
@@ -76,7 +73,6 @@ import { BREAKPOINTS } from '@shared/constants';
     IonList,
     IonItem,
     IonLabel,
-    IonButton,
     IonIcon,
     IonRefresher,
     IonRefresherContent,
@@ -87,10 +83,8 @@ import { BREAKPOINTS } from '@shared/constants';
     IonSpinner,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    IonSelect,
-    IonSelectOption,
-    IonCheckbox,
     TranslateModule,
+    ScrollingModule,
   ],
   template: `
     <ion-header>
@@ -202,7 +196,7 @@ import { BREAKPOINTS } from '@shared/constants';
               <p>{{ 'ORDERS.LIST.NO_ORDERS_DESC' | translate }}</p>
             </div>
           } @else {
-            <!-- 테이블 뷰 -->
+            <!-- 테이블 뷰 (Virtual Scrolling 적용) -->
             @if (viewMode() === 'table') {
               <div class="web-data-table">
                 <div class="table-header">
@@ -213,73 +207,78 @@ import { BREAKPOINTS } from '@shared/constants';
                     </button>
                   </div>
                 </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th class="col-checkbox">
-                        <input type="checkbox" (change)="selectAll()" />
-                      </th>
-                      <th class="col-order">{{ 'ORDERS.TABLE.ORDER_NUMBER' | translate }}</th>
-                      <th class="col-status">{{ 'COMMON.STATUS' | translate }}</th>
-                      <th class="col-customer">{{ 'ORDERS.TABLE.CUSTOMER' | translate }}</th>
-                      <th class="col-address">{{ 'ORDERS.TABLE.ADDRESS' | translate }}</th>
-                      <th class="col-date">{{ 'ORDERS.TABLE.SCHEDULED_DATE' | translate }}</th>
-                      <th class="col-installer">{{ 'ORDERS.TABLE.INSTALLER' | translate }}</th>
-                      <th class="col-actions">{{ 'COMMON.ACTIONS' | translate }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (order of ordersStore.filteredOrders(); track order.id) {
-                      <tr (click)="viewOrder(order.id)">
-                        <td class="col-checkbox" (click)="$event.stopPropagation()">
-                          <input type="checkbox" [checked]="selectedOrders().has(order.id)" 
-                                 (change)="toggleOrderSelection(order.id)" />
-                        </td>
-                        <td class="col-order">
-                          <span class="order-number">{{ order.orderNo }}</span>
-                        </td>
-                        <td class="col-status">
-                          <span [class]="'status-badge status-' + order.status.toLowerCase()">
-                            {{ getStatusLabel(order.status) }}
-                          </span>
-                        </td>
-                        <td class="col-customer">
-                          <div class="customer-info">
-                            <span class="customer-name">{{ order.customerName }}</span>
-                            <span class="customer-phone">{{ order.customerPhone }}</span>
+                <!-- CSS Grid 기반 가상 테이블 -->
+                <div class="virtual-table">
+                  <!-- 고정 헤더 -->
+                  <div class="virtual-table-header">
+                    <div class="vt-cell col-checkbox">
+                      <input type="checkbox" (change)="selectAll()" />
+                    </div>
+                    <div class="vt-cell col-order">{{ 'ORDERS.TABLE.ORDER_NUMBER' | translate }}</div>
+                    <div class="vt-cell col-status">{{ 'COMMON.STATUS' | translate }}</div>
+                    <div class="vt-cell col-customer">{{ 'ORDERS.TABLE.CUSTOMER' | translate }}</div>
+                    <div class="vt-cell col-address">{{ 'ORDERS.TABLE.ADDRESS' | translate }}</div>
+                    <div class="vt-cell col-date">{{ 'ORDERS.TABLE.SCHEDULED_DATE' | translate }}</div>
+                    <div class="vt-cell col-installer">{{ 'ORDERS.TABLE.INSTALLER' | translate }}</div>
+                    <div class="vt-cell col-actions">{{ 'COMMON.ACTIONS' | translate }}</div>
+                  </div>
+                  <!-- Virtual Scroll 본문 -->
+                  <cdk-virtual-scroll-viewport
+                    itemSize="56"
+                    class="virtual-table-body"
+                    minBufferPx="400"
+                    maxBufferPx="800">
+                    <div class="virtual-table-row"
+                         *cdkVirtualFor="let order of ordersStore.filteredOrders(); trackBy: trackById"
+                         (click)="viewOrder(order.id)">
+                      <div class="vt-cell col-checkbox" (click)="$event.stopPropagation()">
+                        <input type="checkbox" [checked]="selectedOrders().has(order.id)"
+                               (change)="toggleOrderSelection(order.id)" />
+                      </div>
+                      <div class="vt-cell col-order">
+                        <span class="order-number">{{ order.orderNo }}</span>
+                      </div>
+                      <div class="vt-cell col-status">
+                        <span [class]="'status-badge status-' + order.status.toLowerCase()">
+                          {{ getStatusLabel(order.status) }}
+                        </span>
+                      </div>
+                      <div class="vt-cell col-customer">
+                        <div class="customer-info">
+                          <span class="customer-name">{{ order.customerName }}</span>
+                          <span class="customer-phone">{{ order.customerPhone }}</span>
+                        </div>
+                      </div>
+                      <div class="vt-cell col-address">
+                        <span class="address-text">{{ order.customerAddress }}</span>
+                      </div>
+                      <div class="vt-cell col-date">
+                        <div class="date-info">
+                          <span class="date">{{ order.appointmentDate | date:'MM/dd (EEE)' }}</span>
+                          <span class="slot">{{ order.appointmentSlot || '-' }}</span>
+                        </div>
+                      </div>
+                      <div class="vt-cell col-installer">
+                        @if (order.installerName) {
+                          <div class="installer-badge">
+                            <ion-icon name="person-outline"></ion-icon>
+                            {{ order.installerName }}
                           </div>
-                        </td>
-                        <td class="col-address">
-                          <span class="address-text">{{ order.customerAddress }}</span>
-                        </td>
-                        <td class="col-date">
-                          <div class="date-info">
-                            <span class="date">{{ order.appointmentDate | date:'MM/dd (EEE)' }}</span>
-                            <span class="slot">{{ order.appointmentSlot || '-' }}</span>
-                          </div>
-                        </td>
-                        <td class="col-installer">
-                          @if (order.installerName) {
-                            <div class="installer-badge">
-                              <ion-icon name="person-outline"></ion-icon>
-                              {{ order.installerName }}
-                            </div>
-                          } @else {
-                            <span class="unassigned">{{ 'ORDERS.STATUS.UNASSIGNED' | translate }}</span>
-                          }
-                        </td>
-                        <td class="col-actions" (click)="$event.stopPropagation()">
-                          <button class="action-btn" [title]="'COMMON.VIEW_DETAIL' | translate" (click)="viewOrder(order.id)">
-                            <ion-icon name="eye-outline"></ion-icon>
-                          </button>
-                          <button class="action-btn" [title]="'COMMON.EDIT' | translate" (click)="editOrder(order.id)">
-                            <ion-icon name="create-outline"></ion-icon>
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                        } @else {
+                          <span class="unassigned">{{ 'ORDERS.STATUS.UNASSIGNED' | translate }}</span>
+                        }
+                      </div>
+                      <div class="vt-cell col-actions" (click)="$event.stopPropagation()">
+                        <button class="action-btn" [title]="'COMMON.VIEW_DETAIL' | translate" (click)="viewOrder(order.id)">
+                          <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                        <button class="action-btn" [title]="'COMMON.EDIT' | translate" (click)="editOrder(order.id)">
+                          <ion-icon name="create-outline"></ion-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </cdk-virtual-scroll-viewport>
+                </div>
                 @if (ordersStore.pagination().hasMore) {
                   <div class="table-footer">
                     <div class="pagination-info">
@@ -369,9 +368,17 @@ import { BREAKPOINTS } from '@shared/constants';
             <p>{{ 'ORDERS.LIST.PULL_TO_REFRESH' | translate }}</p>
           </div>
         } @else {
-          <ion-list>
-            @for (order of ordersStore.filteredOrders(); track order.id) {
-              <ion-item button (click)="viewOrder(order.id)" class="order-item">
+          <cdk-virtual-scroll-viewport
+            itemSize="88"
+            class="order-list-viewport"
+            minBufferPx="400"
+            maxBufferPx="800">
+            <ion-list>
+              <ion-item
+                *cdkVirtualFor="let order of ordersStore.filteredOrders(); trackBy: trackById"
+                button
+                (click)="viewOrder(order.id)"
+                class="order-item">
                 <div class="order-content">
                   <div class="order-header">
                     <span class="order-number">{{ order.orderNo }}</span>
@@ -398,8 +405,9 @@ import { BREAKPOINTS } from '@shared/constants';
                 </div>
                 <ion-icon slot="end" name="chevron-forward-outline" class="chevron-icon"></ion-icon>
               </ion-item>
-            }
-          </ion-list>
+            </ion-list>
+          </cdk-virtual-scroll-viewport>
+
 
           @if (ordersStore.pagination().hasMore) {
             <ion-infinite-scroll (ionInfinite)="loadMore($event)">
@@ -476,46 +484,20 @@ import { BREAKPOINTS } from '@shared/constants';
     }
 
     .stat-card {
-      background: #ffffff;
+      background: #fff;
       border-radius: 12px;
       padding: 12px 8px;
       text-align: center;
       border: 1px solid #e2e8f0;
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      &:active {
-        transform: scale(0.98);
-      }
-
-      .stat-value {
-        font-size: 20px;
-        font-weight: 700;
-        color: #0f172a;
-        line-height: 1;
-        margin-bottom: 4px;
-      }
-
-      .stat-label {
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 500;
-      }
-
-      &.danger {
-        border-left: 3px solid #ef4444;
-        .stat-value { color: #ef4444; }
-      }
-
-      &.warning {
-        border-left: 3px solid #f59e0b;
-        .stat-value { color: #f59e0b; }
-      }
-
-      &.success {
-        border-left: 3px solid #10b981;
-        .stat-value { color: #10b981; }
-      }
     }
+    .stat-card .stat-value { font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 4px; }
+    .stat-card .stat-label { font-size: 11px; color: #64748b; font-weight: 500; }
+    .stat-card.danger { border-left: 3px solid #ef4444; }
+    .stat-card.danger .stat-value { color: #ef4444; }
+    .stat-card.warning { border-left: 3px solid #f59e0b; }
+    .stat-card.warning .stat-value { color: #f59e0b; }
+    .stat-card.success { border-left: 3px solid #10b981; }
+    .stat-card.success .stat-value { color: #10b981; }
 
     .order-item {
       --padding-start: 16px;
@@ -561,39 +543,18 @@ import { BREAKPOINTS } from '@shared/constants';
       text-overflow: ellipsis;
     }
 
-    .order-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 4px;
-    }
+    .order-meta { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #64748b; }
+    .meta-item ion-icon { font-size: 14px; color: #94a3b8; }
+    .meta-item.appointment { color: #3b82f6; font-weight: 500; }
+    .meta-item.appointment ion-icon { color: #3b82f6; }
 
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      color: #64748b;
 
-      ion-icon {
-        font-size: 14px;
-        color: #94a3b8;
-      }
-
-      &.appointment {
-        color: #3b82f6;
-        font-weight: 500;
-
-        ion-icon {
-          color: #3b82f6;
-        }
-      }
-    }
-
-    .chevron-icon {
-      color: #cbd5e1;
-      font-size: 18px;
-    }
+    /* Virtual Scroll */
+    .order-list-viewport { height: calc(100vh - 248px); width: 100%; }
+    cdk-virtual-scroll-viewport { contain: strict; }
+    cdk-virtual-scroll-viewport .cdk-virtual-scroll-content-wrapper { display: flex; flex-direction: column; }
+    .chevron-icon { color: #cbd5e1; font-size: 18px; }
 
     /* ============================================
        웹 버전 스타일 (1080px 이상)
@@ -613,161 +574,36 @@ import { BREAKPOINTS } from '@shared/constants';
       }
     }
 
-    /* 필터 바 */
-    .web-filter-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 16px 20px;
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+    /* Filter bar */
+    .web-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .filter-right { display: flex; align-items: center; gap: 8px; }
+    .search-box { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 280px; }
+    .search-box ion-icon { font-size: 18px; color: #94a3b8; }
+    .search-box input { border: none; background: transparent; font-size: 14px; width: 100%; outline: none; }
+    .search-box input::placeholder { color: #94a3b8; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { font-size: 13px; font-weight: 500; color: #64748b; }
+    .filter-group select, .filter-group input { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; color: #374151; background: #fff; min-width: 120px; }
+    .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #3b82f6; }
 
-      .filter-left {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
+    /* Stats row */
+    .web-stats-row { display: flex; gap: 16px; margin-bottom: 20px; }
+    .web-stats-row .stat-item { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; }
+    .web-stats-row .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .web-stats-row .stat-label { font-size: 13px; color: #64748b; }
+    .web-stats-row .danger .stat-value { color: #ef4444; }
+    .web-stats-row .warning .stat-value { color: #f59e0b; }
+    .web-stats-row .success .stat-value { color: #10b981; }
 
-      .filter-right {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .search-box {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        min-width: 280px;
-
-        ion-icon {
-          font-size: 18px;
-          color: #94a3b8;
-        }
-
-        input {
-          border: none;
-          background: transparent;
-          font-size: 14px;
-          width: 100%;
-          outline: none;
-
-          &::placeholder {
-            color: #94a3b8;
-          }
-        }
-      }
-
-      .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        label {
-          font-size: 13px;
-          font-weight: 500;
-          color: #64748b;
-        }
-
-        select, input {
-          padding: 8px 12px;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 14px;
-          color: #374151;
-          background: #ffffff;
-          min-width: 120px;
-
-          &:focus {
-            outline: none;
-            border-color: #3b82f6;
-          }
-        }
-      }
-    }
-
-    /* 통계 요약 행 */
-    .web-stats-row {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 20px;
-
-      .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
-        background: #ffffff;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-
-        .stat-value {
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-        }
-
-        .stat-label {
-          font-size: 13px;
-          color: #64748b;
-        }
-
-        &.danger .stat-value { color: #ef4444; }
-        &.warning .stat-value { color: #f59e0b; }
-        &.success .stat-value { color: #10b981; }
-      }
-    }
-
-    /* 웹 버튼 */
-    .web-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-
-      ion-icon {
-        font-size: 18px;
-      }
-
-      &.secondary {
-        background: #f1f5f9;
-        color: #374151;
-
-        &:hover {
-          background: #e2e8f0;
-        }
-      }
-
-      &.ghost {
-        background: transparent;
-        color: #64748b;
-
-        &:hover {
-          background: #f1f5f9;
-        }
-      }
-
-      &.sm {
-        padding: 6px 12px;
-        font-size: 13px;
-      }
-    }
+    /* Web buttons */
+    .web-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
+    .web-btn ion-icon { font-size: 18px; }
+    .web-btn.secondary { background: #f1f5f9; color: #374151; }
+    .web-btn.secondary:hover { background: #e2e8f0; }
+    .web-btn.ghost { background: transparent; color: #64748b; }
+    .web-btn.ghost:hover { background: #f1f5f9; }
+    .web-btn.sm { padding: 6px 12px; font-size: 13px; }
 
     /* 데이터 테이블 */
     .web-data-table {
@@ -790,61 +626,90 @@ import { BREAKPOINTS } from '@shared/constants';
         }
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
+      .table-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
 
-        th, td {
-          padding: 14px 16px;
-          text-align: left;
-          border-bottom: 1px solid #f1f5f9;
+        .pagination-info {
+          font-size: 13px;
+          color: #64748b;
         }
+      }
 
-        th {
-          background: #f8fafc;
+      /* CSS Grid 기반 가상 테이블 (Virtual Scrolling 지원) */
+      .virtual-table {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e2e8f0;
+        border-radius: 0 0 12px 12px;
+        overflow: hidden;
+      }
+
+      .virtual-table-header,
+      .virtual-table-row {
+        display: grid;
+        grid-template-columns: 50px 160px 100px 140px minmax(200px, 1fr) 130px 120px 100px;
+        align-items: center;
+      }
+
+      .virtual-table-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+
+        .vt-cell {
+          padding: 14px 16px;
           font-size: 12px;
           font-weight: 600;
           color: #64748b;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
+      }
 
-        td {
+      .virtual-table-body {
+        height: calc(100vh - 400px); /* Adjust based on header/filter heights */
+        min-height: 300px;
+        contain: strict;
+
+        .cdk-virtual-scroll-content-wrapper {
+          display: flex;
+          flex-direction: column;
+        }
+      }
+
+      .virtual-table-row {
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+
+        &:hover {
+          background: #f8fafc;
+        }
+
+        .vt-cell {
+          padding: 14px 16px;
           font-size: 14px;
           color: #374151;
-        }
+          overflow: hidden;
+          text-overflow: ellipsis;
 
-        tbody tr {
-          cursor: pointer;
-          transition: background 0.15s;
-
-          &:hover {
-            background: #f8fafc;
+          &.col-checkbox {
+            text-align: center;
           }
-        }
 
-        .col-checkbox {
-          width: 50px;
-          text-align: center;
-        }
-
-        .col-order {
-          width: 160px;
-
-          .order-number {
+          &.col-order .order-number {
             font-weight: 600;
             font-size: 13px;
             color: #3b82f6;
             white-space: nowrap;
           }
-        }
-
-        .col-status {
-          width: 100px;
-        }
-
-        .col-customer {
-          width: 140px;
 
           .customer-info {
             display: flex;
@@ -854,6 +719,9 @@ import { BREAKPOINTS } from '@shared/constants';
             .customer-name {
               font-weight: 600;
               color: #0f172a;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
 
             .customer-phone {
@@ -861,10 +729,6 @@ import { BREAKPOINTS } from '@shared/constants';
               color: #64748b;
             }
           }
-        }
-
-        .col-address {
-          min-width: 200px;
 
           .address-text {
             display: -webkit-box;
@@ -874,10 +738,6 @@ import { BREAKPOINTS } from '@shared/constants';
             font-size: 13px;
             color: #64748b;
           }
-        }
-
-        .col-date {
-          width: 130px;
 
           .date-info {
             display: flex;
@@ -894,10 +754,6 @@ import { BREAKPOINTS } from '@shared/constants';
               color: #3b82f6;
             }
           }
-        }
-
-        .col-installer {
-          width: 120px;
 
           .installer-badge {
             display: inline-flex;
@@ -918,49 +774,34 @@ import { BREAKPOINTS } from '@shared/constants';
             color: #ef4444;
             font-size: 13px;
           }
-        }
 
-        .col-actions {
-          width: 100px;
-          text-align: center;
+          &.col-actions {
+            text-align: center;
 
-          .action-btn {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
+            .action-btn {
+              width: 32px;
+              height: 32px;
+              border: none;
+              background: transparent;
+              border-radius: 6px;
+              cursor: pointer;
+              transition: background 0.2s;
 
-            ion-icon {
-              font-size: 18px;
-              color: #64748b;
-            }
+              ion-icon {
+                font-size: 18px;
+                color: #64748b;
+              }
 
-            &:hover {
-              background: #f1f5f9;
+              &:hover {
+                background: #f1f5f9;
+              }
             }
           }
         }
       }
-
-      .table-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 20px;
-        border-top: 1px solid #e2e8f0;
-        background: #f8fafc;
-
-        .pagination-info {
-          font-size: 13px;
-          color: #64748b;
-        }
-      }
     }
 
-    /* 상태 배지 */
+    /* Status badges - using color vars for size reduction */
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -968,120 +809,35 @@ import { BREAKPOINTS } from '@shared/constants';
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
-
-      &.status-unassigned { background: rgba(158, 158, 158, 0.15); color: #757575; }
-      &.status-assigned { background: rgba(33, 150, 243, 0.15); color: #1976d2; }
-      &.status-confirmed { background: rgba(3, 169, 244, 0.15); color: #0288d1; }
-      &.status-released { background: rgba(0, 188, 212, 0.15); color: #0097a7; }
-      &.status-dispatched { background: rgba(0, 150, 136, 0.15); color: #00796b; }
-      &.status-completed { background: rgba(76, 175, 80, 0.15); color: #388e3c; }
-      &.status-postponed { background: rgba(255, 152, 0, 0.15); color: #f57c00; }
-      &.status-absent { background: rgba(255, 87, 34, 0.15); color: #e64a19; }
-      &.status-request_cancel { background: rgba(244, 67, 54, 0.15); color: #d32f2f; }
-      &.status-cancelled { background: rgba(121, 85, 72, 0.15); color: #5d4037; }
-      &.status-collected { background: rgba(139, 195, 74, 0.15); color: #689f38; }
-      &.status-partial { background: rgba(139, 195, 74, 0.15); color: #689f38; }
     }
+    .status-unassigned { background: #9e9e9e26; color: #757575; }
+    .status-assigned { background: #2196f326; color: #1976d2; }
+    .status-confirmed { background: #03a9f426; color: #0288d1; }
+    .status-released { background: #00bcd426; color: #0097a7; }
+    .status-dispatched { background: #00968826; color: #00796b; }
+    .status-completed, .status-collected, .status-partial { background: #4caf5026; color: #388e3c; }
+    .status-postponed { background: #ff980026; color: #f57c00; }
+    .status-absent { background: #ff572226; color: #e64a19; }
+    .status-request_cancel { background: #f4433626; color: #d32f2f; }
+    .status-cancelled { background: #79554826; color: #5d4037; }
 
-    /* 카드 그리드 뷰 */
-    .web-card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-
-      @media (min-width: 1600px) {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-
-    .order-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-
-      .card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 16px;
-        border-bottom: 1px solid #f1f5f9;
-
-        .order-number {
-          font-size: 13px;
-          font-weight: 600;
-          color: #3b82f6;
-        }
-      }
-
-      .card-body {
-        padding: 16px;
-
-        .customer-name {
-          font-size: 16px;
-          font-weight: 600;
-          color: #0f172a;
-          margin: 0 0 4px 0;
-        }
-
-        .customer-phone {
-          font-size: 13px;
-          color: #64748b;
-          margin: 0 0 12px 0;
-        }
-
-        .address, .appointment {
-          display: flex;
-          align-items: flex-start;
-          gap: 6px;
-          font-size: 13px;
-          color: #64748b;
-          margin-bottom: 6px;
-
-          ion-icon {
-            font-size: 16px;
-            flex-shrink: 0;
-            margin-top: 1px;
-          }
-        }
-
-        .appointment {
-          color: #3b82f6;
-          font-weight: 500;
-        }
-      }
-
-      .card-footer {
-        padding: 12px 16px;
-        background: #f8fafc;
-        border-top: 1px solid #f1f5f9;
-
-        .installer {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: #374151;
-
-          ion-icon {
-            font-size: 16px;
-            color: #64748b;
-          }
-        }
-
-        .unassigned {
-          color: #ef4444;
-          font-size: 13px;
-        }
-      }
-    }
+    /* Card grid */
+    .web-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (min-width: 1600px) { .web-card-grid { grid-template-columns: repeat(4, 1fr); } }
+    .order-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; cursor: pointer; }
+    .order-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .order-card .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+    .order-card .card-header .order-number { font-size: 13px; font-weight: 600; color: #3b82f6; }
+    .order-card .card-body { padding: 16px; }
+    .order-card .card-body .customer-name { font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 4px 0; }
+    .order-card .card-body .customer-phone { font-size: 13px; color: #64748b; margin: 0 0 12px 0; }
+    .order-card .address, .order-card .appointment { display: flex; align-items: flex-start; gap: 6px; font-size: 13px; color: #64748b; margin-bottom: 6px; }
+    .order-card .address ion-icon, .order-card .appointment ion-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .order-card .appointment { color: #3b82f6; font-weight: 500; }
+    .order-card .card-footer { padding: 12px 16px; background: #f8fafc; border-top: 1px solid #f1f5f9; }
+    .order-card .installer { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; }
+    .order-card .installer ion-icon { font-size: 16px; color: #64748b; }
+    .order-card .unassigned { color: #ef4444; font-size: 13px; }
   `],
 })
 export class OrderListPage implements OnInit {
@@ -1108,6 +864,13 @@ export class OrderListPage implements OnInit {
   protected readonly selectedOrders = signal<Set<string>>(new Set());
   /** 오늘 날짜 (YYYY-MM-DD 형식) */
   protected readonly today = new Date().toISOString().split('T')[0];
+  /**
+   * TrackBy function for virtual scrolling optimization
+   * Returns unique identifier to help Angular track DOM reuse
+   * Complexity: O(1) - Single property access
+   */
+  public trackById = (_index: number, order: Order): string => order.id;
+
 
   constructor() {
     addIcons({ 
@@ -1160,14 +923,14 @@ export class OrderListPage implements OnInit {
 
   protected onStatusFilter(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const filter = select.value as 'all' | 'pending' | 'assigned' | 'dispatched' | 'completed';
-    
+    const filter = select.value;
+
     if (filter === 'dispatched') {
       this.ordersStore.setFilters({ status: [OrderStatus.DISPATCHED] });
     } else if (filter === 'completed') {
       this.ordersStore.setFilters({ status: [OrderStatus.COMPLETED] });
-    } else {
-      this.applyFilter(filter as any);
+    } else if (filter === 'all' || filter === 'pending' || filter === 'assigned') {
+      this.applyFilter(filter);
     }
   }
 
