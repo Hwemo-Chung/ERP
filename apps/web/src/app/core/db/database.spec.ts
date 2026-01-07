@@ -1,4 +1,3 @@
-import Dexie from 'dexie';
 import { db, OfflineOrder, SyncQueueEntry, MetadataCache } from './database';
 
 describe('ERPDatabase', () => {

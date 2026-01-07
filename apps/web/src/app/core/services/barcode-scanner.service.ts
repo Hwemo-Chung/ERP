@@ -67,8 +67,9 @@ export class BarcodeScannerService {
   /**
    * Show manual input dialog
    */
-  private async showManualInputDialog(): Promise<ScanResult> {
-    return new Promise<ScanResult>(async (resolve) => {
+  private showManualInputDialog(): Promise<ScanResult> {
+    return new Promise<ScanResult>((resolve) => {
+      void (async () => {
       const alert = await this.alertCtrl.create({
         header: this.translate.instant('BARCODE.INPUT_HEADER'),
         message: this.isNativePlatform() 
@@ -105,6 +106,7 @@ export class BarcodeScannerService {
       });
 
       await alert.present();
+      })();
     });
   }
 }

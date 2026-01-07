@@ -2,7 +2,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { AuthService, User, AuthTokens } from './auth.service';
-import { Preferences, __configureMock, GetOptions, SetOptions, RemoveOptions } from '@capacitor/preferences';
+import { __configureMock, GetOptions } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 
 describe('AuthService', () => {

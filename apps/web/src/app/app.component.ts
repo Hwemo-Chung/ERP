@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { IonApp, IonRouterOutlet, IonIcon, AlertController, Platform } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -11,7 +11,7 @@ import { NetworkService } from '@core/services/network.service';
 import { AppInitService } from '@core/services/app-init.service';
 import { SessionManagerService } from './shared/services/session-manager.service';
 import { AuthService } from '@core/services/auth.service';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-root',

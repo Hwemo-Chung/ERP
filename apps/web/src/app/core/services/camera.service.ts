@@ -101,31 +101,29 @@ export class CameraService {
   }
 
   private async selectSource(): Promise<CameraSource | null> {
-    return new Promise(async (resolve) => {
-      const sheet = await this.actionSheetCtrl.create({
-        header: this.translate.instant('CAMERA.SELECT_PHOTO'),
-        buttons: [
-          {
-            text: this.translate.instant('CAMERA.CAMERA'),
-            icon: 'camera-outline',
-            data: CameraSource.Camera,
-          },
-          {
-            text: this.translate.instant('CAMERA.GALLERY'),
-            icon: 'image-outline',
-            data: CameraSource.Photos,
-          },
-          {
-            text: this.translate.instant('COMMON.CANCEL'),
-            role: 'cancel',
-            data: null,
-          },
-        ],
-      });
-      await sheet.present();
-      const { data, role } = await sheet.onDidDismiss();
-      resolve(role === 'cancel' ? null : data);
+    const sheet = await this.actionSheetCtrl.create({
+      header: this.translate.instant('CAMERA.SELECT_PHOTO'),
+      buttons: [
+        {
+          text: this.translate.instant('CAMERA.CAMERA'),
+          icon: 'camera-outline',
+          data: CameraSource.Camera,
+        },
+        {
+          text: this.translate.instant('CAMERA.GALLERY'),
+          icon: 'image-outline',
+          data: CameraSource.Photos,
+        },
+        {
+          text: this.translate.instant('COMMON.CANCEL'),
+          role: 'cancel',
+          data: null,
+        },
+      ],
     });
+    await sheet.present();
+    const { data, role } = await sheet.onDidDismiss();
+    return role === 'cancel' ? null : data;
   }
 
   private async takePhoto(source: CameraSource): Promise<CapturedPhoto | null> {
@@ -211,24 +209,26 @@ export class CameraService {
     });
   }
 
-  private async askContinue(currentCount: number): Promise<boolean> {
-    return new Promise(async (resolve) => {
-      const alert = await this.alertCtrl.create({
-        header: this.translate.instant('CAMERA.ADD_PHOTO'),
-        message: this.translate.instant('CAMERA.PHOTO_ADDED', { count: currentCount }),
-        buttons: [
-          {
-            text: this.translate.instant('COMMON.COMPLETE'),
-            role: 'cancel',
-            handler: () => resolve(false),
-          },
-          {
-            text: this.translate.instant('COMMON.ADD'),
-            handler: () => resolve(true),
-          },
-        ],
-      });
-      await alert.present();
+  private askContinue(currentCount: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      void (async () => {
+        const alert = await this.alertCtrl.create({
+          header: this.translate.instant('CAMERA.ADD_PHOTO'),
+          message: this.translate.instant('CAMERA.PHOTO_ADDED', { count: currentCount }),
+          buttons: [
+            {
+              text: this.translate.instant('COMMON.COMPLETE'),
+              role: 'cancel',
+              handler: () => resolve(false),
+            },
+            {
+              text: this.translate.instant('COMMON.ADD'),
+              handler: () => resolve(true),
+            },
+          ],
+        });
+        await alert.present();
+      })();
     });
   }
 

@@ -21,7 +21,7 @@ export interface RemoveOptions {
 }
 
 // Mock storage
-let mockStorage: Map<string, string> = new Map();
+const mockStorage: Map<string, string> = new Map();
 
 // Configurable mock functions - can be overridden in tests
 let getMock = async (options: GetOptions): Promise<GetResult> => {

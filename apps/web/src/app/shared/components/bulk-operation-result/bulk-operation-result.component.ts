@@ -264,7 +264,7 @@ export class BulkOperationResultComponent {
   isOpen = input<boolean>(false);
   result = input<BulkOperationResult | null>(null);
 
-  close = output<void>();
+  dismiss = output<void>();
   retry = output<string[]>();
 
   successRate = computed(() => {
@@ -293,6 +293,6 @@ export class BulkOperationResultComponent {
   }
 
   onClose() {
-    this.close.emit();
+    this.dismiss.emit();
   }
 }

@@ -503,7 +503,7 @@ export class CustomerContactPage implements OnInit {
       customerName: ['', Validators.required],
       contactName: ['', Validators.required],
       department: [''],
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9\-]{10,20}$/)]],
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9-]{10,20}$/)]],
       email: ['', [Validators.required, Validators.email]],
       address: [''],
       businessType: ['both', Validators.required],

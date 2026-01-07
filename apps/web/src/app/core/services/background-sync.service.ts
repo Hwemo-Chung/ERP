@@ -262,27 +262,23 @@ export class BackgroundSyncService {
     // Mark as syncing
     await db.syncQueue.update(op.id!, { status: 'syncing' });
 
-    try {
-      // Execute operation (will use HttpClient with auth interceptor)
-      const response = await fetch(op.url, {
-        method: op.method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await this.getAuthToken()}`,
-        },
-        body: op.method !== 'GET' && op.method !== 'DELETE' ? JSON.stringify(op.body) : undefined,
-      });
+    // Execute operation (will use HttpClient with auth interceptor)
+    const response = await fetch(op.url, {
+      method: op.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await this.getAuthToken()}`,
+      },
+      body: op.method !== 'GET' && op.method !== 'DELETE' ? JSON.stringify(op.body) : undefined,
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // Success - remove from queue
-      await db.syncQueue.delete(op.id!);
-      console.log(`[Sync] ✓ ${op.type} ${op.url}`);
-    } catch (error) {
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+
+    // Success - remove from queue
+    await db.syncQueue.delete(op.id!);
+    console.log(`[Sync] ✓ ${op.type} ${op.url}`);
   }
 
   /**
