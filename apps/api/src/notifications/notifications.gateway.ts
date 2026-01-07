@@ -5,17 +5,16 @@ import {
   OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  MessageBody,
   ConnectedSocket,
+  MessageBody,
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards, Injectable } from '@nestjs/common';
+import { Logger, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import {
   WsEventType,
-  WsEvent,
   WsClientEventType,
   WsSubscribeBranchPayload,
   WsSubscribeOrderPayload,
@@ -62,7 +61,7 @@ export class NotificationsGateway
     private readonly configService: ConfigService,
   ) {}
 
-  afterInit(server: Server) {
+  afterInit(_server: Server) {
     this.logger.log('WebSocket Gateway initialized');
   }
 
@@ -159,7 +158,7 @@ export class NotificationsGateway
   }
 
   @SubscribeMessage(WsClientEventType.PING)
-  handlePing(@ConnectedSocket() client: AuthenticatedSocket): string {
+  handlePing(@ConnectedSocket() _client: AuthenticatedSocket): string {
     return 'pong';
   }
 

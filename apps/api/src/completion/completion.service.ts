@@ -377,7 +377,7 @@ export class CompletionService {
   /**
    * Get settlement lock time for a branch
    */
-  private async getSettlementLockTime(branchId: string): Promise<Date> {
+  private async getSettlementLockTime(_branchId: string): Promise<Date> {
     // In production, get from settings
     const nextMonday = new Date();
     nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7));

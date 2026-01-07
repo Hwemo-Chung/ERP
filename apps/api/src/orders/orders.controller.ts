@@ -25,7 +25,6 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import * as multer from 'multer';
 import { OrdersService } from './orders.service';
 import { AttachmentsService } from './attachments.service';
 import { GetOrdersDto } from './dto/get-orders.dto';

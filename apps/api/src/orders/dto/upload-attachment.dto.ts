@@ -3,7 +3,7 @@
  * For file uploads with metadata
  */
 
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, MaxLength } from 'class-validator';
 
 export class UploadAttachmentDto {

@@ -33,7 +33,6 @@ import {
   IonCol,
   ActionSheetController,
   AlertController,
-  ModalController,
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';

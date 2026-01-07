@@ -9,11 +9,10 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
-  MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 interface AuthenticatedSocket extends Socket {

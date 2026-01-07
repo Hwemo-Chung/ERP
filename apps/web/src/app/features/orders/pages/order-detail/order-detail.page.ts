@@ -22,7 +22,6 @@ import {
   ActionSheetController,
   AlertController,
   ToastController,
-  IonProgressBar,
 } from '@ionic/angular/standalone';
 import { Capacitor } from '@capacitor/core';
 import { addIcons } from 'ionicons';

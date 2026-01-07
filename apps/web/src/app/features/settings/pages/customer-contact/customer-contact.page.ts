@@ -25,14 +25,12 @@ import {
   IonSearchbar,
   IonModal,
   ToastController,
-  AlertController,
-  ModalController,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { addOutline, createOutline, trashOutline, closeOutline, checkmarkOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
-import { CustomerContact, PaginatedResponse, CustomerContactFilter } from './customer-contact.models';
+import { CustomerContact, PaginatedResponse } from './customer-contact.models';
 
 @Component({
   selector: 'app-customer-contact',

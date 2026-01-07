@@ -51,7 +51,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { UIStore } from '../../../../store/ui/ui.store';
-import { Order, OrderLine } from '../../../../store/orders/orders.models';
+import { Order } from '../../../../store/orders/orders.models';
 
 interface WasteCode {
   code: string;

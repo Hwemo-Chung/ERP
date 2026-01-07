@@ -7,7 +7,7 @@
  * - 서버 값 vs 로컬 값 비교 표시
  * - 덮어쓰기/새로고침/취소 옵션
  */
-import { Component, ChangeDetectionStrategy, inject, signal, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonModal,

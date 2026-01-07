@@ -10,7 +10,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { TranslateService } from '@ngx-translate/core';
-import { ConflictData, ConflictResolution } from '../components/conflict-dialog/conflict-dialog.component';
+import { ConflictResolution } from '../components/conflict-dialog/conflict-dialog.component';
 
 export interface VersionedEntity {
   id: string;

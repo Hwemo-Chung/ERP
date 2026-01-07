@@ -12,7 +12,6 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as multer from 'multer';
 import { promisify } from 'util';
 
 const writeFile = promisify(fs.writeFile);
@@ -50,7 +49,7 @@ export class AttachmentsService {
     orderId: string,
     file: Express.Multer.File,
     userId: string,
-    description?: string,
+    _description?: string,
   ) {
     // Validate order exists
     const order = await this.prisma.order.findUnique({
