@@ -31,9 +31,7 @@ describe('BackgroundSyncService', () => {
     addEventListener: jasmine.Spy;
   };
 
-  const createMockOperation = (
-    overrides: Partial<SyncQueueEntry> = {}
-  ): SyncQueueEntry => ({
+  const createMockOperation = (overrides: Partial<SyncQueueEntry> = {}): SyncQueueEntry => ({
     id: 1,
     type: 'note',
     method: 'POST',
@@ -65,10 +63,7 @@ describe('BackgroundSyncService', () => {
       isOffline: isOfflineSignal.asReadonly(),
     });
 
-    syncQueueServiceSpy = jasmine.createSpyObj('SyncQueueService', [
-      'enqueue',
-      'processQueue',
-    ]);
+    syncQueueServiceSpy = jasmine.createSpyObj('SyncQueueService', ['enqueue', 'processQueue']);
 
     uiStoreSpy = jasmine.createSpyObj('UIStore', ['showToast']);
 
@@ -111,9 +106,7 @@ describe('BackgroundSyncService', () => {
     }
 
     // Mock fetch
-    spyOn(window, 'fetch').and.returnValue(
-      Promise.resolve(new Response('{}', { status: 200 }))
-    );
+    spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response('{}', { status: 200 })));
 
     // Mock TranslateService
     const translateSpy = jasmine.createSpyObj('TranslateService', ['instant']);
@@ -146,7 +139,7 @@ describe('BackgroundSyncService', () => {
     it('should register service worker sync listener on construction', () => {
       expect(mockServiceWorker.addEventListener).toHaveBeenCalledWith(
         'message',
-        jasmine.any(Function)
+        jasmine.any(Function),
       );
     });
 
@@ -184,7 +177,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           type: 'completion',
           priority: 1,
-        })
+        }),
       );
     });
 
@@ -200,7 +193,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           type: 'status_change',
           priority: 2,
-        })
+        }),
       );
     });
 
@@ -216,7 +209,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           type: 'waste',
           priority: 3,
-        })
+        }),
       );
     });
 
@@ -232,7 +225,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           type: 'attachment',
           priority: 4,
-        })
+        }),
       );
     });
 
@@ -248,7 +241,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           type: 'note',
           priority: 5,
-        })
+        }),
       );
     });
 
@@ -269,7 +262,7 @@ describe('BackgroundSyncService', () => {
           retryCount: 0,
           maxRetries: 3,
           status: 'pending',
-        })
+        }),
       );
     });
 
@@ -288,7 +281,7 @@ describe('BackgroundSyncService', () => {
     it('should handle background sync unavailable gracefully', async () => {
       const registration = await mockServiceWorker.ready;
       ((registration as any).sync.register as jasmine.Spy).and.returnValue(
-        Promise.reject(new Error('Sync not available'))
+        Promise.reject(new Error('Sync not available')),
       );
 
       await expectAsync(
@@ -297,7 +290,7 @@ describe('BackgroundSyncService', () => {
           method: 'POST',
           url: '/api/test',
           body: {},
-        })
+        }),
       ).toBeResolved();
     });
   });
@@ -306,9 +299,7 @@ describe('BackgroundSyncService', () => {
     it('should set syncInProgress flag during sync', fakeAsync(() => {
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve([])
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve([])),
         }),
       });
 
@@ -333,9 +324,7 @@ describe('BackgroundSyncService', () => {
     it('should show success toast when sync completes', fakeAsync(() => {
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve([])
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve([])),
         }),
       });
 
@@ -343,19 +332,15 @@ describe('BackgroundSyncService', () => {
       tick();
 
       // translate.instant returns the key as-is in the mock
-      expect(uiStoreSpy.showToast).toHaveBeenCalledWith(
-        'SYNC.SUCCESS.ALL_SYNCED',
-        'success',
-        2000
-      );
+      expect(uiStoreSpy.showToast).toHaveBeenCalledWith('SYNC.SUCCESS.ALL_SYNCED', 'success', 2000);
     }));
 
     it('should show warning toast when sync fails', fakeAsync(() => {
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.reject(new Error('Sync failed'))
-          ),
+          toArray: jasmine
+            .createSpy('toArray')
+            .and.returnValue(Promise.reject(new Error('Sync failed'))),
         }),
       });
 
@@ -366,16 +351,16 @@ describe('BackgroundSyncService', () => {
       expect(uiStoreSpy.showToast).toHaveBeenCalledWith(
         'SYNC.WARNING.PARTIAL_SYNC',
         'warning',
-        3000
+        3000,
       );
     }));
 
     it('should reset syncInProgress flag even if sync throws error', fakeAsync(() => {
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.reject(new Error('DB error'))
-          ),
+          toArray: jasmine
+            .createSpy('toArray')
+            .and.returnValue(Promise.reject(new Error('DB error'))),
         }),
       });
 
@@ -390,9 +375,7 @@ describe('BackgroundSyncService', () => {
     it('should return early when no pending operations', fakeAsync(() => {
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve([])
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve([])),
         }),
       });
 
@@ -413,15 +396,11 @@ describe('BackgroundSyncService', () => {
 
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve(operations)
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve(operations)),
         }),
       });
 
-      spyOn<any>(service, 'processSingleOperation').and.returnValue(
-        Promise.resolve()
-      );
+      spyOn<any>(service, 'processSingleOperation').and.returnValue(Promise.resolve());
 
       (service as any).processPendingOperations();
       tick();
@@ -441,15 +420,11 @@ describe('BackgroundSyncService', () => {
 
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve(operations)
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve(operations)),
         }),
       });
 
-      spyOn<any>(service, 'processSingleOperation').and.returnValue(
-        Promise.resolve()
-      );
+      spyOn<any>(service, 'processSingleOperation').and.returnValue(Promise.resolve());
 
       (service as any).processPendingOperations();
       tick();
@@ -466,21 +441,17 @@ describe('BackgroundSyncService', () => {
 
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve(operations)
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve(operations)),
         }),
       });
 
       spyOn<any>(service, 'processSingleOperation').and.returnValues(
         Promise.resolve(),
         Promise.reject(new Error('Network error')),
-        Promise.resolve()
+        Promise.resolve(),
       );
 
-      spyOn<any>(service, 'handleOperationFailure').and.returnValue(
-        Promise.resolve()
-      );
+      spyOn<any>(service, 'handleOperationFailure').and.returnValue(Promise.resolve());
 
       (service as any).processPendingOperations();
       tick();
@@ -514,7 +485,7 @@ describe('BackgroundSyncService', () => {
           headers: jasmine.objectContaining({
             Authorization: 'Bearer mock-access-token',
           }),
-        })
+        }),
       );
     }));
 
@@ -533,7 +504,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           method: 'POST',
           body: JSON.stringify({ test: 'data' }),
-        })
+        }),
       );
     }));
 
@@ -551,7 +522,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           method: 'GET',
           body: undefined,
-        })
+        }),
       );
     }));
 
@@ -569,7 +540,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           method: 'DELETE',
           body: undefined,
-        })
+        }),
       );
     }));
 
@@ -586,7 +557,7 @@ describe('BackgroundSyncService', () => {
       const operation = createMockOperation({ id: 1 });
 
       (window.fetch as jasmine.Spy).and.returnValue(
-        Promise.resolve(new Response('', { status: 400, statusText: 'Bad Request' }))
+        Promise.resolve(new Response('', { status: 400, statusText: 'Bad Request' })),
       );
 
       (service as any).processSingleOperation(operation).catch((error: Error) => {
@@ -600,7 +571,7 @@ describe('BackgroundSyncService', () => {
       const operation = createMockOperation({ id: 1 });
 
       (window.fetch as jasmine.Spy).and.returnValue(
-        Promise.resolve(new Response('', { status: 401, statusText: 'Unauthorized' }))
+        Promise.resolve(new Response('', { status: 401, statusText: 'Unauthorized' })),
       );
 
       (service as any).processSingleOperation(operation).catch((error: Error) => {
@@ -614,7 +585,7 @@ describe('BackgroundSyncService', () => {
       const operation = createMockOperation({ id: 1 });
 
       (window.fetch as jasmine.Spy).and.returnValue(
-        Promise.resolve(new Response('', { status: 500, statusText: 'Server Error' }))
+        Promise.resolve(new Response('', { status: 500, statusText: 'Server Error' })),
       );
 
       (service as any).processSingleOperation(operation).catch((error: Error) => {
@@ -637,7 +608,7 @@ describe('BackgroundSyncService', () => {
         1,
         jasmine.objectContaining({
           retryCount: 1,
-        })
+        }),
       );
     }));
 
@@ -678,7 +649,7 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           status: 'failed',
           lastError: 'Max retries exceeded',
-        })
+        }),
       );
     }));
 
@@ -697,7 +668,7 @@ describe('BackgroundSyncService', () => {
       expect(uiStoreSpy.showToast).toHaveBeenCalledWith(
         'SYNC.OPERATION.COMPLETION 동기화 실패. 관리자에 문의하세요.',
         'danger',
-        5000
+        5000,
       );
     }));
 
@@ -730,7 +701,7 @@ describe('BackgroundSyncService', () => {
         1,
         jasmine.objectContaining({
           lastError: jasmine.stringContaining('300000ms'), // Last backoff value
-        })
+        }),
       );
 
       flush();
@@ -746,9 +717,7 @@ describe('BackgroundSyncService', () => {
 
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve(operations)
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve(operations)),
         }),
       });
 
@@ -768,9 +737,7 @@ describe('BackgroundSyncService', () => {
 
       syncQueueWhereSpy.and.returnValue({
         equals: jasmine.createSpy('equals').and.returnValue({
-          toArray: jasmine.createSpy('toArray').and.returnValue(
-            Promise.resolve(operations)
-          ),
+          toArray: jasmine.createSpy('toArray').and.returnValue(Promise.resolve(operations)),
         }),
       });
 
@@ -873,19 +840,43 @@ describe('BackgroundSyncService', () => {
     }));
   });
 
-  describe('getOperationLabel', () => {
-    it('should return correct Korean labels for operation types', () => {
-      // translate.instant returns the key as-is in the mock
-      // In production, these keys would be resolved to Korean strings
-      expect((service as any).getOperationLabel('completion')).toBe('SYNC.OPERATION.COMPLETION');
-      expect((service as any).getOperationLabel('status_change')).toBe('SYNC.OPERATION.STATUS_CHANGE');
-      expect((service as any).getOperationLabel('waste')).toBe('SYNC.OPERATION.WASTE');
-      expect((service as any).getOperationLabel('attachment')).toBe('SYNC.OPERATION.ATTACHMENT');
-      expect((service as any).getOperationLabel('note')).toBe('SYNC.OPERATION.NOTE');
+  describe('Priority Assignment via enqueue', () => {
+    it('should assign correct priority for each operation type', async () => {
+      const priorityMap: Record<string, number> = {
+        completion: 1,
+        status_change: 2,
+        waste: 3,
+        attachment: 4,
+        note: 5,
+      };
+
+      for (const [type, expectedPriority] of Object.entries(priorityMap)) {
+        __configureDexieMock.resetSyncQueue();
+
+        await service.enqueue({
+          type: type as SyncQueueEntry['type'],
+          method: 'POST',
+          url: `/api/test/${type}`,
+          body: {},
+        });
+
+        const queuedOps = await db.syncQueue.toArray();
+        expect(queuedOps[0]?.priority).toBe(expectedPriority);
+      }
     });
 
-    it('should return original type for unknown operation types', () => {
-      expect((service as any).getOperationLabel('unknown' as any)).toBe('unknown');
+    it('should assign default priority 99 for unknown operation types', async () => {
+      __configureDexieMock.resetSyncQueue();
+
+      await service.enqueue({
+        type: 'unknown_type' as SyncQueueEntry['type'],
+        method: 'POST',
+        url: '/api/test/unknown',
+        body: {},
+      });
+
+      const queuedOps = await db.syncQueue.toArray();
+      expect(queuedOps[0]?.priority).toBe(99);
     });
   });
 
