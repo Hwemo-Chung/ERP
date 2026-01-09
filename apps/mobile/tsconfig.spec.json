@@ -11,7 +11,9 @@
       "@env/*": ["src/environments/*"],
       "@testing/*": ["src/testing/*"],
       "@capacitor/preferences": ["src/testing/capacitor-preferences.mock.ts"],
-      "@app/core/db/database": ["src/testing/dexie.mock.ts"]
+      "@app/core/db/database": ["src/testing/dexie.mock.ts"],
+      "@erp/shared": ["../../packages/shared/src/index.ts"],
+      "@erp/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/testing/**/*.ts"]

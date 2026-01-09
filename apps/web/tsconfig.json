@@ -24,7 +24,9 @@
       "@core/*": ["src/app/core/*"],
       "@shared/*": ["src/app/shared/*"],
       "@features/*": ["src/app/features/*"],
-      "@env/*": ["src/environments/*"]
+      "@env/*": ["src/environments/*"],
+      "@erp/shared": ["../../packages/shared/src/index.ts"],
+      "@erp/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "angularCompilerOptions": {
