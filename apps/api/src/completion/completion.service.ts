@@ -1,9 +1,3 @@
-/**
- * Completion Service
- * Handles order completion with serial number capture and waste tracking
- * Per API_SPEC /orders/{orderId}/complete and /orders/{orderId}/waste
- */
-
 import {
   Injectable,
   BadRequestException,
@@ -48,10 +42,6 @@ export class CompletionService {
     private readonly stateMachine: OrderStateMachine,
   ) {}
 
-  /**
-   * Complete order with serial numbers and waste pickup
-   * Implements SDD section 5.3 - serialization & waste tracking
-   */
   async completeOrder(
     orderId: string,
     dto: CompleteOrderDto,
@@ -76,10 +66,7 @@ export class CompletionService {
       }
 
       // 2. Check settlement lock (SDD section 6.1)
-      const isLocked = await this.isSettlementLocked(
-        order.branchId,
-        order.appointmentDate,
-      );
+      const isLocked = await this.isSettlementLocked(order.branchId, order.appointmentDate);
 
       if (isLocked) {
         throw new ConflictException({
@@ -109,57 +96,12 @@ export class CompletionService {
         });
       }
 
-      // 4. Process serial numbers for each order line
-      const serialResults: Array<{ lineId: string; serialNumber: string; id: string }> = [];
-
-      for (const serialLine of dto.lines) {
-        const line = order.lines.find((l: { id: string }) => l.id === serialLine.lineId);
-        if (!line) {
-          throw new BadRequestException(
-            `주문 라인을 찾을 수 없습니다: ${serialLine.lineId}`,
-          );
-        }
-
-        // Create serial number record
-        const serial = await tx.serialNumber.create({
-          data: {
-            orderLineId: serialLine.lineId,
-            serial: serialLine.serialNumber,
-            recordedBy: userId,
-          },
-        });
-
-        serialResults.push({
-          lineId: serialLine.lineId,
-          serialNumber: serialLine.serialNumber,
-          id: serial.id,
-        });
-      }
+      // 4. Process serial numbers
+      const serialResults = await this.processSerialNumbers(tx, order.lines, dto.lines, userId);
 
       // 5. Log waste pickup if provided
       if (dto.waste && dto.waste.length > 0) {
-        for (const waste of dto.waste) {
-          await tx.wastePickup.upsert({
-            where: {
-              orderId_code: {
-                orderId,
-                code: waste.code,
-              },
-            },
-            create: {
-              orderId,
-              code: waste.code,
-              quantity: waste.quantity,
-              collectedAt: waste.date ? new Date(waste.date) : new Date(),
-              collectedBy: userId,
-            },
-            update: {
-              quantity: waste.quantity,
-              collectedAt: waste.date ? new Date(waste.date) : new Date(),
-              collectedBy: userId,
-            },
-          });
-        }
+        await this.logWasteEntries(tx, orderId, dto.waste, userId);
       }
 
       // 6. Update order status
@@ -187,20 +129,8 @@ export class CompletionService {
         },
       });
 
-      // 8. Audit log
-      await tx.auditLog.create({
-        data: {
-          tableName: 'orders',
-          recordId: orderId,
-          action: 'COMPLETE',
-          diff: JSON.parse(JSON.stringify({
-            serials: serialResults,
-            waste: dto.waste || [],
-            notes: dto.notes,
-          })),
-          actor: userId,
-        },
-      });
+      // 8. Create audit log
+      await this.createCompletionAuditLog(tx, orderId, userId, serialResults, dto.waste, dto.notes);
 
       this.logger.log(`Order completed: ${order.orderNo} by ${userId}`);
 
@@ -215,9 +145,6 @@ export class CompletionService {
     });
   }
 
-  /**
-   * Log waste pickup (can be separate from completion)
-   */
   async logWastePickup(
     orderId: string,
     dto: WastePickupDto,
@@ -236,10 +163,7 @@ export class CompletionService {
     }
 
     // Check settlement lock
-    const isLocked = await this.isSettlementLocked(
-      order.branchId,
-      order.appointmentDate,
-    );
+    const isLocked = await this.isSettlementLocked(order.branchId, order.appointmentDate);
 
     if (isLocked) {
       throw new ConflictException({
@@ -303,9 +227,6 @@ export class CompletionService {
     };
   }
 
-  /**
-   * Get completion details
-   */
   async getCompletionDetails(orderId: string): Promise<{
     id: string;
     orderNumber: string;
@@ -335,59 +256,47 @@ export class CompletionService {
       orderNumber: order.orderNo,
       status: order.status,
       serials: order.lines
-        .flatMap((line: { id: string; itemName: string; serialNumbers: Array<{ serial: string; recordedAt: Date }> }) =>
-          line.serialNumbers.map((sn) => ({
-            lineId: line.id,
-            itemName: line.itemName,
-            serialNumber: sn.serial,
-            recordedAt: sn.recordedAt,
-          })),
+        .flatMap(
+          (line: {
+            id: string;
+            itemName: string;
+            serialNumbers: Array<{ serial: string; recordedAt: Date }>;
+          }) =>
+            line.serialNumbers.map((sn) => ({
+              lineId: line.id,
+              itemName: line.itemName,
+              serialNumber: sn.serial,
+              recordedAt: sn.recordedAt,
+            })),
         )
-        .sort((a: { recordedAt: Date }, b: { recordedAt: Date }) =>
-          new Date(b.recordedAt).getTime() -
-          new Date(a.recordedAt).getTime(),
+        .sort(
+          (a: { recordedAt: Date }, b: { recordedAt: Date }) =>
+            new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
         ),
-      waste: order.wastePickups.map((w: { code: string; quantity: number; collectedAt: Date | null }) => ({
-        code: w.code,
-        quantity: w.quantity,
-        collectedAt: w.collectedAt,
-      })),
+      waste: order.wastePickups.map(
+        (w: { code: string; quantity: number; collectedAt: Date | null }) => ({
+          code: w.code,
+          quantity: w.quantity,
+          collectedAt: w.collectedAt,
+        }),
+      ),
     };
   }
 
-  /**
-   * Check if settlement is locked for a branch on a date
-   * Settlement typically locks at midnight on Monday (per SDD 6.1)
-   */
-  private async isSettlementLocked(
-    branchId: string,
-    appointmentDate: Date,
-  ): Promise<boolean> {
-    // Get settlement lock status from Redis cache
-    // In production, check Redis
-    // For now, check if appointment date is in previous week
+  private async isSettlementLocked(branchId: string, appointmentDate: Date): Promise<boolean> {
     const today = new Date();
     const appointmentWeekStart = this.getWeekStart(appointmentDate);
     const currentWeekStart = this.getWeekStart(today);
-
-    // If appointment is from previous week, settlement might be locked
     return appointmentWeekStart < currentWeekStart;
   }
 
-  /**
-   * Get settlement lock time for a branch
-   */
   private async getSettlementLockTime(_branchId: string): Promise<Date> {
-    // In production, get from settings
     const nextMonday = new Date();
     nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7));
     nextMonday.setHours(9, 0, 0, 0);
     return nextMonday;
   }
 
-  /**
-   * Get week start (Monday)
-   */
   private getWeekStart(date: Date): Date {
     const start = new Date(date);
     const day = start.getDay();
@@ -397,11 +306,93 @@ export class CompletionService {
     return start;
   }
 
-  /**
-   * Amend completion data (serial numbers or waste)
-   * Requires reason for audit trail
-   * NOTE: This is a simplified implementation - actual schema may need adjustments
-   */
+  private async processSerialNumbers(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderLines: Array<{ id: string }>,
+    serialLines: SerialLine[],
+    userId: string,
+  ): Promise<Array<{ lineId: string; serialNumber: string; id: string }>> {
+    const results: Array<{ lineId: string; serialNumber: string; id: string }> = [];
+
+    for (const serialLine of serialLines) {
+      const line = orderLines.find((l) => l.id === serialLine.lineId);
+      if (!line) {
+        throw new BadRequestException(`주문 라인을 찾을 수 없습니다: ${serialLine.lineId}`);
+      }
+
+      const serial = await tx.serialNumber.create({
+        data: {
+          orderLineId: serialLine.lineId,
+          serial: serialLine.serialNumber,
+          recordedBy: userId,
+        },
+      });
+
+      results.push({
+        lineId: serialLine.lineId,
+        serialNumber: serialLine.serialNumber,
+        id: serial.id,
+      });
+    }
+
+    return results;
+  }
+
+  private async logWasteEntries(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderId: string,
+    wasteEntries: WasteEntry[],
+    userId: string,
+  ): Promise<void> {
+    for (const waste of wasteEntries) {
+      await tx.wastePickup.upsert({
+        where: {
+          orderId_code: {
+            orderId,
+            code: waste.code,
+          },
+        },
+        create: {
+          orderId,
+          code: waste.code,
+          quantity: waste.quantity,
+          collectedAt: waste.date ? new Date(waste.date) : new Date(),
+          collectedBy: userId,
+        },
+        update: {
+          quantity: waste.quantity,
+          collectedAt: waste.date ? new Date(waste.date) : new Date(),
+          collectedBy: userId,
+        },
+      });
+    }
+  }
+
+  private async createCompletionAuditLog(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderId: string,
+    userId: string,
+    serials: Array<{ lineId: string; serialNumber: string; id: string }>,
+    waste: WasteEntry[] | undefined,
+    notes: string | undefined,
+  ): Promise<void> {
+    await tx.auditLog.create({
+      data: {
+        tableName: 'orders',
+        recordId: orderId,
+        action: 'COMPLETE',
+        diff: JSON.parse(
+          JSON.stringify({
+            serials,
+            waste: waste || [],
+            notes,
+          }),
+        ),
+        actor: userId,
+      },
+    });
+  }
+
   async amendCompletion(
     orderId: string,
     dto: {
@@ -430,13 +421,8 @@ export class CompletionService {
       }
 
       // Only allow amendments for COMPLETED or PARTIAL orders
-      if (
-        order.status !== OrderStatus.COMPLETED &&
-        order.status !== OrderStatus.PARTIAL
-      ) {
-        throw new BadRequestException(
-          `Cannot amend order in status ${order.status}`,
-        );
+      if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.PARTIAL) {
+        throw new BadRequestException(`Cannot amend order in status ${order.status}`);
       }
 
       const changes: any = {};
@@ -448,7 +434,7 @@ export class CompletionService {
 
         // Delete existing serials for these lines
         await tx.serialNumber.deleteMany({
-          where: { 
+          where: {
             orderLineId: { in: lineIds },
           },
         });

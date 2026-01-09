@@ -24,6 +24,41 @@ import {
   SyncOperationType,
 } from './dto/batch-sync.dto';
 
+const CANCELLABLE_STATUSES: OrderStatus[] = [
+  OrderStatus.UNASSIGNED,
+  OrderStatus.ASSIGNED,
+  OrderStatus.CONFIRMED,
+  OrderStatus.RELEASED,
+  OrderStatus.DISPATCHED,
+  OrderStatus.POSTPONED,
+  OrderStatus.ABSENT,
+];
+
+const EVENT_ALLOWED_STATUSES: OrderStatus[] = [
+  OrderStatus.UNASSIGNED,
+  OrderStatus.ASSIGNED,
+  OrderStatus.CONFIRMED,
+  OrderStatus.RELEASED,
+  OrderStatus.DISPATCHED,
+  OrderStatus.POSTPONED,
+  OrderStatus.ABSENT,
+];
+
+const REASSIGN_ALLOWED_STATUSES: OrderStatus[] = [
+  OrderStatus.ASSIGNED,
+  OrderStatus.CONFIRMED,
+  OrderStatus.RELEASED,
+  OrderStatus.DISPATCHED,
+  OrderStatus.POSTPONED,
+  OrderStatus.ABSENT,
+];
+
+const SPLIT_ALLOWED_STATUSES: OrderStatus[] = [
+  OrderStatus.UNASSIGNED,
+  OrderStatus.ASSIGNED,
+  OrderStatus.CONFIRMED,
+];
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -33,77 +68,17 @@ export class OrdersService {
     private readonly stateMachine: OrderStateMachine,
   ) {}
 
-  /**
-   * Get orders with filtering and pagination
-   */
   async findAll(dto: GetOrdersDto, branchCode?: string) {
-    const where: Prisma.OrderWhereInput = {
-      deletedAt: null,
-    };
-
-    // Branch filter (RBAC: branch users can only see their orders)
-    // "ALL" is a special value meaning no branch filter (for HQ_ADMIN)
-    if (dto.branchCode && dto.branchCode !== 'ALL') {
-      where.branch = { code: dto.branchCode };
-    } else if (branchCode && branchCode !== 'ALL') {
-      where.branch = { code: branchCode };
-    }
-
-    // Status filter
-    if (dto.status) {
-      where.status = dto.status;
-    }
-
-    // Installer filter
-    if (dto.installerId) {
-      where.installerId = dto.installerId;
-    }
-
-    // Date filters
-    if (dto.appointmentDateFrom || dto.appointmentDateTo) {
-      where.appointmentDate = {};
-      if (dto.appointmentDateFrom) {
-        where.appointmentDate.gte = new Date(dto.appointmentDateFrom);
-      }
-      if (dto.appointmentDateTo) {
-        where.appointmentDate.lte = new Date(dto.appointmentDateTo);
-      }
-    }
-
-    // Customer name search
-    if (dto.customerName) {
-      where.customerName = { contains: dto.customerName, mode: 'insensitive' };
-    }
-
-    // Vendor filter
-    if (dto.vendor) {
-      where.vendor = dto.vendor;
-    }
-
-    // Pagination (supports both cursor-based and offset-based)
-    const take = dto.limit || 20;
-    let skip = 0;
-    let cursor: { id: string } | undefined;
-
-    if (dto.cursor) {
-      // Cursor-based pagination
-      skip = 1;
-      cursor = { id: dto.cursor };
-    } else if (dto.page && dto.page > 1) {
-      // Offset-based pagination
-      skip = (dto.page - 1) * take;
-    }
+    const where = this.buildWhereClause(dto, branchCode);
+    const { take, skip, cursor } = this.buildPagination(dto);
 
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
         where,
-        take: take + 1, // Fetch one extra to check if there's more
+        take: take + 1,
         skip,
         cursor,
-        orderBy: [
-          { appointmentDate: dto.sortDirection || 'asc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ appointmentDate: dto.sortDirection || 'asc' }, { createdAt: 'desc' }],
         include: {
           branch: { select: { code: true, name: true } },
           partner: { select: { code: true, name: true } },
@@ -115,57 +90,23 @@ export class OrdersService {
       this.prisma.order.count({ where }),
     ]);
 
-    const hasMore = orders.length > take;
-    const data = hasMore ? orders.slice(0, take) : orders;
-    const nextCursor = hasMore ? data[data.length - 1].id : null;
-
-    return {
-      data,
-      pagination: {
-        nextCursor,
-        hasMore,
-        totalCount: total,
-        total, // Alias for frontend compatibility
-        page: dto.page || 1,
-        limit: take,
-      },
-    };
+    return this.buildPaginationResult(orders, total, take, dto.page);
   }
 
-  /**
-   * Get order statistics by status
-   * Returns counts for each status without loading full order data
-   */
   async getStats(branchCode?: string) {
-    const where: Prisma.OrderWhereInput = {
-      deletedAt: null,
-    };
+    const where = this.buildBranchFilter(branchCode);
 
-    // Branch filter
-    if (branchCode && branchCode !== 'ALL') {
-      where.branch = { code: branchCode };
-    }
-
-    // Get counts for each status in parallel
-    const [
-      total,
-      unassigned,
-      assigned,
-      confirmed,
-      released,
-      dispatched,
-      completed,
-      cancelled,
-    ] = await Promise.all([
-      this.prisma.order.count({ where }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.UNASSIGNED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.ASSIGNED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.CONFIRMED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.RELEASED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.DISPATCHED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.COMPLETED } }),
-      this.prisma.order.count({ where: { ...where, status: OrderStatus.CANCELLED } }),
-    ]);
+    const [total, unassigned, assigned, confirmed, released, dispatched, completed, cancelled] =
+      await Promise.all([
+        this.prisma.order.count({ where }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.UNASSIGNED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.ASSIGNED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.CONFIRMED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.RELEASED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.DISPATCHED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.COMPLETED } }),
+        this.prisma.order.count({ where: { ...where, status: OrderStatus.CANCELLED } }),
+      ]);
 
     return {
       total,
@@ -176,13 +117,10 @@ export class OrdersService {
       dispatched,
       completed,
       cancelled,
-      pending: unassigned, // Alias for frontend compatibility
+      pending: unassigned,
     };
   }
 
-  /**
-   * Get single order by ID
-   */
   async findOne(id: string) {
     const order = await this.prisma.order.findFirst({
       where: { id, deletedAt: null },
@@ -216,9 +154,6 @@ export class OrdersService {
     return order;
   }
 
-  /**
-   * Create new order
-   */
   async create(dto: CreateOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
       const order = await tx.order.create({
@@ -244,7 +179,6 @@ export class OrdersService {
         include: { lines: true, branch: true },
       });
 
-      // Log creation in audit
       await tx.auditLog.create({
         data: {
           tableName: 'orders',
@@ -260,137 +194,156 @@ export class OrdersService {
     });
   }
 
-  /**
-   * Update order with optimistic locking
-   */
   async update(id: string, dto: UpdateOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
-      // Find with version check
-      const existing = await tx.order.findFirst({
-        where: { id, deletedAt: null },
-      });
+      const existing = await this.findOrderForUpdate(tx, id);
+      this.validateVersionForUpdate(existing, dto.expectedVersion);
 
-      if (!existing) {
-        throw new NotFoundException('error.order_not_found');
-      }
-
-      // Optimistic locking check
-      if (dto.expectedVersion && existing.version !== dto.expectedVersion) {
-        throw new ConflictException({
-          error: 'E2017',
-          message: 'error.version_conflict',
-          currentVersion: existing.version,
-          serverState: existing,
-        });
-      }
-
-      // State transition validation if status is being changed
       if (dto.status && dto.status !== existing.status) {
-        const context: TransitionContext = {
-          installerId: dto.installerId || existing.installerId || undefined,
-          appointmentDate: existing.appointmentDate.toISOString().split('T')[0],
-          serialsCaptured: dto.serialsCaptured,
-          reasonCode: dto.reasonCode,
-          wastePickupLogged: dto.wastePickupLogged,
-        };
+        await this.handleStatusTransition(tx, id, existing, dto, userId);
+      }
 
-        const validation = this.stateMachine.validateTransition(
-          existing.status,
-          dto.status,
-          context,
+      if (
+        dto.appointmentDate &&
+        dto.appointmentDate !== existing.appointmentDate.toISOString().split('T')[0]
+      ) {
+        await this.logAppointmentChange(
+          tx,
+          id,
+          existing.appointmentDate,
+          dto.appointmentDate,
+          userId,
+          dto.appointmentChangeReason,
         );
-
-        if (!validation.valid) {
-          throw new BadRequestException({
-            error: validation.errorCode,
-            message: validation.error,
-            details: validation.details,
-          });
-        }
-
-        // Track absence retry count (FR-04)
-        if (dto.status === OrderStatus.ABSENT) {
-          const newRetryCount = existing.absenceRetryCount + 1;
-
-          // Check if max retries exceeded
-          if (newRetryCount > existing.maxAbsenceRetries) {
-            this.logger.warn(
-              `Order ${existing.orderNo} exceeded max absence retries (${newRetryCount}/${existing.maxAbsenceRetries})`,
-            );
-            // Allow but log warning - business may want to auto-escalate later
-          }
-        }
-
-        // Log status change
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: id,
-            previousStatus: existing.status,
-            newStatus: dto.status,
-            changedBy: userId,
-            reasonCode: dto.reasonCode,
-            notes: dto.notes,
-          },
-        });
       }
 
-      // Log appointment change
-      if (dto.appointmentDate && dto.appointmentDate !== existing.appointmentDate.toISOString().split('T')[0]) {
-        await tx.appointment.create({
-          data: {
-            orderId: id,
-            oldDate: existing.appointmentDate,
-            newDate: new Date(dto.appointmentDate),
-            changedBy: userId,
-            reason: dto.appointmentChangeReason,
-          },
-        });
-      }
+      const updated = await this.applyOrderUpdate(tx, id, dto);
 
-      // Update order
-      const updated = await tx.order.update({
-        where: { id },
-        data: {
-          ...(dto.installerId && { installerId: dto.installerId }),
-          ...(dto.partnerId && { partnerId: dto.partnerId }),
-          ...(dto.status && { status: dto.status }),
-          ...(dto.appointmentDate && { appointmentDate: new Date(dto.appointmentDate) }),
-          ...(dto.remarks !== undefined && { remarks: dto.remarks }),
-          // Increment absence retry count when transitioning to ABSENT (FR-04)
-          ...(dto.status === OrderStatus.ABSENT && { absenceRetryCount: { increment: 1 } }),
-          version: { increment: 1 },
-        },
-        include: {
-          branch: true,
-          partner: true,
-          installer: true,
-          lines: true,
-        },
-      });
-
-      // Audit log
-      await tx.auditLog.create({
-        data: {
-          tableName: 'orders',
-          recordId: id,
-          action: 'UPDATE',
-          diff: JSON.parse(JSON.stringify({
-            previous: existing,
-            current: updated,
-            changes: dto,
-          })),
-          actor: userId,
-        },
-      });
-
+      await this.logUpdateAudit(tx, id, existing, updated, dto, userId);
       this.logger.log(`Order updated: ${updated.orderNo}`);
       return updated;
     });
   }
 
-  /**
-   * Bulk status update
-   */
+  private async findOrderForUpdate(tx: Prisma.TransactionClient, id: string) {
+    const existing = await tx.order.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) {
+      throw new NotFoundException('error.order_not_found');
+    }
+    return existing;
+  }
+
+  private validateVersionForUpdate(existing: { version: number }, expectedVersion?: number): void {
+    if (expectedVersion && existing.version !== expectedVersion) {
+      throw new ConflictException({
+        error: 'E2017',
+        message: 'error.version_conflict',
+        currentVersion: existing.version,
+        serverState: existing,
+      });
+    }
+  }
+
+  private async handleStatusTransition(
+    tx: Prisma.TransactionClient,
+    orderId: string,
+    existing: {
+      status: OrderStatus;
+      installerId: string | null;
+      appointmentDate: Date;
+      orderNo: string;
+      absenceRetryCount: number;
+      maxAbsenceRetries: number;
+    },
+    dto: UpdateOrderDto,
+    userId: string,
+  ): Promise<void> {
+    const context: TransitionContext = {
+      installerId: dto.installerId || existing.installerId || undefined,
+      appointmentDate: existing.appointmentDate.toISOString().split('T')[0],
+      serialsCaptured: dto.serialsCaptured,
+      reasonCode: dto.reasonCode,
+      wastePickupLogged: dto.wastePickupLogged,
+    };
+
+    const validation = this.stateMachine.validateTransition(existing.status, dto.status!, context);
+    if (!validation.valid) {
+      throw new BadRequestException({
+        error: validation.errorCode,
+        message: validation.error,
+        details: validation.details,
+      });
+    }
+
+    if (
+      dto.status === OrderStatus.ABSENT &&
+      existing.absenceRetryCount + 1 > existing.maxAbsenceRetries
+    ) {
+      this.logger.warn(
+        `Order ${existing.orderNo} exceeded max absence retries (${existing.absenceRetryCount + 1}/${existing.maxAbsenceRetries})`,
+      );
+    }
+
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId,
+        previousStatus: existing.status,
+        newStatus: dto.status!,
+        changedBy: userId,
+        reasonCode: dto.reasonCode,
+        notes: dto.notes,
+      },
+    });
+  }
+
+  private async logAppointmentChange(
+    tx: Prisma.TransactionClient,
+    orderId: string,
+    oldDate: Date,
+    newDate: string,
+    userId: string,
+    reason?: string,
+  ): Promise<void> {
+    await tx.appointment.create({
+      data: { orderId, oldDate, newDate: new Date(newDate), changedBy: userId, reason },
+    });
+  }
+
+  private async applyOrderUpdate(tx: Prisma.TransactionClient, id: string, dto: UpdateOrderDto) {
+    return tx.order.update({
+      where: { id },
+      data: {
+        ...(dto.installerId && { installerId: dto.installerId }),
+        ...(dto.partnerId && { partnerId: dto.partnerId }),
+        ...(dto.status && { status: dto.status }),
+        ...(dto.appointmentDate && { appointmentDate: new Date(dto.appointmentDate) }),
+        ...(dto.remarks !== undefined && { remarks: dto.remarks }),
+        ...(dto.status === OrderStatus.ABSENT && { absenceRetryCount: { increment: 1 } }),
+        version: { increment: 1 },
+      },
+      include: { branch: true, partner: true, installer: true, lines: true },
+    });
+  }
+
+  private async logUpdateAudit(
+    tx: Prisma.TransactionClient,
+    recordId: string,
+    previous: unknown,
+    current: unknown,
+    changes: unknown,
+    userId: string,
+  ): Promise<void> {
+    await tx.auditLog.create({
+      data: {
+        tableName: 'orders',
+        recordId,
+        action: 'UPDATE',
+        diff: JSON.parse(JSON.stringify({ previous, current, changes })),
+        actor: userId,
+      },
+    });
+  }
+
   async bulkStatusUpdate(dto: BulkStatusDto, userId: string) {
     const results: Array<{ orderId: string; success: boolean; error?: string }> = [];
 
@@ -427,9 +380,6 @@ export class OrdersService {
     };
   }
 
-  /**
-   * Soft delete order
-   */
   async remove(id: string, userId: string) {
     const order = await this.findOne(id);
 
@@ -451,290 +401,348 @@ export class OrdersService {
     this.logger.log(`Order soft deleted: ${order.orderNo}`);
   }
 
-  /**
-   * Split order into multiple child orders (FR-10)
-   * Creates child orders inheriting metadata from parent
-   */
   async splitOrder(id: string, dto: SplitOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
-      // 1. Find parent order with lines
-      const parentOrder = await tx.order.findFirst({
-        where: { id, deletedAt: null },
-        include: {
-          lines: true,
-          branch: true,
-          partner: true,
-        },
-      });
+      const parentOrder = await this.findParentOrderForSplit(tx, id);
+      this.validateSplitOrder(parentOrder, dto);
 
-      if (!parentOrder) {
-        throw new NotFoundException('error.order_not_found');
-      }
-
-      // 2. Optimistic locking check
-      if (parentOrder.version !== dto.version) {
-        throw new ConflictException({
-          error: 'E2017',
-          message: 'error.version_conflict',
-          currentVersion: parentOrder.version,
-        });
-      }
-
-      // 3. Validate order status (can only split UNASSIGNED, ASSIGNED, or CONFIRMED)
-      const allowedStatuses: OrderStatus[] = [
-        OrderStatus.UNASSIGNED,
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-      ];
-
-      if (!allowedStatuses.includes(parentOrder.status)) {
-        throw new BadRequestException({
-          error: 'E2018',
-          message: `Cannot split order with status ${parentOrder.status}`,
-          allowedStatuses,
-        });
-      }
-
-      // 4. Validate all line IDs exist and quantities sum correctly
       const lineMap = new Map(parentOrder.lines.map((line) => [line.id, line]));
-
-      for (const splitLine of dto.splits) {
-        const originalLine = lineMap.get(splitLine.lineId);
-        if (!originalLine) {
-          throw new BadRequestException({
-            error: 'E2019',
-            message: `Line ${splitLine.lineId} not found in order`,
-          });
-        }
-
-        // Sum assignments for this line
-        const totalAssigned = splitLine.assignments.reduce(
-          (sum, assignment) => sum + assignment.quantity,
-          0,
-        );
-
-        if (totalAssigned !== originalLine.quantity) {
-          throw new BadRequestException({
-            error: 'E2020',
-            message: `Quantity mismatch for line ${splitLine.lineId}. Expected ${originalLine.quantity}, got ${totalAssigned}`,
-            expected: originalLine.quantity,
-            actual: totalAssigned,
-          });
-        }
-      }
-
-      // 5. Create child orders (one per unique installer + line combination)
-      const childOrders: any[] = [];
-
-      for (const splitLine of dto.splits) {
-        const originalLine = lineMap.get(splitLine.lineId)!;
-
-        for (const assignment of splitLine.assignments) {
-          // Generate unique order number for child
-          const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-          const childOrderNo = `${parentOrder.orderNo}-SPLIT-${random}`;
-
-          // Create child order inheriting parent metadata
-          const childOrder = await tx.order.create({
-            data: {
-              orderNo: childOrderNo,
-              customerName: parentOrder.customerName,
-              customerPhone: parentOrder.customerPhone,
-              address: JSON.parse(JSON.stringify(parentOrder.address)),
-              vendor: parentOrder.vendor,
-              branchId: parentOrder.branchId,
-              partnerId: parentOrder.partnerId,
-              installerId: assignment.installerId || null,
-              status: assignment.installerId ? OrderStatus.ASSIGNED : OrderStatus.UNASSIGNED,
-              appointmentDate: parentOrder.appointmentDate,
-              appointmentTimeWindow: parentOrder.appointmentTimeWindow,
-              promisedDate: parentOrder.promisedDate,
-              remarks: `Split from ${parentOrder.orderNo} - Assigned to ${assignment.installerName}`,
-              version: 1,
-              lines: {
-                create: {
-                  itemCode: originalLine.itemCode,
-                  itemName: originalLine.itemName,
-                  quantity: assignment.quantity,
-                  weight: originalLine.weight,
-                },
-              },
-            },
-            include: {
-              lines: true,
-              branch: true,
-              partner: true,
-              installer: true,
-            },
-          });
-
-          // Record split relationship
-          await tx.splitOrder.create({
-            data: {
-              parentOrderId: parentOrder.id,
-              childOrderId: childOrder.id,
-              lineId: originalLine.id,
-              quantity: assignment.quantity,
-              createdBy: userId,
-            },
-          });
-
-          // Log status change for child if assigned
-          if (assignment.installerId) {
-            await tx.orderStatusHistory.create({
-              data: {
-                orderId: childOrder.id,
-                previousStatus: OrderStatus.UNASSIGNED,
-                newStatus: OrderStatus.ASSIGNED,
-                changedBy: userId,
-                notes: `Created via split from ${parentOrder.orderNo}`,
-              },
-            });
-          }
-
-          childOrders.push(childOrder);
-        }
-      }
-
-      // 6. Mark parent order as CANCELLED
-      const updatedParent = await tx.order.update({
-        where: { id: parentOrder.id },
-        data: {
-          status: OrderStatus.CANCELLED,
-          version: { increment: 1 },
-          remarks: `Split into ${childOrders.length} child orders`,
-        },
-      });
-
-      await tx.orderStatusHistory.create({
-        data: {
-          orderId: parentOrder.id,
-          previousStatus: parentOrder.status,
-          newStatus: OrderStatus.CANCELLED,
-          changedBy: userId,
-          reasonCode: 'SPLIT',
-          notes: `Parent order split into ${childOrders.length} child orders`,
-        },
-      });
-
-      // 7. Audit log
-      await tx.auditLog.create({
-        data: {
-          tableName: 'orders',
-          recordId: parentOrder.id,
-          action: 'SPLIT',
-          diff: JSON.parse(JSON.stringify({
-            parentOrder: updatedParent,
-            childOrders: childOrders.map((c) => ({ id: c.id, orderNo: c.orderNo })),
-            splitConfig: dto.splits,
-          })),
-          actor: userId,
-        },
-      });
-
-      this.logger.log(
-        `Order split: ${parentOrder.orderNo} -> ${childOrders.length} child orders`,
+      const childOrders = await this.createChildOrders(tx, parentOrder, dto, lineMap, userId);
+      const updatedParent = await this.cancelParentOrder(
+        tx,
+        parentOrder,
+        childOrders.length,
+        userId,
       );
 
-      return {
-        success: true,
-        parentOrder: updatedParent,
-        childOrders,
-      };
+      await this.logSplitAudit(tx, parentOrder.id, updatedParent, childOrders, dto.splits, userId);
+      this.logger.log(`Order split: ${parentOrder.orderNo} -> ${childOrders.length} child orders`);
+
+      return { success: true, parentOrder: updatedParent, childOrders };
     });
   }
 
-  /**
-   * Add event/note/remark to order (특이사항 추가)
-   * Implements FR-[order-events] - POST /orders/{orderId}/events
-   * Related to frontend addNote() functionality
-   */
-  async addEvent(id: string, dto: CreateOrderEventDto, userId: string) {
-    return this.prisma.executeTransaction(async (tx) => {
-      // 1. Find order
-      const order = await tx.order.findUnique({
-        where: { id },
-        include: { events: true },
+  private async findParentOrderForSplit(tx: Prisma.TransactionClient, id: string) {
+    const parentOrder = await tx.order.findFirst({
+      where: { id, deletedAt: null },
+      include: { lines: true, branch: true, partner: true },
+    });
+
+    if (!parentOrder) {
+      throw new NotFoundException('error.order_not_found');
+    }
+    return parentOrder;
+  }
+
+  private validateSplitOrder(
+    parentOrder: {
+      version: number;
+      status: OrderStatus;
+      lines: { id: string; quantity: number }[];
+    },
+    dto: SplitOrderDto,
+  ): void {
+    if (parentOrder.version !== dto.version) {
+      throw new ConflictException({
+        error: 'E2017',
+        message: 'error.version_conflict',
+        currentVersion: parentOrder.version,
       });
+    }
 
-      if (!order) {
-        throw new NotFoundException({
-          error: 'E2001',
-          message: 'Order not found',
-          orderId: id,
-        });
-      }
+    if (!SPLIT_ALLOWED_STATUSES.includes(parentOrder.status)) {
+      throw new BadRequestException({
+        error: 'E2018',
+        message: `Cannot split order with status ${parentOrder.status}`,
+        allowedStatuses: SPLIT_ALLOWED_STATUSES,
+      });
+    }
 
-      // 2. Check soft delete
-      if (order.deletedAt) {
-        throw new NotFoundException({
-          error: 'E2001',
-          message: 'Order has been deleted',
-        });
-      }
-
-      // 3. Validate expected version (optimistic locking) if provided
-      if (dto.expectedVersion !== undefined && order.version !== dto.expectedVersion) {
-        throw new ConflictException({
-          error: 'E2017',
-          message: 'Version mismatch - order was modified by another user',
-          currentVersion: order.version,
-          expectedVersion: dto.expectedVersion,
-        });
-      }
-
-      // 4. Validate order status for adding events
-      // Events can be added to any non-deleted order regardless of status
-      const validStatuses: OrderStatus[] = [
-        OrderStatus.UNASSIGNED,
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-        OrderStatus.RELEASED,
-        OrderStatus.DISPATCHED,
-        OrderStatus.POSTPONED,
-        OrderStatus.ABSENT,
-      ];
-
-      if (!validStatuses.includes(order.status)) {
+    const lineMap = new Map(parentOrder.lines.map((line) => [line.id, line]));
+    for (const splitLine of dto.splits) {
+      const originalLine = lineMap.get(splitLine.lineId);
+      if (!originalLine) {
         throw new BadRequestException({
-          error: 'E2018',
-          message: 'Cannot add event to order in this status',
-          status: order.status,
+          error: 'E2019',
+          message: `Line ${splitLine.lineId} not found in order`,
         });
       }
 
-      // 5. Create order event
-      const event = await tx.orderEvent.create({
-        data: {
-          orderId: id,
-          eventType: dto.eventType,
-          note: dto.note.trim(),
-          createdBy: userId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-            },
+      const totalAssigned = splitLine.assignments.reduce((sum, a) => sum + a.quantity, 0);
+      if (totalAssigned !== originalLine.quantity) {
+        throw new BadRequestException({
+          error: 'E2020',
+          message: `Quantity mismatch for line ${splitLine.lineId}. Expected ${originalLine.quantity}, got ${totalAssigned}`,
+          expected: originalLine.quantity,
+          actual: totalAssigned,
+        });
+      }
+    }
+  }
+
+  private async createChildOrders(
+    tx: Prisma.TransactionClient,
+    parentOrder: {
+      id: string;
+      orderNo: string;
+      customerName: string;
+      customerPhone: string;
+      address: Prisma.JsonValue;
+      vendor: string;
+      branchId: string;
+      partnerId: string | null;
+      appointmentDate: Date;
+      appointmentTimeWindow: string | null;
+      promisedDate: Date;
+    },
+    dto: SplitOrderDto,
+    lineMap: Map<
+      string,
+      {
+        id: string;
+        itemCode: string;
+        itemName: string;
+        quantity: number;
+        weight: Prisma.Decimal | null;
+      }
+    >,
+    userId: string,
+  ) {
+    const childOrders: Awaited<ReturnType<typeof tx.order.create>>[] = [];
+
+    for (const splitLine of dto.splits) {
+      const originalLine = lineMap.get(splitLine.lineId)!;
+
+      for (const assignment of splitLine.assignments) {
+        const childOrder = await this.createSingleChildOrder(
+          tx,
+          parentOrder,
+          originalLine,
+          assignment,
+          userId,
+        );
+        childOrders.push(childOrder);
+      }
+    }
+    return childOrders;
+  }
+
+  private async createSingleChildOrder(
+    tx: Prisma.TransactionClient,
+    parentOrder: {
+      id: string;
+      orderNo: string;
+      customerName: string;
+      customerPhone: string;
+      address: Prisma.JsonValue;
+      vendor: string;
+      branchId: string;
+      partnerId: string | null;
+      appointmentDate: Date;
+      appointmentTimeWindow: string | null;
+      promisedDate: Date;
+    },
+    originalLine: {
+      id: string;
+      itemCode: string;
+      itemName: string;
+      quantity: number;
+      weight: Prisma.Decimal | null;
+    },
+    assignment: { installerId?: string; installerName: string; quantity: number },
+    userId: string,
+  ) {
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const childOrderNo = `${parentOrder.orderNo}-SPLIT-${random}`;
+    const status = assignment.installerId ? OrderStatus.ASSIGNED : OrderStatus.UNASSIGNED;
+
+    const childOrder = await tx.order.create({
+      data: {
+        orderNo: childOrderNo,
+        customerName: parentOrder.customerName,
+        customerPhone: parentOrder.customerPhone,
+        address: JSON.parse(JSON.stringify(parentOrder.address)),
+        vendor: parentOrder.vendor,
+        branchId: parentOrder.branchId,
+        partnerId: parentOrder.partnerId,
+        installerId: assignment.installerId || null,
+        status,
+        appointmentDate: parentOrder.appointmentDate,
+        appointmentTimeWindow: parentOrder.appointmentTimeWindow,
+        promisedDate: parentOrder.promisedDate,
+        remarks: `Split from ${parentOrder.orderNo} - Assigned to ${assignment.installerName}`,
+        version: 1,
+        lines: {
+          create: {
+            itemCode: originalLine.itemCode,
+            itemName: originalLine.itemName,
+            quantity: assignment.quantity,
+            weight: originalLine.weight,
           },
         },
+      },
+      include: { lines: true, branch: true, partner: true, installer: true },
+    });
+
+    await tx.splitOrder.create({
+      data: {
+        parentOrderId: parentOrder.id,
+        childOrderId: childOrder.id,
+        lineId: originalLine.id,
+        quantity: assignment.quantity,
+        createdBy: userId,
+      },
+    });
+
+    if (assignment.installerId) {
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: childOrder.id,
+          previousStatus: OrderStatus.UNASSIGNED,
+          newStatus: OrderStatus.ASSIGNED,
+          changedBy: userId,
+          notes: `Created via split from ${parentOrder.orderNo}`,
+        },
+      });
+    }
+
+    return childOrder;
+  }
+
+  private async cancelParentOrder(
+    tx: Prisma.TransactionClient,
+    parentOrder: { id: string; status: OrderStatus },
+    childCount: number,
+    userId: string,
+  ) {
+    const updatedParent = await tx.order.update({
+      where: { id: parentOrder.id },
+      data: {
+        status: OrderStatus.CANCELLED,
+        version: { increment: 1 },
+        remarks: `Split into ${childCount} child orders`,
+      },
+    });
+
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId: parentOrder.id,
+        previousStatus: parentOrder.status,
+        newStatus: OrderStatus.CANCELLED,
+        changedBy: userId,
+        reasonCode: 'SPLIT',
+        notes: `Parent order split into ${childCount} child orders`,
+      },
+    });
+
+    return updatedParent;
+  }
+
+  private async logSplitAudit(
+    tx: Prisma.TransactionClient,
+    parentOrderId: string,
+    updatedParent: unknown,
+    childOrders: { id: string; orderNo: string }[],
+    splitConfig: SplitOrderDto['splits'],
+    userId: string,
+  ) {
+    await tx.auditLog.create({
+      data: {
+        tableName: 'orders',
+        recordId: parentOrderId,
+        action: 'SPLIT',
+        diff: JSON.parse(
+          JSON.stringify({
+            parentOrder: updatedParent,
+            childOrders: childOrders.map((c) => ({ id: c.id, orderNo: c.orderNo })),
+            splitConfig,
+          }),
+        ),
+        actor: userId,
+      },
+    });
+  }
+
+  private async findAndValidateOrder<T extends object>(
+    tx: Prisma.TransactionClient,
+    id: string,
+    options: {
+      include?: Prisma.OrderInclude;
+      expectedVersion?: number;
+      validStatuses?: OrderStatus[];
+      invalidStatuses?: OrderStatus[];
+      errorContext?: string;
+    },
+  ): Promise<T> {
+    const order = await tx.order.findUnique({
+      where: { id },
+      include: options.include,
+    });
+
+    if (!order) {
+      throw new NotFoundException({ code: 'E2001', message: 'Order not found' });
+    }
+
+    if (order.deletedAt) {
+      throw new NotFoundException({ code: 'E2001', message: 'Order has been deleted' });
+    }
+
+    if (options.expectedVersion !== undefined && order.version !== options.expectedVersion) {
+      throw new ConflictException({
+        code: 'E2017',
+        message: 'Order version mismatch',
+        expectedVersion: options.expectedVersion,
+        currentVersion: order.version,
+      });
+    }
+
+    if (options.validStatuses && !options.validStatuses.includes(order.status)) {
+      throw new BadRequestException({
+        code: 'E2018',
+        message: `Cannot ${options.errorContext || 'perform action on'} order with status ${order.status}`,
+        currentStatus: order.status,
+      });
+    }
+
+    if (options.invalidStatuses && options.invalidStatuses.includes(order.status)) {
+      throw new BadRequestException({
+        code: 'E2018',
+        message: `Cannot ${options.errorContext || 'perform action on'} order with status ${order.status}`,
+        currentStatus: order.status,
+      });
+    }
+
+    return order as T;
+  }
+
+  async addEvent(id: string, dto: CreateOrderEventDto, userId: string) {
+    return this.prisma.executeTransaction(async (tx) => {
+      const order = await this.findAndValidateOrder<{
+        id: string;
+        orderNo: string;
+        events: unknown[];
+      }>(tx, id, {
+        include: { events: true },
+        expectedVersion: dto.expectedVersion,
+        validStatuses: EVENT_ALLOWED_STATUSES,
+        errorContext: 'add event to',
       });
 
-      // 6. Create audit log
+      const event = await tx.orderEvent.create({
+        data: { orderId: id, eventType: dto.eventType, note: dto.note.trim(), createdBy: userId },
+        include: { user: { select: { id: true, username: true, fullName: true } } },
+      });
+
       await tx.auditLog.create({
         data: {
           tableName: 'order_events',
           recordId: event.id,
           action: 'CREATE',
-          diff: JSON.parse(JSON.stringify({
-            event: {
-              id: event.id,
-              eventType: event.eventType,
-              note: event.note,
-            },
-          })),
+          diff: JSON.parse(
+            JSON.stringify({
+              event: { id: event.id, eventType: event.eventType, note: event.note },
+            }),
+          ),
           actor: userId,
         },
       });
@@ -757,93 +765,30 @@ export class OrdersService {
     });
   }
 
-  /**
-   * Cancel an order with reason and optional note
-   * Valid statuses for cancellation:
-   * UNASSIGNED, ASSIGNED, CONFIRMED, RELEASED, DISPATCHED, POSTPONED, ABSENT
-   */
-  async cancelOrder(
-    id: string,
-    dto: CancelOrderDto,
-    userId: string,
-  ) {
+  async cancelOrder(id: string, dto: CancelOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
-      // Check if already cancelled
-      const existing = await tx.cancellationRecord.findUnique({
-        where: { orderId: id },
-      });
-
+      const existing = await tx.cancellationRecord.findUnique({ where: { orderId: id } });
       if (existing) {
-        throw new ConflictException({
-          code: 'E2019',
-          message: 'Order is already cancelled',
-        });
+        throw new ConflictException({ code: 'E2019', message: 'Order is already cancelled' });
       }
 
-      // Find order
-      const order = await tx.order.findUnique({
-        where: { id },
-        include: {
-          cancellationRecord: true,
-        },
+      const order = await this.findAndValidateOrder<{
+        id: string;
+        orderNo: string;
+        status: OrderStatus;
+        cancellationRecord: unknown;
+      }>(tx, id, {
+        include: { cancellationRecord: true },
+        expectedVersion: dto.expectedVersion,
+        validStatuses: CANCELLABLE_STATUSES,
+        errorContext: 'cancel',
       });
 
-      if (!order) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order not found',
-        });
-      }
-
-      if (order.deletedAt) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order has been deleted',
-        });
-      }
-
-      // Version check for optimistic locking
-      if (
-        dto.expectedVersion !== undefined &&
-        order.version !== dto.expectedVersion
-      ) {
-        throw new ConflictException({
-          code: 'E2017',
-          message: 'Order version mismatch',
-          expectedVersion: dto.expectedVersion,
-          currentVersion: order.version,
-        });
-      }
-
-      // Valid statuses for cancellation
-      const validStatuses: OrderStatus[] = [
-        OrderStatus.UNASSIGNED,
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-        OrderStatus.RELEASED,
-        OrderStatus.DISPATCHED,
-        OrderStatus.POSTPONED,
-        OrderStatus.ABSENT,
-      ];
-
-      if (!validStatuses.includes(order.status)) {
-        throw new BadRequestException({
-          code: 'E2020',
-          message: `Cannot cancel order with status ${order.status}`,
-          currentStatus: order.status,
-        });
-      }
-
-      // Update order status to CANCELLED
       const updatedOrder = await tx.order.update({
         where: { id },
-        data: {
-          status: OrderStatus.CANCELLED,
-          version: { increment: 1 },
-        },
+        data: { status: OrderStatus.CANCELLED, version: { increment: 1 } },
       });
 
-      // Create cancellation record
       const cancellationRecord = await tx.cancellationRecord.create({
         data: {
           orderId: id,
@@ -851,21 +796,12 @@ export class OrdersService {
           note: dto.note?.trim() || null,
           cancelledBy: userId,
           previousStatus: order.status,
-          refundAmount: null, // Set by payment processing later
+          refundAmount: null,
           refundProcessed: false,
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-            },
-          },
-        },
+        include: { user: { select: { id: true, username: true, fullName: true } } },
       });
 
-      // Create status history record
       await tx.orderStatusHistory.create({
         data: {
           orderId: id,
@@ -877,7 +813,6 @@ export class OrdersService {
         },
       });
 
-      // Create audit log
       await tx.auditLog.create({
         data: {
           tableName: 'orders',
@@ -886,19 +821,14 @@ export class OrdersService {
           diff: JSON.parse(
             JSON.stringify({
               status: { old: order.status, new: OrderStatus.CANCELLED },
-              cancellation: {
-                reason: dto.reason,
-                note: dto.note?.trim() || null,
-              },
+              cancellation: { reason: dto.reason, note: dto.note?.trim() || null },
             }),
           ),
           actor: userId,
         },
       });
 
-      this.logger.log(
-        `Order ${order.orderNo} cancelled by user ${userId}: ${dto.reason}`,
-      );
+      this.logger.log(`Order ${order.orderNo} cancelled by user ${userId}: ${dto.reason}`);
 
       return {
         success: true,
@@ -917,61 +847,22 @@ export class OrdersService {
     });
   }
 
-  /**
-   * Revert a cancelled order back to processing state
-   * Valid only for orders with status CANCELLED
-   */
-  async revertOrder(
-    id: string,
-    dto: RevertOrderDto,
-    userId: string,
-  ) {
+  async revertOrder(id: string, dto: RevertOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
-      // Find order with cancellation record
-      const order = await tx.order.findUnique({
-        where: { id },
-        include: {
-          cancellationRecord: true,
-        },
+      type OrderWithCancellation = {
+        id: string;
+        orderNo: string;
+        status: OrderStatus;
+        cancellationRecord: { reason: string; previousStatus: string } | null;
+      };
+
+      const order = await this.findAndValidateOrder<OrderWithCancellation>(tx, id, {
+        include: { cancellationRecord: true },
+        expectedVersion: dto.expectedVersion,
+        validStatuses: [OrderStatus.CANCELLED],
+        errorContext: 'revert',
       });
 
-      if (!order) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order not found',
-        });
-      }
-
-      if (order.deletedAt) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order has been deleted',
-        });
-      }
-
-      // Version check for optimistic locking
-      if (
-        dto.expectedVersion !== undefined &&
-        order.version !== dto.expectedVersion
-      ) {
-        throw new ConflictException({
-          code: 'E2017',
-          message: 'Order version mismatch',
-          expectedVersion: dto.expectedVersion,
-          currentVersion: order.version,
-        });
-      }
-
-      // Must be cancelled to revert
-      if (order.status !== OrderStatus.CANCELLED) {
-        throw new BadRequestException({
-          code: 'E2021',
-          message: 'Only cancelled orders can be reverted',
-          currentStatus: order.status,
-        });
-      }
-
-      // No cancellation record found
       if (!order.cancellationRecord) {
         throw new BadRequestException({
           code: 'E2022',
@@ -979,40 +870,17 @@ export class OrdersService {
         });
       }
 
-      // Determine target status
-      const targetStatus: OrderStatus = (dto.targetStatus || order.cancellationRecord.previousStatus) as OrderStatus;
+      const targetStatus = (dto.targetStatus ||
+        order.cancellationRecord.previousStatus) as OrderStatus;
+      this.validateRevertTargetStatus(targetStatus);
 
-      // Validate target status is not CANCELLED or COMPLETED
-      const invalidTargetStatuses: OrderStatus[] = [
-        OrderStatus.CANCELLED,
-        OrderStatus.COMPLETED,
-        OrderStatus.PARTIAL,
-        OrderStatus.COLLECTED,
-      ];
-
-      if (invalidTargetStatuses.includes(targetStatus)) {
-        throw new BadRequestException({
-          code: 'E2023',
-          message: `Cannot revert to status ${targetStatus}`,
-          targetStatus,
-        });
-      }
-
-      // Update order status
       await tx.order.update({
         where: { id },
-        data: {
-          status: targetStatus,
-          version: { increment: 1 },
-        },
+        data: { status: targetStatus, version: { increment: 1 } },
       });
 
-      // Delete cancellation record (order is no longer cancelled)
-      await tx.cancellationRecord.delete({
-        where: { orderId: id },
-      });
+      await tx.cancellationRecord.delete({ where: { orderId: id } });
 
-      // Create status history record
       await tx.orderStatusHistory.create({
         data: {
           orderId: id,
@@ -1024,7 +892,6 @@ export class OrdersService {
         },
       });
 
-      // Create audit log
       await tx.auditLog.create({
         data: {
           tableName: 'orders',
@@ -1059,182 +926,63 @@ export class OrdersService {
     });
   }
 
-  /**
-   * Reassign order to a new installer, branch, or partner
-   * Valid for orders with status ASSIGNED, CONFIRMED, RELEASED, DISPATCHED
-   */
-  async reassignOrder(
-    id: string,
-    dto: ReassignOrderDto,
-    userId: string,
-  ) {
+  private validateRevertTargetStatus(targetStatus: OrderStatus): void {
+    const invalidTargetStatuses: OrderStatus[] = [
+      OrderStatus.CANCELLED,
+      OrderStatus.COMPLETED,
+      OrderStatus.PARTIAL,
+      OrderStatus.COLLECTED,
+    ];
+
+    if (invalidTargetStatuses.includes(targetStatus)) {
+      throw new BadRequestException({
+        code: 'E2023',
+        message: `Cannot revert to status ${targetStatus}`,
+        targetStatus,
+      });
+    }
+  }
+
+  async reassignOrder(id: string, dto: ReassignOrderDto, userId: string) {
     return this.prisma.executeTransaction(async (tx) => {
-      // Find order
-      const order = await tx.order.findUnique({
-        where: { id },
-        include: {
-          installer: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-            },
-          },
-          branch: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-            },
-          },
-          partner: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-            },
-          },
-        },
-      });
-
-      if (!order) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order not found',
-        });
-      }
-
-      if (order.deletedAt) {
-        throw new NotFoundException({
-          code: 'E2001',
-          message: 'Order has been deleted',
-        });
-      }
-
-      // Version check for optimistic locking
-      if (
-        dto.expectedVersion !== undefined &&
-        order.version !== dto.expectedVersion
-      ) {
-        throw new ConflictException({
-          code: 'E2017',
-          message: 'Order version mismatch',
-          expectedVersion: dto.expectedVersion,
-          currentVersion: order.version,
-        });
-      }
-
-      // Valid statuses for reassignment
-      const validStatuses: OrderStatus[] = [
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-        OrderStatus.RELEASED,
-        OrderStatus.DISPATCHED,
-        OrderStatus.POSTPONED,
-        OrderStatus.ABSENT,
-      ];
-
-      if (!validStatuses.includes(order.status)) {
-        throw new BadRequestException({
-          code: 'E2024',
-          message: `Cannot reassign order with status ${order.status}`,
-          currentStatus: order.status,
-        });
-      }
-
-      // Verify new installer exists
-      const newInstaller = await tx.installer.findUnique({
-        where: { id: dto.newInstallerId },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-        },
-      });
-
-      if (!newInstaller) {
-        throw new NotFoundException({
-          code: 'E2025',
-          message: 'New installer not found',
-          installerId: dto.newInstallerId,
-        });
-      }
-
-      // Verify new branch if provided
-      let newBranch = null;
-      if (dto.newBranchId) {
-        newBranch = await tx.branch.findUnique({
-          where: { id: dto.newBranchId },
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        });
-
-        if (!newBranch) {
-          throw new NotFoundException({
-            code: 'E2026',
-            message: 'New branch not found',
-            branchId: dto.newBranchId,
-          });
-        }
-      }
-
-      // Verify new partner if provided
-      let newPartner = null;
-      if (dto.newPartnerId) {
-        newPartner = await tx.partner.findUnique({
-          where: { id: dto.newPartnerId },
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        });
-
-        if (!newPartner) {
-          throw new NotFoundException({
-            code: 'E2027',
-            message: 'New partner not found',
-            partnerId: dto.newPartnerId,
-          });
-        }
-      }
-
-      // Build update data
-      const updateData: any = {
-        installerId: dto.newInstallerId,
-        version: { increment: 1 },
+      type OrderWithAssignment = {
+        id: string;
+        orderNo: string;
+        status: OrderStatus;
+        installer: { id: string; name: string; phone: string } | null;
+        branch: { id: string; code: string; name: string } | null;
+        partner: { id: string; code: string; name: string } | null;
       };
 
-      if (dto.newBranchId) {
-        updateData.branchId = dto.newBranchId;
-      }
-
-      if (dto.newPartnerId) {
-        updateData.partnerId = dto.newPartnerId;
-      }
-
-      // Update order
-      await tx.order.update({
-        where: { id },
-        data: updateData,
+      const order = await this.findAndValidateOrder<OrderWithAssignment>(tx, id, {
+        include: {
+          installer: { select: { id: true, name: true, phone: true } },
+          branch: { select: { id: true, code: true, name: true } },
+          partner: { select: { id: true, code: true, name: true } },
+        },
+        expectedVersion: dto.expectedVersion,
+        validStatuses: REASSIGN_ALLOWED_STATUSES,
+        errorContext: 'reassign',
       });
 
-      // Create status history record
+      const newInstaller = await this.findInstaller(tx, dto.newInstallerId);
+      const newBranch = dto.newBranchId ? await this.findBranch(tx, dto.newBranchId) : null;
+      const newPartner = dto.newPartnerId ? await this.findPartner(tx, dto.newPartnerId) : null;
+
+      const updateData = this.buildReassignUpdateData(dto);
+      await tx.order.update({ where: { id }, data: updateData });
+
       await tx.orderStatusHistory.create({
         data: {
           orderId: id,
           previousStatus: order.status,
-          newStatus: order.status, // Status unchanged, only assignment changed
+          newStatus: order.status,
           reasonCode: 'REASSIGN',
           notes: dto.reason?.trim(),
           changedBy: userId,
         },
       });
 
-      // Create audit log
       await tx.auditLog.create({
         data: {
           tableName: 'orders',
@@ -1242,16 +990,9 @@ export class OrdersService {
           action: 'REASSIGN',
           diff: JSON.parse(
             JSON.stringify({
-              installer: {
-                old: order.installer,
-                new: newInstaller,
-              },
-              branch: dto.newBranchId
-                ? { old: order.branch, new: newBranch }
-                : null,
-              partner: dto.newPartnerId
-                ? { old: order.partner, new: newPartner }
-                : null,
+              installer: { old: order.installer, new: newInstaller },
+              branch: dto.newBranchId ? { old: order.branch, new: newBranch } : null,
+              partner: dto.newPartnerId ? { old: order.partner, new: newPartner } : null,
               reason: dto.reason?.trim(),
             }),
           ),
@@ -1282,15 +1023,63 @@ export class OrdersService {
     });
   }
 
-  /**
-   * Process batch sync operations for offline-first synchronization
-   * Each item is processed independently - failures do not rollback other items
-   * Implements SDD 5.2 Batch Sync API
-   */
-  async processBatchSync(
-    items: BatchSyncItemDto[],
-    userId: string,
-  ): Promise<BatchSyncResponseDto> {
+  private async findInstaller(tx: Prisma.TransactionClient, id: string) {
+    const installer = await tx.installer.findUnique({
+      where: { id },
+      select: { id: true, name: true, phone: true },
+    });
+    if (!installer) {
+      throw new NotFoundException({
+        code: 'E2025',
+        message: 'New installer not found',
+        installerId: id,
+      });
+    }
+    return installer;
+  }
+
+  private async findBranch(tx: Prisma.TransactionClient, id: string) {
+    const branch = await tx.branch.findUnique({
+      where: { id },
+      select: { id: true, code: true, name: true },
+    });
+    if (!branch) {
+      throw new NotFoundException({ code: 'E2026', message: 'New branch not found', branchId: id });
+    }
+    return branch;
+  }
+
+  private async findPartner(tx: Prisma.TransactionClient, id: string) {
+    const partner = await tx.partner.findUnique({
+      where: { id },
+      select: { id: true, code: true, name: true },
+    });
+    if (!partner) {
+      throw new NotFoundException({
+        code: 'E2027',
+        message: 'New partner not found',
+        partnerId: id,
+      });
+    }
+    return partner;
+  }
+
+  private buildReassignUpdateData(dto: ReassignOrderDto) {
+    const data: {
+      installerId: string;
+      branchId?: string;
+      partnerId?: string;
+      version: { increment: number };
+    } = {
+      installerId: dto.newInstallerId,
+      version: { increment: 1 },
+    };
+    if (dto.newBranchId) data.branchId = dto.newBranchId;
+    if (dto.newPartnerId) data.partnerId = dto.newPartnerId;
+    return data;
+  }
+
+  async processBatchSync(items: BatchSyncItemDto[], userId: string): Promise<BatchSyncResponseDto> {
     const results: BatchSyncResultDto[] = [];
 
     for (const item of items) {
@@ -1301,9 +1090,6 @@ export class OrdersService {
     return this.buildBatchResponse(results);
   }
 
-  /**
-   * Process a single sync item based on operation type
-   */
   private async processSyncItem(
     item: BatchSyncItemDto,
     userId: string,
@@ -1328,9 +1114,6 @@ export class OrdersService {
     }
   }
 
-  /**
-   * Handle CREATE operation for batch sync
-   */
   private async handleCreateOperation(
     item: BatchSyncItemDto,
     userId: string,
@@ -1350,16 +1133,12 @@ export class OrdersService {
     }
   }
 
-  /**
-   * Handle UPDATE operation for batch sync with version conflict detection
-   */
   private async handleUpdateOperation(
     item: BatchSyncItemDto,
     userId: string,
   ): Promise<BatchSyncResultDto> {
     const payload = item.payload as UpdateOrderDto;
 
-    // Add expected version from sync item if provided
     if (item.expectedVersion !== undefined) {
       payload.expectedVersion = item.expectedVersion;
     }
@@ -1377,9 +1156,6 @@ export class OrdersService {
     }
   }
 
-  /**
-   * Handle DELETE operation for batch sync
-   */
   private async handleDeleteOperation(
     item: BatchSyncItemDto,
     userId: string,
@@ -1397,9 +1173,6 @@ export class OrdersService {
     }
   }
 
-  /**
-   * Handle errors during sync and extract appropriate error codes
-   */
   private handleSyncError(entityId: string, error: unknown): BatchSyncResultDto {
     if (error instanceof ConflictException) {
       const response = error.getResponse() as Record<string, unknown>;
@@ -1426,21 +1199,13 @@ export class OrdersService {
       };
     }
 
-    // Unknown error
     const message = error instanceof Error ? error.message : 'Unknown error';
     this.logger.error(`Batch sync error for ${entityId}: ${message}`);
 
     return this.createErrorResult(entityId, 'E5000', message);
   }
 
-  /**
-   * Create a standardized error result
-   */
-  private createErrorResult(
-    entityId: string,
-    error: string,
-    message: string,
-  ): BatchSyncResultDto {
+  private createErrorResult(entityId: string, error: string, message: string): BatchSyncResultDto {
     return {
       entityId,
       success: false,
@@ -1449,9 +1214,6 @@ export class OrdersService {
     };
   }
 
-  /**
-   * Build the batch response from individual results
-   */
   private buildBatchResponse(results: BatchSyncResultDto[]): BatchSyncResponseDto {
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -1461,6 +1223,81 @@ export class OrdersService {
       successCount,
       failureCount,
       results,
+    };
+  }
+
+  private buildWhereClause(dto: GetOrdersDto, branchCode?: string): Prisma.OrderWhereInput {
+    const where: Prisma.OrderWhereInput = { deletedAt: null };
+
+    const effectiveBranchCode = dto.branchCode || branchCode;
+    if (effectiveBranchCode && effectiveBranchCode !== 'ALL') {
+      where.branch = { code: effectiveBranchCode };
+    }
+
+    if (dto.status) where.status = dto.status;
+    if (dto.installerId) where.installerId = dto.installerId;
+    if (dto.customerName) {
+      where.customerName = { contains: dto.customerName, mode: 'insensitive' };
+    }
+    if (dto.vendor) where.vendor = dto.vendor;
+
+    if (dto.appointmentDateFrom || dto.appointmentDateTo) {
+      where.appointmentDate = {
+        ...(dto.appointmentDateFrom && { gte: new Date(dto.appointmentDateFrom) }),
+        ...(dto.appointmentDateTo && { lte: new Date(dto.appointmentDateTo) }),
+      };
+    }
+
+    return where;
+  }
+
+  private buildBranchFilter(branchCode?: string): Prisma.OrderWhereInput {
+    const where: Prisma.OrderWhereInput = { deletedAt: null };
+    if (branchCode && branchCode !== 'ALL') {
+      where.branch = { code: branchCode };
+    }
+    return where;
+  }
+
+  private buildPagination(dto: GetOrdersDto): {
+    take: number;
+    skip: number;
+    cursor: { id: string } | undefined;
+  } {
+    const take = dto.limit || 20;
+    let skip = 0;
+    let cursor: { id: string } | undefined;
+
+    if (dto.cursor) {
+      skip = 1;
+      cursor = { id: dto.cursor };
+    } else if (dto.page && dto.page > 1) {
+      skip = (dto.page - 1) * take;
+    }
+
+    return { take, skip, cursor };
+  }
+
+  private buildPaginationResult<T extends { id: string }>(
+    orders: T[],
+    total: number,
+    take: number,
+    page?: number,
+  ) {
+    const hasMore = orders.length > take;
+    const data = hasMore ? orders.slice(0, take) : orders;
+    const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+    return {
+      data,
+      pagination: {
+        nextCursor,
+        hasMore,
+        totalCount: total,
+        total,
+        page: page || 1,
+        limit: take,
+      },
     };
   }
 }

@@ -327,7 +327,10 @@ describe('OrdersService', () => {
       };
 
       mockTx.order.findFirst.mockResolvedValue(mockOrder);
-      mockTx.order.update.mockResolvedValue({ ...mockOrder, appointmentDate: new Date('2024-12-25') });
+      mockTx.order.update.mockResolvedValue({
+        ...mockOrder,
+        appointmentDate: new Date('2024-12-25'),
+      });
       mockTx.appointment.create.mockResolvedValue({});
       mockTx.auditLog.create.mockResolvedValue({});
 
@@ -465,9 +468,7 @@ describe('OrdersService', () => {
         },
         {
           lineId: 'line-2',
-          assignments: [
-            { installerId: 'installer-001', installerName: 'John Doe', quantity: 5 },
-          ],
+          assignments: [{ installerId: 'installer-001', installerName: 'John Doe', quantity: 5 }],
         },
       ],
     };
@@ -524,9 +525,9 @@ describe('OrdersService', () => {
     it('should throw NotFoundException when parent order not found', async () => {
       mockTx.order.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.splitOrder('invalid-order', mockSplitDto, 'user-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.splitOrder('invalid-order', mockSplitDto, 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException on version mismatch', async () => {
@@ -561,9 +562,9 @@ describe('OrdersService', () => {
         ],
       };
 
-      await expect(
-        service.splitOrder('parent-order-123', invalidDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.splitOrder('parent-order-123', invalidDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when quantities do not match', async () => {
@@ -582,14 +583,14 @@ describe('OrdersService', () => {
         ],
       };
 
-      await expect(
-        service.splitOrder('parent-order-123', invalidDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.splitOrder('parent-order-123', invalidDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should create child orders with inherited metadata', async () => {
       mockTx.order.findFirst.mockResolvedValue(mockParentOrder);
-      
+
       const createdOrders: any[] = [];
       mockTx.order.create.mockImplementation(async (data: any) => {
         const childOrder = {
@@ -630,7 +631,7 @@ describe('OrdersService', () => {
 
     it('should assign installers to child orders when provided', async () => {
       mockTx.order.findFirst.mockResolvedValue(mockParentOrder);
-      
+
       let childOrderCount = 0;
       mockTx.order.create.mockImplementation(async (data: any) => {
         childOrderCount++;
@@ -690,7 +691,7 @@ describe('OrdersService', () => {
         status: OrderStatus.CANCELLED,
       });
       mockTx.orderStatusHistory.create.mockResolvedValue({});
-      
+
       const mockSplitOrderCreate = jest.fn().mockResolvedValue({});
       (mockTx as any).splitOrder = { create: mockSplitOrderCreate };
       mockTx.auditLog.create.mockResolvedValue({});
@@ -838,9 +839,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.addEvent('nonexistent-id', eventDto, 'user-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.addEvent('nonexistent-id', eventDto, 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException on version mismatch', async () => {
@@ -865,9 +866,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.addEvent('order-123', eventDto, 'user-123'),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.addEvent('order-123', eventDto, 'user-123')).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw BadRequestException for invalid status', async () => {
@@ -891,9 +892,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.addEvent('order-123', eventDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.addEvent('order-123', eventDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should accept events for valid statuses', async () => {
@@ -908,11 +909,7 @@ describe('OrdersService', () => {
         note: 'Test issue',
       };
 
-      const validStatuses = [
-        OrderStatus.UNASSIGNED,
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-      ];
+      const validStatuses = [OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, OrderStatus.CONFIRMED];
 
       for (const status of validStatuses) {
         (prisma.executeTransaction as jest.Mock).mockImplementationOnce(
@@ -1068,9 +1065,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.cancelOrder('nonexistent-id', cancelDto, 'user-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.cancelOrder('nonexistent-id', cancelDto, 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if order already cancelled', async () => {
@@ -1090,18 +1087,16 @@ describe('OrdersService', () => {
         async (callback: (tx: any) => Promise<any>) => {
           const mockTxLocal = {
             cancellationRecord: {
-              findUnique: jest
-                .fn()
-                .mockResolvedValueOnce(mockCancellationRecord),
+              findUnique: jest.fn().mockResolvedValueOnce(mockCancellationRecord),
             },
           };
           return callback(mockTxLocal);
         },
       );
 
-      await expect(
-        service.cancelOrder('order-123', cancelDto, 'user-123'),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.cancelOrder('order-123', cancelDto, 'user-123')).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw BadRequestException for invalid status', async () => {
@@ -1127,9 +1122,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.cancelOrder('order-123', cancelDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.cancelOrder('order-123', cancelDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should accept orders with various valid statuses', async () => {
@@ -1152,11 +1147,7 @@ describe('OrdersService', () => {
         },
       };
 
-      const validStatuses = [
-        OrderStatus.UNASSIGNED,
-        OrderStatus.ASSIGNED,
-        OrderStatus.CONFIRMED,
-      ];
+      const validStatuses = [OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, OrderStatus.CONFIRMED];
 
       for (const status of validStatuses) {
         (prisma.executeTransaction as jest.Mock).mockImplementationOnce(
@@ -1164,9 +1155,7 @@ describe('OrdersService', () => {
             const mockTxLocal = {
               cancellationRecord: {
                 findUnique: jest.fn().mockResolvedValueOnce(null),
-                create: jest
-                  .fn()
-                  .mockResolvedValueOnce(mockCancellationRecord),
+                create: jest.fn().mockResolvedValueOnce(mockCancellationRecord),
               },
               order: {
                 findUnique: jest.fn().mockResolvedValueOnce({
@@ -1223,9 +1212,7 @@ describe('OrdersService', () => {
           const mockTxLocal = {
             cancellationRecord: {
               findUnique: jest.fn().mockResolvedValueOnce(null),
-              create: jest
-                .fn()
-                .mockResolvedValueOnce(mockCancellationRecord),
+              create: jest.fn().mockResolvedValueOnce(mockCancellationRecord),
             },
             order: {
               findUnique: jest.fn().mockResolvedValueOnce(mockOrder),
@@ -1280,9 +1267,7 @@ describe('OrdersService', () => {
           const mockTxLocal = {
             cancellationRecord: {
               findUnique: jest.fn().mockResolvedValueOnce(null),
-              create: jest
-                .fn()
-                .mockResolvedValueOnce(mockCancellationRecord),
+              create: jest.fn().mockResolvedValueOnce(mockCancellationRecord),
             },
             order: {
               findUnique: jest.fn().mockResolvedValueOnce(mockOrder),
@@ -1339,9 +1324,7 @@ describe('OrdersService', () => {
         async (callback: (tx: any) => Promise<any>) => {
           const mockTxLocal = {
             order: {
-              findUnique: jest
-                .fn()
-                .mockResolvedValueOnce(mockOrderWithCancellation),
+              findUnique: jest.fn().mockResolvedValueOnce(mockOrderWithCancellation),
               update: jest.fn().mockResolvedValueOnce(mockUpdatedOrder),
             },
             cancellationRecord: {
@@ -1381,9 +1364,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.revertOrder('nonexistent-id', revertDto, 'user-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.revertOrder('nonexistent-id', revertDto, 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if order is not cancelled', async () => {
@@ -1405,9 +1388,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.revertOrder('order-123', revertDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.revertOrder('order-123', revertDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should use target status if provided', async () => {
@@ -1433,9 +1416,7 @@ describe('OrdersService', () => {
         async (callback: (tx: any) => Promise<any>) => {
           const mockTxLocal = {
             order: {
-              findUnique: jest
-                .fn()
-                .mockResolvedValueOnce(mockOrderWithCancellation),
+              findUnique: jest.fn().mockResolvedValueOnce(mockOrderWithCancellation),
               update: jest.fn().mockResolvedValueOnce({
                 ...mockOrder,
                 status: OrderStatus.CONFIRMED,
@@ -1547,9 +1528,7 @@ describe('OrdersService', () => {
         async (callback: (tx: any) => Promise<any>) => {
           const mockTxLocal = {
             order: {
-              findUnique: jest
-                .fn()
-                .mockResolvedValueOnce(mockOrderWithInstaller),
+              findUnique: jest.fn().mockResolvedValueOnce(mockOrderWithInstaller),
               update: jest.fn().mockResolvedValueOnce({
                 ...mockOrderWithInstaller,
                 installerId: 'installer-002',
@@ -1570,11 +1549,7 @@ describe('OrdersService', () => {
         },
       );
 
-      const result = await service.reassignOrder(
-        'order-123',
-        reassignDto,
-        'user-123',
-      );
+      const result = await service.reassignOrder('order-123', reassignDto, 'user-123');
 
       expect(result.success).toBe(true);
       expect(result.newAssignment.installer.id).toBe('installer-002');
@@ -1626,9 +1601,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.reassignOrder('order-123', reassignDto, 'user-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.reassignOrder('order-123', reassignDto, 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException for invalid status', async () => {
@@ -1651,9 +1626,9 @@ describe('OrdersService', () => {
         },
       );
 
-      await expect(
-        service.reassignOrder('order-123', reassignDto, 'user-123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.reassignOrder('order-123', reassignDto, 'user-123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reassign with new branch when provided', async () => {
@@ -1718,14 +1693,10 @@ describe('OrdersService', () => {
         },
       );
 
-      const result = await service.reassignOrder(
-        'order-123',
-        reassignDto,
-        'user-123',
-      );
+      const result = await service.reassignOrder('order-123', reassignDto, 'user-123');
 
       expect(result.success).toBe(true);
-      expect(result.newAssignment.branch.id).toBe('branch-002');
+      expect(result.newAssignment.branch?.id).toBe('branch-002');
     });
 
     it('should create order status history with REASSIGN reason', async () => {
@@ -1784,11 +1755,7 @@ describe('OrdersService', () => {
         },
       );
 
-      const result = await service.reassignOrder(
-        'order-123',
-        reassignDto,
-        'user-123',
-      );
+      const result = await service.reassignOrder('order-123', reassignDto, 'user-123');
 
       expect(result.success).toBe(true);
       expect(statusHistoryCreated).toBe(true);
