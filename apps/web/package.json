@@ -16,6 +16,7 @@
     "serve:prod": "http-server dist/web -p 8080 --gzip -c-1"
   },
   "dependencies": {
+    "@erp/shared": "workspace:*",
     "@angular/animations": "^19.0.5",
     "@angular/cdk": "^19.0.0",
     "@angular/common": "^19.0.5",
