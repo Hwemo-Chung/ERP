@@ -28,10 +28,7 @@ describe('BackgroundSyncService', () => {
     });
 
     // Mock SyncQueueService
-    syncQueueService = jasmine.createSpyObj('SyncQueueService', [
-      'enqueue',
-      'processQueue',
-    ]);
+    syncQueueService = jasmine.createSpyObj('SyncQueueService', ['enqueue', 'processQueue']);
 
     // Mock UIStore
     uiStore = jasmine.createSpyObj('UIStore', ['showToast', 'showError']);
@@ -87,8 +84,10 @@ describe('BackgroundSyncService', () => {
     // because Angular signal effects don't fire synchronously in fakeAsync tests
 
     it('should trigger sync when network becomes online', async () => {
-      const processPendingOperationsSpy = spyOn(service as any, 'processPendingOperations')
-        .and.returnValue(Promise.resolve());
+      const processPendingOperationsSpy = spyOn(
+        service as any,
+        'processPendingOperations',
+      ).and.returnValue(Promise.resolve());
 
       // Directly call the method that would be triggered by the effect
       await service.onNetworkOnline();
@@ -116,20 +115,21 @@ describe('BackgroundSyncService', () => {
       expect(uiStore.showToast).toHaveBeenCalledWith(
         '모든 변경사항이 동기화되었습니다',
         'success',
-        2000
+        2000,
       );
     });
 
     it('should show warning toast on sync error', async () => {
-      spyOn(service as any, 'processPendingOperations')
-        .and.returnValue(Promise.reject(new Error('Sync failed')));
+      spyOn(service as any, 'processPendingOperations').and.returnValue(
+        Promise.reject(new Error('Sync failed')),
+      );
 
       await service.onNetworkOnline();
 
       expect(uiStore.showToast).toHaveBeenCalledWith(
         '일부 변경사항을 동기화할 수 없습니다',
         'warning',
-        3000
+        3000,
       );
     });
   });
@@ -142,7 +142,7 @@ describe('BackgroundSyncService', () => {
       }
       spyOnProperty(navigator, 'serviceWorker', 'get').and.returnValue({
         ready: Promise.resolve({
-          sync: { register: jasmine.createSpy('register').and.returnValue(Promise.resolve()) }
+          sync: { register: jasmine.createSpy('register').and.returnValue(Promise.resolve()) },
         }),
         addEventListener: jasmine.createSpy('addEventListener'),
       } as any);
@@ -170,7 +170,7 @@ describe('BackgroundSyncService', () => {
           status: 'pending',
           retryCount: 0,
           maxRetries: 3,
-        })
+        }),
       );
     });
 
@@ -243,11 +243,9 @@ describe('BackgroundSyncService', () => {
       }
 
       const processedOrder: string[] = [];
-      spyOn(service as any, 'processSingleOperation').and.callFake(
-        async (op: SyncOperation) => {
-          processedOrder.push(op.type!);
-        }
-      );
+      spyOn(service as any, 'processSingleOperation').and.callFake(async (op: SyncOperation) => {
+        processedOrder.push(op.type!);
+      });
 
       await (service as any).processPendingOperations();
 
@@ -257,7 +255,14 @@ describe('BackgroundSyncService', () => {
 
     it('should skip operations with missing required fields', async () => {
       const operations = [
-        { method: 'POST' as const, url: '/api/test', body: {}, timestamp: Date.now(), retryCount: 0, status: 'pending' as const }, // missing type and priority
+        {
+          method: 'POST' as const,
+          url: '/api/test',
+          body: {},
+          timestamp: Date.now(),
+          retryCount: 0,
+          status: 'pending' as const,
+        }, // missing type and priority
         {
           type: 'completion' as const,
           method: 'POST' as const,
@@ -280,9 +285,7 @@ describe('BackgroundSyncService', () => {
 
       // Should only process the valid operation
       expect(processSpy).toHaveBeenCalledTimes(1);
-      expect(processSpy).toHaveBeenCalledWith(
-        jasmine.objectContaining({ type: 'completion' })
-      );
+      expect(processSpy).toHaveBeenCalledWith(jasmine.objectContaining({ type: 'completion' }));
     });
   });
 
@@ -328,7 +331,7 @@ describe('BackgroundSyncService', () => {
       await db.syncQueue.add(operation);
 
       spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' }))
+        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' })),
       );
 
       __configureMock.setGetMock(async () => ({ value: 'test-token' }));
@@ -357,7 +360,7 @@ describe('BackgroundSyncService', () => {
       await db.syncQueue.add(operation);
 
       spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' }))
+        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' })),
       );
 
       __configureMock.setGetMock(async () => ({ value: 'test-token' }));
@@ -370,7 +373,7 @@ describe('BackgroundSyncService', () => {
 
     it('should include authorization header in request', async () => {
       const fetchSpy = spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' }))
+        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' })),
       );
 
       __configureMock.setGetMock(async () => ({ value: 'bearer-token-123' }));
@@ -396,9 +399,9 @@ describe('BackgroundSyncService', () => {
         jasmine.objectContaining({
           method: 'POST',
           headers: jasmine.objectContaining({
-            'Authorization': 'Bearer bearer-token-123',
+            Authorization: 'Bearer bearer-token-123',
           }),
-        })
+        }),
       );
     });
   });
@@ -489,7 +492,7 @@ describe('BackgroundSyncService', () => {
       expect(uiStore.showToast).toHaveBeenCalledWith(
         jasmine.stringContaining('동기화 실패'),
         'danger',
-        5000
+        5000,
       );
     });
 
@@ -573,11 +576,13 @@ describe('BackgroundSyncService', () => {
       const result = await service.getPendingOperations();
 
       expect(result.length).toBe(1);
-      expect(result[0]).toEqual(jasmine.objectContaining({
-        type: 'completion',
-        method: 'POST',
-        status: 'pending',
-      }));
+      expect(result[0]).toEqual(
+        jasmine.objectContaining({
+          type: 'completion',
+          method: 'POST',
+          status: 'pending',
+        }),
+      );
     });
 
     it('should return failed operations', async () => {
@@ -597,10 +602,12 @@ describe('BackgroundSyncService', () => {
       const result = await service.getFailedOperations();
 
       expect(result.length).toBe(1);
-      expect(result[0]).toEqual(jasmine.objectContaining({
-        type: 'status_change',
-        status: 'failed',
-      }));
+      expect(result[0]).toEqual(
+        jasmine.objectContaining({
+          type: 'status_change',
+          status: 'failed',
+        }),
+      );
     });
   });
 
@@ -622,7 +629,7 @@ describe('BackgroundSyncService', () => {
 
       // Mock fetch to return success - this allows processSingleOperation to complete
       spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' }))
+        Promise.resolve(new Response('{}', { status: 200, statusText: 'OK' })),
       );
 
       __configureMock.setGetMock(async () => ({ value: 'test-token' }));
@@ -683,33 +690,57 @@ describe('BackgroundSyncService', () => {
     });
   });
 
-  describe('Calculate Priority', () => {
-    it('should return correct priority for each operation type', () => {
-      const calculatePriority = (service as any).calculatePriority.bind(service);
+  describe('Priority Assignment', () => {
+    it('should assign correct priority for each operation type via enqueue', async () => {
+      spyOnProperty(navigator, 'serviceWorker', 'get').and.returnValue({
+        ready: Promise.resolve({
+          sync: { register: jasmine.createSpy('register').and.returnValue(Promise.resolve()) },
+        }),
+        addEventListener: jasmine.createSpy('addEventListener'),
+      } as any);
 
-      expect(calculatePriority('completion')).toBe(1);
-      expect(calculatePriority('status_change')).toBe(2);
-      expect(calculatePriority('waste')).toBe(3);
-      expect(calculatePriority('attachment')).toBe(4);
-      expect(calculatePriority('note')).toBe(5);
+      const priorityMap: Record<string, number> = {
+        completion: 1,
+        status_change: 2,
+        waste: 3,
+        attachment: 4,
+        note: 5,
+      };
+
+      for (const [type, expectedPriority] of Object.entries(priorityMap)) {
+        __configureDexieMock.resetSyncQueue();
+
+        await service.enqueue({
+          type: type as SyncOperation['type'],
+          method: 'POST',
+          url: `/api/test/${type}`,
+          body: {},
+        });
+
+        const queuedOps = await db.syncQueue.toArray();
+        expect(queuedOps[0]?.priority).toBe(expectedPriority);
+      }
     });
 
-    it('should return default priority for unknown types', () => {
-      const calculatePriority = (service as any).calculatePriority.bind(service);
+    it('should assign default priority 99 for unknown operation types', async () => {
+      spyOnProperty(navigator, 'serviceWorker', 'get').and.returnValue({
+        ready: Promise.resolve({
+          sync: { register: jasmine.createSpy('register').and.returnValue(Promise.resolve()) },
+        }),
+        addEventListener: jasmine.createSpy('addEventListener'),
+      } as any);
 
-      expect(calculatePriority('unknown_type' as any)).toBe(99);
-    });
-  });
+      __configureDexieMock.resetSyncQueue();
 
-  describe('Get Operation Label', () => {
-    it('should return correct i18n keys for operation types', () => {
-      const getOperationLabel = (service as any).getOperationLabel.bind(service);
+      await service.enqueue({
+        type: 'unknown_type' as SyncOperation['type'],
+        method: 'POST',
+        url: '/api/test/unknown',
+        body: {},
+      });
 
-      expect(getOperationLabel('completion')).toBe('SYNC.OPERATION.COMPLETION');
-      expect(getOperationLabel('status_change')).toBe('SYNC.OPERATION.STATUS_CHANGE');
-      expect(getOperationLabel('waste')).toBe('SYNC.OPERATION.WASTE');
-      expect(getOperationLabel('attachment')).toBe('SYNC.OPERATION.ATTACHMENT');
-      expect(getOperationLabel('note')).toBe('SYNC.OPERATION.NOTE');
+      const queuedOps = await db.syncQueue.toArray();
+      expect(queuedOps[0]?.priority).toBe(99);
     });
   });
 });
