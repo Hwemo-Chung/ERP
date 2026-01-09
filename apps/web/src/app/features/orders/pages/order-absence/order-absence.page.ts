@@ -1,4 +1,3 @@
-// i18n 적용됨 - 번역 키: ORDERS.ABSENCE.*, ORDERS.STATUS.*
 import {
   Component,
   inject,
@@ -49,9 +48,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 
-/**
- * 부재 사유 코드 정의 - i18n 키 참조용
- */
 interface AbsenceReasonCode {
   value: string;
   labelKey: string;
@@ -851,18 +847,13 @@ export class OrderAbsencePage implements OnInit {
       this.isLoading.set(false);
     }
 
-    // Set default date to tomorrow
     this.nextVisitDate = this.minDate();
   }
 
-  /**
-   * Load order details from store or API
-   */
   private async loadOrder(orderId: string): Promise<void> {
     this.isLoading.set(true);
 
     try {
-      // First try to get from store
       this.ordersStore.selectOrder(orderId);
       const selectedOrder = this.ordersStore.selectedOrder();
 
@@ -870,7 +861,6 @@ export class OrderAbsencePage implements OnInit {
         this.order.set(selectedOrder);
         this.loadRetryCount(selectedOrder);
       } else {
-        // If not in store, check orders array
         const storeOrders = this.ordersStore.orders();
         const foundOrder = storeOrders.find((o) => o.id === orderId);
         if (foundOrder) {
@@ -887,22 +877,13 @@ export class OrderAbsencePage implements OnInit {
     }
   }
 
-  /**
-   * Load retry count from order data
-   * Uses the absenceRetryCount field from the order model (FR-04)
-   */
   private loadRetryCount(order: Order): void {
-    // Load actual retry count from order model
     this.currentRetryCount.set(order.absenceRetryCount || 0);
-    // Update max retries from order if available, otherwise use default
     if (order.maxAbsenceRetries !== undefined) {
       this._maxRetryCount = order.maxAbsenceRetries;
     }
   }
 
-  /**
-   * Check if form is valid for normal absence processing
-   */
   isFormValid(): boolean {
     return (
       this.selectedReasonCode !== '' &&
@@ -912,16 +893,10 @@ export class OrderAbsencePage implements OnInit {
     );
   }
 
-  /**
-   * Check if form is valid for escalation
-   */
   isFormValidForEscalation(): boolean {
     return this.selectedReasonCode !== '';
   }
 
-  /**
-   * Validate selected date is within allowed range
-   */
   private isDateValid(dateStr: string): boolean {
     if (!dateStr) return false;
 
@@ -936,30 +911,20 @@ export class OrderAbsencePage implements OnInit {
     return selected >= min && selected <= max;
   }
 
-  /**
-   * Get translated label for order status
-   */
   getStatusLabel(status: OrderStatus): string {
     return this.translate.instant(`ORDERS.STATUS.${status}`);
   }
 
-  /**
-   * Get translated label for absence reason
-   */
   private getReasonLabel(reasonCode: string): string {
     const reason = ABSENCE_REASON_CODES.find((r) => r.value === reasonCode);
     return reason ? this.translate.instant(reason.labelKey) : reasonCode;
   }
 
-  /**
-   * Submit absence with retry scheduling
-   */
   async submitAbsence(): Promise<void> {
     if (!this.isFormValid() || !this.order()) {
       return;
     }
 
-    // Capture translateService for async handler callback
     const translateService = this.translate;
 
     const alert = await this.alertController.create({
@@ -980,10 +945,6 @@ export class OrderAbsencePage implements OnInit {
     await alert.present();
   }
 
-  /**
-   * Process the absence action with retry scheduling
-   * Sends absence data including reason, notes, and next visit date to API (FR-04)
-   */
   private async processAbsence(): Promise<void> {
     this.isSubmitting.set(true);
 
@@ -991,7 +952,6 @@ export class OrderAbsencePage implements OnInit {
       const orderId = this.orderId();
       const newDate = this.nextVisitDate.split('T')[0];
 
-      // Build notes with contact attempt info
       const noteParts: string[] = [];
       if (this.contactAttempted) {
         noteParts.push(this.translate.instant('ORDERS.ABSENCE.CONTACT_ATTEMPTED'));
@@ -1022,15 +982,11 @@ export class OrderAbsencePage implements OnInit {
     }
   }
 
-  /**
-   * Submit escalation request when max retries reached
-   */
   async submitEscalation(): Promise<void> {
     if (!this.isFormValidForEscalation() || !this.order()) {
       return;
     }
 
-    // 비동기 핸들러를 위한 변수 캡처
     const translateService = this.translate;
 
     const alert = await this.alertController.create({
@@ -1051,23 +1007,13 @@ export class OrderAbsencePage implements OnInit {
     await alert.present();
   }
 
-  /**
-   * Process the escalation request
-   */
   private async processEscalation(): Promise<void> {
     this.isSubmitting.set(true);
 
     try {
       const orderId = this.orderId();
 
-      // Update order status to ABSENT
       await this.ordersStore.updateOrderStatus(orderId, OrderStatus.ABSENT);
-
-      // In a real implementation, you would also:
-      // 1. Create an escalation ticket
-      // 2. Notify admin/manager
-      // 3. Save all absence details
-      // 4. Flag order for special handling
 
       await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.SUCCESS'), 'warning');
 
