@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
 import { db, SyncQueueEntry } from '@app/core/db/database';
+import { buildFullUrl, DEFAULT_SYNC_CONFIG } from '@erp/shared';
 
-// Re-export for backwards compatibility
 export type SyncOperation = SyncQueueEntry;
 
 @Injectable({
@@ -19,7 +19,10 @@ export class SyncQueueService {
   readonly pendingCount = this._pendingCount.asReadonly();
   readonly isSyncing = this._isSyncing.asReadonly();
 
-  async enqueue(operation: Partial<SyncQueueEntry> & Pick<SyncQueueEntry, 'method' | 'url' | 'body' | 'timestamp'>): Promise<void> {
+  async enqueue(
+    operation: Partial<SyncQueueEntry> &
+      Pick<SyncQueueEntry, 'method' | 'url' | 'body' | 'timestamp'>,
+  ): Promise<void> {
     const entry: Omit<SyncQueueEntry, 'id'> = {
       type: operation.type || 'note',
       method: operation.method,
@@ -41,10 +44,7 @@ export class SyncQueueService {
     this._isSyncing.set(true);
 
     try {
-      const operations = await db.syncQueue
-        .orderBy('timestamp')
-        .limit(10)
-        .toArray();
+      const operations = await db.syncQueue.orderBy('timestamp').limit(10).toArray();
 
       for (const op of operations) {
         try {

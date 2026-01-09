@@ -29,10 +29,8 @@ import {
   trashOutline,
   checkmarkDoneOutline,
 } from 'ionicons/icons';
-import {
-  SyncQueueService,
-  SyncOperation,
-} from '../../../core/services/sync-queue.service';
+import { SyncQueueService } from '../../../core/services/sync-queue.service';
+import { SyncOperation } from '@erp/shared';
 
 @Component({
   selector: 'app-sync-conflict-list-modal',
@@ -76,16 +74,12 @@ import {
         <ion-list>
           @for (conflict of conflicts(); track conflict.id) {
             <ion-item button (click)="resolveConflict(conflict)">
-              <ion-icon
-                slot="start"
-                name="alert-circle-outline"
-                color="danger"
-              ></ion-icon>
+              <ion-icon slot="start" name="alert-circle-outline" color="danger"></ion-icon>
               <ion-label>
                 <h2>{{ getEntityLabel(conflict) }}</h2>
                 <p>{{ getConflictDescription(conflict) }}</p>
                 <ion-note>
-                  {{ conflict.timestamp | date:'MM/dd HH:mm' }}
+                  {{ conflict.timestamp | date: 'MM/dd HH:mm' }}
                 </ion-note>
               </ion-label>
               <ion-badge slot="end" color="danger">충돌</ion-badge>
@@ -99,83 +93,78 @@ import {
     <ion-footer>
       <ion-toolbar>
         @if (conflicts().length > 0) {
-          <ion-button
-            slot="start"
-            fill="outline"
-            color="danger"
-            (click)="discardAll()"
-          >
+          <ion-button slot="start" fill="outline" color="danger" (click)="discardAll()">
             <ion-icon slot="start" name="trash-outline"></ion-icon>
             전체 취소
           </ion-button>
         }
-        <ion-button slot="end" fill="outline" (click)="dismiss()">
-          닫기
-        </ion-button>
+        <ion-button slot="end" fill="outline" (click)="dismiss()"> 닫기 </ion-button>
       </ion-toolbar>
     </ion-footer>
   `,
-  styles: [`
-    ion-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+  styles: [
+    `
+      ion-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
 
-      ion-icon {
-        font-size: 24px;
-      }
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      text-align: center;
-
-      ion-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
+        ion-icon {
+          font-size: 24px;
+        }
       }
 
-      h3 {
-        margin: 0 0 8px 0;
-        font-size: 18px;
-        font-weight: 600;
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        text-align: center;
+
+        ion-icon {
+          font-size: 64px;
+          margin-bottom: 16px;
+        }
+
+        h3 {
+          margin: 0 0 8px 0;
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: var(--ion-color-medium);
+        }
       }
 
-      p {
-        margin: 0;
-        font-size: 14px;
-        color: var(--ion-color-medium);
-      }
-    }
+      ion-item {
+        --padding-top: 12px;
+        --padding-bottom: 12px;
 
-    ion-item {
-      --padding-top: 12px;
-      --padding-bottom: 12px;
+        h2 {
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
 
-      h2 {
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
+        p {
+          font-size: 13px;
+          color: var(--ion-color-medium);
+          margin: 0 0 4px 0;
+        }
 
-      p {
-        font-size: 13px;
-        color: var(--ion-color-medium);
-        margin: 0 0 4px 0;
+        ion-note {
+          font-size: 12px;
+        }
       }
 
-      ion-note {
-        font-size: 12px;
+      ion-footer ion-toolbar {
+        padding: 8px;
       }
-    }
-
-    ion-footer ion-toolbar {
-      padding: 8px;
-    }
-  `],
+    `,
+  ],
 })
 export class SyncConflictListModal implements OnInit {
   private readonly modalCtrl = inject(ModalController);

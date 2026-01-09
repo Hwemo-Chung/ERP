@@ -7,7 +7,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ModalController } from '@ionic/angular/standalone';
-import { SyncQueueService, SyncOperationStatus, SyncOperation } from './sync-queue.service';
+import { SyncQueueService } from './sync-queue.service';
+import { SyncOperationStatus, SyncOperation } from '@erp/shared';
 import { db, __configureDexieMock } from '@app/core/db/database';
 import { environment } from '@env/environment';
 
@@ -25,10 +26,7 @@ describe('SyncQueueService', () => {
 
     await TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [
-        SyncQueueService,
-        { provide: ModalController, useValue: modalCtrlSpy },
-      ],
+      providers: [SyncQueueService, { provide: ModalController, useValue: modalCtrlSpy }],
     }).compileComponents();
 
     service = TestBed.inject(SyncQueueService);
@@ -109,7 +107,7 @@ describe('SyncQueueService', () => {
       const processPromise = service.processQueue();
 
       // Wait for async database operations to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Expect HTTP request
       const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
@@ -152,7 +150,7 @@ describe('SyncQueueService', () => {
       const promise2 = service.processQueue();
 
       // Allow microtask queue to flush
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should only have one HTTP request
       const requests = httpMock.match(`${environment.apiUrl}/orders`);
@@ -170,7 +168,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
       expect(req.request.method).toBe('POST');
@@ -187,7 +185,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders/123`);
       expect(req.request.method).toBe('PUT');
@@ -204,7 +202,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders/456`);
       expect(req.request.method).toBe('PATCH');
@@ -221,7 +219,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders/789`);
       expect(req.request.method).toBe('DELETE');
@@ -240,7 +238,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
       req.flush('Network error', { status: 500, statusText: 'Server Error' });
@@ -266,7 +264,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders`);
       req.flush('Error', { status: 500, statusText: 'Server Error' });
@@ -287,9 +285,9 @@ describe('SyncQueueService', () => {
         onWillDismiss: jasmine.createSpy('onWillDismiss').and.returnValue(
           Promise.resolve({
             data: {
-              resolved: false,  // User dismissed without resolving
+              resolved: false, // User dismissed without resolving
             },
-          })
+          }),
         ),
       };
       modalCtrlSpy.create.and.returnValue(Promise.resolve(modalMock as any));
@@ -303,7 +301,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders/1`);
       req.flush(
@@ -312,7 +310,7 @@ describe('SyncQueueService', () => {
           currentVersion: 2,
           currentState: { status: 'ASSIGNED', version: 2 },
         },
-        { status: 409, statusText: 'Conflict' }
+        { status: 409, statusText: 'Conflict' },
       );
 
       await processPromise;
@@ -461,7 +459,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(`${environment.apiUrl}/orders/1`);
       expect(req.request.url).toBe(`${environment.apiUrl}/orders/1`);
@@ -480,7 +478,7 @@ describe('SyncQueueService', () => {
       });
 
       const processPromise = service.processQueue();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const req = httpMock.expectOne(absoluteUrl);
       expect(req.request.url).toBe(absoluteUrl);
@@ -506,7 +504,7 @@ describe('SyncQueueService', () => {
       const processPromise = service.processQueue();
 
       // Wait for first batch to start
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Flush first batch of 20 requests
       let requests = httpMock.match((req) => req.url.includes('/orders/'));
@@ -514,7 +512,7 @@ describe('SyncQueueService', () => {
       requests.forEach((req) => req.flush({ success: true }));
 
       // Wait for second batch to process
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Flush remaining requests
       requests = httpMock.match((req) => req.url.includes('/orders/'));
