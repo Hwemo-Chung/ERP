@@ -1,0 +1,29 @@
+{
+  "name": "@erp/shared",
+  "version": "1.0.0",
+  "description": "Shared models, constants, interceptors, and guards for ERP Logistics",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./models": "./src/models/index.ts",
+    "./constants": "./src/constants/index.ts",
+    "./interceptors": "./src/interceptors/index.ts",
+    "./guards": "./src/guards/index.ts",
+    "./store": "./src/store/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./services": "./src/services/index.ts"
+  },
+  "peerDependencies": {
+    "@angular/common": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
+    "@angular/router": ">=19.0.0",
+    "@ionic/angular": ">=8.0.0",
+    "rxjs": ">=7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
