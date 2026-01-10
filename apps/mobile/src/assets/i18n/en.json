@@ -1292,8 +1292,10 @@
   },
   "ROLES": {
     "HQ_ADMIN": "HQ Administrator",
+    "HQ_MANAGER": "HQ Manager",
     "BRANCH_MANAGER": "Branch Manager",
     "PARTNER_COORDINATOR": "Partner Coordinator",
+    "DRIVER": "Driver",
     "INSTALLER": "Installer"
   },
   "LANGUAGES": {

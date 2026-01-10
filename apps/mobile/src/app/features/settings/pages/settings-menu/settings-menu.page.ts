@@ -51,7 +51,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   template: `
     <ion-header class="ion-no-border">
       <ion-toolbar>
-        <ion-title>설정</ion-title>
+        <ion-title>{{ 'NAV.SETTINGS' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -78,7 +78,7 @@ import { AuthService } from '../../../../core/services/auth.service';
         <!-- Account & Business Section -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-title">계정 및 업무</span>
+            <span class="section-title">{{ 'SETTINGS.SECTION.MANAGEMENT' | translate }}</span>
           </div>
 
           <ion-list class="settings-list" lines="none">
@@ -87,8 +87,8 @@ import { AuthService } from '../../../../core/services/auth.service';
                 <ion-icon name="wallet-outline"></ion-icon>
               </div>
               <ion-label>
-                <h3>정산 관리</h3>
-                <p>주간 정산 기간 관리</p>
+                <h3>{{ 'SETTINGS.MENU.SETTLEMENT' | translate }}</h3>
+                <p>{{ 'SETTINGS.MENU.SETTLEMENT_DESC' | translate }}</p>
               </ion-label>
               <ion-icon name="chevron-forward-outline" slot="end" class="item-chevron"></ion-icon>
             </ion-item>
@@ -98,8 +98,8 @@ import { AuthService } from '../../../../core/services/auth.service';
                 <ion-icon name="notifications-outline"></ion-icon>
               </div>
               <ion-label>
-                <h3>알림 센터</h3>
-                <p>푸시 알림 설정 및 이력</p>
+                <h3>{{ 'SETTINGS.MENU.NOTIFICATION_CENTER' | translate }}</h3>
+                <p>{{ 'SETTINGS.MENU.NOTIFICATION_CENTER_DESC' | translate }}</p>
               </ion-label>
               @if (notificationCount() > 0) {
                 <ion-badge class="notification-badge" slot="end">{{
@@ -117,7 +117,7 @@ import { AuthService } from '../../../../core/services/auth.service';
             <div class="icon-wrapper icon-danger">
               <ion-icon name="log-out-outline"></ion-icon>
             </div>
-            <span class="logout-text">로그아웃</span>
+            <span class="logout-text">{{ 'PROFILE.LOGOUT.BUTTON' | translate }}</span>
             <ion-ripple-effect></ion-ripple-effect>
           </button>
         </section>
@@ -506,25 +506,22 @@ export class SettingsMenuPage {
 
   readonly primaryRole = computed(() => {
     const roles = this.user()?.roles || [];
-    if (roles.length === 0) return 'User';
-
-    const roleDisplayMap: Record<string, string> = {
-      HQ_ADMIN: 'HQ Administrator',
-      HQ_MANAGER: 'HQ Manager',
-      BRANCH_MANAGER: 'Branch Manager',
-      DRIVER: 'Driver',
-      INSTALLER: 'Installer',
-    };
+    if (roles.length === 0) return this.translate.instant('SETTINGS.DEFAULT_USER');
 
     const priorityOrder = ['HQ_ADMIN', 'HQ_MANAGER', 'BRANCH_MANAGER', 'DRIVER', 'INSTALLER'];
 
     for (const role of priorityOrder) {
       if (roles.includes(role)) {
-        return roleDisplayMap[role] || role;
+        const key = `ROLES.${role}`;
+        const translated = this.translate.instant(key);
+        return translated !== key ? translated : role;
       }
     }
 
-    return roleDisplayMap[roles[0]] || roles[0];
+    const firstRole = roles[0];
+    const key = `ROLES.${firstRole}`;
+    const translated = this.translate.instant(key);
+    return translated !== key ? translated : firstRole;
   });
 
   readonly notificationCount = computed(() => 3);

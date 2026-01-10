@@ -79,7 +79,7 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>완료 처리</ion-title>
+        <ion-title>{{ 'COMPLETION.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openFilter()">
             <ion-icon name="filter-outline"></ion-icon>
@@ -89,20 +89,20 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="currentFilter()" (ionChange)="onFilterChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'COMMON.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="dispatched">
-            <ion-label>대기</ion-label>
+            <ion-label>{{ 'REPORTS.COMPLETION.CHIPS.WAITING' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="completed">
-            <ion-label>완료</ion-label>
+            <ion-label>{{ 'REPORTS.COMPLETION.CHIPS.COMPLETED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -117,22 +117,31 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
       <div class="summary-chips">
         <ion-chip color="warning">
           <ion-icon name="time-outline"></ion-icon>
-          <ion-label>대기 {{ pendingCount() }}건</ion-label>
+          <ion-label
+            >{{ 'REPORTS.COMPLETION.CHIPS.WAITING' | translate }} {{ pendingCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
         <ion-chip color="primary">
           <ion-icon name="alert-circle-outline"></ion-icon>
-          <ion-label>진행중 {{ inProgressCount() }}건</ion-label>
+          <ion-label
+            >{{ 'REPORTS.COMPLETION.CHIPS.IN_PROGRESS' | translate }} {{ inProgressCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
         <ion-chip color="success">
           <ion-icon name="checkmark-circle-outline"></ion-icon>
-          <ion-label>완료 {{ completedCount() }}건</ion-label>
+          <ion-label
+            >{{ 'REPORTS.COMPLETION.CHIPS.COMPLETED' | translate }} {{ completedCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
       </div>
 
       @if (isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'COMMON.LOADING' | translate }}</p>
         </div>
       } @else {
         <ion-list>
@@ -144,12 +153,18 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
                 <p>{{ item.appointmentDate }} | {{ item.installerName }}</p>
                 <div class="status-indicators">
                   @if (item.serialEntered) {
-                    <ion-badge color="success">시리얼 입력완료</ion-badge>
+                    <ion-badge color="success">{{
+                      'COMPLETION.STATUS.SERIAL_ENTERED' | translate
+                    }}</ion-badge>
                   } @else {
-                    <ion-badge color="warning">시리얼 미입력</ion-badge>
+                    <ion-badge color="warning">{{
+                      'COMPLETION.STATUS.SERIAL_NOT_ENTERED' | translate
+                    }}</ion-badge>
                   }
                   @if (item.wastePickedUp) {
-                    <ion-badge color="success">폐가전 회수</ion-badge>
+                    <ion-badge color="success">{{
+                      'COMPLETION.STATUS.WASTE_PICKUP' | translate
+                    }}</ion-badge>
                   }
                 </div>
               </ion-label>
@@ -160,7 +175,7 @@ type CompletionFilter = 'dispatched' | 'completed' | 'all';
           } @empty {
             <div class="empty-state">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <p>처리할 항목이 없습니다.</p>
+              <p>{{ 'COMPLETION.NO_ITEMS' | translate }}</p>
             </div>
           }
         </ion-list>

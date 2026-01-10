@@ -36,7 +36,7 @@ import {
   InfiniteScrollCustomEvent,
   ModalController,
 } from '@ionic/angular/standalone';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   OrderFilterModal,
   FilterContext,
@@ -91,7 +91,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>배정 관리</ion-title>
+        <ion-title>{{ 'ASSIGNMENT.TITLE' | translate }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="openFilter()">
             <ion-icon name="filter-outline"></ion-icon>
@@ -101,23 +101,23 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
       <ion-toolbar>
         <ion-searchbar
           [debounce]="300"
-          placeholder="주문번호, 고객명 검색..."
+          [placeholder]="'ASSIGNMENT.SEARCH_PLACEHOLDER' | translate"
           (ionInput)="onSearch($event)"
         ></ion-searchbar>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="currentFilter()" (ionChange)="onStatusChange($event)">
           <ion-segment-button value="all">
-            <ion-label>전체</ion-label>
+            <ion-label>{{ 'COMMON.ALL' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="unassigned">
-            <ion-label>미배정</ion-label>
+            <ion-label>{{ 'ORDER_STATUS.UNASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="assigned">
-            <ion-label>배정</ion-label>
+            <ion-label>{{ 'ORDER_STATUS.ASSIGNED' | translate }}</ion-label>
           </ion-segment-button>
           <ion-segment-button value="confirmed">
-            <ion-label>확정</ion-label>
+            <ion-label>{{ 'ORDER_STATUS.CONFIRMED' | translate }}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -131,23 +131,35 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
       <!-- Summary Chips -->
       <div class="summary-chips">
         <ion-chip color="medium">
-          <ion-label>총 {{ totalCount() }}건</ion-label>
+          <ion-label
+            >{{ 'COMMON.TOTAL' | translate }} {{ totalCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
         <ion-chip color="danger">
-          <ion-label>미배정 {{ unassignedCount() }}건</ion-label>
+          <ion-label
+            >{{ 'ORDER_STATUS.UNASSIGNED' | translate }} {{ unassignedCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
         <ion-chip color="warning">
-          <ion-label>배정 {{ assignedCount() }}건</ion-label>
+          <ion-label
+            >{{ 'ORDER_STATUS.ASSIGNED' | translate }} {{ assignedCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
         <ion-chip color="success">
-          <ion-label>확정 {{ confirmedCount() }}건</ion-label>
+          <ion-label
+            >{{ 'ORDER_STATUS.CONFIRMED' | translate }} {{ confirmedCount()
+            }}{{ 'COMMON.COUNT_SUFFIX' | translate }}</ion-label
+          >
         </ion-chip>
       </div>
 
       @if (ordersStore.isLoading()) {
         <div class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
-          <p>데이터 로딩 중...</p>
+          <p>{{ 'COMMON.LOADING' | translate }}</p>
         </div>
       } @else {
         <ion-list>
@@ -176,7 +188,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
           } @empty {
             <div class="empty-state">
               <ion-icon name="checkmark-circle-outline"></ion-icon>
-              <p>표시할 배정 항목이 없습니다.</p>
+              <p>{{ 'ASSIGNMENT.NO_ITEMS' | translate }}</p>
             </div>
           }
         </ion-list>
@@ -184,7 +196,7 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
         <ion-infinite-scroll (ionInfinite)="onInfinite($event)">
           <ion-infinite-scroll-content
             loadingSpinner="crescent"
-            loadingText="더 불러오는 중..."
+            [loadingText]="'COMMON.LOAD_MORE' | translate"
           ></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       }
@@ -790,6 +802,7 @@ export class AssignmentListPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly uiStore = inject(UIStore);
   private readonly modalController = inject(ModalController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly currentFilter = signal<AssignmentFilter>('all');
 
@@ -862,7 +875,7 @@ export class AssignmentListPage implements OnInit {
       ]);
     } catch (error) {
       console.error('[AssignmentList] Failed to load orders:', error);
-      this.uiStore.showToast('배정 데이터 로드 실패', 'danger');
+      this.uiStore.showToast(this.translate.instant('ASSIGNMENT.ASSIGN_FAILED'), 'danger');
     }
   }
 
