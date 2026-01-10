@@ -94,7 +94,7 @@ describe('OrderListPage (Mobile)', () => {
 
   it('should display KPI metrics', () => {
     fixture.detectChanges();
-    const badges = fixture.nativeElement.querySelectorAll('.kpi-summary ion-badge');
-    expect(badges.length).toBe(2);
+    const chips = fixture.nativeElement.querySelectorAll('.kpi-chips ion-chip');
+    expect(chips.length).toBe(3);
   });
 });

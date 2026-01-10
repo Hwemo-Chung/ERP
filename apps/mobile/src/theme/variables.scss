@@ -1,176 +1,714 @@
 /**
- * Ionic CSS Variables
- * Define theme colors and styles
+ * Ionic CSS Variables - Design System
+ * Logistics ERP Theme
+ *
+ * A refined, professional design system for logistics operations.
+ * Built for clarity, accessibility (WCAG AA), and consistency.
  */
 
 :root {
-  /** Primary - Blue **/
-  --ion-color-primary: #3880ff;
-  --ion-color-primary-rgb: 56, 128, 255;
+  /* ============================================
+   * TYPOGRAPHY SYSTEM
+   * Modular scale with 1.25 ratio
+   * ============================================ */
+
+  /** Font Families **/
+  --font-family-base:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  --font-family-heading:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  --font-family-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+  /** Font Sizes - Modular Scale (base: 16px, ratio: 1.25) **/
+  --font-size-2xs: 0.64rem; /* 10px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-md: 1.125rem; /* 18px */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 1.5rem; /* 24px */
+  --font-size-2xl: 1.875rem; /* 30px */
+  --font-size-3xl: 2.25rem; /* 36px */
+  --font-size-4xl: 3rem; /* 48px */
+
+  /** Font Weights **/
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /** Line Heights **/
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 1.8;
+
+  /** Letter Spacing **/
+  --letter-spacing-tighter: -0.03em;
+  --letter-spacing-tight: -0.015em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.015em;
+  --letter-spacing-wider: 0.03em;
+  --letter-spacing-widest: 0.06em;
+
+  /* ============================================
+   * SPACING SYSTEM
+   * 4px base unit for consistent rhythm
+   * ============================================ */
+
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem; /* 2px */
+  --space-1: 0.25rem; /* 4px */
+  --space-1-5: 0.375rem; /* 6px */
+  --space-2: 0.5rem; /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-7: 1.75rem; /* 28px */
+  --space-8: 2rem; /* 32px */
+  --space-9: 2.25rem; /* 36px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-14: 3.5rem; /* 56px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+  --space-32: 8rem; /* 128px */
+
+  /* ============================================
+   * BORDER RADIUS SYSTEM
+   * Consistent corner treatments
+   * ============================================ */
+
+  --radius-none: 0;
+  --radius-xs: 0.125rem; /* 2px - subtle */
+  --radius-sm: 0.25rem; /* 4px - inputs, small buttons */
+  --radius-md: 0.5rem; /* 8px - cards, modals */
+  --radius-lg: 0.75rem; /* 12px - large cards */
+  --radius-xl: 1rem; /* 16px - prominent elements */
+  --radius-2xl: 1.5rem; /* 24px - floating elements */
+  --radius-3xl: 2rem; /* 32px - pills, avatars */
+  --radius-full: 9999px; /* Fully rounded */
+
+  /* ============================================
+   * ELEVATION / SHADOW SYSTEM
+   * Layered depth for visual hierarchy
+   * ============================================ */
+
+  --shadow-none: none;
+
+  /** Subtle shadows for light elevation **/
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+
+  /** Standard shadows for cards and containers **/
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+  /** Dramatic shadows for modals and overlays **/
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+
+  /** Inner shadow for pressed/inset states **/
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);
+
+  /** Colored shadows for emphasis **/
+  --shadow-primary: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+  --shadow-success: 0 4px 14px 0 rgba(22, 163, 74, 0.25);
+  --shadow-danger: 0 4px 14px 0 rgba(220, 38, 38, 0.25);
+
+  /* ============================================
+   * TRANSITION SYSTEM
+   * Consistent motion for interactions
+   * ============================================ */
+
+  --transition-fast: 100ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
+  --transition-slower: 500ms;
+
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ============================================
+   * NEUTRAL PALETTE
+   * Refined grays for backgrounds and text
+   * ============================================ */
+
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --gray-950: #020617;
+
+  /* ============================================
+   * IONIC CORE COLORS
+   * Professional, accessible palette
+   * ============================================ */
+
+  /** Primary - Refined Blue **/
+  --ion-color-primary: #2563eb;
+  --ion-color-primary-rgb: 37, 99, 235;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #3171e0;
-  --ion-color-primary-tint: #4c8dff;
+  --ion-color-primary-shade: #1d4ed8;
+  --ion-color-primary-tint: #3b82f6;
 
-  /** Secondary - Navy **/
-  --ion-color-secondary: #3dc2ff;
-  --ion-color-secondary-rgb: 61, 194, 255;
+  /** Secondary - Slate Blue **/
+  --ion-color-secondary: #0ea5e9;
+  --ion-color-secondary-rgb: 14, 165, 233;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #36abe0;
-  --ion-color-secondary-tint: #50c8ff;
+  --ion-color-secondary-shade: #0284c7;
+  --ion-color-secondary-tint: #38bdf8;
 
-  /** Tertiary - Purple **/
-  --ion-color-tertiary: #5260ff;
-  --ion-color-tertiary-rgb: 82, 96, 255;
+  /** Tertiary - Indigo **/
+  --ion-color-tertiary: #6366f1;
+  --ion-color-tertiary-rgb: 99, 102, 241;
   --ion-color-tertiary-contrast: #ffffff;
   --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-  --ion-color-tertiary-shade: #4854e0;
-  --ion-color-tertiary-tint: #6370ff;
+  --ion-color-tertiary-shade: #4f46e5;
+  --ion-color-tertiary-tint: #818cf8;
 
-  /** Success - Green **/
-  --ion-color-success: #2dd36f;
-  --ion-color-success-rgb: 45, 211, 111;
+  /** Success - Accessible Green (WCAG AA on white) **/
+  --ion-color-success: #16a34a;
+  --ion-color-success-rgb: 22, 163, 74;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #28ba62;
-  --ion-color-success-tint: #42d77d;
+  --ion-color-success-shade: #15803d;
+  --ion-color-success-tint: #22c55e;
 
-  /** Warning - Yellow **/
-  --ion-color-warning: #ffc409;
-  --ion-color-warning-rgb: 255, 196, 9;
-  --ion-color-warning-contrast: #000000;
-  --ion-color-warning-contrast-rgb: 0, 0, 0;
-  --ion-color-warning-shade: #e0ac08;
-  --ion-color-warning-tint: #ffca22;
+  /** Warning - Amber with dark text (WCAG AA) **/
+  --ion-color-warning: #f59e0b;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #1e1e1e;
+  --ion-color-warning-contrast-rgb: 30, 30, 30;
+  --ion-color-warning-shade: #d97706;
+  --ion-color-warning-tint: #fbbf24;
 
-  /** Danger - Red **/
-  --ion-color-danger: #eb445a;
-  --ion-color-danger-rgb: 235, 68, 90;
+  /** Danger - Accessible Red (WCAG AA) **/
+  --ion-color-danger: #dc2626;
+  --ion-color-danger-rgb: 220, 38, 38;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #cf3c4f;
-  --ion-color-danger-tint: #ed576b;
+  --ion-color-danger-shade: #b91c1c;
+  --ion-color-danger-tint: #ef4444;
 
-  /** Medium - Gray **/
-  --ion-color-medium: #92949c;
-  --ion-color-medium-rgb: 146, 148, 156;
+  /** Medium - Balanced Gray **/
+  --ion-color-medium: #64748b;
+  --ion-color-medium-rgb: 100, 116, 139;
   --ion-color-medium-contrast: #ffffff;
   --ion-color-medium-contrast-rgb: 255, 255, 255;
-  --ion-color-medium-shade: #808289;
-  --ion-color-medium-tint: #9d9fa6;
+  --ion-color-medium-shade: #475569;
+  --ion-color-medium-tint: #94a3b8;
 
-  /** Light **/
-  --ion-color-light: #f4f5f8;
-  --ion-color-light-rgb: 244, 245, 248;
-  --ion-color-light-contrast: #000000;
-  --ion-color-light-contrast-rgb: 0, 0, 0;
-  --ion-color-light-shade: #d7d8da;
-  --ion-color-light-tint: #f5f6f9;
+  /** Light - Soft Background **/
+  --ion-color-light: #f1f5f9;
+  --ion-color-light-rgb: 241, 245, 249;
+  --ion-color-light-contrast: #1e293b;
+  --ion-color-light-contrast-rgb: 30, 41, 59;
+  --ion-color-light-shade: #e2e8f0;
+  --ion-color-light-tint: #f8fafc;
 
-  /** Order Status Colors **/
-  --status-unassigned: #9e9e9e;
-  --status-assigned: #2196f3;
-  --status-confirmed: #03a9f4;
-  --status-released: #00bcd4;
-  --status-dispatched: #009688;
-  --status-completed: #4caf50;
-  --status-postponed: #ff9800;
-  --status-absent: #ff5722;
-  --status-request-cancel: #f44336;
-  --status-cancelled: #795548;
-  --status-collected: #8bc34a;
-  --status-reverted: #607d8b;
+  /** Dark - Deep Slate **/
+  --ion-color-dark: #1e293b;
+  --ion-color-dark-rgb: 30, 41, 59;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #0f172a;
+  --ion-color-dark-tint: #334155;
+
+  /* ============================================
+   * ORDER STATUS COLORS (WCAG AA Accessible)
+   * Optimized for readability and distinction
+   * ============================================ */
+
+  /** Neutral States **/
+  --status-unassigned: #64748b;
+  --status-unassigned-bg: #f1f5f9;
+  --status-unassigned-text: #334155;
+
+  /** Progress States - Blue Spectrum **/
+  --status-assigned: #2563eb;
+  --status-assigned-bg: #dbeafe;
+  --status-assigned-text: #1e40af;
+
+  --status-confirmed: #0284c7;
+  --status-confirmed-bg: #e0f2fe;
+  --status-confirmed-text: #075985;
+
+  --status-released: #0891b2;
+  --status-released-bg: #cffafe;
+  --status-released-text: #155e75;
+
+  --status-dispatched: #0d9488;
+  --status-dispatched-bg: #ccfbf1;
+  --status-dispatched-text: #115e59;
+
+  /** Success States - Green Spectrum **/
+  --status-completed: #16a34a;
+  --status-completed-bg: #dcfce7;
+  --status-completed-text: #166534;
+
+  --status-collected: #65a30d;
+  --status-collected-bg: #ecfccb;
+  --status-collected-text: #3f6212;
+
+  /** Warning States - Amber/Orange **/
+  --status-postponed: #d97706;
+  --status-postponed-bg: #fef3c7;
+  --status-postponed-text: #92400e;
+
+  --status-absent: #ea580c;
+  --status-absent-bg: #ffedd5;
+  --status-absent-text: #9a3412;
+
+  /** Danger States - Red Spectrum **/
+  --status-request-cancel: #dc2626;
+  --status-request-cancel-bg: #fee2e2;
+  --status-request-cancel-text: #991b1b;
+
+  --status-cancelled: #78716c;
+  --status-cancelled-bg: #f5f5f4;
+  --status-cancelled-text: #44403c;
+
+  /** Other States **/
+  --status-reverted: #475569;
+  --status-reverted-bg: #e2e8f0;
+  --status-reverted-text: #1e293b;
+
+  /* ============================================
+   * SEMANTIC TOKENS
+   * Context-aware color assignments
+   * ============================================ */
+
+  /** Backgrounds **/
+  --background-primary: #ffffff;
+  --background-secondary: var(--gray-50);
+  --background-tertiary: var(--gray-100);
+  --background-elevated: #ffffff;
+  --background-overlay: rgba(0, 0, 0, 0.4);
+
+  /** Text Colors **/
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-placeholder: var(--gray-400);
+  --text-disabled: var(--gray-300);
+  --text-inverse: #ffffff;
+
+  /** Border Colors **/
+  --border-subtle: var(--gray-200);
+  --border-default: var(--gray-300);
+  --border-strong: var(--gray-400);
+  --border-focus: var(--ion-color-primary);
+
+  /** Interactive States **/
+  --state-hover: rgba(0, 0, 0, 0.04);
+  --state-pressed: rgba(0, 0, 0, 0.08);
+  --state-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  --state-disabled-opacity: 0.5;
+
+  /* ============================================
+   * IONIC FRAMEWORK INTEGRATION
+   * ============================================ */
+
+  --ion-background-color: var(--background-primary);
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: var(--text-primary);
+  --ion-text-color-rgb: 15, 23, 42;
+
+  --ion-card-background: var(--background-elevated);
+  --ion-item-background: var(--background-primary);
+  --ion-toolbar-background: var(--background-primary);
+  --ion-tab-bar-background: var(--background-primary);
+
+  --ion-border-color: var(--border-subtle);
 }
 
-/* Dark Mode */
+/* ============================================
+ * DARK MODE
+ * Refined dark theme with proper contrast
+ * ============================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ion-color-primary: #428cff;
-    --ion-color-primary-rgb: 66, 140, 255;
+    /* Dark Neutral Palette */
+    --gray-50: #0f172a;
+    --gray-100: #1e293b;
+    --gray-200: #334155;
+    --gray-300: #475569;
+    --gray-400: #64748b;
+    --gray-500: #94a3b8;
+    --gray-600: #cbd5e1;
+    --gray-700: #e2e8f0;
+    --gray-800: #f1f5f9;
+    --gray-900: #f8fafc;
+    --gray-950: #ffffff;
+
+    /* Elevated shadows for dark mode */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+
+    /* Colored shadows - more subtle in dark mode */
+    --shadow-primary: 0 4px 14px 0 rgba(59, 130, 246, 0.2);
+    --shadow-success: 0 4px 14px 0 rgba(34, 197, 94, 0.2);
+    --shadow-danger: 0 4px 14px 0 rgba(239, 68, 68, 0.2);
+
+    /** Primary - Brighter for dark backgrounds **/
+    --ion-color-primary: #3b82f6;
+    --ion-color-primary-rgb: 59, 130, 246;
     --ion-color-primary-contrast: #ffffff;
     --ion-color-primary-contrast-rgb: 255, 255, 255;
-    --ion-color-primary-shade: #3a7be0;
-    --ion-color-primary-tint: #5598ff;
+    --ion-color-primary-shade: #2563eb;
+    --ion-color-primary-tint: #60a5fa;
 
-    --ion-color-secondary: #50c8ff;
-    --ion-color-secondary-rgb: 80, 200, 255;
-    --ion-color-secondary-contrast: #ffffff;
-    --ion-color-secondary-contrast-rgb: 255, 255, 255;
-    --ion-color-secondary-shade: #46b0e0;
-    --ion-color-secondary-tint: #62ceff;
+    /** Secondary **/
+    --ion-color-secondary: #38bdf8;
+    --ion-color-secondary-rgb: 56, 189, 248;
+    --ion-color-secondary-contrast: #0c4a6e;
+    --ion-color-secondary-contrast-rgb: 12, 74, 110;
+    --ion-color-secondary-shade: #0ea5e9;
+    --ion-color-secondary-tint: #7dd3fc;
 
-    --ion-color-tertiary: #6a64ff;
-    --ion-color-tertiary-rgb: 106, 100, 255;
-    --ion-color-tertiary-contrast: #ffffff;
-    --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-    --ion-color-tertiary-shade: #5d58e0;
-    --ion-color-tertiary-tint: #7974ff;
+    /** Tertiary **/
+    --ion-color-tertiary: #818cf8;
+    --ion-color-tertiary-rgb: 129, 140, 248;
+    --ion-color-tertiary-contrast: #1e1b4b;
+    --ion-color-tertiary-contrast-rgb: 30, 27, 75;
+    --ion-color-tertiary-shade: #6366f1;
+    --ion-color-tertiary-tint: #a5b4fc;
 
-    --ion-color-success: #2fdf75;
-    --ion-color-success-rgb: 47, 223, 117;
-    --ion-color-success-contrast: #000000;
-    --ion-color-success-contrast-rgb: 0, 0, 0;
-    --ion-color-success-shade: #29c467;
-    --ion-color-success-tint: #44e283;
+    /** Success **/
+    --ion-color-success: #22c55e;
+    --ion-color-success-rgb: 34, 197, 94;
+    --ion-color-success-contrast: #052e16;
+    --ion-color-success-contrast-rgb: 5, 46, 22;
+    --ion-color-success-shade: #16a34a;
+    --ion-color-success-tint: #4ade80;
 
-    --ion-color-warning: #ffd534;
-    --ion-color-warning-rgb: 255, 213, 52;
-    --ion-color-warning-contrast: #000000;
-    --ion-color-warning-contrast-rgb: 0, 0, 0;
-    --ion-color-warning-shade: #e0bb2e;
-    --ion-color-warning-tint: #ffd948;
+    /** Warning **/
+    --ion-color-warning: #fbbf24;
+    --ion-color-warning-rgb: 251, 191, 36;
+    --ion-color-warning-contrast: #451a03;
+    --ion-color-warning-contrast-rgb: 69, 26, 3;
+    --ion-color-warning-shade: #f59e0b;
+    --ion-color-warning-tint: #fcd34d;
 
-    --ion-color-danger: #ff4961;
-    --ion-color-danger-rgb: 255, 73, 97;
+    /** Danger **/
+    --ion-color-danger: #ef4444;
+    --ion-color-danger-rgb: 239, 68, 68;
     --ion-color-danger-contrast: #ffffff;
     --ion-color-danger-contrast-rgb: 255, 255, 255;
-    --ion-color-danger-shade: #e04055;
-    --ion-color-danger-tint: #ff5b71;
+    --ion-color-danger-shade: #dc2626;
+    --ion-color-danger-tint: #f87171;
 
-    --ion-color-dark: #f4f5f8;
-    --ion-color-dark-rgb: 244, 245, 248;
-    --ion-color-dark-contrast: #000000;
-    --ion-color-dark-contrast-rgb: 0, 0, 0;
-    --ion-color-dark-shade: #d7d8da;
-    --ion-color-dark-tint: #f5f6f9;
+    /** Dark (inverted for dark mode) **/
+    --ion-color-dark: #f1f5f9;
+    --ion-color-dark-rgb: 241, 245, 249;
+    --ion-color-dark-contrast: #0f172a;
+    --ion-color-dark-contrast-rgb: 15, 23, 42;
+    --ion-color-dark-shade: #e2e8f0;
+    --ion-color-dark-tint: #f8fafc;
 
-    --ion-color-medium: #989aa2;
-    --ion-color-medium-rgb: 152, 154, 162;
-    --ion-color-medium-contrast: #000000;
-    --ion-color-medium-contrast-rgb: 0, 0, 0;
-    --ion-color-medium-shade: #86888f;
-    --ion-color-medium-tint: #a2a4ab;
+    /** Medium **/
+    --ion-color-medium: #94a3b8;
+    --ion-color-medium-rgb: 148, 163, 184;
+    --ion-color-medium-contrast: #0f172a;
+    --ion-color-medium-contrast-rgb: 15, 23, 42;
+    --ion-color-medium-shade: #64748b;
+    --ion-color-medium-tint: #cbd5e1;
 
-    --ion-color-light: #222428;
-    --ion-color-light-rgb: 34, 36, 40;
-    --ion-color-light-contrast: #ffffff;
-    --ion-color-light-contrast-rgb: 255, 255, 255;
-    --ion-color-light-shade: #1e2023;
-    --ion-color-light-tint: #383a3e;
+    /** Light (inverted for dark mode) **/
+    --ion-color-light: #1e293b;
+    --ion-color-light-rgb: 30, 41, 59;
+    --ion-color-light-contrast: #f8fafc;
+    --ion-color-light-contrast-rgb: 248, 250, 252;
+    --ion-color-light-shade: #0f172a;
+    --ion-color-light-tint: #334155;
 
-    --ion-background-color: #1e1e1e;
-    --ion-background-color-rgb: 30, 30, 30;
+    /* Order Status Colors - Vibrant for dark mode */
+    --status-unassigned: #94a3b8;
+    --status-unassigned-bg: #1e293b;
+    --status-unassigned-text: #cbd5e1;
 
-    --ion-text-color: #ffffff;
-    --ion-text-color-rgb: 255, 255, 255;
+    --status-assigned: #60a5fa;
+    --status-assigned-bg: #1e3a5f;
+    --status-assigned-text: #bfdbfe;
 
-    --ion-card-background: #2d2d2d;
+    --status-confirmed: #38bdf8;
+    --status-confirmed-bg: #0c4a6e;
+    --status-confirmed-text: #bae6fd;
 
-    --ion-item-background: #1e1e1e;
+    --status-released: #22d3ee;
+    --status-released-bg: #164e63;
+    --status-released-text: #a5f3fc;
 
-    --ion-toolbar-background: #1f1f1f;
+    --status-dispatched: #2dd4bf;
+    --status-dispatched-bg: #134e4a;
+    --status-dispatched-text: #99f6e4;
 
-    --ion-tab-bar-background: #1f1f1f;
+    --status-completed: #4ade80;
+    --status-completed-bg: #14532d;
+    --status-completed-text: #bbf7d0;
+
+    --status-collected: #a3e635;
+    --status-collected-bg: #365314;
+    --status-collected-text: #d9f99d;
+
+    --status-postponed: #fbbf24;
+    --status-postponed-bg: #78350f;
+    --status-postponed-text: #fef3c7;
+
+    --status-absent: #fb923c;
+    --status-absent-bg: #7c2d12;
+    --status-absent-text: #fed7aa;
+
+    --status-request-cancel: #f87171;
+    --status-request-cancel-bg: #7f1d1d;
+    --status-request-cancel-text: #fecaca;
+
+    --status-cancelled: #a8a29e;
+    --status-cancelled-bg: #292524;
+    --status-cancelled-text: #d6d3d1;
+
+    --status-reverted: #94a3b8;
+    --status-reverted-bg: #334155;
+    --status-reverted-text: #e2e8f0;
+
+    /* Semantic Tokens - Dark Mode */
+    --background-primary: #0f172a;
+    --background-secondary: #1e293b;
+    --background-tertiary: #334155;
+    --background-elevated: #1e293b;
+    --background-overlay: rgba(0, 0, 0, 0.6);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-placeholder: #64748b;
+    --text-disabled: #475569;
+    --text-inverse: #0f172a;
+
+    --border-subtle: #334155;
+    --border-default: #475569;
+    --border-strong: #64748b;
+    --border-focus: var(--ion-color-primary);
+
+    --state-hover: rgba(255, 255, 255, 0.04);
+    --state-pressed: rgba(255, 255, 255, 0.08);
+    --state-focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.3);
+
+    /* Ionic Integration - Dark Mode */
+    --ion-background-color: var(--background-primary);
+    --ion-background-color-rgb: 15, 23, 42;
+    --ion-text-color: var(--text-primary);
+    --ion-text-color-rgb: 248, 250, 252;
+
+    --ion-card-background: var(--background-elevated);
+    --ion-item-background: var(--background-primary);
+    --ion-toolbar-background: var(--background-secondary);
+    --ion-tab-bar-background: var(--background-secondary);
+    --ion-border-color: var(--border-subtle);
   }
 }
 
-/* iOS specific styles */
-.ios {
-  --ion-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+/* ============================================
+ * MANUAL DARK MODE CLASS
+ * For apps that toggle dark mode programmatically
+ * ============================================ */
+.dark,
+.ion-palette-dark {
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #cbd5e1;
+  --gray-700: #e2e8f0;
+  --gray-800: #f1f5f9;
+  --gray-900: #f8fafc;
+
+  --ion-color-primary: #3b82f6;
+  --ion-color-primary-rgb: 59, 130, 246;
+  --ion-color-primary-shade: #2563eb;
+  --ion-color-primary-tint: #60a5fa;
+
+  --background-primary: #0f172a;
+  --background-secondary: #1e293b;
+  --background-tertiary: #334155;
+  --background-elevated: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+
+  --border-subtle: #334155;
+  --border-default: #475569;
+
+  --ion-background-color: var(--background-primary);
+  --ion-background-color-rgb: 15, 23, 42;
+  --ion-text-color: var(--text-primary);
+  --ion-text-color-rgb: 248, 250, 252;
+  --ion-card-background: var(--background-elevated);
+  --ion-item-background: var(--background-primary);
+  --ion-toolbar-background: var(--background-secondary);
+  --ion-tab-bar-background: var(--background-secondary);
+  --ion-border-color: var(--border-subtle);
 }
 
-/* Material Design specific styles */
+/* ============================================
+ * PLATFORM-SPECIFIC STYLES
+ * ============================================ */
+
+/* iOS Specific */
+.ios {
+  --ion-font-family: var(--font-family-base);
+
+  /* iOS safe areas */
+  --ion-safe-area-top: env(safe-area-inset-top);
+  --ion-safe-area-bottom: env(safe-area-inset-bottom);
+  --ion-safe-area-left: env(safe-area-inset-left);
+  --ion-safe-area-right: env(safe-area-inset-right);
+
+  /* iOS-specific adjustments */
+  --ion-toolbar-border-color: var(--border-subtle);
+}
+
+/* Material Design Specific */
 .md {
-  --ion-font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+  --ion-font-family: var(--font-family-base);
+
+  /* Material ripple effect */
+  --ion-ripple-color: var(--ion-color-primary);
+}
+
+/* ============================================
+ * ORDER STATUS UTILITY CLASSES
+ * Quick-apply status colors to elements
+ * ============================================ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.status-unassigned {
+  background-color: var(--status-unassigned-bg);
+  color: var(--status-unassigned-text);
+}
+
+.status-assigned {
+  background-color: var(--status-assigned-bg);
+  color: var(--status-assigned-text);
+}
+
+.status-confirmed {
+  background-color: var(--status-confirmed-bg);
+  color: var(--status-confirmed-text);
+}
+
+.status-released {
+  background-color: var(--status-released-bg);
+  color: var(--status-released-text);
+}
+
+.status-dispatched {
+  background-color: var(--status-dispatched-bg);
+  color: var(--status-dispatched-text);
+}
+
+.status-completed {
+  background-color: var(--status-completed-bg);
+  color: var(--status-completed-text);
+}
+
+.status-collected {
+  background-color: var(--status-collected-bg);
+  color: var(--status-collected-text);
+}
+
+.status-postponed {
+  background-color: var(--status-postponed-bg);
+  color: var(--status-postponed-text);
+}
+
+.status-absent {
+  background-color: var(--status-absent-bg);
+  color: var(--status-absent-text);
+}
+
+.status-request-cancel {
+  background-color: var(--status-request-cancel-bg);
+  color: var(--status-request-cancel-text);
+}
+
+.status-cancelled {
+  background-color: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
+}
+
+.status-reverted {
+  background-color: var(--status-reverted-bg);
+  color: var(--status-reverted-text);
+}
+
+/* ============================================
+ * FOCUS VISIBLE ENHANCEMENT
+ * Better keyboard navigation feedback
+ * ============================================ */
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--state-focus-ring);
+}
+
+/* ============================================
+ * SMOOTH SCROLLING
+ * ============================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ============================================
+ * PRINT STYLES
+ * Clean output for printing
+ * ============================================ */
+
+@media print {
+  :root {
+    --ion-background-color: #ffffff;
+    --ion-text-color: #000000;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+  }
 }

@@ -158,6 +158,7 @@
     "LOGIN": {
       "TITLE": "로그인",
       "WELCOME": "환영합니다",
+      "WELCOME_BACK": "다시 오신 것을 환영합니다",
       "SUBTITLE": "계정에 로그인하세요",
       "USERNAME": "사용자명",
       "USERNAME_PLACEHOLDER": "사용자명을 입력하세요",
@@ -165,13 +166,22 @@
       "PASSWORD": "비밀번호",
       "PASSWORD_PLACEHOLDER": "비밀번호를 입력하세요",
       "PASSWORD_REQUIRED": "비밀번호를 입력해 주세요 (최소 4자)",
+      "SHOW_PASSWORD": "비밀번호 표시",
+      "HIDE_PASSWORD": "비밀번호 숨기기",
       "REMEMBER_ME": "로그인 상태 유지",
       "FORGOT_PASSWORD": "비밀번호를 잊으셨나요?",
       "SIGN_IN": "로그인",
       "SIGNING_IN": "로그인 중...",
       "SIGN_OUT": "로그아웃",
       "BIOMETRIC_LOGIN": "{{type}}로 로그인",
-      "TEST_ACCOUNT": "테스트: {{username}} / {{password}}"
+      "TEST_ACCOUNT": "테스트: {{username}} / {{password}}",
+      "ERRORS": {
+        "USERNAME_REQUIRED": "사용자명을 입력해 주세요",
+        "USERNAME_MIN_LENGTH": "사용자명은 최소 3자 이상이어야 합니다",
+        "PASSWORD_REQUIRED": "비밀번호를 입력해 주세요",
+        "PASSWORD_MIN_LENGTH": "비밀번호는 최소 4자 이상이어야 합니다",
+        "INVALID_FIELD": "입력값이 올바르지 않습니다"
+      }
     },
     "ERRORS": {
       "INVALID_CREDENTIALS": "사용자명 또는 비밀번호가 올바르지 않습니다",
@@ -209,7 +219,13 @@
   },
   "DASHBOARD": {
     "TITLE": "대시보드",
+    "SUBTITLE": "오늘의 주문 현황을 한눈에 확인하세요",
     "LOADING_DATA": "데이터를 불러오는 중...",
+    "NO_STATUS_DATA": "상태 데이터가 없습니다",
+    "EMPTY": {
+      "TITLE": "데이터 없음",
+      "MESSAGE": "표시할 주문 데이터가 없습니다. 새로고침을 시도하거나 나중에 다시 확인해주세요."
+    },
     "STATS": {
       "TOTAL_ORDERS": "전체 주문",
       "COMPLETED": "완료",
