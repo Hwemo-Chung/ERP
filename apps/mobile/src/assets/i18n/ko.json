@@ -1294,8 +1294,10 @@
   },
   "ROLES": {
     "HQ_ADMIN": "본사 관리자",
+    "HQ_MANAGER": "본사 매니저",
     "BRANCH_MANAGER": "지점장",
     "PARTNER_COORDINATOR": "협력업체 관리자",
+    "DRIVER": "기사",
     "INSTALLER": "설치기사"
   },
   "LANGUAGES": {
@@ -1419,5 +1421,215 @@
     "CLEAR": "지우기",
     "CONFIRM": "확인",
     "HINT": "여기에 서명해주세요"
+  },
+  "REPORTS": {
+    "TITLE": "리포트",
+    "SUBTITLE": "진행 현황 및 데이터 분석",
+    "DAILY": "일별 리포트",
+    "WEEKLY": "주간 리포트",
+    "MONTHLY": "월간 리포트",
+    "CUSTOM": "기간 설정",
+    "DATE_RANGE": "기간",
+    "GENERATE": "생성",
+    "EXPORT_EXCEL": "엑셀 다운로드",
+    "EXPORT_PDF": "PDF 다운로드",
+    "MENU": {
+      "TITLE": "리포트",
+      "SUBTITLE": "진행 현황 및 데이터 분석",
+      "PROGRESS": "진행현황 대시보드",
+      "PROGRESS_DESC": "설치기사별/지점별 진행 현황",
+      "PROGRESS_DASHBOARD": "진행현황 대시보드",
+      "PROGRESS_DASHBOARD_DESC": "설치기사별/지점별 진행 현황",
+      "CUSTOMER_HISTORY": "고객 이력 조회",
+      "CUSTOMER_HISTORY_DESC": "고객별 주문/설치 이력 검색",
+      "WASTE_SUMMARY": "폐가전 집계",
+      "WASTE_SUMMARY_DESC": "폐가전 회수 현황 및 통계",
+      "UNRETURNED": "미반납 현황",
+      "UNRETURNED_DESC": "미반납 물품 현황 및 관리",
+      "EXPORT": "데이터 내보내기",
+      "EXPORT_DESC": "ECOAS, CSV, PDF 출력"
+    },
+    "PROGRESS": {
+      "TITLE": "진행현황 대시보드",
+      "LOADING": "데이터 로딩 중...",
+      "TOTAL_ORDERS": "총 주문",
+      "COMPLETED": "완료",
+      "IN_PROGRESS": "진행중",
+      "CANCELLED": "취소",
+      "KPI_TITLE": "KPI 현황",
+      "COMPLETION_RATE": "완료율",
+      "WASTE_PICKUP": "폐가전 회수",
+      "ITEMS_SUFFIX": "건",
+      "VIEW_BY_INSTALLER": "설치기사별",
+      "VIEW_BY_BRANCH": "지점별",
+      "VIEW_BY_STATUS": "상태별",
+      "STATUS_LABEL": "현황",
+      "NO_DATA": "데이터가 없습니다",
+      "DATE_SELECT": "기간 선택",
+      "START_DATE": "시작일",
+      "END_DATE": "종료일",
+      "APPLY": "적용",
+      "TODAY": "오늘",
+      "THIS_WEEK": "이번 주",
+      "THIS_MONTH": "이번 달"
+    },
+    "PROGRESS_DASHBOARD": {
+      "GROUPBY": {
+        "INSTALLER": "설치기사별",
+        "BRANCH": "지점별",
+        "STATUS": "상태별"
+      }
+    },
+    "CUSTOMER": {
+      "TITLE": "고객 이력 조회",
+      "SEARCH_PLACEHOLDER": "고객명, 연락처, 주소로 검색...",
+      "SEARCH_HINT": "2글자 이상 입력하세요",
+      "RECENT_SEARCHES": "최근 검색",
+      "SEARCHING": "검색 중...",
+      "RESULTS_COUNT": "검색 결과 {{count}}건",
+      "RESERVATION": "예약",
+      "NO_RESULTS": "검색 결과가 없습니다",
+      "NO_RESULTS_DESC": "다른 검색어를 시도해보세요",
+      "EMPTY_TITLE": "고객 이력 조회",
+      "EMPTY_DESC": "고객명, 연락처, 주소로 검색해주세요",
+      "CSV_SUCCESS": "CSV 다운로드 완료",
+      "CSV_FAILED": "다운로드 실패"
+    },
+    "WASTE": {
+      "TITLE": "폐가전 집계",
+      "TOTAL_COUNT": "총 회수량",
+      "UNIT": "대",
+      "CATEGORY_COUNT": "품목수",
+      "AVERAGE": "평균",
+      "TOP5_TITLE": "TOP 5 품목",
+      "CATEGORY_STATUS": "품목별 현황",
+      "NO_DATA": "데이터가 없습니다",
+      "LAST_7_DAYS": "최근 7일",
+      "LAST_30_DAYS": "최근 30일",
+      "LAST_90_DAYS": "최근 90일",
+      "CSV_SUCCESS": "CSV 다운로드 완료",
+      "CSV_FAILED": "다운로드 실패"
+    },
+    "EXPORT": {
+      "TITLE": "데이터 내보내기",
+      "DATE_SELECT": "기간 선택",
+      "TYPE_SELECT": "내보내기 유형",
+      "TYPE_ECOAS": "ECOAS 포맷",
+      "TYPE_ECOAS_DESC": "레거시 시스템 호환 형식",
+      "TYPE_COMPLETED": "설치완료 리스트",
+      "TYPE_COMPLETED_DESC": "완료된 주문 목록",
+      "TYPE_PENDING": "미완료 리스트",
+      "TYPE_PENDING_DESC": "진행중/대기 주문",
+      "TYPE_WASTE": "폐가전 회수 집계",
+      "TYPE_WASTE_DESC": "회수 현황 통계",
+      "TYPE_RAW": "Raw 데이터",
+      "TYPE_RAW_DESC": "전체 데이터 내보내기",
+      "FORMAT_SELECT": "파일 형식",
+      "EXPORT_BTN": "내보내기",
+      "PROCESSING": "처리중...",
+      "STATUS_PENDING": "내보내기 준비 중...",
+      "STATUS_PROCESSING": "파일 생성 중...",
+      "STATUS_COMPLETED": "내보내기 완료!",
+      "STATUS_ERROR": "오류",
+      "DOWNLOAD": "다운로드",
+      "SUCCESS": "내보내기 완료!",
+      "FAILED": "내보내기 실패",
+      "REQUEST_FAILED": "내보내기 요청 실패",
+      "STATUS_CHECK_FAILED": "상태 확인 실패",
+      "HEADERS": {
+        "CODE": "코드",
+        "ITEM": "품목",
+        "QUANTITY": "수량",
+        "CUSTOMER_NAME": "고객명",
+        "PHONE": "연락처",
+        "ADDRESS": "주소",
+        "ORDER_NUMBER": "주문번호",
+        "STATUS": "상태",
+        "APPOINTMENT_DATE": "예약일"
+      }
+    },
+    "RELEASE_SUMMARY": {
+      "TITLE": "출고요청집계표",
+      "START_DATE": "시작일",
+      "END_DATE": "종료일",
+      "FDC_SELECT": "FDC 선택",
+      "ALL": "전체",
+      "SEARCH_PLACEHOLDER": "모델코드 또는 모델명 검색...",
+      "TOTAL_ORDERS": "총 주문",
+      "TOTAL_QUANTITY": "총 수량",
+      "TOTAL_MODELS": "총 모델",
+      "FDC_COUNT": "FDC 수",
+      "FDC_NAME": "FDC 명",
+      "MODEL_CODE": "모델 코드",
+      "MODEL_NAME": "모델명",
+      "PERIOD": "기간",
+      "PRINT_DATE": "출력일",
+      "QUANTITY": "수량",
+      "TOTAL": "합계",
+      "UNIT": "단위"
+    },
+    "COMPLETION": {
+      "TITLE": "완료 처리",
+      "FILTER": {
+        "ALL": "전체",
+        "DISPATCHED": "대기",
+        "COMPLETED": "완료",
+        "WAITING": "대기중"
+      },
+      "STATUS": {
+        "IN_PROGRESS": "진행중",
+        "COMPLETED": "완료",
+        "WAITING": "대기"
+      },
+      "CHIPS": {
+        "WAITING": "대기",
+        "IN_PROGRESS": "진행중",
+        "COMPLETED": "완료"
+      }
+    },
+    "UNRETURNED": {
+      "TITLE": "미반납 현황",
+      "NO_DATA": "미반납 항목이 없습니다"
+    },
+    "UNRETURNED_ITEMS": {
+      "TITLE": "미환입 현황",
+      "RETURNED": "환입완료",
+      "NOT_RETURNED": "미환입",
+      "FILTER": {
+        "ALL": "전체",
+        "UNRETURNED": "미환입",
+        "RETURNED": "환입완료"
+      },
+      "SEARCH_PLACEHOLDER": "주문번호, 고객명 검색",
+      "SUMMARY": {
+        "UNRETURNED": "미환입",
+        "RETURNED": "환입완료",
+        "TOTAL": "전체"
+      },
+      "LOADING": "데이터 로딩 중...",
+      "LIST_TITLE": "취소건 환입 현황",
+      "CANCEL_DATE": "취소일",
+      "DAYS_OVERDUE_SUFFIX": "일 경과",
+      "NO_DATA": "조회된 데이터가 없습니다",
+      "BRANCH_TITLE": "센터별 미환입 현황",
+      "BRANCH_UNRETURNED": "미환입",
+      "BRANCH_RETURNED": "환입",
+      "DETAIL": {
+        "PRODUCT_NAME": "품목",
+        "CANCEL_REASON": "취소사유",
+        "RETURN_STATUS": "환입상태",
+        "RETURN_DATE": "환입일"
+      },
+      "MARK_RETURN_TITLE": "환입 처리",
+      "MARK_RETURN_CONFIRM": "{{orderNo}} 건을 환입 처리하시겠습니까?",
+      "MARK_RETURN_SUCCESS": "환입 처리 완료",
+      "MARK_RETURN_FAILED": "환입 처리 실패",
+      "EXPORT_SUCCESS": "CSV 다운로드 완료",
+      "EXPORT_FAILED": "다운로드 실패",
+      "PERMISSION_DENIED": "권한이 없습니다. 관리자에게 문의하세요."
+    }
+  },
+  "PLACEHOLDERS": {
+    "ALL": "전체"
   }
 }
