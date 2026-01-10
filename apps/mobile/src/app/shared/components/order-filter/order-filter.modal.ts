@@ -215,9 +215,7 @@ export interface BranchOption {
       <!-- Active Filters Summary -->
       @if (activeFilterCount() > 0) {
         <div class="active-filters">
-          <ion-note>
-            {{ activeFilterCount() }}개의 필터가 적용됨
-          </ion-note>
+          <ion-note> {{ activeFilterCount() }}개의 필터가 적용됨 </ion-note>
         </div>
       }
     </ion-content>
@@ -231,46 +229,507 @@ export interface BranchOption {
       </ion-toolbar>
     </ion-footer>
   `,
-  styles: [`
-    .filter-section {
-      margin-bottom: 24px;
+  styles: [
+    `
+      /* ============================================
+     * MODAL HEADER - Elevated with subtle depth
+     * ============================================ */
+      ion-header {
+        ion-toolbar {
+          --background: var(--background-elevated, #ffffff);
+          --border-width: 0;
+          box-shadow: var(--shadow-sm);
 
-      h3 {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ion-color-medium);
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        padding-left: 4px;
+          ion-title {
+            font-size: var(--font-size-lg, 1.25rem);
+            font-weight: var(--font-weight-semibold, 600);
+            letter-spacing: var(--letter-spacing-tight, -0.015em);
+          }
 
-        ion-icon {
-          font-size: 18px;
+          ion-button {
+            --color: var(--text-secondary, #64748b);
+            font-size: var(--font-size-sm, 0.875rem);
+            font-weight: var(--font-weight-medium, 500);
+
+            ion-icon {
+              font-size: 22px;
+            }
+
+            &:hover {
+              --color: var(--ion-color-primary);
+            }
+          }
         }
       }
-    }
 
-    .status-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+      /* ============================================
+     * CONTENT AREA - Soft background texture
+     * ============================================ */
+      ion-content {
+        --background: var(--background-secondary, #f8fafc);
 
-    .active-filters {
-      text-align: center;
-      margin-top: 16px;
-
-      ion-note {
-        color: var(--ion-color-primary);
+        &::part(background) {
+          background: linear-gradient(
+            180deg,
+            var(--background-secondary, #f8fafc) 0%,
+            var(--background-tertiary, #f1f5f9) 100%
+          );
+        }
       }
-    }
 
-    ion-footer ion-toolbar {
-      padding: 8px 16px;
-    }
-  `],
+      /* ============================================
+     * FILTER SECTION CARDS
+     * Floating cards with subtle elevation
+     * ============================================ */
+      .filter-section {
+        margin-bottom: var(--space-4, 1rem);
+        background: var(--background-elevated, #ffffff);
+        border-radius: var(--radius-xl, 1rem);
+        padding: var(--space-4, 1rem);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-subtle, #e2e8f0);
+
+        /* Stagger animation on load */
+        animation: slideUp 0.4s var(--ease-out) backwards;
+
+        &:nth-child(1) {
+          animation-delay: 0.05s;
+        }
+        &:nth-child(2) {
+          animation-delay: 0.1s;
+        }
+        &:nth-child(3) {
+          animation-delay: 0.15s;
+        }
+        &:nth-child(4) {
+          animation-delay: 0.2s;
+        }
+
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2, 0.5rem);
+          font-size: var(--font-size-xs, 0.75rem);
+          font-weight: var(--font-weight-semibold, 600);
+          color: var(--text-tertiary, #64748b);
+          text-transform: uppercase;
+          letter-spacing: var(--letter-spacing-wider, 0.03em);
+          margin: 0 0 var(--space-3, 0.75rem) 0;
+          padding-bottom: var(--space-2, 0.5rem);
+          border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+
+          ion-icon {
+            font-size: 16px;
+            color: var(--ion-color-primary);
+            opacity: 0.8;
+          }
+        }
+
+        ion-list {
+          background: transparent;
+          padding: 0;
+          margin: 0;
+
+          ion-item {
+            --background: var(--background-secondary, #f8fafc);
+            --border-radius: var(--radius-md, 0.5rem);
+            --padding-start: var(--space-3, 0.75rem);
+            --padding-end: var(--space-3, 0.75rem);
+            --inner-padding-end: 0;
+            --min-height: 52px;
+            margin-bottom: var(--space-2, 0.5rem);
+            border: 1px solid var(--border-subtle, #e2e8f0);
+            border-radius: var(--radius-md, 0.5rem);
+            transition: all var(--transition-fast, 100ms) var(--ease-out);
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &:hover,
+            &:focus-within {
+              --background: var(--background-tertiary, #f1f5f9);
+              border-color: var(--ion-color-primary-tint);
+            }
+
+            ion-label {
+              font-size: var(--font-size-sm, 0.875rem);
+              font-weight: var(--font-weight-medium, 500);
+              color: var(--text-secondary, #475569);
+            }
+          }
+        }
+      }
+
+      /* ============================================
+     * DATE PICKER BUTTONS
+     * Modern, pill-shaped date selectors
+     * ============================================ */
+      ion-datetime-button {
+        &::part(native) {
+          background: linear-gradient(
+            135deg,
+            var(--ion-color-primary-tint) 0%,
+            var(--ion-color-primary) 100%
+          );
+          color: var(--ion-color-primary-contrast, #ffffff);
+          border-radius: var(--radius-full, 9999px);
+          padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+          font-size: var(--font-size-sm, 0.875rem);
+          font-weight: var(--font-weight-medium, 500);
+          min-width: 120px;
+          box-shadow: var(--shadow-primary);
+          transition: all var(--transition-normal, 200ms) var(--ease-out);
+        }
+
+        &:hover::part(native) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.35);
+        }
+
+        &:active::part(native) {
+          transform: translateY(0);
+        }
+      }
+
+      /* Hidden datetime modal styling */
+      ion-datetime {
+        --background: var(--background-elevated, #ffffff);
+        --background-rgb: 255, 255, 255;
+        border-radius: var(--radius-lg, 0.75rem);
+      }
+
+      /* ============================================
+     * STATUS CHIPS
+     * Large touch targets with satisfying feedback
+     * ============================================ */
+      .status-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2, 0.5rem);
+
+        ion-chip {
+          --background: var(--background-secondary, #f1f5f9);
+          --color: var(--text-secondary, #64748b);
+          --padding-start: var(--space-4, 1rem);
+          --padding-end: var(--space-4, 1rem);
+          height: 40px;
+          min-width: 80px;
+          border-radius: var(--radius-full, 9999px);
+          border: 2px solid var(--border-subtle, #e2e8f0);
+          font-size: var(--font-size-sm, 0.875rem);
+          font-weight: var(--font-weight-medium, 500);
+          transition: all var(--transition-normal, 200ms) var(--ease-out);
+          cursor: pointer;
+
+          ion-label {
+            margin: 0;
+          }
+
+          /* Unselected hover state */
+          &:hover:not([color='primary']) {
+            --background: var(--background-tertiary, #e2e8f0);
+            border-color: var(--border-default, #cbd5e1);
+            transform: translateY(-1px);
+          }
+
+          /* Selected state with glow effect */
+          &[color='primary'] {
+            --background: linear-gradient(
+              135deg,
+              var(--ion-color-primary) 0%,
+              var(--ion-color-primary-shade) 100%
+            );
+            --color: var(--ion-color-primary-contrast, #ffffff);
+            border-color: var(--ion-color-primary);
+            box-shadow: var(--shadow-primary);
+            transform: scale(1.02);
+
+            &:hover {
+              box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+              transform: scale(1.04) translateY(-1px);
+            }
+          }
+
+          /* Press animation */
+          &:active {
+            transform: scale(0.98) !important;
+            transition: transform 0.1s ease;
+          }
+        }
+      }
+
+      /* ============================================
+     * SELECT DROPDOWNS
+     * Clean, modern select appearance
+     * ============================================ */
+      ion-select {
+        --placeholder-color: var(--text-placeholder, #94a3b8);
+        --placeholder-opacity: 1;
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: var(--font-weight-medium, 500);
+        color: var(--text-primary, #1e293b);
+        min-height: 44px;
+        width: 100%;
+
+        &::part(container) {
+          padding: 0;
+        }
+
+        &::part(icon) {
+          color: var(--ion-color-primary);
+          opacity: 0.7;
+        }
+
+        &::part(text) {
+          padding-inline-end: var(--space-2, 0.5rem);
+        }
+      }
+
+      /* ============================================
+     * ACTIVE FILTERS BADGE
+     * Eye-catching count indicator
+     * ============================================ */
+      .active-filters {
+        margin-top: var(--space-4, 1rem);
+        padding: var(--space-4, 1rem);
+        background: linear-gradient(
+          135deg,
+          rgba(37, 99, 235, 0.08) 0%,
+          rgba(99, 102, 241, 0.12) 100%
+        );
+        border-radius: var(--radius-xl, 1rem);
+        border: 1px dashed var(--ion-color-primary-tint);
+        text-align: center;
+        animation: pulse-subtle 2s ease-in-out infinite;
+
+        ion-note {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-2, 0.5rem);
+          color: var(--ion-color-primary);
+          font-size: var(--font-size-sm, 0.875rem);
+          font-weight: var(--font-weight-semibold, 600);
+
+          &::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--ion-color-primary);
+            border-radius: var(--radius-full, 9999px);
+            animation: blink 1.5s ease-in-out infinite;
+          }
+        }
+      }
+
+      /* ============================================
+     * FOOTER - Prominent apply button
+     * ============================================ */
+      ion-footer {
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+
+        ion-toolbar {
+          --background: var(--background-elevated, #ffffff);
+          --border-width: 0;
+          padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+          padding-bottom: calc(var(--space-3, 0.75rem) + var(--ion-safe-area-bottom, 0));
+
+          ion-button {
+            --background: linear-gradient(
+              135deg,
+              var(--ion-color-primary) 0%,
+              var(--ion-color-primary-shade) 100%
+            );
+            --background-hover: var(--ion-color-primary-shade);
+            --background-activated: var(--ion-color-primary-shade);
+            --border-radius: var(--radius-xl, 1rem);
+            --box-shadow: var(--shadow-primary);
+            --padding-top: var(--space-4, 1rem);
+            --padding-bottom: var(--space-4, 1rem);
+            height: 56px;
+            font-size: var(--font-size-base, 1rem);
+            font-weight: var(--font-weight-semibold, 600);
+            letter-spacing: var(--letter-spacing-wide, 0.015em);
+            text-transform: none;
+            transition: all var(--transition-normal, 200ms) var(--ease-out);
+
+            ion-icon {
+              font-size: 20px;
+              margin-right: var(--space-2, 0.5rem);
+            }
+
+            &:hover {
+              --box-shadow: 0 8px 30px 0 rgba(37, 99, 235, 0.4);
+              transform: translateY(-2px);
+            }
+
+            &:active {
+              transform: translateY(0) scale(0.98);
+            }
+          }
+        }
+      }
+
+      /* ============================================
+     * ANIMATIONS
+     * ============================================ */
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse-subtle {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.85;
+        }
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.8);
+        }
+      }
+
+      /* ============================================
+     * DARK MODE SUPPORT
+     * ============================================ */
+      @media (prefers-color-scheme: dark) {
+        ion-header ion-toolbar {
+          box-shadow: 0 1px 0 var(--border-subtle, #334155);
+        }
+
+        .filter-section {
+          background: var(--background-elevated, #1e293b);
+          border-color: var(--border-subtle, #334155);
+          box-shadow: var(--shadow-md);
+
+          h3 {
+            border-bottom-color: var(--border-subtle, #334155);
+          }
+
+          ion-list ion-item {
+            --background: var(--background-tertiary, #334155);
+            border-color: var(--border-subtle, #475569);
+          }
+        }
+
+        .status-chips ion-chip {
+          --background: var(--background-tertiary, #334155);
+          border-color: var(--border-subtle, #475569);
+
+          &:hover:not([color='primary']) {
+            --background: var(--gray-600, #475569);
+          }
+
+          &[color='primary'] {
+            --background: linear-gradient(
+              135deg,
+              var(--ion-color-primary) 0%,
+              var(--ion-color-primary-shade) 100%
+            );
+            border-color: var(--ion-color-primary);
+          }
+        }
+
+        ion-datetime-button::part(native) {
+          background: linear-gradient(
+            135deg,
+            var(--ion-color-primary) 0%,
+            var(--ion-color-primary-shade) 100%
+          );
+        }
+
+        .active-filters {
+          background: linear-gradient(
+            135deg,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(129, 140, 248, 0.2) 100%
+          );
+          border-color: var(--ion-color-primary-shade);
+        }
+
+        ion-footer {
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+
+          ion-toolbar {
+            background: var(--background-elevated, #1e293b);
+          }
+        }
+      }
+
+      /* ============================================
+     * MANUAL DARK MODE CLASS
+     * ============================================ */
+      :host-context(.dark),
+      :host-context(.ion-palette-dark) {
+        ion-header ion-toolbar {
+          box-shadow: 0 1px 0 var(--border-subtle, #334155);
+        }
+
+        .filter-section {
+          background: var(--background-elevated, #1e293b);
+          border-color: var(--border-subtle, #334155);
+
+          h3 {
+            border-bottom-color: var(--border-subtle, #334155);
+          }
+        }
+
+        .status-chips ion-chip {
+          --background: var(--background-tertiary, #334155);
+          border-color: var(--border-subtle, #475569);
+        }
+
+        .active-filters {
+          background: linear-gradient(
+            135deg,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(129, 140, 248, 0.2) 100%
+          );
+        }
+      }
+
+      /* ============================================
+     * REDUCED MOTION SUPPORT
+     * ============================================ */
+      @media (prefers-reduced-motion: reduce) {
+        .filter-section {
+          animation: none;
+        }
+
+        .status-chips ion-chip,
+        ion-datetime-button::part(native),
+        ion-footer ion-toolbar ion-button {
+          transition: none;
+        }
+
+        .active-filters {
+          animation: none;
+        }
+
+        .active-filters ion-note::before {
+          animation: none;
+        }
+      }
+    `,
+  ],
 })
 export class OrderFilterModal implements OnInit {
   private readonly modalController = inject(ModalController);
@@ -362,7 +821,7 @@ export class OrderFilterModal implements OnInit {
   toggleStatus(status: OrderStatus): void {
     const current = this.selectedStatuses();
     if (current.includes(status)) {
-      this.selectedStatuses.set(current.filter(s => s !== status));
+      this.selectedStatuses.set(current.filter((s) => s !== status));
     } else {
       this.selectedStatuses.set([...current, status]);
     }
