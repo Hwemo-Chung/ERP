@@ -282,33 +282,45 @@ interface MobileCheck {
 const MOBILE_CHECKS: MobileCheck[] = [
   { name: 'AuthService', path: 'apps/mobile/src/app/core/services/auth.service.ts' },
   { name: 'SyncQueueService', path: 'apps/mobile/src/app/core/services/sync-queue.service.ts' },
-  { name: 'BackgroundSyncService', path: 'apps/mobile/src/app/core/services/background-sync.service.ts' },
+  {
+    name: 'BackgroundSyncService',
+    path: 'apps/mobile/src/app/core/services/background-sync.service.ts',
+  },
   { name: 'WebSocketService', path: 'apps/mobile/src/app/core/services/websocket.service.ts' },
   { name: 'NetworkService', path: 'apps/mobile/src/app/core/services/network.service.ts' },
   { name: 'Database (Dexie)', path: 'apps/mobile/src/app/core/db/database.ts' },
   { name: 'AuthGuard', path: 'apps/mobile/src/app/core/guards/auth.guard.ts' },
   { name: 'AuthInterceptor', path: 'apps/mobile/src/app/core/interceptors/auth.interceptor.ts' },
-  { name: 'OfflineInterceptor', path: 'apps/mobile/src/app/core/interceptors/offline.interceptor.ts' },
+  {
+    name: 'OfflineInterceptor',
+    path: 'apps/mobile/src/app/core/interceptors/offline.interceptor.ts',
+  },
   { name: 'OrdersStore', path: 'apps/mobile/src/app/store/orders/orders.store.ts' },
   { name: 'InstallersStore', path: 'apps/mobile/src/app/store/installers/installers.store.ts' },
   { name: 'UIStore', path: 'apps/mobile/src/app/store/ui/ui.store.ts' },
   { name: 'LoginPage', path: 'apps/mobile/src/app/features/auth/pages/login/login.page.ts' },
-  { name: 'OrderListPage', path: 'apps/mobile/src/app/features/orders/pages/order-list/order-list.page.ts' },
-  { name: 'OrderDetailPage', path: 'apps/mobile/src/app/features/orders/pages/order-detail/order-detail.page.ts' },
+  {
+    name: 'OrderListPage',
+    path: 'apps/mobile/src/app/features/orders/pages/order-list/order-list.page.ts',
+  },
+  {
+    name: 'OrderDetailPage',
+    path: 'apps/mobile/src/app/features/orders/pages/order-detail/order-detail.page.ts',
+  },
   { name: 'DashboardPage', path: 'apps/mobile/src/app/features/dashboard/dashboard.page.ts' },
   { name: 'ProfilePage', path: 'apps/mobile/src/app/features/profile/profile.page.ts' },
 ];
 
-// Documentation checks
-const DOC_FILES = [
-  'PROJECT_OVERVIEW.md',
-  'PRD.md',
-  'ARCHITECTURE.md',
-  'API_SPEC.md',
-  'DATABASE_SCHEMA.md',
-  'DEVELOPMENT_GUIDE.md',
-  'SDD.md',
-  'DEPLOYMENT.md',
+// Documentation checks - map to actual file paths in docs/ folder
+const DOC_FILES: Array<{ name: string; path: string }> = [
+  { name: 'PROJECT_OVERVIEW.md', path: 'docs/technical/PROJECT_OVERVIEW.md' },
+  { name: 'PRD.md', path: 'docs/technical/PRD.md' },
+  { name: 'ARCHITECTURE.md', path: 'docs/technical/ARCHITECTURE.md' },
+  { name: 'API_SPEC.md', path: 'docs/technical/API_SPEC.md' },
+  { name: 'DATABASE_SCHEMA.md', path: 'docs/technical/DATABASE_SCHEMA.md' },
+  { name: 'DEVELOPMENT_GUIDE.md', path: 'docs/guides/DEVELOPMENT_GUIDE.md' },
+  { name: 'SDD.md', path: 'docs/technical/SDD.md' },
+  { name: 'DEPLOYMENT.md', path: 'docs/technical/DEPLOYMENT.md' },
 ];
 
 // Utility functions
@@ -342,7 +354,12 @@ function getStatusIcon(status: 'complete' | 'partial' | 'missing' | boolean): st
 }
 
 // Analysis functions
-function analyzeFRStatus(): { complete: number; partial: number; missing: number; mappings: FRMapping[] } {
+function analyzeFRStatus(): {
+  complete: number;
+  partial: number;
+  missing: number;
+  mappings: FRMapping[];
+} {
   let complete = 0;
   let partial = 0;
   let missing = 0;
@@ -416,10 +433,10 @@ function analyzeMobile(): { items: Array<MobileCheck & { exists: boolean }>; com
 function analyzeDocs(): { items: Array<{ name: string; exists: boolean }>; complete: number } {
   let complete = 0;
 
-  const analyzed = DOC_FILES.map((name) => {
-    const exists = fileExists(`.doc/${name}`);
+  const analyzed = DOC_FILES.map((doc) => {
+    const exists = fileExists(doc.path);
     if (exists) complete++;
-    return { name, exists };
+    return { name: doc.name, exists };
   });
 
   return { items: analyzed, complete };
@@ -499,7 +516,9 @@ function generateProgressMd(): string {
   const frProgress = Math.round((frAnalysis.complete / FR_MAPPINGS.length) * 100);
   const testProgress = Math.round((testAnalysis.complete / TEST_FILES.length) * 100);
 
-  const overallProgress = Math.round((docProgress + apiProgress + mobileProgress + frProgress + testProgress) / 5);
+  const overallProgress = Math.round(
+    (docProgress + apiProgress + mobileProgress + frProgress + testProgress) / 5,
+  );
 
   // Generate markdown
   let md = `# Logistics ERP 프로젝트 진행 상황
@@ -534,7 +553,7 @@ FR 구현:      ${progressBar(frProgress)} ${frProgress}%  (${frAnalysis.complet
   const settlementMod = moduleAnalysis.modules.find((m) => m.name === 'settlement');
   if (settlementMod && !settlementMod.exists.module) {
     criticalIssues.push(
-      '| 🔴 P0 | **Settlement 모듈 미완성** | E2002 에러(정산 잠금) 처리 불가 | `settlement.module.ts`, `settlement.service.ts`, `settlement.controller.ts` 생성 필요 |'
+      '| 🔴 P0 | **Settlement 모듈 미완성** | E2002 에러(정산 잠금) 처리 불가 | `settlement.module.ts`, `settlement.service.ts`, `settlement.controller.ts` 생성 필요 |',
     );
   }
 
@@ -542,7 +561,7 @@ FR 구현:      ${progressBar(frProgress)} ${frProgress}%  (${frAnalysis.complet
   const completionMod = moduleAnalysis.modules.find((m) => m.name === 'completion');
   if (completionMod && completionMod.exists.module && !completionMod.appImported) {
     criticalIssues.push(
-      '| 🔴 P0 | **CompletionModule AppModule 미import** | 완료 처리 API 호출 불가 | `app.module.ts`에 `CompletionModule` import 추가 |'
+      '| 🔴 P0 | **CompletionModule AppModule 미import** | 완료 처리 API 호출 불가 | `app.module.ts`에 `CompletionModule` import 추가 |',
     );
   }
 
@@ -550,7 +569,7 @@ FR 구현:      ${progressBar(frProgress)} ${frProgress}%  (${frAnalysis.complet
   const hasAnyTests = moduleAnalysis.modules.some((m) => m.exists.test);
   if (!hasAnyTests) {
     criticalIssues.push(
-      '| 🟡 P1 | **테스트 커버리지 0%** | 회귀 테스트 불가, 리팩토링 위험 | 최소한 상태 머신, 핵심 서비스 단위 테스트 작성 |'
+      '| 🟡 P1 | **테스트 커버리지 0%** | 회귀 테스트 불가, 리팩토링 위험 | 최소한 상태 머신, 핵심 서비스 단위 테스트 작성 |',
     );
   }
 
@@ -628,7 +647,7 @@ ${criticalIssues.join('\n')}
   md += `
 ---
 
-## 📄 문서 현황 (.doc/)
+## 📄 문서 현황 (docs/)
 
 | 문서 | 상태 |
 |------|:---:|
@@ -663,41 +682,49 @@ function printSummary(): void {
   const docAnalysis = analyzeDocs();
   const testAnalysis = analyzeTests();
 
-  console.log('\n' + colors.bold + colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset);
+  console.log(
+    '\n' +
+      colors.bold +
+      colors.cyan +
+      '═══════════════════════════════════════════════════════' +
+      colors.reset,
+  );
   console.log(colors.bold + '           Logistics ERP - Progress Report' + colors.reset);
-  console.log(colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset + '\n');
+  console.log(
+    colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset + '\n',
+  );
 
   // Documentation
   const docPercent = Math.round((docAnalysis.complete / DOC_FILES.length) * 100);
   console.log(
-    `${colors.blue}📄 Documentation:${colors.reset} ${colors.green}${docAnalysis.complete}/${DOC_FILES.length}${colors.reset} (${docPercent}%)`
+    `${colors.blue}📄 Documentation:${colors.reset} ${colors.green}${docAnalysis.complete}/${DOC_FILES.length}${colors.reset} (${docPercent}%)`,
   );
 
   // API Modules
   const apiPercent = Math.round((moduleAnalysis.complete / API_MODULES.length) * 100);
   console.log(
-    `${colors.blue}🔧 API Modules:${colors.reset}   ${colors.green}${moduleAnalysis.complete}/${API_MODULES.length}${colors.reset} (${apiPercent}%)`
+    `${colors.blue}🔧 API Modules:${colors.reset}   ${colors.green}${moduleAnalysis.complete}/${API_MODULES.length}${colors.reset} (${apiPercent}%)`,
   );
 
   // Mobile
   const mobilePercent = Math.round((mobileAnalysis.complete / MOBILE_CHECKS.length) * 100);
   console.log(
-    `${colors.blue}📱 Mobile:${colors.reset}        ${colors.green}${mobileAnalysis.complete}/${MOBILE_CHECKS.length}${colors.reset} (${mobilePercent}%)`
+    `${colors.blue}📱 Mobile:${colors.reset}        ${colors.green}${mobileAnalysis.complete}/${MOBILE_CHECKS.length}${colors.reset} (${mobilePercent}%)`,
   );
 
   // FR
   const frPercent = Math.round((frAnalysis.complete / FR_MAPPINGS.length) * 100);
   console.log(
-    `${colors.blue}📋 FR Complete:${colors.reset}   ${colors.green}${frAnalysis.complete}/${FR_MAPPINGS.length}${colors.reset} (${frPercent}%)`
+    `${colors.blue}📋 FR Complete:${colors.reset}   ${colors.green}${frAnalysis.complete}/${FR_MAPPINGS.length}${colors.reset} (${frPercent}%)`,
   );
 
   // Tests
   const testPercent = Math.round((testAnalysis.complete / TEST_FILES.length) * 100);
   console.log(
-    `${colors.blue}🧪 Tests:${colors.reset}         ${colors.green}${testAnalysis.complete}/${TEST_FILES.length}${colors.reset} (${testPercent}%)`
+    `${colors.blue}🧪 Tests:${colors.reset}         ${colors.green}${testAnalysis.complete}/${TEST_FILES.length}${colors.reset} (${testPercent}%)`,
   );
   console.log(
-    `   ${colors.cyan}API: ${testAnalysis.byApp.api.complete}/${testAnalysis.byApp.api.total}, Web: ${testAnalysis.byApp.web.complete}/${testAnalysis.byApp.web.total}, Mobile: ${testAnalysis.byApp.mobile.complete}/${testAnalysis.byApp.mobile.total}${colors.reset}`
+    `   ${colors.cyan}API: ${testAnalysis.byApp.api.complete}/${testAnalysis.byApp.api.total}, Web: ${testAnalysis.byApp.web.complete}/${testAnalysis.byApp.web.total}, Mobile: ${testAnalysis.byApp.mobile.complete}/${testAnalysis.byApp.mobile.total}${colors.reset}`,
   );
 
   // Critical issues
@@ -729,9 +756,13 @@ function printSummary(): void {
     console.log(colors.green + '   ✅ No critical issues found' + colors.reset);
   }
 
-  console.log('\n' + colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset);
+  console.log(
+    '\n' + colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset,
+  );
   console.log(colors.green + `✅ PROGRESS.md generated at: ${OUTPUT_FILE}` + colors.reset);
-  console.log(colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset + '\n');
+  console.log(
+    colors.cyan + '═══════════════════════════════════════════════════════' + colors.reset + '\n',
+  );
 }
 
 // Main execution
