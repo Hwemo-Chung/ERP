@@ -1,5 +1,12 @@
 // apps/mobile/src/app/features/assignment/pages/assignment-list/assignment-list.page.ts
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
@@ -30,7 +37,10 @@ import {
   ModalController,
 } from '@ionic/angular/standalone';
 import { TranslateModule } from '@ngx-translate/core';
-import { OrderFilterModal, FilterContext } from '../../../../shared/components/order-filter/order-filter.modal';
+import {
+  OrderFilterModal,
+  FilterContext,
+} from '../../../../shared/components/order-filter/order-filter.modal';
 import { addIcons } from 'ionicons';
 import {
   filterOutline,
@@ -187,67 +197,593 @@ type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
       </ion-fab>
     </ion-content>
   `,
-  styles: [`
-    .summary-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding: 8px 16px;
-      background: var(--ion-toolbar-background);
-    }
+  styles: [
+    `
+      /* ============================================
+     * SUMMARY CHIPS - Glassmorphism Dashboard
+     * ============================================ */
+      .summary-chips {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-2);
+        padding: var(--space-4);
+        background: linear-gradient(
+          135deg,
+          rgba(var(--ion-color-primary-rgb), 0.08) 0%,
+          rgba(var(--ion-color-tertiary-rgb), 0.04) 100%
+        );
+        border-bottom: 1px solid var(--border-subtle);
+        position: relative;
+        overflow: hidden;
 
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 50vh;
-      color: var(--ion-color-medium);
-    }
+        /* Subtle noise texture overlay */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          opacity: 0.03;
+          pointer-events: none;
+        }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 16px;
-      color: var(--ion-color-medium);
+        ion-chip {
+          --background: rgba(var(--ion-background-color-rgb), 0.7);
+          --color: var(--text-primary);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(var(--ion-color-medium-rgb), 0.15);
+          border-radius: var(--radius-lg);
+          margin: 0;
+          padding: var(--space-3) var(--space-2);
+          height: auto;
+          min-height: 56px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-1);
+          box-shadow: var(--shadow-sm);
+          transition: all var(--transition-normal) var(--ease-out);
 
-      ion-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
-      }
-    }
+          &:active {
+            transform: scale(0.97);
+          }
 
-    ion-item {
-      --padding-start: 16px;
+          ion-label {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            letter-spacing: var(--letter-spacing-tight);
+            white-space: nowrap;
+          }
 
-      h2 {
-        font-weight: 600;
-      }
+          /* Total chip - primary accent */
+          &[color='medium'] {
+            --background: linear-gradient(
+              135deg,
+              rgba(var(--ion-color-medium-rgb), 0.15) 0%,
+              rgba(var(--ion-color-medium-rgb), 0.08) 100%
+            );
+            border-color: rgba(var(--ion-color-medium-rgb), 0.25);
 
-      h3 {
-        color: var(--ion-color-dark);
-      }
+            ion-label {
+              background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              background-clip: text;
+            }
+          }
 
-      p {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--ion-color-medium);
-        font-size: 13px;
+          /* Danger chip - unassigned */
+          &[color='danger'] {
+            --background: linear-gradient(
+              135deg,
+              rgba(var(--ion-color-danger-rgb), 0.12) 0%,
+              rgba(var(--ion-color-danger-rgb), 0.06) 100%
+            );
+            border-color: rgba(var(--ion-color-danger-rgb), 0.3);
+            box-shadow: 0 2px 8px rgba(var(--ion-color-danger-rgb), 0.15);
 
-        ion-icon {
-          font-size: 14px;
+            ion-label {
+              color: var(--ion-color-danger);
+            }
+          }
+
+          /* Warning chip - assigned */
+          &[color='warning'] {
+            --background: linear-gradient(
+              135deg,
+              rgba(var(--ion-color-warning-rgb), 0.12) 0%,
+              rgba(var(--ion-color-warning-rgb), 0.06) 100%
+            );
+            border-color: rgba(var(--ion-color-warning-rgb), 0.3);
+            box-shadow: 0 2px 8px rgba(var(--ion-color-warning-rgb), 0.15);
+
+            ion-label {
+              color: var(--ion-color-warning-shade);
+            }
+          }
+
+          /* Success chip - confirmed */
+          &[color='success'] {
+            --background: linear-gradient(
+              135deg,
+              rgba(var(--ion-color-success-rgb), 0.12) 0%,
+              rgba(var(--ion-color-success-rgb), 0.06) 100%
+            );
+            border-color: rgba(var(--ion-color-success-rgb), 0.3);
+            box-shadow: 0 2px 8px rgba(var(--ion-color-success-rgb), 0.15);
+
+            ion-label {
+              color: var(--ion-color-success);
+            }
+          }
         }
       }
 
-      .product-summary {
-        margin-top: 4px;
-        font-size: 12px;
+      /* ============================================
+     * LOADING STATE - Refined spinner
+     * ============================================ */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 50vh;
+        color: var(--text-tertiary);
+        gap: var(--space-4);
+
+        ion-spinner {
+          --color: var(--ion-color-primary);
+          width: 48px;
+          height: 48px;
+        }
+
+        p {
+          font-size: var(--font-size-sm);
+          font-weight: var(--font-weight-medium);
+          letter-spacing: var(--letter-spacing-wide);
+          text-transform: uppercase;
+          animation: pulse 2s ease-in-out infinite;
+        }
       }
-    }
-  `],
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.6;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      /* ============================================
+     * EMPTY STATE - Elegant illustration
+     * ============================================ */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-16) var(--space-6);
+        color: var(--text-tertiary);
+        text-align: center;
+
+        ion-icon {
+          font-size: 80px;
+          margin-bottom: var(--space-6);
+          opacity: 0.4;
+          background: linear-gradient(
+            135deg,
+            var(--ion-color-success) 0%,
+            var(--ion-color-tertiary) 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        p {
+          font-size: var(--font-size-base);
+          font-weight: var(--font-weight-medium);
+          color: var(--text-secondary);
+          max-width: 240px;
+          line-height: var(--line-height-relaxed);
+        }
+      }
+
+      /* ============================================
+     * ORDER LIST - Premium Card Design
+     * ============================================ */
+      ion-list {
+        background: transparent;
+        padding: var(--space-3) var(--space-4) var(--space-20);
+
+        ion-item {
+          --background: var(--background-elevated);
+          --padding-start: var(--space-4);
+          --padding-end: var(--space-4);
+          --padding-top: var(--space-4);
+          --padding-bottom: var(--space-4);
+          --inner-padding-end: 0;
+          --border-radius: var(--radius-lg);
+          --border-width: 0;
+
+          margin-bottom: var(--space-3);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+          border: 1px solid var(--border-subtle);
+          overflow: hidden;
+          position: relative;
+
+          /* Staggered entrance animation */
+          animation: slideInUp 0.4s var(--ease-out) backwards;
+
+          &:nth-child(1) {
+            animation-delay: 0.05s;
+          }
+          &:nth-child(2) {
+            animation-delay: 0.1s;
+          }
+          &:nth-child(3) {
+            animation-delay: 0.15s;
+          }
+          &:nth-child(4) {
+            animation-delay: 0.2s;
+          }
+          &:nth-child(5) {
+            animation-delay: 0.25s;
+          }
+          &:nth-child(6) {
+            animation-delay: 0.3s;
+          }
+          &:nth-child(7) {
+            animation-delay: 0.35s;
+          }
+          &:nth-child(8) {
+            animation-delay: 0.4s;
+          }
+
+          /* Hover/Active state */
+          &:active {
+            --background: var(--state-hover);
+            transform: scale(0.985);
+            transition: transform var(--transition-fast) var(--ease-out);
+          }
+
+          /* Left accent bar */
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(
+              180deg,
+              var(--ion-color-primary) 0%,
+              var(--ion-color-tertiary) 100%
+            );
+            opacity: 0.7;
+            border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+          }
+
+          ion-label {
+            margin: 0;
+            padding-left: var(--space-2);
+
+            /* Order Number - Primary identifier */
+            h2 {
+              font-size: var(--font-size-lg);
+              font-weight: var(--font-weight-bold);
+              color: var(--text-primary);
+              letter-spacing: var(--letter-spacing-tight);
+              margin-bottom: var(--space-1);
+              font-family: var(--font-family-mono);
+            }
+
+            /* Customer Name - Secondary prominence */
+            h3 {
+              font-size: var(--font-size-base);
+              font-weight: var(--font-weight-semibold);
+              color: var(--text-primary);
+              margin-bottom: var(--space-3);
+              line-height: var(--line-height-snug);
+            }
+
+            /* Info rows with icons */
+            p {
+              display: flex;
+              align-items: center;
+              gap: var(--space-2);
+              color: var(--text-secondary);
+              font-size: var(--font-size-sm);
+              margin-bottom: var(--space-1-5);
+              line-height: var(--line-height-normal);
+
+              ion-icon {
+                font-size: 16px;
+                color: var(--text-tertiary);
+                flex-shrink: 0;
+              }
+
+              &:last-of-type {
+                margin-bottom: 0;
+              }
+            }
+
+            /* Address - Tertiary info */
+            .product-summary {
+              margin-top: var(--space-2);
+              padding-top: var(--space-2);
+              border-top: 1px dashed var(--border-subtle);
+              font-size: var(--font-size-xs);
+              color: var(--text-tertiary);
+              line-height: var(--line-height-relaxed);
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+          }
+
+          /* Status Badge - Premium styling */
+          ion-badge {
+            position: absolute;
+            top: var(--space-3);
+            right: var(--space-3);
+            font-size: var(--font-size-2xs);
+            font-weight: var(--font-weight-bold);
+            letter-spacing: var(--letter-spacing-wider);
+            text-transform: uppercase;
+            padding: var(--space-1-5) var(--space-2-5);
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-xs);
+
+            /* Gradient backgrounds for each status */
+            &[color='danger'] {
+              --background: linear-gradient(
+                135deg,
+                var(--ion-color-danger) 0%,
+                var(--ion-color-danger-shade) 100%
+              );
+              --color: var(--ion-color-danger-contrast);
+            }
+
+            &[color='warning'] {
+              --background: linear-gradient(
+                135deg,
+                var(--ion-color-warning) 0%,
+                var(--ion-color-warning-shade) 100%
+              );
+              --color: var(--ion-color-warning-contrast);
+            }
+
+            &[color='success'] {
+              --background: linear-gradient(
+                135deg,
+                var(--ion-color-success) 0%,
+                var(--ion-color-success-shade) 100%
+              );
+              --color: var(--ion-color-success-contrast);
+            }
+          }
+
+          /* Detail arrow enhancement */
+          ion-icon[slot='end'] {
+            color: var(--text-placeholder);
+            font-size: 20px;
+            margin-left: var(--space-2);
+          }
+        }
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ============================================
+     * FAB BUTTON - Premium floating action
+     * ============================================ */
+      ion-fab {
+        --background: transparent;
+
+        ion-fab-button {
+          --background: linear-gradient(
+            135deg,
+            var(--ion-color-primary) 0%,
+            var(--ion-color-tertiary) 100%
+          );
+          --background-activated: linear-gradient(
+            135deg,
+            var(--ion-color-primary-shade) 0%,
+            var(--ion-color-tertiary-shade) 100%
+          );
+          --box-shadow:
+            0 8px 24px rgba(var(--ion-color-primary-rgb), 0.35), 0 4px 8px rgba(0, 0, 0, 0.1);
+          --border-radius: var(--radius-xl);
+          width: 60px;
+          height: 60px;
+          transition: all var(--transition-normal) var(--ease-out);
+
+          /* Pulse animation on idle */
+          animation: fabPulse 3s ease-in-out infinite;
+
+          &:active {
+            transform: scale(0.92);
+            animation: none;
+          }
+
+          ion-icon {
+            font-size: 28px;
+            color: white;
+          }
+
+          /* Glow ring effect */
+          &::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(
+              135deg,
+              var(--ion-color-primary-tint) 0%,
+              var(--ion-color-tertiary-tint) 100%
+            );
+            opacity: 0;
+            z-index: -1;
+            transition: opacity var(--transition-normal) var(--ease-out);
+          }
+
+          &:hover::before {
+            opacity: 0.5;
+          }
+        }
+      }
+
+      @keyframes fabPulse {
+        0%,
+        100% {
+          box-shadow:
+            0 8px 24px rgba(var(--ion-color-primary-rgb), 0.35),
+            0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        50% {
+          box-shadow:
+            0 12px 32px rgba(var(--ion-color-primary-rgb), 0.5),
+            0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+      }
+
+      /* ============================================
+     * DARK MODE ENHANCEMENTS
+     * ============================================ */
+      @media (prefers-color-scheme: dark) {
+        .summary-chips {
+          background: linear-gradient(
+            135deg,
+            rgba(var(--ion-color-primary-rgb), 0.12) 0%,
+            rgba(var(--ion-color-tertiary-rgb), 0.08) 100%
+          );
+
+          &::before {
+            opacity: 0.05;
+          }
+
+          ion-chip {
+            --background: rgba(var(--ion-background-color-rgb), 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+
+            &[color='medium'] {
+              --background: linear-gradient(
+                135deg,
+                rgba(var(--ion-color-medium-rgb), 0.2) 0%,
+                rgba(var(--ion-color-medium-rgb), 0.1) 100%
+              );
+            }
+
+            &[color='danger'] {
+              --background: linear-gradient(
+                135deg,
+                rgba(var(--ion-color-danger-rgb), 0.2) 0%,
+                rgba(var(--ion-color-danger-rgb), 0.1) 100%
+              );
+              box-shadow: 0 2px 12px rgba(var(--ion-color-danger-rgb), 0.25);
+            }
+
+            &[color='warning'] {
+              --background: linear-gradient(
+                135deg,
+                rgba(var(--ion-color-warning-rgb), 0.2) 0%,
+                rgba(var(--ion-color-warning-rgb), 0.1) 100%
+              );
+              box-shadow: 0 2px 12px rgba(var(--ion-color-warning-rgb), 0.25);
+            }
+
+            &[color='success'] {
+              --background: linear-gradient(
+                135deg,
+                rgba(var(--ion-color-success-rgb), 0.2) 0%,
+                rgba(var(--ion-color-success-rgb), 0.1) 100%
+              );
+              box-shadow: 0 2px 12px rgba(var(--ion-color-success-rgb), 0.25);
+            }
+          }
+        }
+
+        ion-list ion-item {
+          --background: var(--background-elevated);
+          border-color: var(--border-subtle);
+          box-shadow: var(--shadow-md);
+
+          &::before {
+            opacity: 0.9;
+          }
+        }
+
+        ion-fab ion-fab-button {
+          --box-shadow:
+            0 8px 28px rgba(var(--ion-color-primary-rgb), 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      /* ============================================
+     * RESPONSIVE ADJUSTMENTS
+     * ============================================ */
+      @media (max-width: 359px) {
+        .summary-chips {
+          grid-template-columns: repeat(2, 1fr);
+          gap: var(--space-2);
+
+          ion-chip {
+            min-height: 48px;
+            padding: var(--space-2);
+
+            ion-label {
+              font-size: var(--font-size-xs);
+            }
+          }
+        }
+      }
+
+      @media (min-width: 768px) {
+        .summary-chips {
+          max-width: 600px;
+          margin: 0 auto;
+          border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        ion-list {
+          max-width: 700px;
+          margin: 0 auto;
+        }
+      }
+
+      /* ============================================
+     * REDUCED MOTION SUPPORT
+     * ============================================ */
+      @media (prefers-reduced-motion: reduce) {
+        ion-list ion-item {
+          animation: none;
+        }
+
+        ion-fab ion-fab-button {
+          animation: none;
+        }
+
+        .loading-container p {
+          animation: none;
+        }
+      }
+    `,
+  ],
 })
 export class AssignmentListPage implements OnInit {
   readonly ordersStore = inject(OrdersStore);
@@ -263,15 +799,19 @@ export class AssignmentListPage implements OnInit {
     const filter = this.currentFilter();
 
     // Assignment tab shows: UNASSIGNED, ASSIGNED, CONFIRMED
-    const assignmentStatuses = [OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, OrderStatus.CONFIRMED];
-    let filtered = orders.filter(o => assignmentStatuses.includes(o.status));
+    const assignmentStatuses = [
+      OrderStatus.UNASSIGNED,
+      OrderStatus.ASSIGNED,
+      OrderStatus.CONFIRMED,
+    ];
+    let filtered = orders.filter((o) => assignmentStatuses.includes(o.status));
 
     if (filter === 'unassigned') {
-      filtered = filtered.filter(o => o.status === OrderStatus.UNASSIGNED);
+      filtered = filtered.filter((o) => o.status === OrderStatus.UNASSIGNED);
     } else if (filter === 'assigned') {
-      filtered = filtered.filter(o => o.status === OrderStatus.ASSIGNED);
+      filtered = filtered.filter((o) => o.status === OrderStatus.ASSIGNED);
     } else if (filter === 'confirmed') {
-      filtered = filtered.filter(o => o.status === OrderStatus.CONFIRMED);
+      filtered = filtered.filter((o) => o.status === OrderStatus.CONFIRMED);
     }
 
     return filtered;
@@ -353,7 +893,7 @@ export class AssignmentListPage implements OnInit {
         context: 'assignment' as FilterContext,
         currentFilters: this.ordersStore.filters(),
         installers: [], // Can be populated from metadata store if available
-        branches: [],   // Can be populated from metadata store for HQ_ADMIN
+        branches: [], // Can be populated from metadata store for HQ_ADMIN
       },
     });
 

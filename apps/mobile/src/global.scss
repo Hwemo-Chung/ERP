@@ -56,27 +56,218 @@
   padding-bottom: var(--ion-safe-area-bottom);
 }
 
-// Status colors for orders
+/* ============================================
+   ENHANCED STATUS BADGE SYSTEM
+   Animated gradient badges with glow effects
+   ============================================ */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--transition-fast) var(--ease-out),
+    box-shadow var(--transition-normal) var(--ease-out);
 
-  &.status-unassigned { background: var(--status-unassigned); color: #fff; }
-  &.status-assigned { background: var(--status-assigned); color: #fff; }
-  &.status-confirmed { background: var(--status-confirmed); color: #fff; }
-  &.status-released { background: var(--status-released); color: #fff; }
-  &.status-dispatched { background: var(--status-dispatched); color: #fff; }
-  &.status-completed { background: var(--status-completed); color: #fff; }
-  &.status-postponed { background: var(--status-postponed); color: #000; }
-  &.status-absent { background: var(--status-absent); color: #fff; }
-  &.status-request-cancel { background: var(--status-request-cancel); color: #fff; }
-  &.status-cancelled { background: var(--status-cancelled); color: #fff; }
-  &.status-collected { background: var(--status-collected); color: #fff; }
-  &.status-reverted { background: var(--status-reverted); color: #fff; }
+  // Subtle shine animation overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    animation: badge-shine 3s ease-in-out infinite;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  // Status variants with gradients
+  &.status-unassigned {
+    background: linear-gradient(135deg, var(--status-unassigned) 0%, var(--gray-500) 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+  }
+
+  &.status-assigned {
+    background: linear-gradient(135deg, var(--status-assigned) 0%, #1d4ed8 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  }
+
+  &.status-confirmed {
+    background: linear-gradient(135deg, var(--status-confirmed) 0%, #0369a1 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+  }
+
+  &.status-released {
+    background: linear-gradient(135deg, var(--status-released) 0%, #0e7490 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+  }
+
+  &.status-dispatched {
+    background: linear-gradient(135deg, var(--status-dispatched) 0%, #0f766e 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35);
+  }
+
+  &.status-completed {
+    background: linear-gradient(135deg, var(--status-completed) 0%, #15803d 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);
+  }
+
+  &.status-postponed {
+    background: linear-gradient(135deg, var(--status-postponed) 0%, #b45309 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+  }
+
+  &.status-absent {
+    background: linear-gradient(135deg, var(--status-absent) 0%, #c2410c 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+  }
+
+  &.status-request-cancel {
+    background: linear-gradient(135deg, var(--status-request-cancel) 0%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  }
+
+  &.status-cancelled {
+    background: linear-gradient(135deg, var(--status-cancelled) 0%, #57534e 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(120, 113, 108, 0.3);
+  }
+
+  &.status-collected {
+    background: linear-gradient(135deg, var(--status-collected) 0%, #4d7c0f 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(101, 163, 13, 0.35);
+  }
+
+  &.status-reverted {
+    background: linear-gradient(135deg, var(--status-reverted) 0%, #334155 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(71, 85, 105, 0.35);
+  }
+
+  // Dot indicator variant
+  &.with-dot::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: currentColor;
+    opacity: 0.6;
+    margin-left: var(--space-1);
+  }
+
+  // Outlined variant
+  &.status-outline {
+    background: transparent;
+    border: 1.5px solid currentColor;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  // Soft variant (uses background colors from tokens)
+  &.status-soft {
+    &.status-unassigned {
+      background: var(--status-unassigned-bg);
+      color: var(--status-unassigned-text);
+      box-shadow: none;
+    }
+    &.status-assigned {
+      background: var(--status-assigned-bg);
+      color: var(--status-assigned-text);
+      box-shadow: none;
+    }
+    &.status-confirmed {
+      background: var(--status-confirmed-bg);
+      color: var(--status-confirmed-text);
+      box-shadow: none;
+    }
+    &.status-released {
+      background: var(--status-released-bg);
+      color: var(--status-released-text);
+      box-shadow: none;
+    }
+    &.status-dispatched {
+      background: var(--status-dispatched-bg);
+      color: var(--status-dispatched-text);
+      box-shadow: none;
+    }
+    &.status-completed {
+      background: var(--status-completed-bg);
+      color: var(--status-completed-text);
+      box-shadow: none;
+    }
+    &.status-collected {
+      background: var(--status-collected-bg);
+      color: var(--status-collected-text);
+      box-shadow: none;
+    }
+    &.status-postponed {
+      background: var(--status-postponed-bg);
+      color: var(--status-postponed-text);
+      box-shadow: none;
+    }
+    &.status-absent {
+      background: var(--status-absent-bg);
+      color: var(--status-absent-text);
+      box-shadow: none;
+    }
+    &.status-request-cancel {
+      background: var(--status-request-cancel-bg);
+      color: var(--status-request-cancel-text);
+      box-shadow: none;
+    }
+    &.status-cancelled {
+      background: var(--status-cancelled-bg);
+      color: var(--status-cancelled-text);
+      box-shadow: none;
+    }
+    &.status-reverted {
+      background: var(--status-reverted-bg);
+      color: var(--status-reverted-text);
+      box-shadow: none;
+    }
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+@keyframes badge-shine {
+  0%,
+  100% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
 }
 
 // Offline indicator
@@ -116,10 +307,69 @@
   }
 }
 
-// Card styling
+/* ============================================
+   ENHANCED CARD SYSTEM
+   ============================================ */
 ion-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin: var(--space-3);
+  background: var(--ion-card-background);
+  border: 1px solid var(--border-subtle);
+  transition:
+    box-shadow var(--transition-normal) var(--ease-out),
+    transform var(--transition-normal) var(--ease-out);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  ion-card-header {
+    padding: var(--space-4);
+    padding-bottom: var(--space-2);
+  }
+
+  ion-card-content {
+    padding: var(--space-4);
+    padding-top: var(--space-2);
+  }
+}
+
+// Card utility classes
+.card-elevated {
+  box-shadow: var(--shadow-xl) !important;
+  border: none !important;
+
+  &:hover {
+    box-shadow: var(--shadow-2xl) !important;
+    transform: translateY(-2px);
+  }
+}
+
+.card-outline {
+  box-shadow: none !important;
+  border: 2px solid var(--border-default) !important;
+  background: transparent !important;
+
+  &:hover {
+    border-color: var(--ion-color-primary) !important;
+    background: var(--state-hover) !important;
+  }
+}
+
+.card-flat {
+  box-shadow: none !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.card-interactive {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 // Form styling
@@ -135,15 +385,119 @@ ion-card {
   }
 }
 
-// List item styling
+/* ============================================
+   ENHANCED ION-ITEM STYLING
+   ============================================ */
 ion-item {
   --inner-padding-end: 8px;
+  --transition: background-color var(--transition-fast) var(--ease-out);
+
+  &:hover {
+    --background: var(--state-hover);
+  }
+
+  &:focus-within {
+    --background: var(--state-hover);
+    --border-color: var(--ion-color-primary);
+  }
+
+  &.item-interactive:active {
+    --background: var(--state-pressed);
+  }
+
+  // Enhanced detail arrow
+  &[detail] {
+    ion-icon[slot='end'] {
+      color: var(--text-tertiary);
+      transition: transform var(--transition-fast) var(--ease-out);
+    }
+
+    &:hover ion-icon[slot='end'] {
+      transform: translateX(2px);
+    }
+  }
+}
+
+// List card item style
+.list-card-item {
+  --background: var(--background-elevated);
+  --border-radius: var(--radius-lg);
+  --padding-start: var(--space-4);
+  --padding-end: var(--space-4);
+  --inner-padding-top: var(--space-3);
+  --inner-padding-bottom: var(--space-3);
+  margin: var(--space-2) var(--space-3);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-subtle);
+
+  &:first-child {
+    margin-top: var(--space-3);
+  }
+
+  &:last-child {
+    margin-bottom: var(--space-3);
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
 }
 
 // Button with icon
 .btn-icon {
   --padding-start: 8px;
   --padding-end: 8px;
+}
+
+/* ============================================
+   ENHANCED BUTTON VARIANTS
+   ============================================ */
+.btn-rounded {
+  --border-radius: var(--radius-full) !important;
+  border-radius: var(--radius-full) !important;
+}
+
+.btn-glass {
+  --background: rgba(255, 255, 255, 0.1) !important;
+  --background-hover: rgba(255, 255, 255, 0.15) !important;
+  --background-activated: rgba(255, 255, 255, 0.2) !important;
+  --color: var(--text-primary) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (prefers-color-scheme: dark) {
+    --background: rgba(255, 255, 255, 0.08) !important;
+    --background-hover: rgba(255, 255, 255, 0.12) !important;
+    --background-activated: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.btn-soft {
+  --background: var(--ion-color-primary-tint) !important;
+  --background-hover: var(--ion-color-primary) !important;
+  --color: var(--ion-color-primary) !important;
+  --color-hover: var(--ion-color-primary-contrast) !important;
+
+  &.ion-color-success {
+    --background: rgba(22, 163, 74, 0.15) !important;
+    --color: var(--ion-color-success) !important;
+  }
+
+  &.ion-color-danger {
+    --background: rgba(220, 38, 38, 0.15) !important;
+    --color: var(--ion-color-danger) !important;
+  }
+
+  &.ion-color-warning {
+    --background: rgba(245, 158, 11, 0.15) !important;
+    --color: var(--ion-color-warning-shade) !important;
+  }
 }
 
 // Pull to refresh
@@ -153,7 +507,9 @@ ion-refresher {
   }
 }
 
-// Loading skeleton
+/* ============================================
+   ENHANCED SKELETON LOADING
+   ============================================ */
 .skeleton-card {
   padding: 16px;
 
@@ -172,36 +528,734 @@ ion-refresher {
   }
 }
 
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+// Enhanced shimmer animation class
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--gray-200);
+  border-radius: var(--radius-sm);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 25%,
+      rgba(255, 255, 255, 0.6) 50%,
+      rgba(255, 255, 255, 0.4) 75%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: var(--gray-200);
+
+    &::after {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 25%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.08) 75%,
+        transparent 100%
+      );
+      background-size: 200% 100%;
+    }
+  }
 }
 
-// Empty state
+// Skeleton variants
+.skeleton-text {
+  @extend .skeleton-shimmer;
+  height: var(--space-4);
+  width: 100%;
+  border-radius: var(--radius-xs);
+}
+
+.skeleton-avatar {
+  @extend .skeleton-shimmer;
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-full);
+}
+
+.skeleton-button {
+  @extend .skeleton-shimmer;
+  height: var(--space-10);
+  width: var(--space-24);
+  border-radius: var(--radius-md);
+}
+
+.skeleton-thumbnail {
+  @extend .skeleton-shimmer;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ============================================
+   ENHANCED EMPTY STATE
+   ============================================ */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: var(--space-16) var(--space-6);
   text-align: center;
+  min-height: 300px;
+
+  // Illustration container
+  .empty-state-illustration {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // Background circle
+    &::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--gray-100) 100%);
+      border-radius: var(--radius-full);
+      opacity: 0.5;
+    }
+
+    img,
+    svg {
+      position: relative;
+      z-index: 1;
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+    }
+  }
 
   ion-icon {
-    font-size: 64px;
-    color: var(--ion-color-medium);
-    margin-bottom: 16px;
+    font-size: 72px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
+    opacity: 0.6;
   }
 
+  .empty-state-title,
   h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 8px;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+    line-height: var(--line-height-snug);
   }
 
+  .empty-state-description,
   p {
-    color: var(--ion-color-medium);
-    font-size: 14px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    max-width: 280px;
+    margin: 0 0 var(--space-6);
   }
+
+  .empty-state-action {
+    margin-top: var(--space-2);
+  }
+
+  // Compact variant
+  &.empty-state-compact {
+    min-height: 200px;
+    padding: var(--space-8) var(--space-4);
+
+    .empty-state-illustration {
+      width: 100px;
+      height: 100px;
+      margin-bottom: var(--space-4);
+    }
+
+    ion-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-3);
+    }
+  }
+
+  // Inline variant
+  &.empty-state-inline {
+    flex-direction: row;
+    min-height: auto;
+    padding: var(--space-4);
+    gap: var(--space-4);
+    text-align: left;
+
+    ion-icon {
+      font-size: 32px;
+      margin: 0;
+    }
+
+    .empty-state-content {
+      flex: 1;
+    }
+  }
+}
+
+/* ============================================
+   GLASS EFFECT UTILITY
+   ============================================ */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.glass-effect-subtle {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(15, 23, 42, 0.5);
+  }
+}
+
+.glass-effect-strong {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+
+// Fade in
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal) var(--ease-out) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Slide up
+.animate-slide-up {
+  animation: slideUp var(--transition-slow) var(--ease-out) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Slide down
+.animate-slide-down {
+  animation: slideDown var(--transition-slow) var(--ease-out) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Scale in
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal) var(--ease-bounce) forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Bounce
+.animate-bounce {
+  animation: bounce 0.6s var(--ease-bounce);
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+// Pulse
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Spin
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Stagger animation delays
+.animate-delay-1 {
+  animation-delay: 50ms;
+}
+.animate-delay-2 {
+  animation-delay: 100ms;
+}
+.animate-delay-3 {
+  animation-delay: 150ms;
+}
+.animate-delay-4 {
+  animation-delay: 200ms;
+}
+.animate-delay-5 {
+  animation-delay: 250ms;
+}
+.animate-delay-6 {
+  animation-delay: 300ms;
+}
+.animate-delay-7 {
+  animation-delay: 350ms;
+}
+.animate-delay-8 {
+  animation-delay: 400ms;
+}
+
+// Animation on scroll (when element enters viewport)
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity var(--transition-slow) var(--ease-out),
+    transform var(--transition-slow) var(--ease-out);
+
+  &.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+.text-2xs {
+  font-size: var(--font-size-2xs);
+}
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+.text-base {
+  font-size: var(--font-size-base);
+}
+.text-md {
+  font-size: var(--font-size-md);
+}
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+.text-xl {
+  font-size: var(--font-size-xl);
+}
+.text-2xl {
+  font-size: var(--font-size-2xl);
+}
+.text-3xl {
+  font-size: var(--font-size-3xl);
+}
+.text-4xl {
+  font-size: var(--font-size-4xl);
+}
+
+.font-light {
+  font-weight: var(--font-weight-light);
+}
+.font-regular {
+  font-weight: var(--font-weight-regular);
+}
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.leading-tight {
+  line-height: var(--line-height-tight);
+}
+.leading-snug {
+  line-height: var(--line-height-snug);
+}
+.leading-normal {
+  line-height: var(--line-height-normal);
+}
+.leading-relaxed {
+  line-height: var(--line-height-relaxed);
+}
+.leading-loose {
+  line-height: var(--line-height-loose);
+}
+
+.tracking-tighter {
+  letter-spacing: var(--letter-spacing-tighter);
+}
+.tracking-tight {
+  letter-spacing: var(--letter-spacing-tight);
+}
+.tracking-normal {
+  letter-spacing: var(--letter-spacing-normal);
+}
+.tracking-wide {
+  letter-spacing: var(--letter-spacing-wide);
+}
+.tracking-wider {
+  letter-spacing: var(--letter-spacing-wider);
+}
+.tracking-widest {
+  letter-spacing: var(--letter-spacing-widest);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+.text-placeholder {
+  color: var(--text-placeholder);
+}
+.text-disabled {
+  color: var(--text-disabled);
+}
+.text-inverse {
+  color: var(--text-inverse);
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.font-mono {
+  font-family: var(--font-family-mono);
+}
+
+/* ============================================
+   ENHANCED ION-SEARCHBAR
+   ============================================ */
+ion-searchbar {
+  --background: var(--gray-100);
+  --border-radius: var(--radius-xl);
+  --box-shadow: none;
+  --placeholder-color: var(--text-placeholder);
+  --placeholder-opacity: 1;
+  --icon-color: var(--text-tertiary);
+  padding: var(--space-2) var(--space-3);
+
+  &.searchbar-has-focus {
+    --background: var(--background-primary);
+    --box-shadow: var(--state-focus-ring);
+  }
+
+  .searchbar-input-container {
+    border-radius: var(--radius-xl);
+    transition: box-shadow var(--transition-fast) var(--ease-out);
+  }
+
+  input.searchbar-input {
+    font-size: var(--font-size-base);
+    padding-left: var(--space-10) !important;
+  }
+
+  ion-icon.searchbar-search-icon {
+    left: var(--space-4) !important;
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    --background: var(--gray-100);
+  }
+}
+
+/* ============================================
+   TOUCH FEEDBACK IMPROVEMENTS
+   ============================================ */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: var(--state-pressed);
+    border-radius: var(--radius-full);
+    transform: translate(-50%, -50%);
+    transition:
+      width 0.3s ease,
+      height 0.3s ease,
+      opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  &:active::after {
+    width: 200%;
+    height: 200%;
+    opacity: 1;
+  }
+}
+
+// Native-like touch feedback
+.touch-scale {
+  transition: transform var(--transition-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.touch-opacity {
+  transition: opacity var(--transition-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+// Disable touch highlight globally on interactive elements
+button,
+[tappable],
+[ion-button],
+ion-button,
+ion-item[button],
+ion-item[detail],
+ion-fab-button,
+ion-segment-button,
+ion-chip,
+ion-card[button] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* ============================================
+   SPACING UTILITIES
+   ============================================ */
+.gap-1 {
+  gap: var(--space-1);
+}
+.gap-2 {
+  gap: var(--space-2);
+}
+.gap-3 {
+  gap: var(--space-3);
+}
+.gap-4 {
+  gap: var(--space-4);
+}
+.gap-5 {
+  gap: var(--space-5);
+}
+.gap-6 {
+  gap: var(--space-6);
+}
+.gap-8 {
+  gap: var(--space-8);
+}
+
+/* ============================================
+   BORDER RADIUS UTILITIES
+   ============================================ */
+.rounded-none {
+  border-radius: var(--radius-none);
+}
+.rounded-xs {
+  border-radius: var(--radius-xs);
+}
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+.rounded-xl {
+  border-radius: var(--radius-xl);
+}
+.rounded-2xl {
+  border-radius: var(--radius-2xl);
+}
+.rounded-3xl {
+  border-radius: var(--radius-3xl);
+}
+.rounded-full {
+  border-radius: var(--radius-full);
+}
+
+/* ============================================
+   SHADOW UTILITIES
+   ============================================ */
+.shadow-none {
+  box-shadow: var(--shadow-none);
+}
+.shadow-xs {
+  box-shadow: var(--shadow-xs);
+}
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+.shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
+.shadow-2xl {
+  box-shadow: var(--shadow-2xl);
+}
+.shadow-inner {
+  box-shadow: var(--shadow-inner);
+}
+
+/* ============================================
+   BACKGROUND UTILITIES
+   ============================================ */
+.bg-primary {
+  background-color: var(--background-primary);
+}
+.bg-secondary {
+  background-color: var(--background-secondary);
+}
+.bg-tertiary {
+  background-color: var(--background-tertiary);
+}
+.bg-elevated {
+  background-color: var(--background-elevated);
+}
+
+/* ============================================
+   BORDER UTILITIES
+   ============================================ */
+.border-subtle {
+  border: 1px solid var(--border-subtle);
+}
+.border-default {
+  border: 1px solid var(--border-default);
+}
+.border-strong {
+  border: 1px solid var(--border-strong);
 }
 
 /* ============================================
@@ -231,4 +1285,181 @@ ion-content cdk-virtual-scroll-viewport {
   height: 1px;
   width: 1px;
   transform-origin: 0 0;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES FOR UTILITIES
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  // Status badge dark mode adjustments
+  .status-badge {
+    &::before {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 100%
+      );
+    }
+  }
+
+  // Card dark mode
+  ion-card {
+    border-color: var(--border-subtle);
+  }
+
+  .card-outline {
+    border-color: var(--border-default) !important;
+
+    &:hover {
+      border-color: var(--ion-color-primary) !important;
+    }
+  }
+
+  // Empty state dark mode
+  .empty-state {
+    .empty-state-illustration::before {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, var(--gray-100) 100%);
+    }
+  }
+
+  // List card item dark mode
+  .list-card-item {
+    --background: var(--background-elevated);
+    border-color: var(--border-subtle);
+  }
+
+  // Soft buttons dark mode
+  .btn-soft {
+    --background: rgba(59, 130, 246, 0.15) !important;
+
+    &.ion-color-success {
+      --background: rgba(34, 197, 94, 0.15) !important;
+    }
+
+    &.ion-color-danger {
+      --background: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    &.ion-color-warning {
+      --background: rgba(251, 191, 36, 0.15) !important;
+    }
+  }
+}
+
+/* ============================================
+   MANUAL DARK MODE CLASS OVERRIDES
+   ============================================ */
+.dark,
+.ion-palette-dark {
+  // Status badge
+  .status-badge {
+    &::before {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 100%
+      );
+    }
+  }
+
+  // Glass effect
+  .glass-effect {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-effect-subtle {
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  .glass-effect-strong {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  // Skeleton shimmer
+  .skeleton-shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 25%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.08) 75%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+  }
+
+  // Empty state
+  .empty-state {
+    .empty-state-illustration::before {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, var(--gray-100) 100%);
+    }
+  }
+
+  // Cards
+  ion-card {
+    border-color: var(--border-subtle);
+  }
+
+  .card-outline {
+    border-color: var(--border-default) !important;
+  }
+
+  .list-card-item {
+    --background: var(--background-elevated);
+    border-color: var(--border-subtle);
+  }
+
+  // Soft buttons
+  .btn-soft {
+    --background: rgba(59, 130, 246, 0.15) !important;
+
+    &.ion-color-success {
+      --background: rgba(34, 197, 94, 0.15) !important;
+    }
+
+    &.ion-color-danger {
+      --background: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    &.ion-color-warning {
+      --background: rgba(251, 191, 36, 0.15) !important;
+    }
+  }
+}
+
+/* ============================================
+   REDUCED MOTION PREFERENCES
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .status-badge::before {
+    animation: none;
+  }
+
+  .skeleton-shimmer::after {
+    animation: none;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-scale-in,
+  .animate-bounce,
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
