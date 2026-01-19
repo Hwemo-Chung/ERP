@@ -10,10 +10,14 @@ import {
 } from './common/interceptors';
 
 async function bootstrap() {
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300'];
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     cors: {
-      origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300'],
+      origin: corsOrigins,
       credentials: true,
       methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
       allowedHeaders: [

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter mobile run build:test",
+  "outputDirectory": "www",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.14.4 --activate",
+  "framework": "angular",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
