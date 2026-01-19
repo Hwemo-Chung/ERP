@@ -1,0 +1,36 @@
+# Render.com Blueprint for ERP Logistics API
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: erp-logistics-api
+    runtime: node
+    region: singapore # Closest to Korea
+    plan: free
+    buildCommand: |
+      corepack enable &&
+      corepack prepare pnpm@9.14.4 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter erp-logistics-api run prisma:generate &&
+      pnpm --filter erp-logistics-api run build
+    startCommand: pnpm --filter erp-logistics-api run start:prod
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: REDIS_URL
+        sync: false # Set manually in Render dashboard
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false # Will be set after Vercel deployment
