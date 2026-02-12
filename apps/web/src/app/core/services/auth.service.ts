@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Preferences } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 export interface User {
   id: string;
@@ -14,6 +15,7 @@ export interface User {
   roles: string[];
   branchId: string;
   branchCode: string;
+  branchName?: string;
 }
 
 export interface AuthTokens {
@@ -39,6 +41,7 @@ interface AuthState {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   // State
   private readonly _state = signal<AuthState>({
@@ -68,16 +71,16 @@ export class AuthService {
   private safeJsonParse<T>(value: string | null, clearKey?: string): T | null {
     if (!value || value === 'undefined' || value === 'null') {
       if (clearKey) {
-        Preferences.remove({ key: clearKey }).catch(() => {});
+        Preferences.remove({ key: clearKey }).catch((e) => void e);
       }
       return null;
     }
     try {
       return JSON.parse(value) as T;
-    } catch {
-      console.warn('[Auth] Clearing corrupted storage data for key:', clearKey);
+    } catch (error) {
+      this.logger.warn('[Auth] Failed to parse stored data for key:', clearKey, error);
       if (clearKey) {
-        Preferences.remove({ key: clearKey }).catch(() => {});
+        Preferences.remove({ key: clearKey }).catch((e) => void e);
       }
       return null;
     }
@@ -102,7 +105,7 @@ export class AuthService {
         this._state.update((s) => ({ ...s, tokens, user }));
       }
     } catch (error) {
-      console.warn('[Auth] Failed to restore session from storage:', error);
+      this.logger.warn('[Auth] Failed to restore session from storage:', error);
       // Continue with unauthenticated state - user will need to login
     }
   }
@@ -115,8 +118,8 @@ export class AuthService {
       const data = await firstValueFrom(
         this.http.post<{ accessToken: string; refreshToken: string; user: User }>(
           `${environment.apiUrl}/auth/login`,
-          credentials
-        )
+          credentials,
+        ),
       );
 
       const tokens: AuthTokens = {
@@ -139,11 +142,14 @@ export class AuthService {
       }));
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const httpBody = (err as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this._state.update((s) => ({
         ...s,
         isLoading: false,
-        error: err.error?.message || 'Login failed',
+        error: (httpBody?.['message'] as string) || 'Login failed',
       }));
       return false;
     }
@@ -151,9 +157,7 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/auth/logout`, {})
-      );
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/auth/logout`, {}));
     } catch {
       // Ignore logout API errors
     }
@@ -185,8 +189,8 @@ export class AuthService {
       const response = await firstValueFrom(
         this.http.post<{ accessToken: string; refreshToken: string }>(
           `${environment.apiUrl}/auth/refresh`,
-          { refreshToken: currentTokens.refreshToken }
-        )
+          { refreshToken: currentTokens.refreshToken },
+        ),
       );
 
       const tokens: AuthTokens = {
@@ -219,8 +223,8 @@ export class AuthService {
       const data = await firstValueFrom(
         this.http.post<{ accessToken: string; refreshToken: string; user: User }>(
           `${environment.apiUrl}/auth/refresh`,
-          { refreshToken }
-        )
+          { refreshToken },
+        ),
       );
 
       const tokens: AuthTokens = {
@@ -242,14 +246,20 @@ export class AuthService {
         isLoading: false,
       }));
 
-      console.info(`[Auth] Biometric refresh token login success for user: ${data.user.loginId}`);
+      this.logger.info(
+        `[Auth] Biometric refresh token login success for user: ${data.user.loginId}`,
+      );
       return true;
-    } catch (err: any) {
-      console.warn('[Auth] Biometric refresh token expired or invalid:', err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      this.logger.warn('[Auth] Biometric refresh token expired or invalid:', msg);
+      const httpBody = (err as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this._state.update((s) => ({
         ...s,
         isLoading: false,
-        error: err.error?.message || 'Token refresh failed',
+        error: (httpBody?.['message'] as string) || 'Token refresh failed',
       }));
       return false;
     }

@@ -33,6 +33,7 @@ import {
 } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrdersService, Order } from '../../services/orders.service';
+import { LoggerService } from '../../../../core/services/logger.service';
 import {
   OrderStatus,
   ORDER_STATUS_LABELS,
@@ -1008,7 +1009,7 @@ export class OrderDetailPage implements OnInit {
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly alertCtrl = inject(AlertController);
   private readonly translate = inject(TranslateService);
-
+  private readonly logger = inject(LoggerService);
   protected readonly order = signal<Order | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly allowedTransitions = signal<string[]>([]);
@@ -1215,7 +1216,7 @@ export class OrderDetailPage implements OnInit {
       const transitions = ALLOWED_TRANSITIONS[updated.status as OrderStatus] || [];
       this.allowedTransitions.set(transitions as string[]);
     } catch (error) {
-      console.error('Failed to update status:', error);
+      this.logger.error('Failed to update status:', error);
     }
   }
 

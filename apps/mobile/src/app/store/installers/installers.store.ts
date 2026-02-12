@@ -3,18 +3,8 @@
  * Manages metadata: installer list with caching
  */
 
-import {
-  Injectable,
-  computed,
-  inject,
-} from '@angular/core';
-import {
-  signalStore,
-  withState,
-  withComputed,
-  withMethods,
-  patchState,
-} from '@ngrx/signals';
+import { Injectable, computed, inject } from '@angular/core';
+import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
@@ -55,9 +45,7 @@ export class InstallersStore extends signalStore(
     }),
 
     // Active installers only
-    activeInstallers: computed(() =>
-      installers().filter((i) => i.status === 'ACTIVE')
-    ),
+    activeInstallers: computed(() => installers().filter((i) => i.status === 'ACTIVE')),
   })),
 
   withMethods((store, http = inject(HttpClient)) => ({
@@ -80,7 +68,7 @@ export class InstallersStore extends signalStore(
       try {
         const params = branchCode ? `?branchCode=${branchCode}` : '';
         const response = await firstValueFrom(
-          http.get<Installer[]>(`${environment.apiUrl}/metadata/installers${params}`)
+          http.get<Installer[]>(`${environment.apiUrl}/metadata/installers${params}`),
         );
 
         // Cache for 1 day
@@ -95,8 +83,13 @@ export class InstallersStore extends signalStore(
           isLoading: false,
           lastSyncTime: Date.now(),
         });
-      } catch (error: any) {
-        const errorMessage = error?.error?.message || 'Failed to load installers';
+      } catch (error: unknown) {
+        const httpBody = (error as Record<string, unknown>)?.['error'] as
+          | Record<string, unknown>
+          | undefined;
+        const errorMessage =
+          (httpBody?.['message'] as string) ||
+          (error instanceof Error ? error.message : 'Failed to load installers');
         patchState(store, {
           error: errorMessage,
           isLoading: false,
@@ -135,9 +128,7 @@ export class InstallersStore extends signalStore(
      * Get active installers for a branch
      */
     getActiveByBranch(branchCode: string): Installer[] {
-      return store
-        .installers()
-        .filter((i) => i.branchCode === branchCode && i.status === 'ACTIVE');
+      return store.installers().filter((i) => i.branchCode === branchCode && i.status === 'ACTIVE');
     },
-  }))
+  })),
 ) {}

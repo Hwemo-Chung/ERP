@@ -380,7 +380,7 @@ export class CompletionCertificatePage implements OnInit {
     const user = this.authService.user();
     return {
       name: user?.name || '',
-      company: (user as any)?.branchName || user?.branchCode || '',
+      company: user?.branchName || user?.branchCode || '',
     };
   });
 

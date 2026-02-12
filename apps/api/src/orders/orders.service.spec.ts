@@ -1,8 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { OrderQueryService } from './order-query.service';
+import { OrderMutationService } from './order-mutation.service';
+import { OrderAssignmentService } from './order-assignment.service';
+import { OrderSplitService } from './order-split.service';
+import { OrderLifecycleService } from './order-lifecycle.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStateMachine } from './order-state-machine';
+import { RedisLockService } from '../common/services/redis-lock.service';
 import { OrderStatus } from '@prisma/client';
 import { SyncOperationType, BatchSyncItemDto } from './dto/batch-sync.dto';
 
@@ -10,6 +16,7 @@ describe('OrdersService', () => {
   let service: OrdersService;
   let prisma: jest.Mocked<PrismaService>;
   let stateMachine: jest.Mocked<OrderStateMachine>;
+  let redisLockService: jest.Mocked<RedisLockService>;
 
   const mockOrder = {
     id: 'order-123',
@@ -63,6 +70,11 @@ describe('OrdersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
+        OrderQueryService,
+        OrderMutationService,
+        OrderAssignmentService,
+        OrderSplitService,
+        OrderLifecycleService,
         {
           provide: PrismaService,
           useValue: {
@@ -82,6 +94,14 @@ describe('OrdersService', () => {
           provide: OrderStateMachine,
           useValue: {
             validateTransition: jest.fn(),
+            canRevert: jest.fn().mockReturnValue({ valid: true }),
+          },
+        },
+        {
+          provide: RedisLockService,
+          useValue: {
+            acquireLock: jest.fn().mockResolvedValue('mock-token'),
+            releaseLock: jest.fn().mockResolvedValue(true),
           },
         },
       ],
@@ -90,6 +110,7 @@ describe('OrdersService', () => {
     service = module.get<OrdersService>(OrdersService);
     prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
     stateMachine = module.get(OrderStateMachine) as jest.Mocked<OrderStateMachine>;
+    redisLockService = module.get(RedisLockService) as jest.Mocked<RedisLockService>;
   });
 
   describe('findAll', () => {

@@ -8,14 +8,9 @@
  * - Weekly auto-lock via SettlementLockCron
  */
 
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { SettlementStatus } from '@prisma/client';
+import { SettlementStatus, SettlementPeriod } from '@prisma/client';
 
 export interface SettlementPeriodResponse {
   id: string;
@@ -23,10 +18,10 @@ export interface SettlementPeriodResponse {
   periodStart: Date;
   periodEnd: Date;
   status: SettlementStatus;
-  lockedBy?: string;
-  lockedAt?: Date;
-  unlockedBy?: string;
-  unlockedAt?: Date;
+  lockedBy: string | null;
+  lockedAt: Date | null;
+  unlockedBy: string | null;
+  unlockedAt: Date | null;
 }
 
 export interface PeriodHistoryResponse {
@@ -261,7 +256,7 @@ export class SettlementService {
   /**
    * Map Prisma model to response DTO
    */
-  private mapToResponse(period: any): SettlementPeriodResponse {
+  private mapToResponse(period: SettlementPeriod): SettlementPeriodResponse {
     return {
       id: period.id,
       branchId: period.branchId,

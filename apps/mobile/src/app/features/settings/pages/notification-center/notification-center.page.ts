@@ -1,16 +1,53 @@
-import { Component, signal, inject, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  inject,
+  OnInit,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonButton, IonList, IonItem, IonLabel, IonBadge, IonIcon, IonSpinner,
-  IonSegment, IonSegmentButton, IonToggle, IonCard, IonCardHeader,
-  IonCardTitle, IonCardContent, IonRefresher, IonRefresherContent,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonIcon,
+  IonSpinner,
+  IonSegment,
+  IonSegmentButton,
+  IonToggle,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonRefresher,
+  IonRefresherContent,
   ToastController,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { notificationsOutline, checkmarkCircleOutline, alertCircleOutline, swapHorizontalOutline, timeOutline, trashOutline } from 'ionicons/icons';
-import { NotificationsService, Notification, NotifCategory } from '../../../../core/services/notifications.service';
+import {
+  notificationsOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  swapHorizontalOutline,
+  timeOutline,
+  trashOutline,
+} from 'ionicons/icons';
+import {
+  NotificationsService,
+  Notification,
+  NotifCategory,
+} from '../../../../core/services/notifications.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -18,10 +55,30 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, TranslateModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons,
-    IonBackButton, IonButton, IonList, IonItem, IonLabel, IonBadge, IonIcon,
-    IonSpinner, IonSegment, IonSegmentButton, IonToggle, IonCard, IonCardHeader,
-    IonCardTitle, IonCardContent, IonRefresher, IonRefresherContent,
+    CommonModule,
+    TranslateModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonButton,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonIcon,
+    IonSpinner,
+    IonSegment,
+    IonSegmentButton,
+    IonToggle,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonRefresher,
+    IonRefresherContent,
   ],
   template: `
     <ion-header>
@@ -113,13 +170,30 @@ import { TranslateModule } from '@ngx-translate/core';
       }
     </ion-content>
   `,
-  styles: [`
-    .unread { --background: var(--ion-color-primary-tint); }
-    .center { display: flex; justify-content: center; padding: 48px; }
-    .empty { text-align: center; padding: 48px; color: var(--ion-color-medium); }
-    .timestamp { font-size: 11px; color: var(--ion-color-medium); }
-    ion-card-title { font-size: 16px; }
-  `],
+  styles: [
+    `
+      .unread {
+        --background: var(--ion-color-primary-tint);
+      }
+      .center {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+      .empty {
+        text-align: center;
+        padding: 48px;
+        color: var(--ion-color-medium);
+      }
+      .timestamp {
+        font-size: 11px;
+        color: var(--ion-color-medium);
+      }
+      ion-card-title {
+        font-size: 16px;
+      }
+    `,
+  ],
 })
 export class NotificationCenterPage implements OnInit {
   private readonly router = inject(Router);
@@ -137,13 +211,17 @@ export class NotificationCenterPage implements OnInit {
   protected readonly filteredNotifications = computed(() => {
     const f = this.filter();
     const list = this.notifications();
-    return f === 'all' ? list : list.filter(n => !n.read);
+    return f === 'all' ? list : list.filter((n) => !n.read);
   });
 
   constructor() {
     addIcons({
-      notificationsOutline, checkmarkCircleOutline, alertCircleOutline,
-      swapHorizontalOutline, timeOutline, trashOutline,
+      notificationsOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      swapHorizontalOutline,
+      timeOutline,
+      trashOutline,
     });
   }
 
@@ -163,7 +241,7 @@ export class NotificationCenterPage implements OnInit {
     }
   }
 
-  async onRefresh(event: any): Promise<void> {
+  async onRefresh(event: RefresherCustomEvent): Promise<void> {
     await this.loadData();
     event.target.complete();
   }

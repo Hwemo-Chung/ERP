@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@capacitor/cli/assets/capacitor.config.schema.json",
   "appId": "com.erp.logistics",
   "appName": "Logistics ERP",
-  "webDir": "www",
+  "webDir": "www/browser",
   "server": {
     "androidScheme": "https"
   },

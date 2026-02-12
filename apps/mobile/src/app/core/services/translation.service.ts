@@ -2,11 +2,12 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Preferences } from '@capacitor/preferences';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 export type SupportedLanguage = 'ko' | 'en';
 
 interface TranslationData {
-  [key: string]: any;
+  [key: string]: string | TranslationData;
 }
 
 @Injectable({
@@ -14,6 +15,7 @@ interface TranslationData {
 })
 export class TranslationService {
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggerService);
   private readonly STORAGE_KEY = 'erp_language';
   private readonly DEFAULT_LANGUAGE: SupportedLanguage = 'ko';
 
@@ -46,7 +48,7 @@ export class TranslationService {
 
     try {
       const translations = await firstValueFrom(
-        this.http.get<TranslationData>(`/assets/i18n/${language}.json`)
+        this.http.get<TranslationData>(`/assets/i18n/${language}.json`),
       );
 
       this._translations.set(translations);
@@ -58,11 +60,11 @@ export class TranslationService {
         value: language,
       });
     } catch (error) {
-      console.error(`Failed to load translations for ${language}:`, error);
+      this.logger.error(`Failed to load translations for ${language}:`, error);
 
       // Fallback to default language if not already trying it
       if (language !== this.DEFAULT_LANGUAGE) {
-        console.warn(`Falling back to default language: ${this.DEFAULT_LANGUAGE}`);
+        this.logger.warn(`Falling back to default language: ${this.DEFAULT_LANGUAGE}`);
         await this.setLanguage(this.DEFAULT_LANGUAGE);
       }
     } finally {
@@ -74,9 +76,9 @@ export class TranslationService {
    * Get translation by key path (e.g., 'PROFILE.TITLE')
    * Supports parameter replacement: translate('PROFILE.SYNC.PENDING_COUNT', { count: 5 })
    */
-  translate(key: string, params?: Record<string, any>): string {
+  translate(key: string, params?: Record<string, string | number | boolean>): string {
     const keys = key.split('.');
-    let value: any = this._translations();
+    let value: string | TranslationData = this._translations();
 
     // Navigate through nested keys
     for (const k of keys) {
@@ -105,7 +107,7 @@ export class TranslationService {
    * Get translation with Signal support
    * Returns a computed signal that updates when language changes
    */
-  translateSignal(key: string, params?: Record<string, any>) {
+  translateSignal(key: string, params?: Record<string, string | number | boolean>) {
     return computed(() => this.translate(key, params));
   }
 
@@ -113,7 +115,7 @@ export class TranslationService {
    * Get instant translation (synchronous)
    * Use this when you need the value immediately
    */
-  instant(key: string, params?: Record<string, any>): string {
+  instant(key: string, params?: Record<string, string | number | boolean>): string {
     return this.translate(key, params);
   }
 
@@ -122,7 +124,7 @@ export class TranslationService {
    */
   hasKey(key: string): boolean {
     const keys = key.split('.');
-    let value: any = this._translations();
+    let value: string | TranslationData = this._translations();
 
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
@@ -149,7 +151,7 @@ export class TranslationService {
    * Replace template parameters in translation string
    * Example: "Hello {{name}}" with { name: "John" } => "Hello John"
    */
-  private replaceParams(text: string, params: Record<string, any>): string {
+  private replaceParams(text: string, params: Record<string, string | number | boolean>): string {
     return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       return params[key] !== undefined ? String(params[key]) : match;
     });

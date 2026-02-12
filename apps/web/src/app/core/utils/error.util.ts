@@ -2,6 +2,7 @@
  * Type-safe error handling utilities
  * Replaces 'any' type in catch blocks with proper type guards
  */
+import { environment } from '@env/environment';
 
 /**
  * Type guard to check if value is an Error instance
@@ -102,10 +103,12 @@ export function logError(context: string, error: unknown): void {
   const code = getErrorCode(error);
   const status = getHttpStatus(error);
 
-  console.error(`[${context}] Error:`, {
-    message,
-    ...(code && { code }),
-    ...(status && { status }),
-    raw: error,
-  });
+  if (!environment.production) {
+    console.error(`[${context}] Error:`, {
+      message,
+      ...(code && { code }),
+      ...(status && { status }),
+      raw: error,
+    });
+  }
 }

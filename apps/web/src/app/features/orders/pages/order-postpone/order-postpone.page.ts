@@ -40,6 +40,7 @@ import {
   documentTextOutline,
 } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 
@@ -583,6 +584,7 @@ export class OrderPostponePage implements OnInit {
 
   // TranslateService를 템플릿에서 사용하기 위해 public으로 노출
   readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   // Computed values for date constraints
   minDate = computed(() => {
@@ -645,7 +647,7 @@ export class OrderPostponePage implements OnInit {
         }
       }
     } catch (error) {
-      console.error('Failed to load order:', error);
+      this.logger.error('Failed to load order:', error);
       const msg = this.translate.instant('ORDERS.POSTPONE.ERROR.LOAD_FAILED');
       await this.showToast(msg, 'danger');
     } finally {
@@ -743,7 +745,7 @@ export class OrderPostponePage implements OnInit {
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
-      console.error('Failed to postpone order:', error);
+      this.logger.error('Failed to postpone order:', error);
       await this.showToast(this.translate.instant('ORDERS.POSTPONE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);

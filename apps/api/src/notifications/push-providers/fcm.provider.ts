@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import { PushProvider } from '@prisma/client';
-import {
-  IPushProvider,
-  PushPayload,
-  PushSendResult,
-} from './push-provider.interface';
+import { IPushProvider, PushPayload, PushSendResult } from './push-provider.interface';
 
 /**
  * FCM (Firebase Cloud Messaging) Provider
@@ -115,7 +111,7 @@ export class FcmProvider implements IPushProvider {
         success: true,
         messageId,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       return this.handleError(error, token);
     }
   }
@@ -146,9 +142,10 @@ export class FcmProvider implements IPushProvider {
   /**
    * Handle FCM errors and determine if subscription should be removed
    */
-  private handleError(error: any, token: string): PushSendResult {
-    const errorCode = error?.code;
-    const errorMessage = error?.message || '';
+  private handleError(error: unknown, token: string): PushSendResult {
+    const fcmError = error as { code?: string; message?: string; stack?: string };
+    const errorCode = fcmError?.code;
+    const errorMessage = fcmError?.message || '';
 
     // Invalid registration token - remove subscription
     if (
@@ -165,10 +162,7 @@ export class FcmProvider implements IPushProvider {
 
     // Invalid argument - likely malformed message or token
     if (errorCode === 'messaging/invalid-argument') {
-      this.logger.error(
-        `Invalid FCM argument: ${token.substring(0, 20)}...`,
-        errorMessage,
-      );
+      this.logger.error(`Invalid FCM argument: ${token.substring(0, 20)}...`, errorMessage);
       return {
         success: false,
         error: 'Invalid message format',
@@ -177,10 +171,7 @@ export class FcmProvider implements IPushProvider {
     }
 
     // Quota exceeded / rate limited
-    if (
-      errorCode === 'messaging/quota-exceeded' ||
-      errorCode === 'messaging/too-many-requests'
-    ) {
+    if (errorCode === 'messaging/quota-exceeded' || errorCode === 'messaging/too-many-requests') {
       this.logger.warn(`FCM rate limited: ${token.substring(0, 20)}...`);
       return {
         success: false,
@@ -191,9 +182,7 @@ export class FcmProvider implements IPushProvider {
 
     // Third-party auth error - check service account permissions
     if (errorCode === 'messaging/third-party-auth-error') {
-      this.logger.error(
-        'FCM authentication error - check service account permissions',
-      );
+      this.logger.error('FCM authentication error - check service account permissions');
       return {
         success: false,
         error: 'Authentication error',
@@ -202,10 +191,7 @@ export class FcmProvider implements IPushProvider {
     }
 
     // Server unavailable - retry later
-    if (
-      errorCode === 'messaging/server-unavailable' ||
-      errorCode === 'messaging/internal-error'
-    ) {
+    if (errorCode === 'messaging/server-unavailable' || errorCode === 'messaging/internal-error') {
       this.logger.error(`FCM server error: ${errorMessage}`);
       return {
         success: false,
@@ -215,10 +201,7 @@ export class FcmProvider implements IPushProvider {
     }
 
     // Unknown error - log and don't remove subscription
-    this.logger.error(
-      `Failed to send FCM message: ${token.substring(0, 20)}...`,
-      error.stack,
-    );
+    this.logger.error(`Failed to send FCM message: ${token.substring(0, 20)}...`, fcmError.stack);
 
     return {
       success: false,

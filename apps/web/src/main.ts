@@ -11,7 +11,13 @@
  * - 전역 에러 핸들러
  * - Sentry 에러 모니터링
  */
-import { enableProdMode, importProvidersFrom, isDevMode, APP_INITIALIZER, ErrorHandler } from '@angular/core';
+import {
+  enableProdMode,
+  importProvidersFrom,
+  isDevMode,
+  APP_INITIALIZER,
+  ErrorHandler,
+} from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
@@ -44,9 +50,7 @@ if (environment.production && environment.sentryDsn) {
     dsn: environment.sentryDsn,
     environment: 'production',
     release: `erp-web@${environment.appVersion}`,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-    ],
+    integrations: [Sentry.browserTracingIntegration()],
     // Performance monitoring sample rate (adjust based on traffic)
     tracesSampleRate: 0.1,
     // Only report errors from our domain
@@ -98,7 +102,7 @@ bootstrapApplication(AppComponent, {
         apiResponseInterceptor,
         errorInterceptor,
         offlineInterceptor,
-      ])
+      ]),
     ),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
@@ -115,7 +119,7 @@ bootstrapApplication(AppComponent, {
           useFactory: HttpLoaderFactory,
           deps: [HttpClient],
         },
-      })
+      }),
     ),
     // 앱 부트스트랩 전에 번역 파일 미리 로드
     {
@@ -125,4 +129,8 @@ bootstrapApplication(AppComponent, {
       multi: true,
     },
   ],
-}).catch((err) => console.error('Bootstrap error:', err));
+}).catch((err) => {
+  if (!environment.production) {
+    console.error('Bootstrap error:', err);
+  }
+});

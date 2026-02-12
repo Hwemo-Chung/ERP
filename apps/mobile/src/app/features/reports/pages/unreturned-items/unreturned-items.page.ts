@@ -6,26 +6,70 @@
  * - Filter by: branch, date range, return status (returned/unreturned)
  * - Display: order info, customer info, cancellation date, return status
  */
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-  IonLabel, IonBadge, IonSpinner, IonButton, IonIcon, IonSegment, IonSegmentButton,
-  IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
-  IonSearchbar, IonChip, IonNote, IonItemSliding, IonItemOptions, IonItemOption,
-  ToastController, AlertController,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonSpinner,
+  IonButton,
+  IonIcon,
+  IonSegment,
+  IonSegmentButton,
+  IonDatetimeButton,
+  IonModal,
+  IonDatetime,
+  IonRefresher,
+  IonRefresherContent,
+  IonSearchbar,
+  IonChip,
+  IonNote,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
+  ToastController,
+  AlertController,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  downloadOutline, calendarOutline, returnDownBackOutline,
-  checkmarkCircleOutline, closeCircleOutline, searchOutline,
-  alertCircleOutline, refreshOutline
+  downloadOutline,
+  calendarOutline,
+  returnDownBackOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline,
+  searchOutline,
+  alertCircleOutline,
+  refreshOutline,
 } from 'ionicons/icons';
-import { ReportsService, UnreturnedItem, UnreturnedSummary } from '../../../../core/services/reports.service';
+import {
+  ReportsService,
+  UnreturnedItem,
+  UnreturnedSummary,
+} from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
 
@@ -34,11 +78,38 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-    IonLabel, IonBadge, IonSpinner, IonButton, IonIcon, IonSegment, IonSegmentButton,
-    IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
-    IonSearchbar, IonChip, IonNote, IonItemSliding, IonItemOptions, IonItemOption,
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonSpinner,
+    IonButton,
+    IonIcon,
+    IonSegment,
+    IonSegmentButton,
+    IonDatetimeButton,
+    IonModal,
+    IonDatetime,
+    IonRefresher,
+    IonRefresherContent,
+    IonSearchbar,
+    IonChip,
+    IonNote,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption,
     TranslateModule,
   ],
   template: `
@@ -121,21 +192,27 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
           <ion-card-content>
             <ion-icon name="alert-circle-outline"></ion-icon>
             <div class="summary-value">{{ summary().unreturnedCount }}</div>
-            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.UNRETURNED' | translate }}</div>
+            <div class="summary-label">
+              {{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.UNRETURNED' | translate }}
+            </div>
           </ion-card-content>
         </ion-card>
         <ion-card class="summary-card" color="success">
           <ion-card-content>
             <ion-icon name="checkmark-circle-outline"></ion-icon>
             <div class="summary-value">{{ summary().returnedCount }}</div>
-            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.RETURNED' | translate }}</div>
+            <div class="summary-label">
+              {{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.RETURNED' | translate }}
+            </div>
           </ion-card-content>
         </ion-card>
         <ion-card class="summary-card" color="primary">
           <ion-card-content>
             <ion-icon name="return-down-back-outline"></ion-icon>
             <div class="summary-value">{{ summary().totalCount }}</div>
-            <div class="summary-label">{{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.TOTAL' | translate }}</div>
+            <div class="summary-label">
+              {{ 'REPORTS.UNRETURNED_ITEMS.SUMMARY.TOTAL' | translate }}
+            </div>
           </ion-card-content>
         </ion-card>
       </div>
@@ -163,7 +240,9 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                   <ion-item [button]="true" (click)="showItemDetail(item)">
                     <div class="item-content" slot="start">
                       <ion-icon
-                        [name]="item.isReturned ? 'checkmark-circle-outline' : 'close-circle-outline'"
+                        [name]="
+                          item.isReturned ? 'checkmark-circle-outline' : 'close-circle-outline'
+                        "
                         [color]="item.isReturned ? 'success' : 'danger'"
                       ></ion-icon>
                     </div>
@@ -171,11 +250,18 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                       <h2>{{ item.orderNo }}</h2>
                       <h3>{{ item.customerName }}</h3>
                       <p>
-                        <ion-note>{{ 'REPORTS.UNRETURNED_ITEMS.CANCEL_DATE' | translate }}: {{ item.cancelledAt | date:'yyyy-MM-dd' }}</ion-note>
+                        <ion-note
+                          >{{ 'REPORTS.UNRETURNED_ITEMS.CANCEL_DATE' | translate }}:
+                          {{ item.cancelledAt | date: 'yyyy-MM-dd' }}</ion-note
+                        >
                       </p>
                       <p>
                         <ion-chip [color]="item.isReturned ? 'success' : 'danger'" size="small">
-                          {{ item.isReturned ? ('REPORTS.UNRETURNED_ITEMS.RETURNED' | translate) : ('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED' | translate) }}
+                          {{
+                            item.isReturned
+                              ? ('REPORTS.UNRETURNED_ITEMS.RETURNED' | translate)
+                              : ('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED' | translate)
+                          }}
                         </ion-chip>
                         @if (item.productName) {
                           <ion-chip color="medium" size="small">{{ item.productName }}</ion-chip>
@@ -184,10 +270,11 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
                     </ion-label>
                     <ion-note slot="end">
                       @if (item.returnedAt) {
-                        {{ item.returnedAt | date:'MM/dd' }}
+                        {{ item.returnedAt | date: 'MM/dd' }}
                       } @else {
                         <span class="overdue" [class.critical]="isOverdue(item)">
-                          {{ getDaysOverdue(item) }}{{ 'REPORTS.UNRETURNED_ITEMS.DAYS_OVERDUE_SUFFIX' | translate }}
+                          {{ getDaysOverdue(item)
+                          }}{{ 'REPORTS.UNRETURNED_ITEMS.DAYS_OVERDUE_SUFFIX' | translate }}
                         </span>
                       }
                     </ion-note>
@@ -215,21 +302,26 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
         @if (branchSummary().length > 0) {
           <ion-card>
             <ion-card-header>
-              <ion-card-title>{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_TITLE' | translate }}</ion-card-title>
+              <ion-card-title>{{
+                'REPORTS.UNRETURNED_ITEMS.BRANCH_TITLE' | translate
+              }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               @for (branch of branchSummary(); track branch.branchCode) {
                 <div class="branch-item">
                   <span class="branch-name">{{ branch.branchName }}</span>
                   <div class="branch-stats">
-                    <ion-badge color="danger">{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_UNRETURNED' | translate }} {{ branch.unreturnedCount }}</ion-badge>
-                    <ion-badge color="success">{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_RETURNED' | translate }} {{ branch.returnedCount }}</ion-badge>
+                    <ion-badge color="danger"
+                      >{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_UNRETURNED' | translate }}
+                      {{ branch.unreturnedCount }}</ion-badge
+                    >
+                    <ion-badge color="success"
+                      >{{ 'REPORTS.UNRETURNED_ITEMS.BRANCH_RETURNED' | translate }}
+                      {{ branch.returnedCount }}</ion-badge
+                    >
                   </div>
                   <div class="progress-bar">
-                    <div
-                      class="progress-fill"
-                      [style.width.%]="getReturnRate(branch)"
-                    ></div>
+                    <div class="progress-fill" [style.width.%]="getReturnRate(branch)"></div>
                   </div>
                 </div>
               }
@@ -239,99 +331,140 @@ type ReturnStatusFilter = 'all' | 'unreturned' | 'returned';
       }
     </ion-content>
   `,
-  styles: [`
-    .date-range {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 8px;
-    }
-    .date-separator { color: var(--ion-color-medium); }
+  styles: [
+    `
+      .date-range {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+      }
+      .date-separator {
+        color: var(--ion-color-medium);
+      }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .summary-card {
-      margin: 0;
-    }
-    .summary-card ion-card-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 12px 8px;
-    }
-    .summary-card ion-icon { font-size: 24px; margin-bottom: 4px; }
-    .summary-card .summary-value { font-size: 24px; font-weight: bold; }
-    .summary-card .summary-label { font-size: 12px; opacity: 0.8; }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .summary-card {
+        margin: 0;
+      }
+      .summary-card ion-card-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 8px;
+      }
+      .summary-card ion-icon {
+        font-size: 24px;
+        margin-bottom: 4px;
+      }
+      .summary-card .summary-value {
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .summary-card .summary-label {
+        font-size: 12px;
+        opacity: 0.8;
+      }
 
-    .center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      color: var(--ion-color-medium);
-    }
-    .center p { margin-top: 16px; }
+      .center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        color: var(--ion-color-medium);
+      }
+      .center p {
+        margin-top: 16px;
+      }
 
-    .list-content { padding: 0; }
-    .item-content {
-      display: flex;
-      align-items: center;
-      margin-right: 12px;
-    }
-    .item-content ion-icon { font-size: 24px; }
+      .list-content {
+        padding: 0;
+      }
+      .item-content {
+        display: flex;
+        align-items: center;
+        margin-right: 12px;
+      }
+      .item-content ion-icon {
+        font-size: 24px;
+      }
 
-    ion-card-title {
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      ion-card-title {
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-    .empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 24px;
-      color: var(--ion-color-medium);
-    }
-    .empty ion-icon { font-size: 48px; margin-bottom: 16px; }
+      .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 48px 24px;
+        color: var(--ion-color-medium);
+      }
+      .empty ion-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
 
-    .overdue { color: var(--ion-color-warning); font-weight: 500; }
-    .overdue.critical { color: var(--ion-color-danger); }
+      .overdue {
+        color: var(--ion-color-warning);
+        font-weight: 500;
+      }
+      .overdue.critical {
+        color: var(--ion-color-danger);
+      }
 
-    .branch-item {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--ion-color-light);
-    }
-    .branch-item:last-child { border-bottom: none; }
-    .branch-name { flex: 1; font-weight: 500; min-width: 100px; }
-    .branch-stats { display: flex; gap: 4px; }
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: var(--ion-color-light);
-      border-radius: 2px;
-      margin-top: 4px;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--ion-color-success);
-      border-radius: 2px;
-      transition: width 0.3s ease;
-    }
+      .branch-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--ion-color-light);
+      }
+      .branch-item:last-child {
+        border-bottom: none;
+      }
+      .branch-name {
+        flex: 1;
+        font-weight: 500;
+        min-width: 100px;
+      }
+      .branch-stats {
+        display: flex;
+        gap: 4px;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: var(--ion-color-light);
+        border-radius: 2px;
+        margin-top: 4px;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--ion-color-success);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+      }
 
-    ion-chip { --padding-start: 6px; --padding-end: 6px; height: 22px; font-size: 11px; }
-  `],
+      ion-chip {
+        --padding-start: 6px;
+        --padding-end: 6px;
+        height: 22px;
+        font-size: 11px;
+      }
+    `,
+  ],
 })
 export class UnreturnedItemsPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
@@ -339,7 +472,7 @@ export class UnreturnedItemsPage implements OnInit {
   private readonly toastCtrl = inject(ToastController);
   private readonly alertCtrl = inject(AlertController);
   private readonly translate = inject(TranslateService);
-
+  private readonly logger = inject(LoggerService);
   // State signals
   protected readonly isLoading = signal(false);
   protected readonly dateFrom = signal(this.getDefaultDateFrom());
@@ -352,12 +485,14 @@ export class UnreturnedItemsPage implements OnInit {
     unreturnedCount: 0,
     returnedCount: 0,
   });
-  protected readonly branchSummary = signal<{
-    branchCode: string;
-    branchName: string;
-    unreturnedCount: number;
-    returnedCount: number;
-  }[]>([]);
+  protected readonly branchSummary = signal<
+    {
+      branchCode: string;
+      branchName: string;
+      unreturnedCount: number;
+      returnedCount: number;
+    }[]
+  >([]);
 
   // Computed signals
   protected readonly filteredItems = computed(() => {
@@ -366,15 +501,16 @@ export class UnreturnedItemsPage implements OnInit {
     const search = this.searchTerm().toLowerCase();
 
     if (filter === 'unreturned') {
-      result = result.filter(item => !item.isReturned);
+      result = result.filter((item) => !item.isReturned);
     } else if (filter === 'returned') {
-      result = result.filter(item => item.isReturned);
+      result = result.filter((item) => item.isReturned);
     }
 
     if (search) {
-      result = result.filter(item =>
-        item.orderNo.toLowerCase().includes(search) ||
-        item.customerName.toLowerCase().includes(search)
+      result = result.filter(
+        (item) =>
+          item.orderNo.toLowerCase().includes(search) ||
+          item.customerName.toLowerCase().includes(search),
       );
     }
 
@@ -383,9 +519,14 @@ export class UnreturnedItemsPage implements OnInit {
 
   constructor() {
     addIcons({
-      downloadOutline, calendarOutline, returnDownBackOutline,
-      checkmarkCircleOutline, closeCircleOutline, searchOutline,
-      alertCircleOutline, refreshOutline
+      downloadOutline,
+      calendarOutline,
+      returnDownBackOutline,
+      checkmarkCircleOutline,
+      closeCircleOutline,
+      searchOutline,
+      alertCircleOutline,
+      refreshOutline,
     });
   }
 
@@ -404,28 +545,30 @@ export class UnreturnedItemsPage implements OnInit {
     const branchCode = this.authService.user()?.branchCode;
 
     try {
-      this.reportsService.getUnreturnedItems({
-        branchCode,
-        dateFrom: this.dateFrom().split('T')[0],
-        dateTo: this.dateTo().split('T')[0],
-      }).subscribe({
-        next: (data) => {
-          this.items.set(data.items || []);
-          this.summary.set({
-            totalCount: data.totalCount || 0,
-            unreturnedCount: data.unreturnedCount || 0,
-            returnedCount: data.returnedCount || 0,
-          });
-          this.branchSummary.set(data.byBranch || []);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to load unreturned items:', err);
-          this.items.set([]);
-          this.summary.set({ totalCount: 0, unreturnedCount: 0, returnedCount: 0 });
-          this.isLoading.set(false);
-        },
-      });
+      this.reportsService
+        .getUnreturnedItems({
+          branchCode,
+          dateFrom: this.dateFrom().split('T')[0],
+          dateTo: this.dateTo().split('T')[0],
+        })
+        .subscribe({
+          next: (data) => {
+            this.items.set(data.items || []);
+            this.summary.set({
+              totalCount: data.totalCount || 0,
+              unreturnedCount: data.unreturnedCount || 0,
+              returnedCount: data.returnedCount || 0,
+            });
+            this.branchSummary.set(data.byBranch || []);
+            this.isLoading.set(false);
+          },
+          error: (err) => {
+            this.logger.error('Failed to load unreturned items:', err);
+            this.items.set([]);
+            this.summary.set({ totalCount: 0, unreturnedCount: 0, returnedCount: 0 });
+            this.isLoading.set(false);
+          },
+        });
     } catch {
       this.isLoading.set(false);
     }
@@ -449,7 +592,7 @@ export class UnreturnedItemsPage implements OnInit {
     this.searchTerm.set(event.detail.value || '');
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     await this.loadData();
     event.target.complete();
   }
@@ -476,20 +619,31 @@ export class UnreturnedItemsPage implements OnInit {
     const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
     const markReturnBtn = await this.translate.get('COMMON.BUTTONS.MARK_RETURN').toPromise();
     const returnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.RETURNED').toPromise();
-    const notReturnedText = await this.translate.get('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED').toPromise();
-    const productLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.PRODUCT_NAME').toPromise();
-    const cancelDateLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.CANCEL_DATE').toPromise();
-    const cancelReasonLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.CANCEL_REASON').toPromise();
-    const returnStatusLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_STATUS').toPromise();
-    const returnDateLabel = await this.translate.get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_DATE').toPromise();
+    const notReturnedText = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED')
+      .toPromise();
+    const productLabel = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.DETAIL.PRODUCT_NAME')
+      .toPromise();
+    const cancelDateLabel = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.CANCEL_DATE')
+      .toPromise();
+    const cancelReasonLabel = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.DETAIL.CANCEL_REASON')
+      .toPromise();
+    const returnStatusLabel = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_STATUS')
+      .toPromise();
+    const returnDateLabel = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.DETAIL.RETURN_DATE')
+      .toPromise();
 
     // Translate cancel reason code to localized text
     const cancelReasonKey = `COMMON.CANCEL_REASONS.${item.cancelReason}`;
-    const translatedReason = item.cancelReason
-      ? this.translate.instant(cancelReasonKey)
-      : '-';
+    const translatedReason = item.cancelReason ? this.translate.instant(cancelReasonKey) : '-';
     // If translation not found, instant() returns the key, so fallback to original value
-    const cancelReasonValue = translatedReason === cancelReasonKey ? item.cancelReason : translatedReason;
+    const cancelReasonValue =
+      translatedReason === cancelReasonKey ? item.cancelReason : translatedReason;
 
     let message = `${productLabel}: ${item.productName || '-'}\n`;
     message += `${cancelDateLabel}: ${new Date(item.cancelledAt).toLocaleDateString('ko-KR')}\n`;
@@ -510,7 +664,7 @@ export class UnreturnedItemsPage implements OnInit {
       buttons: showMarkReturnBtn
         ? [
             { text: cancelBtn, role: 'cancel' },
-            { text: markReturnBtn, handler: () => this.markAsReturned(item) }
+            { text: markReturnBtn, handler: () => this.markAsReturned(item) },
           ]
         : [okBtn],
     });
@@ -520,10 +674,18 @@ export class UnreturnedItemsPage implements OnInit {
   async markAsReturned(item: UnreturnedItem) {
     const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
     const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
-    const header = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_TITLE').toPromise();
-    const confirmMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_CONFIRM', { orderNo: item.orderNo }).toPromise();
-    const successMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_SUCCESS').toPromise();
-    const failedMsg = await this.translate.get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_FAILED').toPromise();
+    const header = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_TITLE')
+      .toPromise();
+    const confirmMsg = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_CONFIRM', { orderNo: item.orderNo })
+      .toPromise();
+    const successMsg = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_SUCCESS')
+      .toPromise();
+    const failedMsg = await this.translate
+      .get('REPORTS.UNRETURNED_ITEMS.MARK_RETURN_FAILED')
+      .toPromise();
 
     const alert = await this.alertCtrl.create({
       header,
@@ -542,8 +704,8 @@ export class UnreturnedItemsPage implements OnInit {
               });
               await toast.present();
               this.loadData();
-            } catch (error: any) {
-              const is403 = error?.status === 403;
+            } catch (error: unknown) {
+              const is403 = (error as Record<string, unknown>)?.['status'] === 403;
               const errorMsg = is403
                 ? this.translate.instant('REPORTS.UNRETURNED_ITEMS.PERMISSION_DENIED')
                 : failedMsg;
@@ -564,16 +726,18 @@ export class UnreturnedItemsPage implements OnInit {
   async exportData() {
     try {
       const headers = this.translate.instant('REPORTS.UNRETURNED_ITEMS.EXPORT_HEADERS');
-      const rows = this.filteredItems().map(item => [
+      const rows = this.filteredItems().map((item) => [
         item.orderNo,
         item.customerName,
         item.productName || '',
         new Date(item.cancelledAt).toLocaleDateString('ko-KR'),
         item.cancelReason || '',
-        item.isReturned ? this.translate.instant('REPORTS.UNRETURNED_ITEMS.RETURNED') : this.translate.instant('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED'),
+        item.isReturned
+          ? this.translate.instant('REPORTS.UNRETURNED_ITEMS.RETURNED')
+          : this.translate.instant('REPORTS.UNRETURNED_ITEMS.NOT_RETURNED'),
         item.returnedAt ? new Date(item.returnedAt).toLocaleDateString('ko-KR') : '',
       ]);
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+      const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
 
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);

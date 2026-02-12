@@ -41,14 +41,10 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import {
-  checkmarkOutline,
-  closeOutline,
-  cameraOutline,
-  trashOutline,
-} from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, cameraOutline, trashOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
+import { LoggerService } from '../../../../core/services/logger.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { UIStore } from '../../../../store/ui/ui.store';
 import { Order } from '../../../../store/orders/orders.models';
@@ -109,16 +105,16 @@ interface WasteCode {
             @for (line of orderLines(); let i = $index; track line.id) {
               <ion-item [formGroupName]="i" class="serial-item">
                 <ion-label position="stacked">
-                  {{ line.itemName || line.productName }} ({{ 'ORDERS.COMPLETION_MODAL.QUANTITY' | translate }}: {{ line.quantity }})
+                  {{ line.itemName || line.productName }} ({{
+                    'ORDERS.COMPLETION_MODAL.QUANTITY' | translate
+                  }}: {{ line.quantity }})
                 </ion-label>
                 <ion-input
                   formControlName="serialNumber"
                   [placeholder]="'ORDERS.COMPLETION_MODAL.SERIAL_PLACEHOLDER' | translate"
                   [maxlength]="20"
                 ></ion-input>
-                <span slot="end" class="count">
-                  {{ i + 1 }}/{{ orderLines().length }}
-                </span>
+                <span slot="end" class="count"> {{ i + 1 }}/{{ orderLines().length }} </span>
               </ion-item>
             }
           </div>
@@ -130,11 +126,17 @@ interface WasteCode {
           <div formArrayName="waste">
             @for (waste of wasteArray().controls; let i = $index; track i) {
               <ion-item [formGroupName]="i" class="waste-item">
-                <ion-label position="stacked">{{ 'ORDERS.COMPLETION_MODAL.WASTE_CODE' | translate }}</ion-label>
-                <ion-select formControlName="code" [placeholder]="'ORDERS.COMPLETION_MODAL.WASTE_CODE_SELECT' | translate">
+                <ion-label position="stacked">{{
+                  'ORDERS.COMPLETION_MODAL.WASTE_CODE' | translate
+                }}</ion-label>
+                <ion-select
+                  formControlName="code"
+                  [placeholder]="'ORDERS.COMPLETION_MODAL.WASTE_CODE_SELECT' | translate"
+                >
                   @for (code of wasteCodes(); track code.code) {
                     <ion-select-option [value]="code.code">
-                      {{ code.code }} - {{ code.labelKey ? (code.labelKey | translate) : code.name }}
+                      {{ code.code }} -
+                      {{ code.labelKey ? (code.labelKey | translate) : code.name }}
                     </ion-select-option>
                   }
                 </ion-select>
@@ -169,11 +171,7 @@ interface WasteCode {
             @for (photo of photos(); track $index) {
               <div class="photo-item">
                 <ion-img [src]="photo"></ion-img>
-                <ion-button
-                  fill="clear"
-                  color="danger"
-                  (click)="removePhoto($index)"
-                >
+                <ion-button fill="clear" color="danger" (click)="removePhoto($index)">
                   <ion-icon name="close-outline"></ion-icon>
                 </ion-button>
               </div>
@@ -188,7 +186,9 @@ interface WasteCode {
         <!-- Notes -->
         <div class="section">
           <ion-item>
-            <ion-label position="stacked">{{ 'ORDERS.COMPLETION_MODAL.NOTES_LABEL' | translate }}</ion-label>
+            <ion-label position="stacked">{{
+              'ORDERS.COMPLETION_MODAL.NOTES_LABEL' | translate
+            }}</ion-label>
             <ion-textarea
               formControlName="notes"
               [placeholder]="'ORDERS.COMPLETION_MODAL.NOTES_PLACEHOLDER' | translate"
@@ -210,106 +210,104 @@ interface WasteCode {
         <ion-button slot="start" fill="outline" (click)="dismiss()">
           {{ 'COMMON.BUTTON.CANCEL' | translate }}
         </ion-button>
-        <ion-button
-          slot="end"
-          [disabled]="!form.valid || isSubmitting()"
-          (click)="onSubmit()"
-        >
+        <ion-button slot="end" [disabled]="!form.valid || isSubmitting()" (click)="onSubmit()">
           <ion-icon name="checkmark-outline"></ion-icon>
           {{ 'COMMON.BUTTON.COMPLETE' | translate }}
         </ion-button>
       </ion-toolbar>
     </ion-footer>
   `,
-  styles: [`
-    .order-header {
-      background: var(--ion-color-light);
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
+  styles: [
+    `
+      .order-header {
+        background: var(--ion-color-light);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
 
-      h2 {
-        margin: 0 0 8px 0;
-        font-weight: 600;
+        h2 {
+          margin: 0 0 8px 0;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 0;
+          font-size: 13px;
+          color: var(--ion-color-medium);
+        }
       }
 
-      p {
-        margin: 0;
-        font-size: 13px;
-        color: var(--ion-color-medium);
-      }
-    }
+      .section {
+        margin-bottom: 24px;
 
-    .section {
-      margin-bottom: 24px;
-
-      h3 {
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0 0 12px 0;
-        color: var(--ion-color-primary);
-      }
-    }
-
-    .serial-item {
-      margin-bottom: 8px;
-      --padding-top: 8px;
-      --padding-bottom: 8px;
-
-      .count {
-        font-size: 12px;
-        color: var(--ion-color-medium);
-        margin-left: 8px;
-      }
-    }
-
-    .waste-item {
-      margin-bottom: 8px;
-      --padding-top: 8px;
-      --padding-bottom: 8px;
-    }
-
-    .photos {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .photo-item {
-      position: relative;
-      background: var(--ion-color-light);
-      border-radius: 8px;
-      overflow: hidden;
-      aspect-ratio: 1;
-
-      ion-image {
-        width: 100%;
-        height: 100%;
+        h3 {
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0 0 12px 0;
+          color: var(--ion-color-primary);
+        }
       }
 
-      ion-button {
-        position: absolute;
+      .serial-item {
+        margin-bottom: 8px;
+        --padding-top: 8px;
+        --padding-bottom: 8px;
+
+        .count {
+          font-size: 12px;
+          color: var(--ion-color-medium);
+          margin-left: 8px;
+        }
+      }
+
+      .waste-item {
+        margin-bottom: 8px;
+        --padding-top: 8px;
+        --padding-bottom: 8px;
+      }
+
+      .photos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .photo-item {
+        position: relative;
+        background: var(--ion-color-light);
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+
+        ion-image {
+          width: 100%;
+          height: 100%;
+        }
+
+        ion-button {
+          position: absolute;
+          top: 0;
+          right: 0;
+          --padding-start: 2px;
+          --padding-end: 2px;
+        }
+      }
+
+      .loading-overlay {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
         top: 0;
+        left: 0;
         right: 0;
-        --padding-start: 2px;
-        --padding-end: 2px;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 1000;
       }
-    }
-
-    .loading-overlay {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-    }
-  `],
+    `,
+  ],
 })
 export class OrderCompletionModal implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -317,6 +315,7 @@ export class OrderCompletionModal implements OnInit {
   private readonly translate = inject(TranslateService);
   readonly ordersStore = inject(OrdersStore);
   readonly uiStore = inject(UIStore);
+  private readonly logger = inject(LoggerService);
 
   order: Order | null = null;
   form!: FormGroup;
@@ -363,7 +362,7 @@ export class OrderCompletionModal implements OnInit {
         this.fb.group({
           lineId: [line.id],
           serialNumber: ['', Validators.required],
-        })
+        }),
       );
     });
 
@@ -381,7 +380,7 @@ export class OrderCompletionModal implements OnInit {
       this.fb.group({
         code: ['', Validators.required],
         quantity: [1, [Validators.required, Validators.min(1)]],
-      })
+      }),
     );
   }
 
@@ -402,7 +401,7 @@ export class OrderCompletionModal implements OnInit {
         this.photos.update((current) => [...current, image.dataUrl!]);
       }
     } catch (error) {
-      console.error('Camera error:', error);
+      this.logger.error('Camera error:', error);
       const msg = this.translate.instant('ORDERS.COMPLETION_MODAL.ERROR.CAMERA_ACCESS');
       this.uiStore.showToast(msg, 'danger');
     }
@@ -435,7 +434,7 @@ export class OrderCompletionModal implements OnInit {
       await this.modalCtrl.dismiss(null, 'confirm');
     } catch (error) {
       this.uiStore.showToast(errorMsg, 'danger');
-      console.error('Completion error:', error);
+      this.logger.error('Completion error:', error);
     } finally {
       this.isSubmitting.set(false);
     }

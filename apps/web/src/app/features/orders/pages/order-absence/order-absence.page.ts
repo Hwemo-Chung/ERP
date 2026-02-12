@@ -45,6 +45,7 @@ import {
   alertCircleOutline,
 } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderStatus } from '../../../../store/orders/orders.models';
 
@@ -837,6 +838,7 @@ export class OrderAbsencePage implements OnInit {
 
   // TranslateService를 템플릿에서 사용하기 위해 public으로 노출
   readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -869,7 +871,7 @@ export class OrderAbsencePage implements OnInit {
         }
       }
     } catch (error) {
-      console.error('Failed to load order:', error);
+      this.logger.error('Failed to load order:', error);
       const msg = this.translate.instant('ORDERS.ABSENCE.ERROR.LOAD_FAILED');
       await this.showToast(msg, 'danger');
     } finally {
@@ -975,7 +977,7 @@ export class OrderAbsencePage implements OnInit {
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
-      console.error('Failed to process absence:', error);
+      this.logger.error('Failed to process absence:', error);
       await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);
@@ -1020,7 +1022,7 @@ export class OrderAbsencePage implements OnInit {
       // Navigate back to order detail
       this.router.navigate(['/orders', orderId], { replaceUrl: true });
     } catch (error) {
-      console.error('Failed to process escalation:', error);
+      this.logger.error('Failed to process escalation:', error);
       await this.showToast(this.translate.instant('ORDERS.ABSENCE.TOAST.ERROR'), 'danger');
     } finally {
       this.isSubmitting.set(false);

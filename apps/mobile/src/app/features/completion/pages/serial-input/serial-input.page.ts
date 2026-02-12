@@ -2,7 +2,15 @@
  * Serial Input Page
  * PRD FR-04: Serial number capture via barcode scanning or manual input
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,17 +35,13 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  barcodeOutline,
-  scanOutline,
-  checkmarkCircleOutline,
-  saveOutline,
-} from 'ionicons/icons';
+import { barcodeOutline, scanOutline, checkmarkCircleOutline, saveOutline } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 import { BarcodeScannerService } from '../../../../core/services/barcode-scanner.service';
 import { UIStore } from '../../../../store/ui/ui.store';
 import { TranslateModule } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface ProductSerial {
   lineId: string;
@@ -78,7 +82,9 @@ interface ProductSerial {
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>시리얼 번호 입력</ion-title>
         <ion-buttons slot="end">
@@ -104,8 +110,7 @@ interface ProductSerial {
           </ion-card-header>
           <ion-card-content>
             <p class="instruction">
-              각 제품의 제조번호(시리얼 번호)를 입력해주세요.
-              영문/숫자 10-20자리
+              각 제품의 제조번호(시리얼 번호)를 입력해주세요. 영문/숫자 10-20자리
             </p>
           </ion-card-content>
         </ion-card>
@@ -147,11 +152,7 @@ interface ProductSerial {
 
         <!-- Save Button -->
         <div class="action-buttons">
-          <ion-button 
-            expand="block" 
-            [disabled]="!allValid()"
-            (click)="saveSerials()"
-          >
+          <ion-button expand="block" [disabled]="!allValid()" (click)="saveSerials()">
             <ion-icon name="save-outline" slot="start"></ion-icon>
             저장
           </ion-button>
@@ -159,62 +160,64 @@ interface ProductSerial {
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-    }
-
-    .instruction {
-      color: var(--ion-color-medium);
-      font-size: 14px;
-    }
-
-    .product-info {
-      margin-bottom: 12px;
-
-      h3 {
-        margin: 0;
-        font-weight: 600;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      p {
-        margin: 4px 0 0;
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+      }
+
+      .instruction {
         color: var(--ion-color-medium);
-        font-size: 13px;
+        font-size: 14px;
       }
-    }
 
-    ion-item {
-      --padding-start: 0;
-    }
+      .product-info {
+        margin-bottom: 12px;
 
-    ion-input.valid {
-      --color: var(--ion-color-success);
-    }
+        h3 {
+          margin: 0;
+          font-weight: 600;
+        }
 
-    ion-input.invalid {
-      --color: var(--ion-color-danger);
-    }
+        p {
+          margin: 4px 0 0;
+          color: var(--ion-color-medium);
+          font-size: 13px;
+        }
+      }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
+      ion-item {
+        --padding-start: 0;
+      }
 
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+      ion-input.valid {
+        --color: var(--ion-color-success);
+      }
+
+      ion-input.invalid {
+        --color: var(--ion-color-danger);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+
+      .action-buttons {
+        margin-top: 24px;
+      }
+    `,
+  ],
 })
 export class SerialInputPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -223,6 +226,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
   protected readonly ordersStore = inject(OrdersStore);
   private readonly barcodeScanner = inject(BarcodeScannerService);
   private readonly uiStore = inject(UIStore);
+  private readonly logger = inject(LoggerService);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
@@ -259,14 +263,16 @@ export class SerialInputPage implements OnInit, OnDestroy {
     const order = this.order();
     const lines = order?.lines || order?.orderLines;
     if (lines) {
-      this.products.set(lines.map((line: OrderLine) => ({
-        lineId: line.id,
-        productCode: line.itemCode || line.productCode || '',
-        productName: line.itemName || line.productName || '',
-        quantity: line.quantity,
-        serialNumber: line.serialNumber || '',
-        isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,
-      })));
+      this.products.set(
+        lines.map((line: OrderLine) => ({
+          lineId: line.id,
+          productCode: line.itemCode || line.productCode || '',
+          productName: line.itemName || line.productName || '',
+          quantity: line.quantity,
+          serialNumber: line.serialNumber || '',
+          isValid: line.serialNumber ? /^[A-Za-z0-9]{10,20}$/.test(line.serialNumber) : false,
+        })),
+      );
     }
   }
 
@@ -275,7 +281,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
    */
   async openScanner(): Promise<void> {
     const prods = this.products();
-    const unscannedIndex = prods.findIndex(p => !p.isValid);
+    const unscannedIndex = prods.findIndex((p) => !p.isValid);
 
     if (unscannedIndex === -1) {
       this.uiStore.showToast('모든 시리얼 번호가 이미 입력되었습니다', 'success');
@@ -306,7 +312,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
 
       if (result.hasContent) {
         // Update the serial number
-        this.products.update(products => {
+        this.products.update((products) => {
           const updated = [...products];
           updated[index].serialNumber = result.content.toUpperCase();
           updated[index].isValid = /^[A-Za-z0-9]{10,20}$/.test(result.content);
@@ -323,11 +329,14 @@ export class SerialInputPage implements OnInit, OnDestroy {
             this.uiStore.showToast('모든 시리얼 번호가 입력되었습니다', 'success');
           }
         } else {
-          this.uiStore.showToast('시리얼 번호 형식이 올바르지 않습니다 (영문/숫자 10-20자)', 'warning');
+          this.uiStore.showToast(
+            '시리얼 번호 형식이 올바르지 않습니다 (영문/숫자 10-20자)',
+            'warning',
+          );
         }
       }
     } catch (error) {
-      console.error('Scan error:', error);
+      this.logger.error('Scan error:', error);
       this.uiStore.showToast('스캔 중 오류가 발생했습니다', 'danger');
     } finally {
       this.currentScanIndex = -1;
@@ -338,7 +347,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
    * Handle manual serial input
    */
   onSerialInput(index: number): void {
-    this.products.update(products => {
+    this.products.update((products) => {
       const updated = [...products];
       const serial = updated[index].serialNumber.toUpperCase();
       updated[index].serialNumber = serial;
@@ -353,7 +362,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
    */
   allValid(): boolean {
     const prods = this.products();
-    return prods.length > 0 && prods.every(p => p.isValid);
+    return prods.length > 0 && prods.every((p) => p.isValid);
   }
 
   /**
@@ -362,7 +371,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
   getProgress(): number {
     const prods = this.products();
     if (prods.length === 0) return 0;
-    const valid = prods.filter(p => p.isValid).length;
+    const valid = prods.filter((p) => p.isValid).length;
     return Math.round((valid / prods.length) * 100);
   }
 
@@ -376,7 +385,7 @@ export class SerialInputPage implements OnInit, OnDestroy {
     }
 
     try {
-      const serialUpdates = this.products().map(p => ({
+      const serialUpdates = this.products().map((p) => ({
         lineId: p.lineId,
         serialNumber: p.serialNumber,
       }));

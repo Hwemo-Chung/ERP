@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
@@ -95,8 +95,9 @@ async function bootstrap() {
   const port = configService.get<number>('port') || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger docs available at: http://localhost:${port}/docs`);
+  const logger = new Logger('Bootstrap');
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Swagger docs available at: http://localhost:${port}/docs`);
 }
 
 bootstrap();

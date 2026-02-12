@@ -7,9 +7,10 @@ import { CompletionService } from './completion.service';
 import { CompletionController } from './completion.controller';
 import { OrderStateMachine } from '../orders/order-state-machine';
 import { PrismaModule } from '../prisma/prisma.module';
+import { SettlementModule } from '../settlement/settlement.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, SettlementModule],
   providers: [CompletionService, OrderStateMachine],
   controllers: [CompletionController],
   exports: [CompletionService],

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStateMachine } from '../orders/order-state-machine';
+import { SettlementService } from '../settlement/settlement.service';
 import { OrderStatus } from '@prisma/client';
 
 export interface SerialLine {
@@ -40,6 +41,7 @@ export class CompletionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stateMachine: OrderStateMachine,
+    private readonly settlementService: SettlementService,
   ) {}
 
   async completeOrder(
@@ -62,17 +64,16 @@ export class CompletionService {
       });
 
       if (!order) {
-        throw new NotFoundException('주문을 찾을 수 없습니다');
+        throw new NotFoundException({ code: 'E3001', message: 'Order not found' });
       }
 
-      // 2. Check settlement lock (SDD section 6.1)
-      const isLocked = await this.isSettlementLocked(order.branchId, order.appointmentDate);
+      // 2. Check settlement lock (SDD section 6.1) via SettlementService DB lookup
+      const isLocked = await this.settlementService.isOrderLocked(orderId);
 
       if (isLocked) {
         throw new ConflictException({
           code: 'E2002',
-          message: '정산이 마감되어 수정할 수 없습니다',
-          lockedUntil: await this.getSettlementLockTime(order.branchId),
+          message: 'Settlement is locked, modification not allowed',
         });
       }
 
@@ -159,16 +160,16 @@ export class CompletionService {
     });
 
     if (!order) {
-      throw new NotFoundException('주문을 찾을 수 없습니다');
+      throw new NotFoundException({ code: 'E3001', message: 'Order not found' });
     }
 
-    // Check settlement lock
-    const isLocked = await this.isSettlementLocked(order.branchId, order.appointmentDate);
+    // Check settlement lock via SettlementService DB lookup
+    const isLocked = await this.settlementService.isOrderLocked(orderId);
 
     if (isLocked) {
       throw new ConflictException({
         code: 'E2002',
-        message: '정산이 마감되어 수정할 수 없습니다',
+        message: 'Settlement is locked, modification not allowed',
       });
     }
 
@@ -176,7 +177,10 @@ export class CompletionService {
     const validCodePattern = /^P(0[1-9]|1[0-9]|2[01])$/;
     for (const entry of dto.entries) {
       if (!validCodePattern.test(entry.code)) {
-        throw new BadRequestException(`유효하지 않은 폐기 코드: ${entry.code}`);
+        throw new BadRequestException({
+          code: 'E3002',
+          message: `Invalid waste code: ${entry.code}`,
+        });
       }
     }
 
@@ -248,7 +252,7 @@ export class CompletionService {
     });
 
     if (!order) {
-      throw new NotFoundException('주문을 찾을 수 없습니다');
+      throw new NotFoundException({ code: 'E3001', message: 'Order not found' });
     }
 
     return {
@@ -283,29 +287,6 @@ export class CompletionService {
     };
   }
 
-  private async isSettlementLocked(branchId: string, appointmentDate: Date): Promise<boolean> {
-    const today = new Date();
-    const appointmentWeekStart = this.getWeekStart(appointmentDate);
-    const currentWeekStart = this.getWeekStart(today);
-    return appointmentWeekStart < currentWeekStart;
-  }
-
-  private async getSettlementLockTime(_branchId: string): Promise<Date> {
-    const nextMonday = new Date();
-    nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7));
-    nextMonday.setHours(9, 0, 0, 0);
-    return nextMonday;
-  }
-
-  private getWeekStart(date: Date): Date {
-    const start = new Date(date);
-    const day = start.getDay();
-    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-    start.setDate(diff);
-    start.setHours(0, 0, 0, 0);
-    return start;
-  }
-
   private async processSerialNumbers(
     tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
     orderLines: Array<{ id: string }>,
@@ -317,7 +298,10 @@ export class CompletionService {
     for (const serialLine of serialLines) {
       const line = orderLines.find((l) => l.id === serialLine.lineId);
       if (!line) {
-        throw new BadRequestException(`주문 라인을 찾을 수 없습니다: ${serialLine.lineId}`);
+        throw new BadRequestException({
+          code: 'E3003',
+          message: `Order line not found: ${serialLine.lineId}`,
+        });
       }
 
       const serial = await tx.serialNumber.create({
@@ -404,112 +388,26 @@ export class CompletionService {
     userId: string,
   ) {
     return this.prisma.executeTransaction(async (tx) => {
-      // Find order
-      const order = await tx.order.findUnique({
-        where: { id: orderId },
-        include: {
-          lines: {
-            include: {
-              serialNumbers: true,
-            },
-          },
-        },
-      });
+      const order = await this.findAmendableOrder(tx, orderId);
+      const changes: Record<string, { count: number; updated: boolean }> = {};
 
-      if (!order) {
-        throw new NotFoundException(`Order ${orderId} not found`);
-      }
-
-      // Only allow amendments for COMPLETED or PARTIAL orders
-      if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.PARTIAL) {
-        throw new BadRequestException(`Cannot amend order in status ${order.status}`);
-      }
-
-      const changes: any = {};
-
-      // Update serial numbers if provided
       if (dto.serials && dto.serials.length > 0) {
-        // Find the affected order lines
-        const lineIds = dto.serials.map((s) => s.lineId);
-
-        // Delete existing serials for these lines
-        await tx.serialNumber.deleteMany({
-          where: {
-            orderLineId: { in: lineIds },
-          },
-        });
-
-        // Create new serials
-        const newSerials = await Promise.all(
-          dto.serials.map((line) =>
-            tx.serialNumber.create({
-              data: {
-                orderLineId: line.lineId,
-                serial: line.serialNumber,
-                recordedAt: new Date(),
-                recordedBy: userId,
-              },
-            }),
-          ),
-        );
-
-        changes.serials = {
-          count: newSerials.length,
-          updated: true,
-        };
+        changes.serials = await this.replaceSerialNumbers(tx, dto.serials, userId);
       }
 
-      // Update waste entries if provided
       if (dto.waste && dto.waste.length > 0) {
-        // Delete existing waste for this order
-        await tx.wastePickup.deleteMany({
-          where: { orderId: order.id },
-        });
-
-        // Create new waste entries
-        const newWaste = await Promise.all(
-          dto.waste.map((entry) =>
-            tx.wastePickup.create({
-              data: {
-                orderId: order.id,
-                code: entry.code,
-                quantity: entry.quantity,
-                collectedAt: new Date(),
-                collectedBy: userId,
-              },
-            }),
-          ),
-        );
-
-        changes.waste = {
-          count: newWaste.length,
-          updated: true,
-        };
+        changes.waste = await this.replaceWasteEntries(tx, order.id, dto.waste, userId);
       }
 
-      // Create audit log for amendment
-      await tx.auditLog.create({
-        data: {
-          actor: userId,
-          action: 'UPDATE',
-          tableName: 'orders',
-          recordId: order.id,
-          diff: {
-            reason: dto.reason,
-            notes: dto.notes,
-            amendments: changes,
-          },
-        },
-      });
+      await this.createAmendmentAuditLog(tx, order.id, userId, dto.reason, dto.notes, changes);
 
-      // Create order status history for amendment tracking
       await tx.orderStatusHistory.create({
         data: {
           orderId: order.id,
           previousStatus: order.status,
-          newStatus: order.status, // Status unchanged
+          newStatus: order.status,
           changedBy: userId,
-          reasonCode: 'AMEND' as any,
+          reasonCode: 'AMEND',
           notes: `Completion amended: ${dto.reason}`,
         },
       });
@@ -522,6 +420,99 @@ export class CompletionService {
         reason: dto.reason,
         amendedAt: new Date(),
       };
+    });
+  }
+
+  private async findAmendableOrder(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderId: string,
+  ) {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      include: { lines: { include: { serialNumbers: true } } },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.PARTIAL) {
+      throw new BadRequestException(`Cannot amend order in status ${order.status}`);
+    }
+
+    return order;
+  }
+
+  private async replaceSerialNumbers(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    serials: { lineId: string; serialNumber: string }[],
+    userId: string,
+  ): Promise<{ count: number; updated: boolean }> {
+    const lineIds = serials.map((s) => s.lineId);
+
+    await tx.serialNumber.deleteMany({
+      where: { orderLineId: { in: lineIds } },
+    });
+
+    const newSerials = await Promise.all(
+      serials.map((line) =>
+        tx.serialNumber.create({
+          data: {
+            orderLineId: line.lineId,
+            serial: line.serialNumber,
+            recordedAt: new Date(),
+            recordedBy: userId,
+          },
+        }),
+      ),
+    );
+
+    return { count: newSerials.length, updated: true };
+  }
+
+  private async replaceWasteEntries(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderId: string,
+    waste: { code: string; quantity: number }[],
+    userId: string,
+  ): Promise<{ count: number; updated: boolean }> {
+    await tx.wastePickup.deleteMany({
+      where: { orderId },
+    });
+
+    const newWaste = await Promise.all(
+      waste.map((entry) =>
+        tx.wastePickup.create({
+          data: {
+            orderId,
+            code: entry.code,
+            quantity: entry.quantity,
+            collectedAt: new Date(),
+            collectedBy: userId,
+          },
+        }),
+      ),
+    );
+
+    return { count: newWaste.length, updated: true };
+  }
+
+  private async createAmendmentAuditLog(
+    tx: Parameters<Parameters<typeof this.prisma.executeTransaction>[0]>[0],
+    orderId: string,
+    userId: string,
+    reason: string,
+    notes: string | undefined,
+    changes: Record<string, { count: number; updated: boolean }>,
+  ): Promise<void> {
+    await tx.auditLog.create({
+      data: {
+        actor: userId,
+        action: 'UPDATE',
+        tableName: 'orders',
+        recordId: orderId,
+        diff: { reason, notes, amendments: changes },
+      },
     });
   }
 }

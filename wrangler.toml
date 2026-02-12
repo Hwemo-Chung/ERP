@@ -1,0 +1,32 @@
+# Cloudflare Pages Deployment Configuration
+# ============================================
+# This project deploys TWO separate Cloudflare Pages projects:
+#   1. erp-web    — Web admin dashboard
+#   2. erp-mobile — Mobile PWA
+#
+# Deployment commands:
+#   pnpm deploy:web:cf      — Build and deploy web app
+#   pnpm deploy:mobile:cf   — Build and deploy mobile app
+#
+# Prerequisites:
+#   1. Install wrangler: npm install -g wrangler
+#   2. Authenticate: wrangler login
+#   3. Create Pages projects in CF dashboard (or first deploy creates them)
+#
+# Environment variables (set in Cloudflare Pages dashboard):
+#   - No server-side env vars needed (static SPA)
+#   - API URL is baked into the build via environment.cloudflare.ts
+#
+# CORS Setup (required on Render.com API):
+#   Set CORS_ORIGINS to your CF Pages URLs:
+#   https://erp-web.pages.dev,https://erp-mobile.pages.dev
+
+# ---- Web App ----
+# Build:  pnpm web:build:cloudflare
+# Output: apps/web/dist/web/browser
+# Deploy: wrangler pages deploy apps/web/dist/web/browser --project-name=erp-web
+
+# ---- Mobile App (PWA) ----
+# Build:  pnpm mobile:build:cloudflare
+# Output: apps/mobile/www/browser
+# Deploy: wrangler pages deploy apps/mobile/www/browser --project-name=erp-mobile

@@ -6,6 +6,7 @@ import { environment } from '@env/environment';
 import { SyncQueueService } from './sync-queue.service';
 import { UIStore } from '../../store/ui/ui.store';
 import { db, SyncQueueEntry, BackgroundSyncTask } from '@app/core/db/database';
+import { LoggerService } from './logger.service';
 
 export type SyncOperation = SyncQueueEntry;
 export type { BackgroundSyncTask } from '@app/core/db/database';
@@ -36,6 +37,7 @@ export class BackgroundSyncService {
   private readonly uiStore = inject(UIStore);
   private readonly swUpdate = inject(SwUpdate);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   private syncInProgress = false;
   private workerRegistration: ServiceWorkerRegistration | null = null;
@@ -60,7 +62,7 @@ export class BackgroundSyncService {
     if (this.isInitialized) return;
 
     if (!environment.production) {
-      console.log('Skipping Service Worker registration in development mode');
+      this.logger.log('Skipping Service Worker registration in development mode');
       this.isInitialized = true;
       return;
     }
@@ -70,11 +72,11 @@ export class BackgroundSyncService {
         this.workerRegistration = await navigator.serviceWorker.register('/ngsw-worker.js', {
           scope: '/',
         });
-        console.log('Service Worker registered for background sync');
+        this.logger.log('Service Worker registered for background sync');
         this.isInitialized = true;
       }
     } catch (error) {
-      console.error('Failed to register Service Worker:', error);
+      this.logger.error('Failed to register Service Worker:', error);
     }
   }
 
@@ -106,7 +108,7 @@ export class BackgroundSyncService {
           }
         ).sync.register(`sync-${dataType}`);
       } catch (error) {
-        console.warn('Background sync registration failed:', error);
+        this.logger.warn('Background sync registration failed:', error);
       }
     }
 
@@ -164,18 +166,18 @@ export class BackgroundSyncService {
 
   async onNetworkOnline(): Promise<void> {
     if (this.syncInProgress) {
-      console.log('[Sync] Sync already in progress, skipping...');
+      this.logger.log('[Sync] Sync already in progress, skipping...');
       return;
     }
 
-    console.log('[Sync] Network online, starting sync...');
+    this.logger.log('[Sync] Network online, starting sync...');
     this.syncInProgress = true;
 
     try {
       await this.processPendingOperations();
       this.uiStore.showToast(this.translate.instant('SYNC.SUCCESS.ALL_SYNCED'), 'success', 2000);
     } catch (error) {
-      console.error('[Sync] Sync error:', error);
+      this.logger.error('[Sync] Sync error:', error);
       this.uiStore.showToast(this.translate.instant('SYNC.WARNING.PARTIAL_SYNC'), 'warning', 3000);
     } finally {
       this.syncInProgress = false;
@@ -200,7 +202,7 @@ export class BackgroundSyncService {
 
   async clearQueue(): Promise<void> {
     await db.syncQueue.clear();
-    console.warn('[Sync] Sync queue cleared');
+    this.logger.warn('[Sync] Sync queue cleared');
   }
 
   private async updatePendingCount(): Promise<void> {
@@ -219,7 +221,7 @@ export class BackgroundSyncService {
         }
       ).sync.register(SYNC_TAG);
     } catch (error) {
-      console.warn('Background Sync not available:', error);
+      this.logger.warn('Background Sync not available:', error);
     }
   }
 
@@ -227,18 +229,18 @@ export class BackgroundSyncService {
     const operations = await db.syncQueue.where('status').equals('pending').toArray();
 
     if (operations.length === 0) {
-      console.log('[Sync] No pending operations');
+      this.logger.log('[Sync] No pending operations');
       return;
     }
 
     const sorted = operations.sort((a, b) => a.priority - b.priority);
-    console.log(`[Sync] Processing ${sorted.length} operations`);
+    this.logger.log(`[Sync] Processing ${sorted.length} operations`);
 
     for (const op of sorted) {
       try {
         await this.processSingleOperation(op);
       } catch (error) {
-        console.error(`[Sync] Failed to process operation:`, op, error);
+        this.logger.error(`[Sync] Failed to process operation:`, op, error);
         await this.handleOperationFailure(op);
       }
     }
@@ -261,7 +263,7 @@ export class BackgroundSyncService {
     }
 
     await db.syncQueue.delete(op.id!);
-    console.log(`[Sync] ✓ ${op.type} ${op.url}`);
+    this.logger.log(`[Sync] ✓ ${op.type} ${op.url}`);
   }
 
   private async handleOperationFailure(op: SyncOperation): Promise<void> {
@@ -269,7 +271,7 @@ export class BackgroundSyncService {
 
     if (retryCount >= op.maxRetries) {
       await db.syncQueue.update(op.id!, { status: 'failed', lastError: 'Max retries exceeded' });
-      console.error(`[Sync] ✗ Max retries for ${op.type} ${op.url}. Stored for manual review.`);
+      this.logger.error(`[Sync] ✗ Max retries for ${op.type} ${op.url}. Stored for manual review.`);
 
       const label = this.translate.instant(OPERATION_LABEL_MAP[op.type] || op.type);
       this.uiStore.showToast(`${label} 동기화 실패. 관리자에 문의하세요.`, 'danger', 5000);
@@ -282,7 +284,7 @@ export class BackgroundSyncService {
       lastError: `Retry ${retryCount}/${op.maxRetries} in ${backoffMs}ms`,
     });
 
-    console.log(
+    this.logger.log(
       `[Sync] ⟳ Retrying ${op.type} after ${backoffMs}ms (attempt ${retryCount}/${op.maxRetries})`,
     );
 
@@ -304,7 +306,7 @@ export class BackgroundSyncService {
 
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data?.type === 'SYNC_COMPLETE') {
-        console.log('[Sync] Service Worker sync complete');
+        this.logger.log('[Sync] Service Worker sync complete');
         this.onNetworkOnline();
       }
     });

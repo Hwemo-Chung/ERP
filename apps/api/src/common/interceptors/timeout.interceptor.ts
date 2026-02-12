@@ -20,7 +20,7 @@ import { catchError, timeout } from 'rxjs/operators';
 export class TimeoutInterceptor implements NestInterceptor {
   private readonly defaultTimeout = 30000; // 30 seconds in milliseconds
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     // Get custom timeout from metadata if set, otherwise use default
     const customTimeout = this.getCustomTimeout(context);
     const timeoutDuration = customTimeout || this.defaultTimeout;
@@ -30,10 +30,7 @@ export class TimeoutInterceptor implements NestInterceptor {
       catchError((err) => {
         if (err instanceof TimeoutError) {
           return throwError(
-            () =>
-              new RequestTimeoutException(
-                `Request exceeded timeout of ${timeoutDuration}ms`,
-              ),
+            () => new RequestTimeoutException(`Request exceeded timeout of ${timeoutDuration}ms`),
           );
         }
         return throwError(() => err);

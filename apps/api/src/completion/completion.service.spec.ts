@@ -7,17 +7,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CompletionService } from './completion.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStateMachine } from '../orders/order-state-machine';
+import { SettlementService } from '../settlement/settlement.service';
 import { OrderStatus } from '@prisma/client';
-import {
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 
 describe('CompletionService', () => {
   let service: CompletionService;
   let prismaService: any;
   let stateMachine: any;
+  let settlementService: any;
 
   const mockUserId = 'user-123';
   const mockOrderId = 'order-456';
@@ -52,6 +50,10 @@ describe('CompletionService', () => {
       getAvailableTransitions: jest.fn(),
     };
 
+    const mockSettlementService = {
+      isOrderLocked: jest.fn().mockResolvedValue(false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CompletionService,
@@ -63,12 +65,17 @@ describe('CompletionService', () => {
           provide: OrderStateMachine,
           useValue: mockStateMachine,
         },
+        {
+          provide: SettlementService,
+          useValue: mockSettlementService,
+        },
       ],
     }).compile();
 
     service = module.get<CompletionService>(CompletionService);
     prismaService = module.get(PrismaService);
     stateMachine = module.get(OrderStateMachine);
+    settlementService = module.get(SettlementService);
   });
 
   afterEach(() => {
@@ -77,9 +84,9 @@ describe('CompletionService', () => {
 
   // Mock private methods
   beforeEach(() => {
-    // Mock isSettlementLocked to always return false (not locked)
-    jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValue(false);
-    
+    // Reset settlementService.isOrderLocked to return false (not locked)
+    settlementService.isOrderLocked.mockResolvedValue(false);
+
     // Mock stateMachine validateTransition to return valid by default
     stateMachine.validateTransition.mockReturnValue({
       valid: true,
@@ -172,11 +179,7 @@ describe('CompletionService', () => {
       stateMachine.validateTransition.mockReturnValue({ valid: true });
 
       // Execute
-      const result = await service.completeOrder(
-        mockOrderId,
-        completeOrderDto,
-        mockUserId,
-      );
+      const result = await service.completeOrder(mockOrderId, completeOrderDto, mockUserId);
 
       // Assertions
       expect(result).toEqual({
@@ -221,10 +224,8 @@ describe('CompletionService', () => {
     });
 
     it('should throw ConflictException with E2002 when settlement is locked', async () => {
-      // Mock settlement locked
-      jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValueOnce(true);
-      
-      // Create order from previous week to trigger settlement lock
+      settlementService.isOrderLocked.mockResolvedValueOnce(true);
+
       const lastWeekDate = new Date();
       lastWeekDate.setDate(lastWeekDate.getDate() - 10);
 
@@ -247,16 +248,14 @@ describe('CompletionService', () => {
         service.completeOrder(mockOrderId, completeOrderDto, mockUserId),
       ).rejects.toThrow(ConflictException);
 
-      // Check the error response structure
       try {
-        // Re-mock for second call
-        jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValueOnce(true);
+        settlementService.isOrderLocked.mockResolvedValueOnce(true);
         await service.completeOrder(mockOrderId, completeOrderDto, mockUserId);
         fail('Should have thrown ConflictException');
       } catch (error: any) {
         expect(error).toBeInstanceOf(ConflictException);
         expect(error.response?.code).toBe('E2002');
-        expect(error.response?.message).toContain('정산이 마감되어');
+        expect(error.response?.message).toContain('Settlement is locked');
       }
     });
 
@@ -320,7 +319,7 @@ describe('CompletionService', () => {
 
       await expect(
         service.completeOrder(mockOrderId, dtoWithInvalidLine, mockUserId),
-      ).rejects.toThrow(/주문 라인을 찾을 수 없습니다/);
+      ).rejects.toThrow(/Order line not found/);
     });
 
     it('should complete order without waste pickup', async () => {
@@ -367,11 +366,7 @@ describe('CompletionService', () => {
 
       stateMachine.validateTransition.mockReturnValue({ valid: true });
 
-      const result = await service.completeOrder(
-        mockOrderId,
-        dtoWithoutWaste,
-        mockUserId,
-      );
+      const result = await service.completeOrder(mockOrderId, dtoWithoutWaste, mockUserId);
 
       expect(result.wasteCount).toBe(0);
       expect(stateMachine.validateTransition).toHaveBeenCalledWith(
@@ -550,11 +545,7 @@ describe('CompletionService', () => {
         .mockResolvedValueOnce(mockWastePickups[1] as any);
       prismaService.auditLog.create.mockResolvedValue({} as any);
 
-      const result = await service.logWastePickup(
-        mockOrderId,
-        wastePickupDto,
-        mockUserId,
-      );
+      const result = await service.logWastePickup(mockOrderId, wastePickupDto, mockUserId);
 
       expect(result).toEqual({
         orderId: mockOrderId,
@@ -581,19 +572,19 @@ describe('CompletionService', () => {
     it('should throw NotFoundException when order does not exist', async () => {
       prismaService.order.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.logWastePickup(mockOrderId, wastePickupDto, mockUserId),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.logWastePickup(mockOrderId, wastePickupDto, mockUserId)).rejects.toThrow(
+        NotFoundException,
+      );
 
-      await expect(
-        service.logWastePickup(mockOrderId, wastePickupDto, mockUserId),
-      ).rejects.toThrow(/주문을 찾을 수 없습니다/);
+      await expect(service.logWastePickup(mockOrderId, wastePickupDto, mockUserId)).rejects.toThrow(
+        /Order not found/,
+      );
     });
 
     it('should throw ConflictException with E2002 when settlement is locked', async () => {
       // Mock settlement locked for this specific test
-      jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValueOnce(true);
-      
+      settlementService.isOrderLocked.mockResolvedValueOnce(true);
+
       const lastWeekDate = new Date();
       lastWeekDate.setDate(lastWeekDate.getDate() - 10);
 
@@ -604,14 +595,14 @@ describe('CompletionService', () => {
 
       prismaService.order.findFirst.mockResolvedValue(oldOrder as any);
 
-      await expect(
-        service.logWastePickup(mockOrderId, wastePickupDto, mockUserId),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.logWastePickup(mockOrderId, wastePickupDto, mockUserId)).rejects.toThrow(
+        ConflictException,
+      );
 
       // Check the error response structure
       try {
         // Re-mock for second call
-        jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValueOnce(true);
+        settlementService.isOrderLocked.mockResolvedValueOnce(true);
         await service.logWastePickup(mockOrderId, wastePickupDto, mockUserId);
         fail('Should have thrown ConflictException');
       } catch (error: any) {
@@ -629,13 +620,13 @@ describe('CompletionService', () => {
 
       prismaService.order.findFirst.mockResolvedValue(mockOrder as any);
 
-      await expect(
-        service.logWastePickup(mockOrderId, invalidDto, mockUserId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.logWastePickup(mockOrderId, invalidDto, mockUserId)).rejects.toThrow(
+        BadRequestException,
+      );
 
-      await expect(
-        service.logWastePickup(mockOrderId, invalidDto, mockUserId),
-      ).rejects.toThrow(/유효하지 않은 폐기 코드/);
+      await expect(service.logWastePickup(mockOrderId, invalidDto, mockUserId)).rejects.toThrow(
+        /Invalid waste code/,
+      );
     });
 
     it('should throw BadRequestException for waste code above P21', async () => {
@@ -647,9 +638,9 @@ describe('CompletionService', () => {
 
       prismaService.order.findFirst.mockResolvedValue(mockOrder as any);
 
-      await expect(
-        service.logWastePickup(mockOrderId, invalidDto, mockUserId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.logWastePickup(mockOrderId, invalidDto, mockUserId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should accept all valid waste codes from P01 to P21', async () => {
@@ -676,11 +667,7 @@ describe('CompletionService', () => {
       } as any);
       prismaService.auditLog.create.mockResolvedValue({} as any);
 
-      const result = await service.logWastePickup(
-        mockOrderId,
-        validDto,
-        mockUserId,
-      );
+      const result = await service.logWastePickup(mockOrderId, validDto, mockUserId);
 
       expect(result.wasteCount).toBe(21);
       expect(prismaService.wastePickup.upsert).toHaveBeenCalledTimes(21);
@@ -883,13 +870,9 @@ describe('CompletionService', () => {
     it('should throw NotFoundException when order does not exist', async () => {
       prismaService.order.findFirst.mockResolvedValue(null);
 
-      await expect(service.getCompletionDetails(mockOrderId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getCompletionDetails(mockOrderId)).rejects.toThrow(NotFoundException);
 
-      await expect(service.getCompletionDetails(mockOrderId)).rejects.toThrow(
-        /주문을 찾을 수 없습니다/,
-      );
+      await expect(service.getCompletionDetails(mockOrderId)).rejects.toThrow(/Order not found/);
     });
 
     it('should return empty arrays when no serials or waste exist', async () => {
@@ -989,8 +972,8 @@ describe('CompletionService', () => {
 
     it('should block completion for orders from previous week', async () => {
       // Mock settlement locked for orders from previous week
-      jest.spyOn(service as any, 'isSettlementLocked').mockResolvedValueOnce(true);
-      
+      settlementService.isOrderLocked.mockResolvedValueOnce(true);
+
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
 

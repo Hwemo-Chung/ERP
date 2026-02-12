@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '@env/environment';
 import { WebSocketService } from './websocket.service';
+import { LoggerService } from './logger.service';
 
 export type NotifCategory = 'reassign' | 'delay' | 'customer' | 'system';
 
@@ -32,6 +33,7 @@ export interface NotificationSettings {
 export class NotificationsService {
   private readonly http = inject(HttpClient);
   private readonly wsService = inject(WebSocketService);
+  private readonly logger = inject(LoggerService);
   private readonly baseUrl = `${environment.apiUrl}/notifications`;
 
   // Local state
@@ -46,9 +48,7 @@ export class NotificationsService {
   // Public signals
   readonly notifications = this._notifications.asReadonly();
   readonly settings = this._settings.asReadonly();
-  readonly unreadCount = computed(() => 
-    this._notifications().filter(n => !n.read).length
-  );
+  readonly unreadCount = computed(() => this._notifications().filter((n) => !n.read).length);
 
   constructor() {
     this.initWebSocketListener();
@@ -56,7 +56,7 @@ export class NotificationsService {
 
   private initWebSocketListener(): void {
     this.wsService.onMessage<Notification>('notification').subscribe((data) => {
-      this._notifications.update(list => [data, ...list]);
+      this._notifications.update((list) => [data, ...list]);
     });
   }
 
@@ -68,12 +68,12 @@ export class NotificationsService {
       // Note: apiResponseInterceptor unwraps { success, data } -> data
       const notifications = await firstValueFrom(
         this.http.get<Notification[]>(`${this.baseUrl}`, {
-          params: { limit: String(limit) }
-        })
+          params: { limit: String(limit) },
+        }),
       );
       this._notifications.set(notifications || []);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      this.logger.error('Failed to load notifications:', error);
     }
   }
 
@@ -83,11 +83,11 @@ export class NotificationsService {
   async loadSettings(): Promise<void> {
     try {
       const settings = await firstValueFrom(
-        this.http.get<NotificationSettings>(`${this.baseUrl}/settings`)
+        this.http.get<NotificationSettings>(`${this.baseUrl}/settings`),
       );
       this._settings.set(settings);
     } catch (error) {
-      console.error('Failed to load notification settings:', error);
+      this.logger.error('Failed to load notification settings:', error);
     }
   }
 
@@ -97,11 +97,11 @@ export class NotificationsService {
   async updateSettings(settings: Partial<NotificationSettings>): Promise<void> {
     try {
       const updated = await firstValueFrom(
-        this.http.patch<NotificationSettings>(`${this.baseUrl}/settings`, settings)
+        this.http.patch<NotificationSettings>(`${this.baseUrl}/settings`, settings),
       );
       this._settings.set(updated);
     } catch (error) {
-      console.error('Failed to update settings:', error);
+      this.logger.error('Failed to update settings:', error);
       throw error;
     }
   }
@@ -111,16 +111,14 @@ export class NotificationsService {
    */
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.patch(`${this.baseUrl}/${notificationId}/read`, {})
-      );
-      this._notifications.update(list =>
-        list.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      await firstValueFrom(this.http.patch(`${this.baseUrl}/${notificationId}/read`, {}));
+      this._notifications.update((list) =>
+        list.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
       );
     } catch (error) {
       // Optimistic update even on error
-      this._notifications.update(list =>
-        list.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      this._notifications.update((list) =>
+        list.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
       );
     }
   }
@@ -130,17 +128,11 @@ export class NotificationsService {
    */
   async markAllAsRead(): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.post(`${this.baseUrl}/mark-all-read`, {})
-      );
-      this._notifications.update(list =>
-        list.map(n => ({ ...n, read: true }))
-      );
+      await firstValueFrom(this.http.post(`${this.baseUrl}/mark-all-read`, {}));
+      this._notifications.update((list) => list.map((n) => ({ ...n, read: true })));
     } catch (error) {
       // Optimistic update
-      this._notifications.update(list =>
-        list.map(n => ({ ...n, read: true }))
-      );
+      this._notifications.update((list) => list.map((n) => ({ ...n, read: true })));
     }
   }
 
@@ -152,7 +144,7 @@ export class NotificationsService {
       this.http.post(`${this.baseUrl}/subscribe`, {
         endpoint: subscription.endpoint,
         keys: subscription.toJSON().keys,
-      })
+      }),
     );
   }
 
@@ -161,14 +153,10 @@ export class NotificationsService {
    */
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.delete(`${this.baseUrl}/${notificationId}`)
-      );
-      this._notifications.update(list =>
-        list.filter(n => n.id !== notificationId)
-      );
+      await firstValueFrom(this.http.delete(`${this.baseUrl}/${notificationId}`));
+      this._notifications.update((list) => list.filter((n) => n.id !== notificationId));
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      this.logger.error('Failed to delete notification:', error);
     }
   }
 }

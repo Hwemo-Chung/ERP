@@ -1,16 +1,48 @@
 // apps/mobile/src/app/features/reports/pages/progress-dashboard/progress-dashboard.page.ts
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
-  IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
-  IonRefresher, IonRefresherContent, IonProgressBar,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonSpinner,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonBadge,
+  IonList,
+  IonItem,
+  IonRefresher,
+  IonRefresherContent,
+  IonProgressBar,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ReportsService, KpiSummary, ProgressItem } from '../../../../core/services/reports.service';
+import {
+  ReportsService,
+  KpiSummary,
+  ProgressItem,
+} from '../../../../core/services/reports.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/constants/roles';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 type ViewType = 'installer' | 'branch' | 'status';
 
@@ -19,23 +51,57 @@ type ViewType = 'installer' | 'branch' | 'status';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, TranslateModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonSegment, IonSegmentButton,
-    IonLabel, IonSpinner, IonGrid, IonRow, IonCol, IonBadge, IonList, IonItem,
-    IonRefresher, IonRefresherContent, IonProgressBar,
+    CommonModule,
+    TranslateModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+    IonSpinner,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonBadge,
+    IonList,
+    IonItem,
+    IonRefresher,
+    IonRefresherContent,
+    IonProgressBar,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
+        <ion-buttons slot="start"
+          ><ion-back-button defaultHref="/tabs/reports"></ion-back-button
+        ></ion-buttons>
         <ion-title>{{ 'REPORTS.PROGRESS.TITLE' | translate }}</ion-title>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="viewType()" (ionChange)="onViewTypeChange($any($event).detail.value)">
-          <ion-segment-button value="installer"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_INSTALLER' | translate }}</ion-label></ion-segment-button>
-          <ion-segment-button value="branch"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_BRANCH' | translate }}</ion-label></ion-segment-button>
-          <ion-segment-button value="status"><ion-label>{{ 'REPORTS.PROGRESS.VIEW_BY_STATUS' | translate }}</ion-label></ion-segment-button>
+          <ion-segment-button value="installer"
+            ><ion-label>{{
+              'REPORTS.PROGRESS.VIEW_BY_INSTALLER' | translate
+            }}</ion-label></ion-segment-button
+          >
+          <ion-segment-button value="branch"
+            ><ion-label>{{
+              'REPORTS.PROGRESS.VIEW_BY_BRANCH' | translate
+            }}</ion-label></ion-segment-button
+          >
+          <ion-segment-button value="status"
+            ><ion-label>{{
+              'REPORTS.PROGRESS.VIEW_BY_STATUS' | translate
+            }}</ion-label></ion-segment-button
+          >
         </ion-segment>
       </ion-toolbar>
     </ion-header>
@@ -52,28 +118,36 @@ type ViewType = 'installer' | 'branch' | 'status';
         <ion-grid>
           <ion-row>
             <ion-col size="6">
-              <ion-card><ion-card-content>
-                <div class="stat-value">{{ summary()?.total || 0 }}</div>
-                <div class="stat-label">총 주문</div>
-              </ion-card-content></ion-card>
+              <ion-card
+                ><ion-card-content>
+                  <div class="stat-value">{{ summary()?.total || 0 }}</div>
+                  <div class="stat-label">총 주문</div>
+                </ion-card-content></ion-card
+              >
             </ion-col>
             <ion-col size="6">
-              <ion-card color="success"><ion-card-content>
-                <div class="stat-value">{{ summary()?.completed || 0 }}</div>
-                <div class="stat-label">완료</div>
-              </ion-card-content></ion-card>
+              <ion-card color="success"
+                ><ion-card-content>
+                  <div class="stat-value">{{ summary()?.completed || 0 }}</div>
+                  <div class="stat-label">완료</div>
+                </ion-card-content></ion-card
+              >
             </ion-col>
             <ion-col size="6">
-              <ion-card color="warning"><ion-card-content>
-                <div class="stat-value">{{ summary()?.inProgress || 0 }}</div>
-                <div class="stat-label">진행중</div>
-              </ion-card-content></ion-card>
+              <ion-card color="warning"
+                ><ion-card-content>
+                  <div class="stat-value">{{ summary()?.inProgress || 0 }}</div>
+                  <div class="stat-label">진행중</div>
+                </ion-card-content></ion-card
+              >
             </ion-col>
             <ion-col size="6">
-              <ion-card color="danger"><ion-card-content>
-                <div class="stat-value">{{ summary()?.pending || 0 }}</div>
-                <div class="stat-label">미배정</div>
-              </ion-card-content></ion-card>
+              <ion-card color="danger"
+                ><ion-card-content>
+                  <div class="stat-value">{{ summary()?.pending || 0 }}</div>
+                  <div class="stat-label">미배정</div>
+                </ion-card-content></ion-card
+              >
             </ion-col>
           </ion-row>
         </ion-grid>
@@ -89,17 +163,26 @@ type ViewType = 'installer' | 'branch' | 'status';
             </div>
             <div class="kpi-item">
               <span>약속방문준수율</span>
-              <ion-progress-bar [value]="(summary()?.appointmentRate || 0) / 100" color="success"></ion-progress-bar>
+              <ion-progress-bar
+                [value]="(summary()?.appointmentRate || 0) / 100"
+                color="success"
+              ></ion-progress-bar>
               <ion-badge color="success">{{ summary()?.appointmentRate || 0 }}%</ion-badge>
             </div>
             <div class="kpi-item">
               <span>폐가전 회수율</span>
-              <ion-progress-bar [value]="(summary()?.wastePickupRate || 0) / 100" color="tertiary"></ion-progress-bar>
+              <ion-progress-bar
+                [value]="(summary()?.wastePickupRate || 0) / 100"
+                color="tertiary"
+              ></ion-progress-bar>
               <ion-badge color="tertiary">{{ summary()?.wastePickupRate || 0 }}%</ion-badge>
             </div>
             <div class="kpi-item">
               <span>설치불량율</span>
-              <ion-progress-bar [value]="(summary()?.defectRate || 0) / 100" color="danger"></ion-progress-bar>
+              <ion-progress-bar
+                [value]="(summary()?.defectRate || 0) / 100"
+                color="danger"
+              ></ion-progress-bar>
               <ion-badge color="danger">{{ summary()?.defectRate || 0 }}%</ion-badge>
             </div>
           </ion-card-content>
@@ -123,7 +206,11 @@ type ViewType = 'installer' | 'branch' | 'status';
                   <div slot="end" class="progress-stats">
                     <span>{{ getItemStats(item, viewType()) }}</span>
                     @if (viewType() !== 'status') {
-                      <ion-badge [color]="item.rate >= 80 ? 'success' : item.rate >= 50 ? 'warning' : 'danger'">
+                      <ion-badge
+                        [color]="
+                          item.rate >= 80 ? 'success' : item.rate >= 50 ? 'warning' : 'danger'
+                        "
+                      >
                         {{ item.rate }}%
                       </ion-badge>
                     }
@@ -138,23 +225,62 @@ type ViewType = 'installer' | 'branch' | 'status';
       }
     </ion-content>
   `,
-  styles: [`
-    .center { display: flex; justify-content: center; padding: 48px; }
-    .stat-value { font-size: 28px; font-weight: bold; text-align: center; }
-    .stat-label { text-align: center; color: var(--ion-color-medium); font-size: 13px; }
-    .kpi-item { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    .kpi-item span { min-width: 100px; font-size: 13px; }
-    .kpi-item ion-progress-bar { flex: 1; }
-    .progress-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .progress-stats span { font-size: 12px; color: var(--ion-color-medium); }
-    .empty { text-align: center; padding: 24px; color: var(--ion-color-medium); }
-    ion-card-title { font-size: 16px; }
-  `],
+  styles: [
+    `
+      .center {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+      .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+      }
+      .stat-label {
+        text-align: center;
+        color: var(--ion-color-medium);
+        font-size: 13px;
+      }
+      .kpi-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .kpi-item span {
+        min-width: 100px;
+        font-size: 13px;
+      }
+      .kpi-item ion-progress-bar {
+        flex: 1;
+      }
+      .progress-stats {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+      .progress-stats span {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+      }
+      .empty {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+      ion-card-title {
+        font-size: 16px;
+      }
+    `,
+  ],
 })
 export class ProgressDashboardPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
   private readonly authService = inject(AuthService);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   protected readonly viewType = signal<ViewType>('installer');
   protected readonly isLoading = signal(false);
@@ -170,7 +296,9 @@ export class ProgressDashboardPage implements OnInit {
     return labels[this.viewType()];
   });
 
-  ngOnInit() { this.loadData(); }
+  ngOnInit() {
+    this.loadData();
+  }
 
   async loadData() {
     this.isLoading.set(true);
@@ -189,15 +317,15 @@ export class ProgressDashboardPage implements OnInit {
       // Load progress
       this.reportsService.getProgress({ groupBy: this.viewType(), branchCode }).subscribe({
         next: (data) => {
-          console.log('[ProgressDashboard] Received progress data:', {
+          this.logger.log('[ProgressDashboard] Received progress data:', {
             viewType: this.viewType(),
             itemCount: data.items?.length,
-            firstItems: data.items?.slice(0, 3).map(i => ({ name: i.name, total: i.total })),
+            firstItems: data.items?.slice(0, 3).map((i) => ({ name: i.name, total: i.total })),
           });
           this.progressItems.set(data.items || []);
         },
         error: (err) => {
-          console.error('[ProgressDashboard] Error loading progress:', err);
+          this.logger.error('[ProgressDashboard] Error loading progress:', err);
           this.progressItems.set([]);
         },
       });
@@ -211,7 +339,7 @@ export class ProgressDashboardPage implements OnInit {
     this.loadData();
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     await this.loadData();
     event.target.complete();
   }
@@ -225,7 +353,7 @@ export class ProgressDashboardPage implements OnInit {
       const statusKey = item.key || item.name || '';
       const translationKey = `ORDER_STATUS.${statusKey}`;
       const translated = this.translate.instant(translationKey);
-      return translated !== translationKey ? translated : (item.name || statusKey);
+      return translated !== translationKey ? translated : item.name || statusKey;
     }
     return item.name || '';
   }

@@ -2,7 +2,15 @@
  * Completion Process Page
  * PRD FR-06: Order completion workflow with serial input, waste pickup, photos, and certificate
  */
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -40,6 +48,7 @@ import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus, Order, OrderLine } from '../../../../store/orders/orders.models';
 import { CameraService } from '../../../../core/services/camera.service';
 import { UIStore } from '../../../../store/ui/ui.store';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-completion-process',
@@ -137,7 +146,9 @@ import { UIStore } from '../../../../store/ui/ui.store';
                   <h2>사진 첨부</h2>
                   <p>설치 완료 사진 (선택)</p>
                 </ion-label>
-                <ion-badge slot="end" [color]="photoCount() > 0 ? 'success' : 'medium'">{{ photoCount() }}장</ion-badge>
+                <ion-badge slot="end" [color]="photoCount() > 0 ? 'success' : 'medium'"
+                  >{{ photoCount() }}장</ion-badge
+                >
               </ion-item>
 
               <!-- Step 4: Certificate -->
@@ -198,8 +209,8 @@ import { UIStore } from '../../../../store/ui/ui.store';
 
         <!-- Complete Button -->
         <div class="action-buttons">
-          <ion-button 
-            expand="block" 
+          <ion-button
+            expand="block"
             color="success"
             [disabled]="!canComplete()"
             (click)="completeOrder()"
@@ -211,58 +222,60 @@ import { UIStore } from '../../../../store/ui/ui.store';
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      font-size: 16px;
-    }
-
-    ion-item {
-      --padding-start: 0;
-
-      ion-icon[slot="start"] {
-        font-size: 24px;
-        margin-right: 16px;
-      }
-    }
-
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .photo-item {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: 8px;
-      overflow: hidden;
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      .remove-btn {
-        position: absolute;
-        top: 0;
-        right: 0;
-        --padding-start: 4px;
-        --padding-end: 4px;
-        margin: 0;
+      ion-card-title {
+        font-size: 16px;
       }
-    }
 
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+      ion-item {
+        --padding-start: 0;
+
+        ion-icon[slot='start'] {
+          font-size: 24px;
+          margin-right: 16px;
+        }
+      }
+
+      .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .photo-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .remove-btn {
+          position: absolute;
+          top: 0;
+          right: 0;
+          --padding-start: 4px;
+          --padding-end: 4px;
+          margin: 0;
+        }
+      }
+
+      .action-buttons {
+        margin-top: 24px;
+      }
+    `,
+  ],
 })
 export class CompletionProcessPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -273,6 +286,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
   protected readonly ordersStore = inject(OrdersStore);
   private readonly cameraService = inject(CameraService);
   private readonly uiStore = inject(UIStore);
+  private readonly logger = inject(LoggerService);
 
   protected readonly orderId = signal('');
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
@@ -356,7 +370,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
         this.uiStore.showToast('사진 촬영에 실패했습니다', 'danger');
       }
     } catch (error) {
-      console.error('Photo upload error:', error);
+      this.logger.error('Photo upload error:', error);
       this.uiStore.showToast('사진 촬영 중 오류가 발생했습니다', 'danger');
     }
   }
@@ -375,7 +389,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
   async addNote(): Promise<void> {
     const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
     const addBtn = await this.translate.get('COMMON.BUTTONS.ADD').toPromise();
-    
+
     const alert = await this.alertCtrl.create({
       header: '특이사항 추가',
       inputs: [
@@ -396,7 +410,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
           handler: async (data) => {
             const note = data.note?.trim();
             if (note) {
-              this.notes.update(notes => [...notes, note]);
+              this.notes.update((notes) => [...notes, note]);
               this.uiStore.showToast('특이사항이 추가되었습니다', 'success');
             }
           },
@@ -412,7 +426,7 @@ export class CompletionProcessPage implements OnInit, OnDestroy {
   async completeOrder(): Promise<void> {
     const cancelBtn = await this.translate.get('COMMON.BUTTONS.CANCEL').toPromise();
     const okBtn = await this.translate.get('COMMON.BUTTONS.OK').toPromise();
-    
+
     const alert = await this.alertCtrl.create({
       header: '완료 처리',
       message: '주문을 완료 처리하시겠습니까?',

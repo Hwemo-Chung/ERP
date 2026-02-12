@@ -1,21 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Role } from '@prisma/client';
 
-/**
- * Order state machine based on ARCHITECTURE.md specification
- * Controls valid state transitions for orders
- */
 @Injectable()
 export class OrderStateMachine {
-  /**
-   * Valid state transitions map
-   * Key: current state, Value: array of valid next states
-   */
   private readonly transitions: Map<OrderStatus, OrderStatus[]> = new Map([
     [OrderStatus.UNASSIGNED, [OrderStatus.ASSIGNED]],
-    [OrderStatus.ASSIGNED, [OrderStatus.CONFIRMED, OrderStatus.UNASSIGNED]],
-    [OrderStatus.CONFIRMED, [OrderStatus.RELEASED, OrderStatus.ASSIGNED]],
-    [OrderStatus.RELEASED, [OrderStatus.DISPATCHED, OrderStatus.CONFIRMED]],
+    [
+      OrderStatus.ASSIGNED,
+      [OrderStatus.CONFIRMED, OrderStatus.UNASSIGNED, OrderStatus.REQUEST_CANCEL],
+    ],
+    [
+      OrderStatus.CONFIRMED,
+      [OrderStatus.RELEASED, OrderStatus.ASSIGNED, OrderStatus.REQUEST_CANCEL],
+    ],
+    [
+      OrderStatus.RELEASED,
+      [OrderStatus.DISPATCHED, OrderStatus.CONFIRMED, OrderStatus.REQUEST_CANCEL],
+    ],
     [
       OrderStatus.DISPATCHED,
       [
@@ -24,47 +25,80 @@ export class OrderStateMachine {
         OrderStatus.POSTPONED,
         OrderStatus.ABSENT,
         OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
       ],
     ],
-    [OrderStatus.POSTPONED, [OrderStatus.DISPATCHED, OrderStatus.ABSENT, OrderStatus.CANCELLED]],
-    [OrderStatus.ABSENT, [OrderStatus.DISPATCHED, OrderStatus.POSTPONED, OrderStatus.CANCELLED]],
+    [
+      OrderStatus.POSTPONED,
+      [
+        OrderStatus.DISPATCHED,
+        OrderStatus.ABSENT,
+        OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
+      ],
+    ],
+    [
+      OrderStatus.ABSENT,
+      [
+        OrderStatus.DISPATCHED,
+        OrderStatus.POSTPONED,
+        OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
+      ],
+    ],
     [OrderStatus.COMPLETED, [OrderStatus.COLLECTED]],
     [OrderStatus.PARTIAL, [OrderStatus.COMPLETED, OrderStatus.COLLECTED]],
-    [OrderStatus.COLLECTED, []], // Terminal state
-    [OrderStatus.CANCELLED, []], // Terminal state
-    [OrderStatus.REQUEST_CANCEL, []], // Terminal state
+    [OrderStatus.COLLECTED, []],
+    [OrderStatus.CANCELLED, []],
+    [OrderStatus.REQUEST_CANCEL, [OrderStatus.CANCELLED, OrderStatus.DISPATCHED]],
   ]);
 
-  /**
-   * Guard conditions for state transitions
-   */
-  private readonly guards: Map<
-    string,
-    (context: TransitionContext) => boolean
-  > = new Map([
-    // UNASSIGNED -> ASSIGNED: installer_id required
+  private readonly guards: Map<string, (context: TransitionContext) => boolean> = new Map([
     [`${OrderStatus.UNASSIGNED}:${OrderStatus.ASSIGNED}`, (ctx) => !!ctx.installerId],
-    
-    // CONFIRMED -> RELEASED: appointment_date must be today
-    [`${OrderStatus.CONFIRMED}:${OrderStatus.RELEASED}`, (ctx) => {
-      const today = new Date().toISOString().split('T')[0];
-      return ctx.appointmentDate === today;
-    }],
-    
-    // DISPATCHED -> COMPLETED: serial_number required
+
+    [
+      `${OrderStatus.CONFIRMED}:${OrderStatus.RELEASED}`,
+      (ctx) => {
+        const today = new Date().toISOString().split('T')[0];
+        return ctx.appointmentDate === today;
+      },
+    ],
+
     [`${OrderStatus.DISPATCHED}:${OrderStatus.COMPLETED}`, (ctx) => !!ctx.serialsCaptured],
-    
-    // DISPATCHED -> POSTPONED: reason_code required
+
     [`${OrderStatus.DISPATCHED}:${OrderStatus.POSTPONED}`, (ctx) => !!ctx.reasonCode],
-    
-    // DISPATCHED -> ABSENT: retry_count < 3
+
     [`${OrderStatus.DISPATCHED}:${OrderStatus.ABSENT}`, (ctx) => (ctx.retryCount || 0) < 3],
-    
-    // DISPATCHED -> CANCELLED: cancel_reason required
+
     [`${OrderStatus.DISPATCHED}:${OrderStatus.CANCELLED}`, (ctx) => !!ctx.reasonCode],
-    
-    // COMPLETED -> COLLECTED: waste_pickup logged
+
     [`${OrderStatus.COMPLETED}:${OrderStatus.COLLECTED}`, (ctx) => !!ctx.wastePickupLogged],
+
+    [`${OrderStatus.PARTIAL}:${OrderStatus.COMPLETED}`, (ctx) => !!ctx.partialItemsResolved],
+
+    [`${OrderStatus.PARTIAL}:${OrderStatus.COLLECTED}`, (ctx) => !!ctx.wastePickupLogged],
+
+    [`${OrderStatus.ASSIGNED}:${OrderStatus.REQUEST_CANCEL}`, (ctx) => ctx.role === Role.INSTALLER],
+    [
+      `${OrderStatus.CONFIRMED}:${OrderStatus.REQUEST_CANCEL}`,
+      (ctx) => ctx.role === Role.INSTALLER,
+    ],
+    [`${OrderStatus.RELEASED}:${OrderStatus.REQUEST_CANCEL}`, (ctx) => ctx.role === Role.INSTALLER],
+    [
+      `${OrderStatus.DISPATCHED}:${OrderStatus.REQUEST_CANCEL}`,
+      (ctx) => ctx.role === Role.INSTALLER,
+    ],
+
+    [
+      `${OrderStatus.POSTPONED}:${OrderStatus.REQUEST_CANCEL}`,
+      (ctx) => ctx.role === Role.INSTALLER,
+    ],
+    [`${OrderStatus.ABSENT}:${OrderStatus.REQUEST_CANCEL}`, (ctx) => ctx.role === Role.INSTALLER],
+
+    [
+      `${OrderStatus.REQUEST_CANCEL}:${OrderStatus.CANCELLED}`,
+      (ctx) => ctx.role === Role.HQ_ADMIN || ctx.role === Role.BRANCH_MANAGER,
+    ],
   ]);
 
   /**
@@ -96,7 +130,7 @@ export class OrderStateMachine {
     // Check guard conditions
     const guardKey = `${from}:${to}`;
     const guard = this.guards.get(guardKey);
-    
+
     if (guard && !guard(context)) {
       return {
         valid: false,
@@ -176,6 +210,8 @@ export interface TransitionContext {
   reasonCode?: string;
   retryCount?: number;
   wastePickupLogged?: boolean;
+  partialItemsResolved?: boolean;
+  role?: Role;
 }
 
 export interface ValidationResult {

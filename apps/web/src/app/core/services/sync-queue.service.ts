@@ -4,6 +4,7 @@ import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
 import { db, SyncQueueEntry } from '@app/core/db/database';
 import { buildFullUrl, DEFAULT_SYNC_CONFIG } from '@erp/shared';
+import { LoggerService } from './logger.service';
 
 export type SyncOperation = SyncQueueEntry;
 
@@ -12,6 +13,7 @@ export type SyncOperation = SyncQueueEntry;
 })
 export class SyncQueueService {
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggerService);
 
   private readonly _pendingCount = signal(0);
   private readonly _isSyncing = signal(false);
@@ -58,7 +60,7 @@ export class SyncQueueService {
             const retryCount = (op.retryCount || 0) + 1;
             if (retryCount >= 3) {
               // Move to dead letter queue or log
-              console.error('Max retries reached for sync operation:', op);
+              this.logger.error('Max retries reached for sync operation:', op);
               await db.syncQueue.delete(op.id);
             } else {
               await db.syncQueue.update(op.id, { retryCount });

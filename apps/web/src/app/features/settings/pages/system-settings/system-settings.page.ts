@@ -48,6 +48,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { SystemUser, SystemSettings, UserRole } from './system-settings.models';
 import { AuthService } from '@app/core/services/auth.service';
+import { LoggerService } from '@app/core/services/logger.service';
 
 @Component({
   selector: 'app-system-settings',
@@ -609,6 +610,7 @@ import { AuthService } from '@app/core/services/auth.service';
 })
 export class SystemSettingsPage implements OnInit {
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   systemForm!: FormGroup;
   userForm!: FormGroup;
@@ -680,7 +682,7 @@ export class SystemSettingsPage implements OnInit {
       const settings = await firstValueFrom(this.http.get<SystemSettings>(`${this.apiUrl}/system`));
       this.systemForm.patchValue(settings);
     } catch (error) {
-      console.error('Failed to load system settings');
+      this.logger.error('Failed to load system settings');
     }
   }
 
@@ -689,9 +691,13 @@ export class SystemSettingsPage implements OnInit {
     try {
       const response = await firstValueFrom(this.http.get<SystemUser[]>(`${this.apiUrl}/users`));
       this.users = response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this.errorMessage =
-        error?.error?.message || this.translate.instant('SETTINGS.SYSTEM.ERROR.LOAD_USERS_FAILED');
+        (httpBody?.['message'] as string) ||
+        this.translate.instant('SETTINGS.SYSTEM.ERROR.LOAD_USERS_FAILED');
     } finally {
       this.isLoading = false;
     }
@@ -714,9 +720,13 @@ export class SystemSettingsPage implements OnInit {
         color: 'success',
       });
       await toast.present();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this.errorMessage =
-        error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
+        (httpBody?.['message'] as string) ||
+        translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -770,9 +780,13 @@ export class SystemSettingsPage implements OnInit {
 
       this.closeUserModal();
       this.loadUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this.errorMessage =
-        error?.error?.message || translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
+        (httpBody?.['message'] as string) ||
+        translateService.instant('SETTINGS.SYSTEM.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -801,9 +815,12 @@ export class SystemSettingsPage implements OnInit {
       await toast.present();
 
       this.loadUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this.errorMessage =
-        error?.error?.message ||
+        (httpBody?.['message'] as string) ||
         translateService.instant('SETTINGS.SYSTEM.ERROR.STATUS_CHANGE_FAILED');
     }
   }

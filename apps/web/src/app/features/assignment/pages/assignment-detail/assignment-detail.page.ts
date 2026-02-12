@@ -448,7 +448,7 @@ export class AssignmentDetailPage implements OnInit {
     }
 
     // If address is an object (API format), format it
-    const addr = (o as any).address;
+    const addr = o.address;
     if (addr && typeof addr === 'object') {
       const parts = [addr.line1, addr.line2, addr.city].filter(Boolean);
       return parts.join(' ') || '-';

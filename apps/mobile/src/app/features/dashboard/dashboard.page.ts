@@ -29,6 +29,7 @@ import {
 } from 'ionicons/icons';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from '../../core/services/logger.service';
 
 interface DashboardSummary {
   summary: {
@@ -1055,6 +1056,7 @@ interface DashboardSummary {
 })
 export class DashboardPage implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggerService);
 
   protected readonly data = signal<DashboardSummary | null>(null);
   protected readonly isLoading = signal(true);
@@ -1117,7 +1119,7 @@ export class DashboardPage implements OnInit {
       this.data.set(result);
       this.statusEntries.set(Object.entries(result.statusBreakdown));
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      this.logger.error('Failed to load dashboard data:', error);
     } finally {
       this.isLoading.set(false);
     }

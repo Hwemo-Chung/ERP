@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -77,7 +78,7 @@ export class UsersService {
         partnerId: data.partnerId,
         roles: {
           create: data.roles.map((role) => ({
-            role: role as any,
+            role: role as Role,
           })),
         },
       },

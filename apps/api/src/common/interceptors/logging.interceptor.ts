@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request } from 'express';
@@ -23,7 +17,7 @@ import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const { method, url, headers, body } = request;
     const startTime = Date.now();
@@ -33,8 +27,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const userId = user?.sub || 'anonymous';
 
     // Extract correlation ID from headers
-    const correlationId =
-      (headers['x-correlation-id'] as string) || this.generateCorrelationId();
+    const correlationId = (headers['x-correlation-id'] as string) || this.generateCorrelationId();
 
     // Sanitize request body for logging (remove passwords)
     const sanitizedBody = this.sanitizeRequestBody(body);
@@ -46,9 +39,7 @@ export class LoggingInterceptor implements NestInterceptor {
       url,
       userId,
       correlationId,
-      ...(method !== 'GET' && Object.keys(sanitizedBody).length > 0
-        ? { body: sanitizedBody }
-        : {}),
+      ...(method !== 'GET' && Object.keys(sanitizedBody).length > 0 ? { body: sanitizedBody } : {}),
     });
 
     return next.handle().pipe(
@@ -85,7 +76,7 @@ export class LoggingInterceptor implements NestInterceptor {
   /**
    * Sanitize request body by removing sensitive fields
    */
-  private sanitizeRequestBody(body: any): any {
+  private sanitizeRequestBody(body: unknown): Record<string, unknown> {
     if (!body || typeof body !== 'object') {
       return {};
     }
@@ -101,7 +92,7 @@ export class LoggingInterceptor implements NestInterceptor {
       'apiKey',
     ];
 
-    const sanitized = { ...body };
+    const sanitized = { ...(body as Record<string, unknown>) };
 
     for (const field of sensitiveFields) {
       if (field in sanitized) {

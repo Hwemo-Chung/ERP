@@ -3,10 +3,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus, Role } from '@prisma/client';
 
 export interface MetadataCache {
-  branches: any[];
-  wasteTypes: any[];
-  orderStatuses: any[];
-  roles: any[];
+  branches: Array<{ id: string; code: string; name: string; region: string }>;
+  wasteTypes: Array<{ id: string; code: string; descriptionKo: string; descriptionEn: string }>;
+  orderStatuses: Array<{
+    value: OrderStatus;
+    label: string;
+    description: string;
+    color: string;
+    category: string;
+  }>;
+  roles: Array<{ value: Role; label: string; permissions: string[] }>;
   lastUpdated: Date;
 }
 
@@ -131,8 +137,8 @@ export class MetadataService implements OnModuleInit {
         },
         select: { partnerId: true },
       });
-      const partnerIdsInBranch = new Set(installersInBranch.map(i => i.partnerId));
-      return partners.filter(p => partnerIdsInBranch.has(p.id));
+      const partnerIdsInBranch = new Set(installersInBranch.map((i) => i.partnerId));
+      return partners.filter((p) => partnerIdsInBranch.has(p.id));
     }
 
     return partners;
@@ -184,10 +190,7 @@ export class MetadataService implements OnModuleInit {
   async refreshCache() {
     this.logger.log('Refreshing metadata cache...');
 
-    const [branches, wasteTypes] = await Promise.all([
-      this.getBranches(),
-      this.getWasteTypes(),
-    ]);
+    const [branches, wasteTypes] = await Promise.all([this.getBranches(), this.getWasteTypes()]);
 
     this.cache = {
       branches,
@@ -260,7 +263,11 @@ export class MetadataService implements OnModuleInit {
   }
 
   private getStatusCategory(status: OrderStatus): string {
-    const doneStatuses: OrderStatus[] = [OrderStatus.COMPLETED, OrderStatus.COLLECTED, OrderStatus.PARTIAL];
+    const doneStatuses: OrderStatus[] = [
+      OrderStatus.COMPLETED,
+      OrderStatus.COLLECTED,
+      OrderStatus.PARTIAL,
+    ];
     const cancelledStatuses: OrderStatus[] = [OrderStatus.CANCELLED, OrderStatus.REQUEST_CANCEL];
     const exceptionStatuses: OrderStatus[] = [OrderStatus.POSTPONED, OrderStatus.ABSENT];
 
@@ -295,22 +302,9 @@ export class MetadataService implements OnModuleInit {
         'reports:all',
         'settings:manage',
       ],
-      [Role.BRANCH_MANAGER]: [
-        'users:read',
-        'orders:branch',
-        'reports:branch',
-        'export:branch',
-      ],
-      [Role.PARTNER_COORDINATOR]: [
-        'orders:partner',
-        'orders:assign',
-        'installers:manage',
-      ],
-      [Role.INSTALLER]: [
-        'orders:own',
-        'orders:update_status',
-        'waste:capture',
-      ],
+      [Role.BRANCH_MANAGER]: ['users:read', 'orders:branch', 'reports:branch', 'export:branch'],
+      [Role.PARTNER_COORDINATOR]: ['orders:partner', 'orders:assign', 'installers:manage'],
+      [Role.INSTALLER]: ['orders:own', 'orders:update_status', 'waste:capture'],
     };
     return permissions[role] || [];
   }

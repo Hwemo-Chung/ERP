@@ -1,7 +1,7 @@
 /**
  * FR-20: File Attachment Component
  * PRD: 주문별 파일 첨부 - 사진 업로드 (5MB, 10개 제한)
- * 
+ *
  * 기능:
  * - 사진 업로드 (최대 5MB each, 10개 per order)
  * - 미리보기 표시
@@ -18,10 +18,11 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../core/services/logger.service';
 import { addIcons } from 'ionicons';
-import { 
-  cameraOutline, 
-  imageOutline, 
+import {
+  cameraOutline,
+  imageOutline,
   trashOutline,
   addOutline,
   closeOutline,
@@ -49,13 +50,7 @@ const MAX_FILES = 10;
   selector: 'app-file-attachment',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    TranslateModule,
-    IonIcon,
-    IonSpinner,
-    IonBadge,
-  ],
+  imports: [CommonModule, TranslateModule, IonIcon, IonSpinner, IonBadge],
   template: `
     <div class="file-attachment-container">
       <!-- 헤더 -->
@@ -119,179 +114,185 @@ const MAX_FILES = 10;
 
       <!-- 안내 메시지 -->
       <p class="help-text">
-        {{ 'FILE_ATTACHMENT.HELP_TEXT' | translate: { maxFiles: maxFiles, maxSize: formatSize(maxFileSize) } }}
+        {{
+          'FILE_ATTACHMENT.HELP_TEXT'
+            | translate: { maxFiles: maxFiles, maxSize: formatSize(maxFileSize) }
+        }}
       </p>
 
       <!-- Hidden file input -->
-      <input 
-        type="file" 
-        #fileInput 
-        hidden 
-        multiple 
+      <input
+        type="file"
+        #fileInput
+        hidden
+        multiple
         accept="image/*,.pdf,.doc,.docx"
         (change)="onFileSelected($event)"
       />
     </div>
   `,
-  styles: [`
-    .file-attachment-container {
-      padding: 16px;
-      background: var(--ion-color-light);
-      border-radius: 12px;
-    }
+  styles: [
+    `
+      .file-attachment-container {
+        padding: 16px;
+        background: var(--ion-color-light);
+        border-radius: 12px;
+      }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
 
-    .title {
-      font-weight: 600;
-      font-size: 16px;
-    }
+      .title {
+        font-weight: 600;
+        font-size: 16px;
+      }
 
-    .file-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 12px;
-    }
+      .file-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+      }
 
-    .file-item {
-      position: relative;
-      border-radius: 8px;
-      overflow: hidden;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
+      .file-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
 
-    .preview-image {
-      width: 100%;
-      aspect-ratio: 1;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-    }
+      .preview-image {
+        width: 100%;
+        aspect-ratio: 1;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
 
-    .upload-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
+      .upload-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
 
-    .preview-file {
-      width: 100%;
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-    }
+      .preview-file {
+        width: 100%;
+        aspect-ratio: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+      }
 
-    .preview-file ion-icon {
-      font-size: 32px;
-      color: var(--ion-color-medium);
-    }
+      .preview-file ion-icon {
+        font-size: 32px;
+        color: var(--ion-color-medium);
+      }
 
-    .preview-file .file-name {
-      font-size: 11px;
-      color: var(--ion-color-medium);
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
-      margin-top: 4px;
-    }
+      .preview-file .file-name {
+        font-size: 11px;
+        color: var(--ion-color-medium);
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+        margin-top: 4px;
+      }
 
-    .file-actions {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      display: flex;
-      gap: 4px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
+      .file-actions {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
 
-    .file-item:hover .file-actions {
-      opacity: 1;
-    }
+      .file-item:hover .file-actions {
+        opacity: 1;
+      }
 
-    .action-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
+      .action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
 
-    .action-btn.danger:hover {
-      background: var(--ion-color-danger);
-    }
+      .action-btn.danger:hover {
+        background: var(--ion-color-danger);
+      }
 
-    .file-info {
-      padding: 6px 8px;
-      background: var(--ion-color-light);
-    }
+      .file-info {
+        padding: 6px 8px;
+        background: var(--ion-color-light);
+      }
 
-    .file-size {
-      font-size: 11px;
-      color: var(--ion-color-medium);
-    }
+      .file-size {
+        font-size: 11px;
+        color: var(--ion-color-medium);
+      }
 
-    .add-file {
-      aspect-ratio: 1;
-      border: 2px dashed var(--ion-color-medium);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+      .add-file {
+        aspect-ratio: 1;
+        border: 2px dashed var(--ion-color-medium);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
 
-    .add-file:hover {
-      border-color: var(--ion-color-primary);
-      background: rgba(var(--ion-color-primary-rgb), 0.05);
-    }
+      .add-file:hover {
+        border-color: var(--ion-color-primary);
+        background: rgba(var(--ion-color-primary-rgb), 0.05);
+      }
 
-    .add-file ion-icon {
-      font-size: 24px;
-      color: var(--ion-color-medium);
-    }
+      .add-file ion-icon {
+        font-size: 24px;
+        color: var(--ion-color-medium);
+      }
 
-    .add-file span {
-      font-size: 12px;
-      color: var(--ion-color-medium);
-      margin-top: 4px;
-    }
+      .add-file span {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        margin-top: 4px;
+      }
 
-    .help-text {
-      margin-top: 12px;
-      font-size: 12px;
-      color: var(--ion-color-medium);
-      text-align: center;
-    }
-  `]
+      .help-text {
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        text-align: center;
+      }
+    `,
+  ],
 })
 export class FileAttachmentComponent {
   private actionSheetCtrl = inject(ActionSheetController);
   private toastCtrl = inject(ToastController);
   private translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   // Inputs
   attachments = input<FileAttachment[]>([]);
@@ -311,9 +312,9 @@ export class FileAttachmentComponent {
   readonly maxFiles = MAX_FILES;
 
   constructor() {
-    addIcons({ 
-      cameraOutline, 
-      imageOutline, 
+    addIcons({
+      cameraOutline,
+      imageOutline,
       trashOutline,
       addOutline,
       closeOutline,
@@ -383,7 +384,9 @@ export class FileAttachmentComponent {
 
         // Check max files limit
         if (this.attachments().length >= MAX_FILES) {
-          const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', { maxFiles: MAX_FILES });
+          const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', {
+            maxFiles: MAX_FILES,
+          });
           this.showToast(msg, 'warning');
           return;
         }
@@ -395,7 +398,7 @@ export class FileAttachmentComponent {
       // User cancelled or permission denied
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       if (!errorMessage.includes('User cancelled') && !errorMessage.includes('cancelled')) {
-        console.error('Camera error:', error);
+        this.logger.error('Camera error:', error);
         this.showToast(this.translate.instant('FILE_ATTACHMENT.ERROR.CAMERA_FAILED'), 'danger');
       }
     }
@@ -414,12 +417,16 @@ export class FileAttachmentComponent {
     const validFiles: File[] = [];
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.SIZE_EXCEEDED', { fileName: file.name });
+        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.SIZE_EXCEEDED', {
+          fileName: file.name,
+        });
         this.showToast(msg, 'warning');
         continue;
       }
       if (this.attachments().length + validFiles.length >= MAX_FILES) {
-        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', { maxFiles: MAX_FILES });
+        const msg = this.translate.instant('FILE_ATTACHMENT.ERROR.MAX_FILES', {
+          maxFiles: MAX_FILES,
+        });
         this.showToast(msg, 'warning');
         break;
       }

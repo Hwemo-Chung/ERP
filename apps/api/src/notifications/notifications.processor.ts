@@ -3,6 +3,7 @@ import { Job } from 'bull';
 import { Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PushProviderFactory, PushPayload } from './push-providers';
+import { Notification, NotificationSubscription } from '@prisma/client';
 
 /**
  * Payload structure for push notification jobs
@@ -133,16 +134,17 @@ export class NotificationsProcessor {
    * Send push notification to a single subscription
    */
   private async sendToSubscription(
-    subscription: any,
+    subscription: NotificationSubscription,
     payload: PushPayload,
     isUrgent: boolean,
   ): Promise<void> {
     try {
       // Check quiet hours (skip for urgent notifications)
-      if (!isUrgent && this.isWithinQuietHours(subscription.quietHours)) {
-        this.logger.debug(
-          `Skipping push to device ${subscription.deviceId} - within quiet hours`,
-        );
+      if (
+        !isUrgent &&
+        this.isWithinQuietHours(subscription.quietHours as QuietHoursConfig | null)
+      ) {
+        this.logger.debug(`Skipping push to device ${subscription.deviceId} - within quiet hours`);
         return;
       }
 
@@ -160,13 +162,9 @@ export class NotificationsProcessor {
       const result = await provider.send(subscription.token, payload);
 
       if (result.success) {
-        this.logger.debug(
-          `Push sent to device ${subscription.deviceId}: ${result.messageId}`,
-        );
+        this.logger.debug(`Push sent to device ${subscription.deviceId}: ${result.messageId}`);
       } else {
-        this.logger.error(
-          `Failed to send push to ${subscription.deviceId}: ${result.error}`,
-        );
+        this.logger.error(`Failed to send push to ${subscription.deviceId}: ${result.error}`);
 
         // Deactivate invalid subscription
         if (result.shouldRemoveSubscription) {
@@ -236,16 +234,17 @@ export class NotificationsProcessor {
   /**
    * Build push payload from notification record
    */
-  private buildPushPayload(notification: any): PushPayload {
+  private buildPushPayload(notification: Notification): PushPayload {
+    const payload = notification.payload as Record<string, unknown> | null;
     const basePayload: PushPayload = {
-      title: notification.payload?.title || 'New Notification',
-      body: notification.payload?.body || 'You have a new notification',
+      title: (payload?.title as string) || 'New Notification',
+      body: (payload?.body as string) || 'You have a new notification',
       data: {
         notificationId: notification.id,
         category: notification.category,
         orderId: notification.orderId,
         createdAt: notification.createdAt.toISOString(),
-        ...notification.payload,
+        ...(payload || {}),
       },
     };
 
@@ -255,7 +254,10 @@ export class NotificationsProcessor {
   /**
    * Apply category-specific customizations to payload
    */
-  private applyCategoryCustomizations(payload: PushPayload, notification: any): PushPayload {
+  private applyCategoryCustomizations(
+    payload: PushPayload,
+    notification: Notification,
+  ): PushPayload {
     const categoryConfigs: Record<string, Partial<PushPayload>> = {
       order_assigned: {
         icon: 'ic_order_assigned',

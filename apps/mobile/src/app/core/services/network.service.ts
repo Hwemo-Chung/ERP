@@ -1,11 +1,13 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Network } from '@capacitor/network';
+import { LoggerService } from './logger.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NetworkService {
   private readonly _isOffline = signal(false);
+  private readonly logger = inject(LoggerService);
   readonly isOffline = this._isOffline.asReadonly();
 
   async initializeNetworkListener(): Promise<void> {
@@ -16,7 +18,7 @@ export class NetworkService {
     // Listen for changes
     Network.addListener('networkStatusChange', (status) => {
       this._isOffline.set(!status.connected);
-      console.log(`Network status changed: ${status.connected ? 'online' : 'offline'}`);
+      this.logger.log(`Network status changed: ${status.connected ? 'online' : 'offline'}`);
     });
   }
 

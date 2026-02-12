@@ -11,14 +11,10 @@
  * Unlocks: Friday 5:00 PM (for final adjustments)
  */
 
-import {
-  Injectable,
-  Logger,
-  Inject,
-  Optional,
-} from '@nestjs/common';
+import { Injectable, Logger, Inject, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { Branch } from '@prisma/client';
 import { Redis } from 'ioredis';
 import { REDIS_PROVIDER } from '../common/constants';
 
@@ -207,15 +203,13 @@ export class SettlementLockCron {
     return friday;
   }
 
-  private async notifyBranches(branches: any[]): Promise<void> {
+  private async notifyBranches(branches: Branch[]): Promise<void> {
     // In production, send push notifications via FCM
     // Format: "Weekly settlement locked. Unlock: Friday 5:00 PM"
-    this.logger.log(
-      `[Settlement Lock] Notifying ${branches.length} branches via push`,
-    );
+    this.logger.log(`[Settlement Lock] Notifying ${branches.length} branches via push`);
   }
 
-  private async notifyUnlock(branches: any[]): Promise<void> {
+  private async notifyUnlock(branches: Branch[]): Promise<void> {
     // Send unlock notification
     this.logger.log(`[Settlement Unlock] Notifying ${branches.length} branches`);
   }

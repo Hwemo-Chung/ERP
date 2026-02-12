@@ -21,6 +21,7 @@ import {
   IonSpinner,
   ActionSheetController,
   AlertController,
+  ModalController,
   ToastController,
 } from '@ionic/angular/standalone';
 import { Capacitor } from '@capacitor/core';
@@ -43,12 +44,32 @@ import {
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { OrdersService, Order } from '../../services/orders.service';
+import { OrderCompletionModal } from '../order-completion/order-completion.modal';
 import {
   FileAttachmentComponent,
   FileAttachment,
 } from '../../../../shared/components/file-attachment/file-attachment.component';
 import { FileAttachmentService } from './file-attachment.service';
+import { FileAttachment as ModelFileAttachment } from './file-attachment.models';
+
+interface ProcessableAttachment {
+  id: string;
+  name?: string;
+  fileName?: string;
+  url?: string;
+  size?: number;
+  fileSize?: number;
+  type?: string;
+  uploadedAt?: Date | number;
+  isImage?: boolean;
+  thumbnailUrl?: string;
+  base64Data: string;
+  orderId?: string;
+  fileType?: string;
+  uploadProgress?: number;
+}
 
 // Valid transitions per status
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -532,8 +553,11 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   private readonly alertCtrl = inject(AlertController);
   /** 토스트 알림 컨트롤러 */
   private readonly toastCtrl = inject(ToastController);
+  /** 모달 컨트롤러 */
+  private readonly modalCtrl = inject(ModalController);
   /** 다국어 번역 서비스 */
   private readonly translateService = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
   /** 컴포넌트 파괴 시 구독 해제용 Subject */
   private readonly destroy$ = new Subject<void>();
 
@@ -622,6 +646,11 @@ export class OrderDetailPage implements OnInit, OnDestroy {
   }
 
   protected async confirmStatusChange(newStatus: string): Promise<void> {
+    if (newStatus === 'COMPLETED') {
+      await this.openCompletionModal();
+      return;
+    }
+
     const statusLabel = this.getStatusLabel(newStatus);
     const alert = await this.alertCtrl.create({
       header: this.translateService.instant('ORDERS.DETAIL.CONFIRM_STATUS_CHANGE'),
@@ -653,7 +682,23 @@ export class OrderDetailPage implements OnInit, OnDestroy {
       this.order.set(updated);
       this.allowedTransitions.set(ALLOWED_TRANSITIONS[updated.status] || []);
     } catch (error) {
-      console.error('Failed to update status:', error);
+      this.logger.error('Failed to update status:', error);
+    }
+  }
+
+  private async openCompletionModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: OrderCompletionModal,
+    });
+
+    await modal.present();
+
+    const { role } = await modal.onWillDismiss();
+    if (role === 'confirm') {
+      const orderId = this.order()?.id;
+      if (orderId) {
+        await this.loadOrder(orderId);
+      }
     }
   }
 
@@ -850,20 +895,20 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     }
   }
 
-  protected onFileInputChange(event: any): void {
-    const files = event.target.files;
+  protected onFileInputChange(event: Event): void {
+    const files = (event.target as HTMLInputElement).files;
     if (!files || files.length === 0) return;
 
-    for (const file of files) {
+    for (const file of Array.from(files)) {
       const reader = new FileReader();
-      reader.onload = async (e: any) => {
-        const base64String = e.target.result.split(',')[1];
+      reader.onload = async (e: ProgressEvent<FileReader>) => {
+        const base64String = (e.target?.result as string).split(',')[1];
         const isImage = file.type.startsWith('image/');
 
         const attachment = {
           id: `file_${Date.now()}`,
           name: file.name,
-          url: e.target.result,
+          url: e.target?.result as string,
           size: file.size,
           type: file.type,
           uploadedAt: new Date(),
@@ -877,7 +922,7 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     }
   }
 
-  private async processAttachment(attachment: any): Promise<void> {
+  private async processAttachment(attachment: ProcessableAttachment): Promise<void> {
     // Compress image if needed
     if (attachment.isImage) {
       const result = await this.fileService.compressImage(attachment.base64Data, {
@@ -903,13 +948,44 @@ export class OrderDetailPage implements OnInit, OnDestroy {
     const orderId = this.order()?.id;
     if (orderId) {
       this.isUploading.set(true);
+      const modelAttachment: ModelFileAttachment = {
+        id: attachment.id,
+        orderId,
+        fileName: attachment.fileName || attachment.name || 'unknown',
+        fileType: attachment.fileType || attachment.type || 'application/octet-stream',
+        fileSize: attachment.fileSize || attachment.size || 0,
+        base64Data: attachment.base64Data,
+        uploadedAt:
+          typeof attachment.uploadedAt === 'number'
+            ? attachment.uploadedAt
+            : (attachment.uploadedAt?.getTime() ?? Date.now()),
+        isImage: attachment.isImage ?? false,
+        thumbnailUrl: attachment.thumbnailUrl,
+      };
       this.fileService
-        .uploadFile(orderId, attachment)
+        .uploadFile(orderId, modelAttachment)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.fileService.addAttachment(attachment);
-            this.attachments.update((list) => [...list, attachment]);
+            this.fileService.addAttachment(modelAttachment);
+            const displayAttachment: FileAttachment = {
+              id: attachment.id,
+              name: attachment.name,
+              fileName: attachment.fileName,
+              url: attachment.url,
+              size: attachment.size,
+              fileSize: attachment.fileSize,
+              type: attachment.type,
+              uploadedAt:
+                attachment.uploadedAt instanceof Date
+                  ? attachment.uploadedAt
+                  : typeof attachment.uploadedAt === 'number'
+                    ? new Date(attachment.uploadedAt)
+                    : undefined,
+              isImage: attachment.isImage,
+              thumbnailUrl: attachment.thumbnailUrl,
+            };
+            this.attachments.update((list) => [...list, displayAttachment]);
             this.isUploading.set(false);
             const toast = this.toastCtrl.create({
               message: this.translateService.instant('ORDERS.DETAIL.FILE_UPLOADED'),

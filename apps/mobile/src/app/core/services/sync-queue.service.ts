@@ -9,6 +9,7 @@ import {
   ConflictData,
 } from '../../shared/components/sync-conflict/sync-conflict.modal';
 import { SyncOperationStatus, SyncOperation, DEFAULT_SYNC_CONFIG, chunk } from '@erp/shared';
+import { LoggerService } from './logger.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +17,7 @@ import { SyncOperationStatus, SyncOperation, DEFAULT_SYNC_CONFIG, chunk } from '
 export class SyncQueueService {
   private readonly http = inject(HttpClient);
   private readonly modalCtrl = inject(ModalController);
+  private readonly logger = inject(LoggerService);
 
   // State signals
   private readonly _pendingCount = signal(0);
@@ -71,7 +73,7 @@ export class SyncQueueService {
 
       this._lastSyncTime.set(new Date());
     } catch (error) {
-      console.error('Sync queue processing failed:', error);
+      this.logger.error('Sync queue processing failed:', error);
       this._lastError.set('동기화 처리 중 오류가 발생했습니다');
     } finally {
       this._isSyncing.set(false);
@@ -152,7 +154,7 @@ export class SyncQueueService {
 
     // Check max retries
     if (retryCount >= DEFAULT_SYNC_CONFIG.maxRetries) {
-      console.error('Max retries reached for sync operation:', op);
+      this.logger.error('Max retries reached for sync operation:', op);
       await db.syncQueue.update(op.id, {
         status: SyncOperationStatus.FAILED,
         retryCount,
@@ -191,7 +193,7 @@ export class SyncQueueService {
       });
 
       // Log conflict resolution
-      console.log('Conflict resolved:', {
+      this.logger.log('Conflict resolved:', {
         operationId,
         resolutionSummary: data.resolutionSummary,
       });

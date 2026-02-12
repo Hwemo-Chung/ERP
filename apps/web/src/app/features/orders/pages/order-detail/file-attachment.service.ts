@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
@@ -14,6 +15,14 @@ import {
   FileCompressionResult,
 } from './file-attachment.models';
 
+declare global {
+  interface Window {
+    DocumentScanner?: {
+      scanDocument: (options?: Record<string, unknown>) => Promise<{ scans: string[] }>;
+    };
+  }
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -22,6 +31,7 @@ export class FileAttachmentService {
   private attachments$ = new BehaviorSubject<FileAttachment[]>([]);
   private uploadProgress$ = new BehaviorSubject<number>(0);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   constructor(private http: HttpClient) {}
 
@@ -32,11 +42,11 @@ export class FileAttachmentService {
     try {
       // Check if DocumentScanner is available
       if (!('DocumentScanner' in window)) {
-        console.warn('DocumentScanner not available');
+        this.logger.warn('DocumentScanner not available');
         return null;
       }
 
-      const DocumentScannerPlugin = (window as any).DocumentScanner;
+      const DocumentScannerPlugin = window.DocumentScanner!;
       const result = await DocumentScannerPlugin.scanDocument({
         croppingGuide: 'ON',
         responseType: 'base64',
@@ -62,7 +72,7 @@ export class FileAttachmentService {
         thumbnailUrl: `data:image/jpeg;base64,${scanData}`,
       };
     } catch (error) {
-      console.error('Document picker error:', error);
+      this.logger.error('Document picker error:', error);
       return null;
     }
   }
@@ -99,7 +109,7 @@ export class FileAttachmentService {
         thumbnailUrl: `data:image/jpeg;base64,${photo.base64String}`,
       };
     } catch (error) {
-      console.error('Camera error:', error);
+      this.logger.error('Camera error:', error);
       return null;
     }
   }
@@ -136,7 +146,7 @@ export class FileAttachmentService {
         thumbnailUrl: `data:image/jpeg;base64,${photo.base64String}`,
       };
     } catch (error) {
-      console.error('Gallery picker error:', error);
+      this.logger.error('Gallery picker error:', error);
       return null;
     }
   }
@@ -146,14 +156,9 @@ export class FileAttachmentService {
    */
   async compressImage(
     base64Data: string,
-    options: FileCompressionOptions = {}
+    options: FileCompressionOptions = {},
   ): Promise<FileCompressionResult> {
-    const {
-      maxWidth = 1024,
-      maxHeight = 1024,
-      quality = 0.7,
-      mimeType = 'image/webp',
-    } = options;
+    const { maxWidth = 1024, maxHeight = 1024, quality = 0.7, mimeType = 'image/webp' } = options;
 
     return new Promise((resolve) => {
       const img = new Image();
@@ -185,8 +190,7 @@ export class FileAttachmentService {
         const compressedBase64 = canvas.toDataURL(mimeType, quality);
         const originalSize = this.estimateBase64Size(base64Data);
         const compressedSize = this.estimateBase64Size(compressedBase64);
-        const ratio =
-          ((originalSize - compressedSize) / originalSize) * 100;
+        const ratio = ((originalSize - compressedSize) / originalSize) * 100;
 
         resolve({
           success: true,
@@ -213,10 +217,7 @@ export class FileAttachmentService {
   /**
    * 파일 업로드 (서버에 전송)
    */
-  uploadFile(
-    orderId: string,
-    attachment: FileAttachment
-  ): Observable<FileUploadResponse> {
+  uploadFile(orderId: string, attachment: FileAttachment): Observable<FileUploadResponse> {
     const request: FileUploadRequest = {
       fileName: attachment.fileName,
       fileType: attachment.fileType,
@@ -226,16 +227,13 @@ export class FileAttachmentService {
     };
 
     return this.http
-      .post<FileUploadResponse>(
-        `${this.API_BASE}/${orderId}/attachments`,
-        request
-      )
+      .post<FileUploadResponse>(`${this.API_BASE}/${orderId}/attachments`, request)
       .pipe(
         tap(() => {
           this.uploadProgress$.next(100);
           setTimeout(() => this.uploadProgress$.next(0), 1000);
         }),
-        catchError(this.handleError)
+        catchError(this.handleError),
       );
   }
 
@@ -243,48 +241,35 @@ export class FileAttachmentService {
    * 주문의 첨부 파일 목록 조회
    */
   getAttachments(orderId: string): Observable<FileAttachment[]> {
-    return this.http
-      .get<FileAttachment[]>(`${this.API_BASE}/${orderId}/attachments`)
-      .pipe(
-        tap((attachments) => this.attachments$.next(attachments)),
-        catchError(this.handleError)
-      );
+    return this.http.get<FileAttachment[]>(`${this.API_BASE}/${orderId}/attachments`).pipe(
+      tap((attachments) => this.attachments$.next(attachments)),
+      catchError(this.handleError),
+    );
   }
 
   /**
    * 첨부 파일 삭제
    */
-  deleteAttachment(
-    orderId: string,
-    attachmentId: string
-  ): Observable<{ success: boolean }> {
+  deleteAttachment(orderId: string, attachmentId: string): Observable<{ success: boolean }> {
     return this.http
-      .delete<{ success: boolean }>(
-        `${this.API_BASE}/${orderId}/attachments/${attachmentId}`
-      )
+      .delete<{ success: boolean }>(`${this.API_BASE}/${orderId}/attachments/${attachmentId}`)
       .pipe(
         tap(() => {
           const current = this.attachments$.value;
-          this.attachments$.next(
-            current.filter((a) => a.id !== attachmentId)
-          );
+          this.attachments$.next(current.filter((a) => a.id !== attachmentId));
         }),
-        catchError(this.handleError)
+        catchError(this.handleError),
       );
   }
 
   /**
    * 첨부 파일 다운로드 (data URL로 반환)
    */
-  downloadAttachment(
-    orderId: string,
-    attachmentId: string
-  ): Observable<Blob> {
+  downloadAttachment(orderId: string, attachmentId: string): Observable<Blob> {
     return this.http
-      .get(
-        `${this.API_BASE}/${orderId}/attachments/${attachmentId}/download`,
-        { responseType: 'blob' }
-      )
+      .get(`${this.API_BASE}/${orderId}/attachments/${attachmentId}/download`, {
+        responseType: 'blob',
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -344,9 +329,9 @@ export class FileAttachmentService {
   /**
    * HTTP 에러 처리
    */
-  private handleError(error: HttpErrorResponse) {
+  private handleError = (error: HttpErrorResponse) => {
     const errorMsg = error.error?.message || error.message || 'File upload error';
-    console.error('FileAttachmentService error:', errorMsg);
+    this.logger.error('FileAttachmentService error:', errorMsg);
     return throwError(() => new Error(errorMsg));
-  }
+  };
 }

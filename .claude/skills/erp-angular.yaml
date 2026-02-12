@@ -1,0 +1,82 @@
+name: erp-angular
+version: "1.0.0"
+description: Angular 19 + Ionic 8 모던 패턴 가이드
+
+environment:
+  node: ">=20"
+  package_manager: "pnpm"
+
+preferred_patterns:
+  component:
+    architecture: "Standalone Components"
+    state: "Signals"
+    change_detection: "OnPush"
+    template: |
+      @Component({
+        selector: 'app-{{name}}',
+        standalone: true,
+        imports: [CommonModule, IonicModule],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          @if (isLoading()) {
+            <ion-spinner />
+          } @else {
+            @for (item of items(); track item.id) {
+              <app-item [data]="item" />
+            }
+          }
+        `
+      })
+      export class {{Name}}Component {
+        private readonly service = inject({{Name}}Service);
+        
+        items = signal<Item[]>([]);
+        isLoading = signal(false);
+        
+        readonly filteredItems = computed(() => 
+          this.items().filter(i => i.active)
+        );
+      }
+
+  service:
+    template: |
+      @Injectable({ providedIn: 'root' })
+      export class {{Name}}Service {
+        private readonly http = inject(HttpClient);
+        
+        getItems(): Observable<ApiResponse<Item[]>> {
+          return this.http.get<ApiResponse<Item[]>>('/api/items');
+        }
+      }
+
+critical_rules:
+  inject_function:
+    rule: "클래스 필드 초기화자에서만 사용"
+    correct: "private readonly service = inject(MyService);"
+    wrong: |
+      someMethod() {
+        const service = inject(MyService); // ERROR!
+      }
+  
+  api_response:
+    rule: "이중 중첩 접근 필수"
+    pattern: "response.data.data"
+    example: |
+      const items = response.data.data;
+      const total = response.data.meta.total;
+
+  state_machine:
+    rule: "OrderStateMachine 통해서만 상태 전환"
+    error_code: "E2001 = Invalid state transition"
+    
+  settlement_lock:
+    rule: "정산 중인 주문 수정 불가"
+    error_code: "E2002"
+    solution: "HQ_ADMIN 권한으로 unlock"
+
+commands:
+  dev: "pnpm web:dev"
+  build: "pnpm web:build"
+  test: "pnpm test"
+  e2e: "pnpm test:e2e"
+  db_studio: "pnpm db:studio"

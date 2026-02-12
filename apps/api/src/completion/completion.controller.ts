@@ -23,9 +23,32 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { OrderStatus } from '@prisma/client';
 
 interface User {
   id: string;
+}
+
+interface AmendCompletionResponse {
+  success: boolean;
+  orderId: string;
+  orderNo: string;
+  changes: Record<string, { count: number; updated: boolean }>;
+  reason: string;
+  amendedAt: Date;
+}
+
+interface CompletionDetailsResponse {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  serials: Array<{
+    lineId: string;
+    itemName: string;
+    serialNumber: string;
+    recordedAt: Date;
+  }>;
+  waste: Array<{ code: string; quantity: number; collectedAt: Date | null }>;
 }
 
 @Controller('orders/:orderId')
@@ -60,7 +83,7 @@ export class CompletionController {
   @Roles('INSTALLER', 'BRANCH_MANAGER', 'HQ_ADMIN')
   @ApiOperation({
     summary: 'Complete order with serial numbers',
-    description: 'Complete order by capturing serial numbers and optionally logging waste pickups'
+    description: 'Complete order by capturing serial numbers and optionally logging waste pickups',
   })
   @ApiParam({ name: 'orderId', description: 'Order ID' })
   async completeOrder(
@@ -68,9 +91,7 @@ export class CompletionController {
     @Body() dto: CompletionRequestDto,
     @CurrentUser() user: User,
   ) {
-    this.logger.log(
-      `Completion requested for order ${orderId} by user ${user.id}`,
-    );
+    this.logger.log(`Completion requested for order ${orderId} by user ${user.id}`);
 
     return this.completionService.completeOrder(orderId, dto, user.id);
   }
@@ -92,7 +113,7 @@ export class CompletionController {
   @Roles('INSTALLER', 'BRANCH_MANAGER', 'HQ_ADMIN')
   @ApiOperation({
     summary: 'Log waste pickup',
-    description: 'Record waste pickup entries for an order (separate from completion)'
+    description: 'Record waste pickup entries for an order (separate from completion)',
   })
   @ApiParam({ name: 'orderId', description: 'Order ID' })
   async logWaste(
@@ -112,19 +133,18 @@ export class CompletionController {
   @Patch('completion')
   @HttpCode(HttpStatus.OK)
   @Roles('INSTALLER', 'BRANCH_MANAGER', 'HQ_ADMIN')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Amend completion data',
-    description: 'Modify serial numbers or waste pickup entries after initial completion. Requires reason for audit trail.'
+    description:
+      'Modify serial numbers or waste pickup entries after initial completion. Requires reason for audit trail.',
   })
   @ApiParam({ name: 'orderId', description: 'Order ID' })
   async amendCompletion(
     @Param('orderId') orderId: string,
     @Body() dto: AmendCompletionDto,
     @CurrentUser() user: User,
-  ): Promise<any> {
-    this.logger.log(
-      `Completion amendment requested for order ${orderId} by user ${user.id}`,
-    );
+  ): Promise<AmendCompletionResponse> {
+    this.logger.log(`Completion amendment requested for order ${orderId} by user ${user.id}`);
 
     return this.completionService.amendCompletion(orderId, dto, user.id);
   }
@@ -137,7 +157,7 @@ export class CompletionController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get completion details by order ID' })
   @ApiParam({ name: 'orderId', description: 'Order ID' })
-  async getCompletion(@Param('orderId') orderId: string): Promise<any> {
+  async getCompletion(@Param('orderId') orderId: string): Promise<CompletionDetailsResponse> {
     return this.completionService.getCompletionDetails(orderId);
   }
 }

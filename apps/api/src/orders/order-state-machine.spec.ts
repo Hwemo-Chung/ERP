@@ -32,7 +32,9 @@ describe('OrderStateMachine', () => {
       });
 
       it('should allow DISPATCHED → COMPLETED', () => {
-        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.COMPLETED)).toBe(true);
+        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.COMPLETED)).toBe(
+          true,
+        );
       });
 
       it('should allow DISPATCHED → PARTIAL', () => {
@@ -40,7 +42,9 @@ describe('OrderStateMachine', () => {
       });
 
       it('should allow DISPATCHED → POSTPONED', () => {
-        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.POSTPONED)).toBe(true);
+        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.POSTPONED)).toBe(
+          true,
+        );
       });
 
       it('should allow DISPATCHED → ABSENT', () => {
@@ -48,7 +52,9 @@ describe('OrderStateMachine', () => {
       });
 
       it('should allow DISPATCHED → CANCELLED', () => {
-        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.CANCELLED)).toBe(true);
+        expect(stateMachine.canTransition(OrderStatus.DISPATCHED, OrderStatus.CANCELLED)).toBe(
+          true,
+        );
       });
 
       it('should allow COMPLETED → COLLECTED', () => {
@@ -78,7 +84,9 @@ describe('OrderStateMachine', () => {
       });
 
       it('should allow POSTPONED → DISPATCHED (retry)', () => {
-        expect(stateMachine.canTransition(OrderStatus.POSTPONED, OrderStatus.DISPATCHED)).toBe(true);
+        expect(stateMachine.canTransition(OrderStatus.POSTPONED, OrderStatus.DISPATCHED)).toBe(
+          true,
+        );
       });
 
       it('should allow ABSENT → DISPATCHED (retry)', () => {
@@ -96,7 +104,9 @@ describe('OrderStateMachine', () => {
 
     describe('invalid transitions', () => {
       it('should reject UNASSIGNED → COMPLETED (direct jump)', () => {
-        expect(stateMachine.canTransition(OrderStatus.UNASSIGNED, OrderStatus.COMPLETED)).toBe(false);
+        expect(stateMachine.canTransition(OrderStatus.UNASSIGNED, OrderStatus.COMPLETED)).toBe(
+          false,
+        );
       });
 
       it('should reject COMPLETED → ASSIGNED (reverse)', () => {
@@ -108,11 +118,15 @@ describe('OrderStateMachine', () => {
       });
 
       it('should reject CANCELLED → DISPATCHED (terminal state)', () => {
-        expect(stateMachine.canTransition(OrderStatus.CANCELLED, OrderStatus.DISPATCHED)).toBe(false);
+        expect(stateMachine.canTransition(OrderStatus.CANCELLED, OrderStatus.DISPATCHED)).toBe(
+          false,
+        );
       });
 
       it('should reject UNASSIGNED → DISPATCHED (skipping states)', () => {
-        expect(stateMachine.canTransition(OrderStatus.UNASSIGNED, OrderStatus.DISPATCHED)).toBe(false);
+        expect(stateMachine.canTransition(OrderStatus.UNASSIGNED, OrderStatus.DISPATCHED)).toBe(
+          false,
+        );
       });
 
       it('should reject ASSIGNED → RELEASED (skipping CONFIRMED)', () => {
@@ -120,7 +134,9 @@ describe('OrderStateMachine', () => {
       });
 
       it('should reject CONFIRMED → DISPATCHED (skipping RELEASED)', () => {
-        expect(stateMachine.canTransition(OrderStatus.CONFIRMED, OrderStatus.DISPATCHED)).toBe(false);
+        expect(stateMachine.canTransition(OrderStatus.CONFIRMED, OrderStatus.DISPATCHED)).toBe(
+          false,
+        );
       });
     });
   });
@@ -491,22 +507,34 @@ describe('OrderStateMachine', () => {
       expect(transitions).toEqual([OrderStatus.ASSIGNED]);
     });
 
-    it('should return [CONFIRMED, UNASSIGNED] for ASSIGNED', () => {
+    it('should return [CONFIRMED, UNASSIGNED, REQUEST_CANCEL] for ASSIGNED', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.ASSIGNED);
-      expect(transitions).toEqual([OrderStatus.CONFIRMED, OrderStatus.UNASSIGNED]);
+      expect(transitions).toEqual([
+        OrderStatus.CONFIRMED,
+        OrderStatus.UNASSIGNED,
+        OrderStatus.REQUEST_CANCEL,
+      ]);
     });
 
-    it('should return [RELEASED, ASSIGNED] for CONFIRMED', () => {
+    it('should return [RELEASED, ASSIGNED, REQUEST_CANCEL] for CONFIRMED', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.CONFIRMED);
-      expect(transitions).toEqual([OrderStatus.RELEASED, OrderStatus.ASSIGNED]);
+      expect(transitions).toEqual([
+        OrderStatus.RELEASED,
+        OrderStatus.ASSIGNED,
+        OrderStatus.REQUEST_CANCEL,
+      ]);
     });
 
-    it('should return [DISPATCHED, CONFIRMED] for RELEASED', () => {
+    it('should return [DISPATCHED, CONFIRMED, REQUEST_CANCEL] for RELEASED', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.RELEASED);
-      expect(transitions).toEqual([OrderStatus.DISPATCHED, OrderStatus.CONFIRMED]);
+      expect(transitions).toEqual([
+        OrderStatus.DISPATCHED,
+        OrderStatus.CONFIRMED,
+        OrderStatus.REQUEST_CANCEL,
+      ]);
     });
 
-    it('should return 5 options for DISPATCHED', () => {
+    it('should return 6 options for DISPATCHED', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.DISPATCHED);
       expect(transitions).toEqual([
         OrderStatus.COMPLETED,
@@ -514,24 +542,27 @@ describe('OrderStateMachine', () => {
         OrderStatus.POSTPONED,
         OrderStatus.ABSENT,
         OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
       ]);
     });
 
-    it('should return [DISPATCHED, ABSENT, CANCELLED] for POSTPONED', () => {
+    it('should return [DISPATCHED, ABSENT, CANCELLED, REQUEST_CANCEL] for POSTPONED', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.POSTPONED);
       expect(transitions).toEqual([
         OrderStatus.DISPATCHED,
         OrderStatus.ABSENT,
         OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
       ]);
     });
 
-    it('should return [DISPATCHED, POSTPONED, CANCELLED] for ABSENT', () => {
+    it('should return [DISPATCHED, POSTPONED, CANCELLED, REQUEST_CANCEL] for ABSENT', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.ABSENT);
       expect(transitions).toEqual([
         OrderStatus.DISPATCHED,
         OrderStatus.POSTPONED,
         OrderStatus.CANCELLED,
+        OrderStatus.REQUEST_CANCEL,
       ]);
     });
 
@@ -555,9 +586,9 @@ describe('OrderStateMachine', () => {
       expect(transitions).toEqual([]);
     });
 
-    it('should return empty array for REQUEST_CANCEL (terminal)', () => {
+    it('should return [CANCELLED, DISPATCHED] for REQUEST_CANCEL (non-terminal)', () => {
       const transitions = stateMachine.getAvailableTransitions(OrderStatus.REQUEST_CANCEL);
-      expect(transitions).toEqual([]);
+      expect(transitions).toEqual([OrderStatus.CANCELLED, OrderStatus.DISPATCHED]);
     });
   });
 
@@ -606,8 +637,8 @@ describe('OrderStateMachine', () => {
       expect(stateMachine.isTerminalState(OrderStatus.CANCELLED)).toBe(true);
     });
 
-    it('should return true for REQUEST_CANCEL (terminal)', () => {
-      expect(stateMachine.isTerminalState(OrderStatus.REQUEST_CANCEL)).toBe(true);
+    it('should return false for REQUEST_CANCEL (can go to CANCELLED)', () => {
+      expect(stateMachine.isTerminalState(OrderStatus.REQUEST_CANCEL)).toBe(false);
     });
   });
 
@@ -872,51 +903,35 @@ describe('OrderStateMachine', () => {
         const today = new Date().toISOString().split('T')[0];
 
         // UNASSIGNED → ASSIGNED
-        let result = stateMachine.validateTransition(
-          OrderStatus.UNASSIGNED,
-          OrderStatus.ASSIGNED,
-          { installerId: 'installer-123' },
-        );
+        let result = stateMachine.validateTransition(OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, {
+          installerId: 'installer-123',
+        });
         expect(result.valid).toBe(true);
 
         // ASSIGNED → CONFIRMED
-        result = stateMachine.validateTransition(
-          OrderStatus.ASSIGNED,
-          OrderStatus.CONFIRMED,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.ASSIGNED, OrderStatus.CONFIRMED, {});
         expect(result.valid).toBe(true);
 
         // CONFIRMED → RELEASED
-        result = stateMachine.validateTransition(
-          OrderStatus.CONFIRMED,
-          OrderStatus.RELEASED,
-          { appointmentDate: today },
-        );
+        result = stateMachine.validateTransition(OrderStatus.CONFIRMED, OrderStatus.RELEASED, {
+          appointmentDate: today,
+        });
         expect(result.valid).toBe(true);
 
         // RELEASED → DISPATCHED
-        result = stateMachine.validateTransition(
-          OrderStatus.RELEASED,
-          OrderStatus.DISPATCHED,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.RELEASED, OrderStatus.DISPATCHED, {});
         expect(result.valid).toBe(true);
 
         // DISPATCHED → COMPLETED
-        result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.COMPLETED,
-          { serialsCaptured: true },
-        );
+        result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.COMPLETED, {
+          serialsCaptured: true,
+        });
         expect(result.valid).toBe(true);
 
         // COMPLETED → COLLECTED
-        result = stateMachine.validateTransition(
-          OrderStatus.COMPLETED,
-          OrderStatus.COLLECTED,
-          { wastePickupLogged: true },
-        );
+        result = stateMachine.validateTransition(OrderStatus.COMPLETED, OrderStatus.COLLECTED, {
+          wastePickupLogged: true,
+        });
         expect(result.valid).toBe(true);
       });
 
@@ -924,27 +939,19 @@ describe('OrderStateMachine', () => {
         const today = new Date().toISOString().split('T')[0];
 
         // Path to DISPATCHED
-        let result = stateMachine.validateTransition(
-          OrderStatus.UNASSIGNED,
-          OrderStatus.ASSIGNED,
-          { installerId: 'installer-123' },
-        );
+        let result = stateMachine.validateTransition(OrderStatus.UNASSIGNED, OrderStatus.ASSIGNED, {
+          installerId: 'installer-123',
+        });
         expect(result.valid).toBe(true);
 
         // DISPATCHED → PARTIAL (no guard)
-        result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.PARTIAL,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.PARTIAL, {});
         expect(result.valid).toBe(true);
 
-        // PARTIAL → COMPLETED (no guard)
-        result = stateMachine.validateTransition(
-          OrderStatus.PARTIAL,
-          OrderStatus.COMPLETED,
-          {},
-        );
+        // PARTIAL → COMPLETED (guard requires partialItemsResolved)
+        result = stateMachine.validateTransition(OrderStatus.PARTIAL, OrderStatus.COMPLETED, {
+          partialItemsResolved: true,
+        });
         expect(result.valid).toBe(true);
       });
 
@@ -958,59 +965,39 @@ describe('OrderStateMachine', () => {
         expect(result.valid).toBe(true);
 
         // POSTPONED → DISPATCHED (retry)
-        result = stateMachine.validateTransition(
-          OrderStatus.POSTPONED,
-          OrderStatus.DISPATCHED,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.POSTPONED, OrderStatus.DISPATCHED, {});
         expect(result.valid).toBe(true);
       });
 
       it('should validate absent retry path with limit', () => {
         // First attempt: DISPATCHED → ABSENT
-        let result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.ABSENT,
-          { retryCount: 0 },
-        );
+        let result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.ABSENT, {
+          retryCount: 0,
+        });
         expect(result.valid).toBe(true);
 
         // Second attempt: ABSENT → DISPATCHED → ABSENT
-        result = stateMachine.validateTransition(
-          OrderStatus.ABSENT,
-          OrderStatus.DISPATCHED,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.ABSENT, OrderStatus.DISPATCHED, {});
         expect(result.valid).toBe(true);
 
-        result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.ABSENT,
-          { retryCount: 1 },
-        );
+        result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.ABSENT, {
+          retryCount: 1,
+        });
         expect(result.valid).toBe(true);
 
         // Third attempt (last): ABSENT → DISPATCHED → ABSENT
-        result = stateMachine.validateTransition(
-          OrderStatus.ABSENT,
-          OrderStatus.DISPATCHED,
-          {},
-        );
+        result = stateMachine.validateTransition(OrderStatus.ABSENT, OrderStatus.DISPATCHED, {});
         expect(result.valid).toBe(true);
 
-        result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.ABSENT,
-          { retryCount: 2 },
-        );
+        result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.ABSENT, {
+          retryCount: 2,
+        });
         expect(result.valid).toBe(true);
 
         // Fourth attempt: should fail
-        result = stateMachine.validateTransition(
-          OrderStatus.DISPATCHED,
-          OrderStatus.ABSENT,
-          { retryCount: 3 },
-        );
+        result = stateMachine.validateTransition(OrderStatus.DISPATCHED, OrderStatus.ABSENT, {
+          retryCount: 3,
+        });
         expect(result.valid).toBe(false);
       });
     });
@@ -1035,11 +1022,9 @@ describe('OrderStateMachine', () => {
         );
         expect(result.valid).toBe(false);
 
-        result = stateMachine.validateTransition(
-          OrderStatus.CANCELLED,
-          OrderStatus.ASSIGNED,
-          { installerId: 'installer-123' },
-        );
+        result = stateMachine.validateTransition(OrderStatus.CANCELLED, OrderStatus.ASSIGNED, {
+          installerId: 'installer-123',
+        });
         expect(result.valid).toBe(false);
       });
     });

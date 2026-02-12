@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../prisma/prisma.service';
-import { Platform, PushProvider, NotificationStatus } from '@prisma/client';
+import { Platform, PushProvider, NotificationStatus, Prisma, Notification } from '@prisma/client';
 import { PushProviderFactory, PushPayload } from './push-providers';
 import { PushJobPayload } from './notifications.processor';
 
@@ -130,7 +130,7 @@ export class NotificationsService {
       cursor?: string;
     } = {},
   ) {
-    const where: any = { userId };
+    const where: Prisma.NotificationWhereInput = { userId };
 
     if (options.category) {
       where.category = options.category;
@@ -261,7 +261,7 @@ export class NotificationsService {
     return hour * 60 + min;
   }
 
-  private async sendPush(userId: string, notification: any) {
+  private async sendPush(userId: string, notification: Notification) {
     const subscriptions = await this.prisma.notificationSubscription.findMany({
       where: { userId, isActive: true, categoriesEnabled: { has: notification.category } },
     });
@@ -331,19 +331,20 @@ export class NotificationsService {
     }
   }
 
-  private buildPushPayload(notification: any): PushPayload {
+  private buildPushPayload(notification: Notification): PushPayload {
     const config = CATEGORY_PUSH_CONFIG[notification.category] || DEFAULT_PUSH_CONFIG;
     const clickAction = config.clickAction.replace('{orderId}', notification.orderId || '');
+    const payload = notification.payload as Record<string, unknown> | null;
 
     return {
-      title: notification.payload?.title || 'New Notification',
-      body: notification.payload?.body || 'You have a new notification',
+      title: (payload?.title as string) || 'New Notification',
+      body: (payload?.body as string) || 'You have a new notification',
       data: {
         notificationId: notification.id,
         category: notification.category,
         orderId: notification.orderId,
         createdAt: notification.createdAt.toISOString(),
-        ...notification.payload,
+        ...(payload && typeof payload === 'object' ? payload : {}),
       },
       icon: config.icon,
       sound: config.sound,

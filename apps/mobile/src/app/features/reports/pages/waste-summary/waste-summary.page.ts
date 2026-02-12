@@ -1,13 +1,39 @@
 // apps/web/src/app/features/reports/pages/waste-summary/waste-summary.page.ts
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-  IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
-  IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonSpinner,
+  IonButton,
+  IonIcon,
+  IonDatetimeButton,
+  IonModal,
+  IonDatetime,
+  IonRefresher,
+  IonRefresherContent,
   ToastController,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { downloadOutline, calendarOutline, trashOutline } from 'ionicons/icons';
@@ -20,19 +46,43 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonList, IonItem,
-    IonLabel, IonBadge, IonSpinner, IonButton, IonIcon,
-    IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonSpinner,
+    IonButton,
+    IonIcon,
+    IonDatetimeButton,
+    IonModal,
+    IonDatetime,
+    IonRefresher,
+    IonRefresherContent,
     TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
+        <ion-buttons slot="start"
+          ><ion-back-button defaultHref="/tabs/reports"></ion-back-button
+        ></ion-buttons>
         <ion-title>폐가전 집계</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="exportData()"><ion-icon name="download-outline"></ion-icon></ion-button>
+          <ion-button (click)="exportData()"
+            ><ion-icon name="download-outline"></ion-icon
+          ></ion-button>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
@@ -43,8 +93,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         </div>
         <ion-modal [keepContentsMounted]="true">
           <ng-template>
-            <ion-datetime 
-              id="startDate" 
+            <ion-datetime
+              id="startDate"
               presentation="date"
               [value]="dateFrom()"
               (ionChange)="onDateFromChange($event)"
@@ -53,8 +103,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         </ion-modal>
         <ion-modal [keepContentsMounted]="true">
           <ng-template>
-            <ion-datetime 
-              id="endDate" 
+            <ion-datetime
+              id="endDate"
               presentation="date"
               [value]="dateTo()"
               (ionChange)="onDateToChange($event)"
@@ -125,22 +175,84 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       }
     </ion-content>
   `,
-  styles: [`
-    .date-range { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
-    .center { display: flex; justify-content: center; padding: 48px; }
-    .total-count { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .total-count ion-icon { font-size: 32px; }
-    .total-count .value { font-size: 48px; font-weight: bold; }
-    .total-count .unit { font-size: 18px; }
-    .total-label { text-align: center; margin-top: 8px; opacity: 0.8; }
-    .empty { text-align: center; padding: 24px; color: var(--ion-color-medium); }
-    .rank-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; position: relative; }
-    .rank-item .rank { width: 24px; height: 24px; border-radius: 50%; background: var(--ion-color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-    .rank-item .name { flex: 1; }
-    .rank-item .count { font-weight: 600; }
-    .rank-item .bar { position: absolute; bottom: -4px; left: 36px; height: 3px; background: var(--ion-color-primary-tint); border-radius: 2px; }
-    ion-card-title { font-size: 16px; }
-  `],
+  styles: [
+    `
+      .date-range {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+      }
+      .center {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+      .total-count {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .total-count ion-icon {
+        font-size: 32px;
+      }
+      .total-count .value {
+        font-size: 48px;
+        font-weight: bold;
+      }
+      .total-count .unit {
+        font-size: 18px;
+      }
+      .total-label {
+        text-align: center;
+        margin-top: 8px;
+        opacity: 0.8;
+      }
+      .empty {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+      .rank-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        position: relative;
+      }
+      .rank-item .rank {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--ion-color-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .rank-item .name {
+        flex: 1;
+      }
+      .rank-item .count {
+        font-weight: 600;
+      }
+      .rank-item .bar {
+        position: absolute;
+        bottom: -4px;
+        left: 36px;
+        height: 3px;
+        background: var(--ion-color-primary-tint);
+        border-radius: 2px;
+      }
+      ion-card-title {
+        font-size: 16px;
+      }
+    `,
+  ],
 })
 export class WasteSummaryPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
@@ -154,19 +266,21 @@ export class WasteSummaryPage implements OnInit {
   protected readonly totalCount = signal(0);
   protected readonly wasteStats = signal<WasteStat[]>([]);
 
-  protected readonly topCategories = computed(() => 
-    [...this.wasteStats()].sort((a, b) => b.count - a.count).slice(0, 5)
+  protected readonly topCategories = computed(() =>
+    [...this.wasteStats()].sort((a, b) => b.count - a.count).slice(0, 5),
   );
 
-  protected readonly maxCount = computed(() => 
-    Math.max(...this.wasteStats().map(s => s.count), 1)
+  protected readonly maxCount = computed(() =>
+    Math.max(...this.wasteStats().map((s) => s.count), 1),
   );
 
   constructor() {
     addIcons({ downloadOutline, calendarOutline, trashOutline });
   }
 
-  ngOnInit() { this.loadData(); }
+  ngOnInit() {
+    this.loadData();
+  }
 
   private getDefaultDateFrom(): string {
     const d = new Date();
@@ -179,20 +293,22 @@ export class WasteSummaryPage implements OnInit {
     const branchCode = this.authService.user()?.branchCode;
 
     try {
-      this.reportsService.getWasteSummary({
-        branchCode,
-        dateFrom: this.dateFrom().split('T')[0],
-        dateTo: this.dateTo().split('T')[0],
-      }).subscribe({
-        next: (data) => {
-          this.totalCount.set(data.totalCount || 0);
-          this.wasteStats.set(data.byCategory || []);
-        },
-        error: () => {
-          this.totalCount.set(0);
-          this.wasteStats.set([]);
-        },
-      });
+      this.reportsService
+        .getWasteSummary({
+          branchCode,
+          dateFrom: this.dateFrom().split('T')[0],
+          dateTo: this.dateTo().split('T')[0],
+        })
+        .subscribe({
+          next: (data) => {
+            this.totalCount.set(data.totalCount || 0);
+            this.wasteStats.set(data.byCategory || []);
+          },
+          error: () => {
+            this.totalCount.set(0);
+            this.wasteStats.set([]);
+          },
+        });
     } finally {
       this.isLoading.set(false);
     }
@@ -208,7 +324,7 @@ export class WasteSummaryPage implements OnInit {
     this.loadData();
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     await this.loadData();
     event.target.complete();
   }
@@ -224,14 +340,14 @@ export class WasteSummaryPage implements OnInit {
       const headers = [
         this.translate.instant('WASTE.EXPORT.HEADERS.CODE'),
         this.translate.instant('WASTE.EXPORT.HEADERS.ITEM'),
-        this.translate.instant('WASTE.EXPORT.HEADERS.QUANTITY')
+        this.translate.instant('WASTE.EXPORT.HEADERS.QUANTITY'),
       ];
-      const rows = this.wasteStats().map(s => [s.code, s.name, String(s.count)]);
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-      
+      const rows = this.wasteStats().map((s) => [s.code, s.name, String(s.count)]);
+      const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `waste_summary_${this.dateFrom().split('T')[0]}_${this.dateTo().split('T')[0]}.csv`;
