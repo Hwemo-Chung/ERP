@@ -6,7 +6,12 @@ import {
   APP_INITIALIZER,
 } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withPreloading, PreloadAllModules, RouteReuseStrategy } from '@angular/router';
+import {
+  provideRouter,
+  withPreloading,
+  PreloadAllModules,
+  RouteReuseStrategy,
+} from '@angular/router';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
@@ -59,7 +64,7 @@ bootstrapApplication(AppComponent, {
         apiResponseInterceptor,
         errorInterceptor,
         offlineInterceptor,
-      ])
+      ]),
     ),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
@@ -75,7 +80,7 @@ bootstrapApplication(AppComponent, {
           useFactory: HttpLoaderFactory,
           deps: [HttpClient],
         },
-      })
+      }),
     ),
     // Load translations before app bootstrap
     {
@@ -85,4 +90,8 @@ bootstrapApplication(AppComponent, {
       multi: true,
     },
   ],
-}).catch((err) => console.error('Bootstrap error:', err));
+}).catch((err) => {
+  if (!environment.production) {
+    console.error('Bootstrap error:', err);
+  }
+});

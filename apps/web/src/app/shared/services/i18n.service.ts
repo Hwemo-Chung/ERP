@@ -1,26 +1,26 @@
 /**
  * @fileoverview 다국어(i18n) 서비스
  * @description 애플리케이션의 언어 설정을 관리하고 번역 기능을 제공합니다.
- * 
+ *
  * 주요 기능:
  * - 언어 변경 및 초기화
  * - 번역 문자열 조회
  * - 언어 설정 저장/복원
- * 
+ *
  * 사용 예시:
  * ```typescript
  * // 컴포넌트에서 사용
  * translate = inject(I18nService);
- * 
+ *
  * // 현재 언어 확인
  * const lang = this.translate.currentLang();
- * 
+ *
  * // 언어 변경
  * this.translate.setLanguage('en');
- * 
+ *
  * // 번역 텍스트 가져오기 (Observable)
  * this.translate.get('COMMON.OK').subscribe(text => console.log(text));
- * 
+ *
  * // 즉시 번역 (이미 로드된 경우)
  * const text = this.translate.instant('COMMON.OK');
  * ```
@@ -28,12 +28,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { 
-  LANGUAGE_CODES, 
-  DEFAULT_LANGUAGE, 
-  STORAGE_KEYS,
-  type LanguageCode 
-} from '../constants';
+import { LoggerService } from '../../core/services/logger.service';
+import { LANGUAGE_CODES, DEFAULT_LANGUAGE, STORAGE_KEYS, type LanguageCode } from '../constants';
 
 /**
  * 언어 정보 인터페이스
@@ -57,12 +53,13 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
 ];
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class I18nService {
   /** TranslateService 주입 */
   private translateService = inject(TranslateService);
-  
+  private readonly logger = inject(LoggerService);
+
   /** 현재 언어 상태 (Signal) */
   private _currentLang = signal<LanguageCode>(DEFAULT_LANGUAGE);
 
@@ -82,19 +79,19 @@ export class I18nService {
    */
   private initializeLanguage(): void {
     // 사용 가능한 언어 설정
-    const langCodes = SUPPORTED_LANGUAGES.map(lang => lang.code);
+    const langCodes = SUPPORTED_LANGUAGES.map((lang) => lang.code);
     this.translateService.addLangs(langCodes);
-    
+
     // 기본 언어 설정
     this.translateService.setDefaultLang(DEFAULT_LANGUAGE);
 
     // 저장된 언어 또는 브라우저 언어 확인
     const savedLang = this.getSavedLanguage();
     const browserLang = this.translateService.getBrowserLang() as LanguageCode;
-    
+
     // 우선순위: 저장된 언어 > 브라우저 언어 > 기본 언어
     let langToUse: LanguageCode = DEFAULT_LANGUAGE;
-    
+
     if (savedLang && this.isValidLanguage(savedLang)) {
       langToUse = savedLang;
     } else if (browserLang && this.isValidLanguage(browserLang)) {
@@ -111,13 +108,13 @@ export class I18nService {
    */
   setLanguage(lang: LanguageCode): Observable<unknown> {
     if (!this.isValidLanguage(lang)) {
-      console.warn(`[I18nService] 지원하지 않는 언어입니다: ${lang}`);
+      this.logger.warn(`[I18nService] 지원하지 않는 언어입니다: ${lang}`);
       lang = DEFAULT_LANGUAGE;
     }
 
     this._currentLang.set(lang);
     this.saveLanguage(lang);
-    
+
     return this.translateService.use(lang);
   }
 
@@ -156,7 +153,7 @@ export class I18nService {
    * @returns 유효 여부
    */
   private isValidLanguage(lang: string): lang is LanguageCode {
-    return SUPPORTED_LANGUAGES.some(l => l.code === lang);
+    return SUPPORTED_LANGUAGES.some((l) => l.code === lang);
   }
 
   /**
@@ -190,8 +187,9 @@ export class I18nService {
    * @returns 현재 언어의 상세 정보
    */
   getCurrentLanguageInfo(): LanguageInfo {
-    return SUPPORTED_LANGUAGES.find(l => l.code === this._currentLang()) 
-      ?? SUPPORTED_LANGUAGES[0];
+    return (
+      SUPPORTED_LANGUAGES.find((l) => l.code === this._currentLang()) ?? SUPPORTED_LANGUAGES[0]
+    );
   }
 
   /**

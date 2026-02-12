@@ -18,6 +18,7 @@ import { NetworkService } from './network.service';
 import { SyncQueueService } from './sync-queue.service';
 import { db } from '../db/database';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 export interface SyncMetadata {
   lastSyncTime: number;
@@ -30,6 +31,7 @@ export class OfflineSyncService {
   private http = inject(HttpClient);
   private networkService = inject(NetworkService);
   private syncQueue = inject(SyncQueueService);
+  private logger = inject(LoggerService);
   private apiUrl = `${environment.apiUrl}`;
 
   readonly isSyncing = signal(false);
@@ -84,8 +86,9 @@ export class OfflineSyncService {
       await this.syncQueue.processPendingOperations();
 
       this.lastSyncTime.set(Date.now());
-    } catch (error: any) {
-      this.syncError.set(error?.message || 'Sync failed');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Sync failed';
+      this.syncError.set(msg);
     } finally {
       this.isSyncing.set(false);
     }
@@ -96,26 +99,24 @@ export class OfflineSyncService {
    * Uses version conflict detection
    */
   private async pushLocalChanges() {
-    const pendingChanges = await db
-      .table('syncQueue')
-      .where('synced')
-      .equals(0)
-      .toArray();
+    const pendingChanges = await db.table('syncQueue').where('synced').equals(0).toArray();
 
     for (const change of pendingChanges) {
       try {
         await this.pushChange(change);
         await db.table('syncQueue').update(change.id, { synced: 1 });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const httpError = error as Record<string, unknown>;
         // Conflict detected - add to conflict resolution queue
-        if (error?.status === 409) {
+        if (httpError?.['status'] === 409) {
+          const errorBody = httpError?.['error'] as Record<string, unknown> | undefined;
           await db.table('conflictQueue').add({
             id: change.id,
             dataType: change.dataType,
             localVersion: change.version,
-            serverVersion: error?.error?.version,
+            serverVersion: errorBody?.['version'],
             localData: change.data,
-            serverData: error?.error?.data,
+            serverData: errorBody?.['data'],
             timestamp: Date.now(),
           });
         } else {
@@ -135,10 +136,12 @@ export class OfflineSyncService {
       case 'CREATE':
         return firstValueFrom(this.http.post(url, change.data));
       case 'UPDATE':
-        return firstValueFrom(this.http.put(url, {
-          ...change.data,
-          version: change.version,
-        }));
+        return firstValueFrom(
+          this.http.put(url, {
+            ...change.data,
+            version: change.version,
+          }),
+        );
       case 'DELETE':
         return firstValueFrom(this.http.delete(url));
       default:
@@ -165,7 +168,7 @@ export class OfflineSyncService {
             timestamp: number;
           }>(`${this.apiUrl}/${dataType}/delta`, {
             params: { since: lastSync.toString() },
-          })
+          }),
         );
 
         // Merge with local data
@@ -176,8 +179,9 @@ export class OfflineSyncService {
           lastSyncTime: response.timestamp,
           dataVersion: (metadata?.dataVersion || 0) + 1,
         });
-      } catch (error: any) {
-        console.warn(`Failed to sync ${dataType}:`, error);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`Failed to sync ${dataType}:`, msg);
         // Continue with other data types
       }
     }
@@ -196,10 +200,7 @@ export class OfflineSyncService {
       if (!localItem) {
         // New item from server
         await table.add(remoteItem);
-      } else if (
-        localItem.version !== undefined &&
-        remoteItem.version !== undefined
-      ) {
+      } else if (localItem.version !== undefined && remoteItem.version !== undefined) {
         // Version conflict - compare versions
         if (remoteItem.version > localItem.version) {
           // Server is newer - but preserve local edits if pending
@@ -225,13 +226,8 @@ export class OfflineSyncService {
    * Resolve conflicts using Operational Transformation
    * User decision on conflict
    */
-  async resolveConflict(
-    conflictId: string,
-    resolution: 'use-local' | 'use-server' | 'merge'
-  ) {
-    const conflict = await db
-      .table('conflictQueue')
-      .get(conflictId);
+  async resolveConflict(conflictId: string, resolution: 'use-local' | 'use-server' | 'merge') {
+    const conflict = await db.table('conflictQueue').get(conflictId);
 
     if (!conflict) return;
 
@@ -295,7 +291,7 @@ export class OfflineSyncService {
           from: from.toISOString(),
           to: to.toISOString(),
         },
-      })
+      }),
     );
 
     const table = db.table(dataType);

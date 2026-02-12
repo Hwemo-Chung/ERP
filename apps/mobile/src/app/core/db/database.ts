@@ -16,6 +16,9 @@ export interface OfflineOrder {
   version: number;
   localUpdatedAt: number;
   syncedAt?: number;
+  // Absence tracking (FR-04)
+  absenceRetryCount?: number;
+  maxAbsenceRetries?: number;
   // Nested data - supports both API field names (itemCode/itemName) and legacy (productCode/productName)
   orderLines?: Array<{
     id: string;
@@ -38,7 +41,15 @@ export interface SyncQueueEntry {
   timestamp: number;
   retryCount: number;
   maxRetries?: number;
-  status?: 'pending' | 'syncing' | 'failed' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CONFLICT' | 'FAILED';
+  status?:
+    | 'pending'
+    | 'syncing'
+    | 'failed'
+    | 'PENDING'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'CONFLICT'
+    | 'FAILED';
   lastError?: string;
   entityType?: 'order' | 'completion';
   entityId?: string;

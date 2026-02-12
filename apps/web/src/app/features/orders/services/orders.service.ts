@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { firstValueFrom } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { environment } from '@env/environment';
-import { db } from '@core/db/database';
+import { db, OfflineOrder } from '@core/db/database';
 import { NetworkService } from '@core/services/network.service';
 import { ConflictResolverService } from '../../../shared/services/conflict-resolver.service';
 
@@ -101,7 +101,7 @@ export class OrdersService {
     }
 
     const result = await firstValueFrom(
-      this.http.get<PaginatedResponse<Order>>(this.apiUrl, { params: httpParams })
+      this.http.get<PaginatedResponse<Order>>(this.apiUrl, { params: httpParams }),
     );
 
     // Cache to IndexedDB for offline use
@@ -117,9 +117,7 @@ export class OrdersService {
       return cached ? this.mapOfflineOrder(cached) : null;
     }
 
-    const order = await firstValueFrom(
-      this.http.get<Order>(`${this.apiUrl}/${id}`)
-    );
+    const order = await firstValueFrom(this.http.get<Order>(`${this.apiUrl}/${id}`));
 
     // Cache to IndexedDB
     if (order) {
@@ -132,7 +130,7 @@ export class OrdersService {
   async updateStatus(id: string, dto: UpdateStatusDto): Promise<Order> {
     try {
       const result = await firstValueFrom(
-        this.http.patch<Order>(`${this.apiUrl}/${id}/status`, dto)
+        this.http.patch<Order>(`${this.apiUrl}/${id}/status`, dto),
       );
 
       // Update cache
@@ -149,7 +147,7 @@ export class OrdersService {
       if (error instanceof HttpErrorResponse && error.status === 409) {
         const serverOrder = error.error?.data as Order;
         const localOrder = await this.getOrder(id);
-        
+
         if (serverOrder && localOrder) {
           const resolution = await this.conflictResolver.resolveConflict(
             this.translate.instant('CONFLICT.ENTITY.ORDER'),
@@ -160,7 +158,7 @@ export class OrdersService {
               appointmentDate: this.translate.instant('CONFLICT.FIELD.APPOINTMENT_DATE'),
               appointmentSlot: this.translate.instant('CONFLICT.FIELD.APPOINTMENT_SLOT'),
               customerMemo: this.translate.instant('CONFLICT.FIELD.MEMO'),
-            }
+            },
           );
 
           if (resolution === 'overwrite') {
@@ -173,7 +171,7 @@ export class OrdersService {
             // Return server data
             return serverOrder;
           }
-          
+
           // Cancel - throw to let caller handle
           throw new Error(this.translate.instant('CONFLICT.CANCELLED'));
         }
@@ -183,9 +181,7 @@ export class OrdersService {
   }
 
   async bulkAssign(orderIds: string[], installerId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post(`${this.apiUrl}/bulk/assign`, { orderIds, installerId })
-    );
+    await firstValueFrom(this.http.post(`${this.apiUrl}/bulk/assign`, { orderIds, installerId }));
   }
 
   private async cacheOrders(orders: Order[]): Promise<void> {
@@ -221,8 +217,7 @@ export class OrdersService {
       const search = params.search.toLowerCase();
       filtered = filtered.filter(
         (o) =>
-          o.orderNo.toLowerCase().includes(search) ||
-          o.customerName.toLowerCase().includes(search)
+          o.orderNo.toLowerCase().includes(search) || o.customerName.toLowerCase().includes(search),
       );
     }
 
@@ -253,7 +248,7 @@ export class OrdersService {
     };
   }
 
-  private mapOfflineOrder(offline: any): Order {
+  private mapOfflineOrder(offline: OfflineOrder): Order {
     return {
       id: offline.id,
       orderNo: offline.orderNo,

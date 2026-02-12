@@ -4,6 +4,7 @@ import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera
 import { Capacitor } from '@capacitor/core';
 import { AlertController, ActionSheetController } from '@ionic/angular/standalone';
 import { TranslateService } from '@ngx-translate/core';
+import { LoggerService } from './logger.service';
 
 export interface CapturedPhoto {
   dataUrl: string;
@@ -19,7 +20,8 @@ export class CameraService {
   private readonly alertCtrl = inject(AlertController);
   private readonly actionSheetCtrl = inject(ActionSheetController);
   private readonly translate = inject(TranslateService);
-  
+  private readonly logger = inject(LoggerService);
+
   readonly isCapturing = signal(false);
 
   /**
@@ -39,7 +41,7 @@ export class CameraService {
   async requestPermission(): Promise<boolean> {
     try {
       const permissions = await Camera.checkPermissions();
-      
+
       if (permissions.camera === 'granted' && permissions.photos === 'granted') {
         return true;
       }
@@ -50,7 +52,7 @@ export class CameraService {
 
       return request.camera === 'granted' || request.camera === 'limited';
     } catch (error) {
-      console.error('Camera permission error:', error);
+      this.logger.error('Camera permission error:', error);
       return false;
     }
   }
@@ -85,7 +87,7 @@ export class CameraService {
    */
   async captureMultiplePhotos(maxCount: number = 5): Promise<CapturedPhoto[]> {
     const photos: CapturedPhoto[] = [];
-    
+
     for (let i = 0; i < maxCount; i++) {
       const photo = await this.capturePhoto();
       if (!photo) break;
@@ -162,9 +164,10 @@ export class CameraService {
         webPath: image.webPath,
         base64: image.base64String,
       };
-    } catch (error: any) {
-      if (error.message !== 'User cancelled photos app') {
-        console.error('Camera capture error:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg !== 'User cancelled photos app') {
+        this.logger.error('Camera capture error:', msg);
         await this.showCaptureError();
       }
       return null;
@@ -185,7 +188,7 @@ export class CameraService {
       input.onchange = async (event: Event) => {
         const target = event.target as HTMLInputElement;
         const file = target.files?.[0];
-        
+
         if (!file) {
           resolve(null);
           return;

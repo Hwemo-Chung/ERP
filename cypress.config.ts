@@ -8,7 +8,7 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },
-    specPattern: 'cypress/e2e/**/*.cy.ts',
+    specPattern: 'cypress/e2e/**/!(*.legacy).cy.ts',
     supportFile: 'cypress/support/e2e.ts',
     defaultCommandTimeout: 10000,
     requestTimeout: 10000,

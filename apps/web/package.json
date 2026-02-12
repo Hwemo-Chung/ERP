@@ -10,6 +10,8 @@
     "build": "ng build",
     "build:prod": "ng build --configuration=production",
     "build:test": "ng build --configuration=test",
+    "build:ghpages": "ng build --configuration=ghpages",
+    "build:cloudflare": "ng build --configuration=cloudflare",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --no-watch --no-progress --browsers=ChromeHeadless",

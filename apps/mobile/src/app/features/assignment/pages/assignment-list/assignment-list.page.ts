@@ -54,6 +54,7 @@ import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus } from '../../../../store/orders/orders.models';
 import { AuthService } from '@core/services/auth.service';
 import { UIStore } from '../../../../store/ui/ui.store';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 type AssignmentFilter = 'unassigned' | 'assigned' | 'confirmed' | 'all';
 
@@ -803,7 +804,7 @@ export class AssignmentListPage implements OnInit {
   private readonly uiStore = inject(UIStore);
   private readonly modalController = inject(ModalController);
   private readonly translate = inject(TranslateService);
-
+  private readonly logger = inject(LoggerService);
   protected readonly currentFilter = signal<AssignmentFilter>('all');
 
   // Computed counts from orders store filtered by assignment-related statuses
@@ -874,7 +875,7 @@ export class AssignmentListPage implements OnInit {
         this.ordersStore.loadOrders(branchCode, 1, 100),
       ]);
     } catch (error) {
-      console.error('[AssignmentList] Failed to load orders:', error);
+      this.logger.error('[AssignmentList] Failed to load orders:', error);
       this.uiStore.showToast(this.translate.instant('ASSIGNMENT.ASSIGN_FAILED'), 'danger');
     }
   }

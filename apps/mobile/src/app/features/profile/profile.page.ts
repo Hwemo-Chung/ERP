@@ -12,7 +12,14 @@
  * - Logout with pending operations warning
  */
 
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent,
@@ -58,6 +65,7 @@ import { SyncQueueService } from '@core/services/sync-queue.service';
 import { NetworkService } from '@core/services/network.service';
 import { TranslationService, SupportedLanguage } from '@core/services/translation.service';
 import { NotificationsService } from '@core/services/notifications.service';
+import { LoggerService } from '@core/services/logger.service';
 import { environment } from '@env/environment';
 import { getRoleLabel, getRoleColor } from '@shared/constants/roles';
 import {
@@ -166,12 +174,7 @@ interface SyncStatus {
           </ion-card-header>
           <ion-card-content>
             <p>{{ t.instant('PROFILE.SYNC.CONFLICT_MESSAGE') }}</p>
-            <ion-button
-              expand="block"
-              color="danger"
-              fill="outline"
-              (click)="viewConflicts()"
-            >
+            <ion-button expand="block" color="danger" fill="outline" (click)="viewConflicts()">
               {{ t.instant('PROFILE.SYNC.RESOLVE_CONFLICTS') }}
             </ion-button>
           </ion-card-content>
@@ -196,18 +199,28 @@ interface SyncStatus {
               ></ion-icon>
               <ion-label>
                 <h3>{{ t.instant('PROFILE.SYNC.NETWORK') }}</h3>
-                <p>{{ t.instant(networkService.isOffline() ? 'PROFILE.SYNC.OFFLINE' : 'PROFILE.SYNC.ONLINE') }}</p>
+                <p>
+                  {{
+                    t.instant(
+                      networkService.isOffline() ? 'PROFILE.SYNC.OFFLINE' : 'PROFILE.SYNC.ONLINE'
+                    )
+                  }}
+                </p>
               </ion-label>
             </ion-item>
             <ion-item>
               <ion-icon
                 slot="start"
-                [name]="syncQueue.pendingCount() > 0 ? 'warning-outline' : 'shield-checkmark-outline'"
+                [name]="
+                  syncQueue.pendingCount() > 0 ? 'warning-outline' : 'shield-checkmark-outline'
+                "
                 [color]="syncQueue.pendingCount() > 0 ? 'warning' : 'success'"
               ></ion-icon>
               <ion-label>
                 <h3>{{ t.instant('PROFILE.SYNC.PENDING_OPERATIONS') }}</h3>
-                <p>{{ t.instant('PROFILE.SYNC.PENDING_COUNT', { count: syncQueue.pendingCount() }) }}</p>
+                <p>
+                  {{ t.instant('PROFILE.SYNC.PENDING_COUNT', { count: syncQueue.pendingCount() }) }}
+                </p>
               </ion-label>
               @if (syncQueue.pendingCount() > 0) {
                 <ion-button
@@ -217,7 +230,11 @@ interface SyncStatus {
                   (click)="forceSync()"
                   [disabled]="syncQueue.isSyncing() || networkService.isOffline()"
                 >
-                  {{ t.instant(syncQueue.isSyncing() ? 'PROFILE.SYNC.SYNCING' : 'PROFILE.SYNC.SYNC_NOW') }}
+                  {{
+                    t.instant(
+                      syncQueue.isSyncing() ? 'PROFILE.SYNC.SYNCING' : 'PROFILE.SYNC.SYNC_NOW'
+                    )
+                  }}
                 </ion-button>
               }
             </ion-item>
@@ -225,7 +242,8 @@ interface SyncStatus {
               <ion-item>
                 <ion-label>
                   <ion-note>
-                    {{ t.instant('PROFILE.SYNC.LAST_SYNC') }}: {{ lastSyncTime() | date:'MM/dd HH:mm' }}
+                    {{ t.instant('PROFILE.SYNC.LAST_SYNC') }}:
+                    {{ lastSyncTime() | date: 'MM/dd HH:mm' }}
                   </ion-note>
                 </ion-label>
               </ion-item>
@@ -340,116 +358,113 @@ interface SyncStatus {
       </ion-card>
 
       <!-- Logout Button -->
-      <ion-button
-        expand="block"
-        color="danger"
-        fill="outline"
-        (click)="confirmLogout()"
-      >
+      <ion-button expand="block" color="danger" fill="outline" (click)="confirmLogout()">
         <ion-icon slot="start" name="log-out-outline"></ion-icon>
         {{ t.instant('PROFILE.LOGOUT.BUTTON') }}
       </ion-button>
     </ion-content>
   `,
-  styles: [`
-    .user-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-
-      ion-avatar {
-        width: 72px;
-        height: 72px;
-        background: var(--ion-color-light);
+  styles: [
+    `
+      .user-card {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 50%;
+        gap: 16px;
 
-        ion-icon {
-          width: 64px;
-          height: 64px;
-          color: var(--ion-color-primary);
-        }
-      }
-
-      .user-info {
-        flex: 1;
-
-        h2 {
-          margin: 0 0 4px 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .username {
-          margin: 0 0 2px 0;
-          font-size: 14px;
-          color: var(--ion-color-medium);
-        }
-
-        .roles {
-          margin-top: 8px;
+        ion-avatar {
+          width: 72px;
+          height: 72px;
+          background: var(--ion-color-light);
           display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
 
-          ion-badge {
-            font-size: 11px;
-            padding: 4px 8px;
+          ion-icon {
+            width: 64px;
+            height: 64px;
+            color: var(--ion-color-primary);
+          }
+        }
+
+        .user-info {
+          flex: 1;
+
+          h2 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            font-weight: 600;
+          }
+
+          .username {
+            margin: 0 0 2px 0;
+            font-size: 14px;
+            color: var(--ion-color-medium);
+          }
+
+          .roles {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+
+            ion-badge {
+              font-size: 11px;
+              padding: 4px 8px;
+            }
           }
         }
       }
-    }
 
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
 
-      ion-icon {
-        font-size: 20px;
-      }
-    }
-
-    ion-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-
-      h3 {
-        font-size: 14px;
-        font-weight: 500;
-        margin: 0 0 4px 0;
+        ion-icon {
+          font-size: 20px;
+        }
       }
 
-      p {
-        font-size: 13px;
-        color: var(--ion-color-medium);
-        margin: 0;
+      ion-item {
+        --padding-start: 0;
+        --inner-padding-end: 0;
+
+        h3 {
+          font-size: 14px;
+          font-weight: 500;
+          margin: 0 0 4px 0;
+        }
+
+        p {
+          font-size: 13px;
+          color: var(--ion-color-medium);
+          margin: 0;
+        }
+
+        ion-note {
+          font-size: 12px;
+        }
       }
 
-      ion-note {
-        font-size: 12px;
+      ion-button[expand='block'] {
+        margin-top: 24px;
+        margin-bottom: 24px;
       }
-    }
 
-    ion-button[expand="block"] {
-      margin-top: 24px;
-      margin-bottom: 24px;
-    }
+      .conflict-card {
+        border-left: 4px solid var(--ion-color-danger);
+        background: var(--ion-color-danger-tint);
 
-    .conflict-card {
-      border-left: 4px solid var(--ion-color-danger);
-      background: var(--ion-color-danger-tint);
-
-      p {
-        margin: 0 0 12px 0;
-        font-size: 14px;
-        color: var(--ion-color-danger-shade);
+        p {
+          margin: 0 0 12px 0;
+          font-size: 14px;
+          color: var(--ion-color-danger-shade);
+        }
       }
-    }
-  `],
+    `,
+  ],
 })
 export class ProfilePage implements OnInit {
   protected readonly authService = inject(AuthService);
@@ -459,6 +474,7 @@ export class ProfilePage implements OnInit {
   private readonly alertCtrl = inject(AlertController);
   private readonly modalCtrl = inject(ModalController);
   private readonly notificationsService = inject(NotificationsService);
+  private readonly logger = inject(LoggerService);
 
   protected readonly version = environment.appVersion;
   protected readonly environmentKey = environment.production
@@ -470,7 +486,7 @@ export class ProfilePage implements OnInit {
 
   // Settings state
   protected readonly notificationPrefs = signal<NotificationPreferences>(
-    getDefaultNotificationPreferences()
+    getDefaultNotificationPreferences(),
   );
   protected readonly darkModeEnabled = signal(false);
   protected readonly lastSyncTime = signal<Date | null>(null);
@@ -478,12 +494,10 @@ export class ProfilePage implements OnInit {
 
   // Computed states
   protected readonly allNotificationsEnabled = computed(() =>
-    areAllNotificationsEnabled(this.notificationPrefs())
+    areAllNotificationsEnabled(this.notificationPrefs()),
   );
 
-  protected readonly supportedLanguages = computed(() =>
-    this.t.getSupportedLanguages()
-  );
+  protected readonly supportedLanguages = computed(() => this.t.getSupportedLanguages());
 
   // Re-export helper functions for template use
   protected readonly getRoleLabel = getRoleLabel;
@@ -568,10 +582,7 @@ export class ProfilePage implements OnInit {
   /**
    * Toggle individual notification category
    */
-  protected toggleNotificationCategory(
-    category: NotificationCategory,
-    event: CustomEvent
-  ): void {
+  protected toggleNotificationCategory(category: NotificationCategory, event: CustomEvent): void {
     const enabled = event.detail.checked;
     this.notificationPrefs.update((prefs) => ({
       ...prefs,
@@ -604,9 +615,7 @@ export class ProfilePage implements OnInit {
   protected async confirmLogout(): Promise<void> {
     const pendingCount = this.syncQueue.pendingCount();
     const messageKey =
-      pendingCount > 0
-        ? 'PROFILE.LOGOUT.PENDING_WARNING'
-        : 'PROFILE.LOGOUT.CONFIRM_MESSAGE';
+      pendingCount > 0 ? 'PROFILE.LOGOUT.PENDING_WARNING' : 'PROFILE.LOGOUT.CONFIRM_MESSAGE';
 
     const alert = await this.alertCtrl.create({
       header: this.t.instant('PROFILE.LOGOUT.CONFIRM_TITLE'),
@@ -647,7 +656,7 @@ export class ProfilePage implements OnInit {
         const prefs = JSON.parse(notifPrefsJson) as NotificationPreferences;
         this.notificationPrefs.set(prefs);
       } catch (error) {
-        console.error('Failed to parse notification preferences:', error);
+        this.logger.error('Failed to parse notification preferences:', error);
         this.notificationPrefs.set(getDefaultNotificationPreferences());
       }
     }
@@ -657,10 +666,7 @@ export class ProfilePage implements OnInit {
    * Save general settings to localStorage
    */
   private saveSettings(): void {
-    localStorage.setItem(
-      this.STORAGE_KEYS.DARK_MODE,
-      String(this.darkModeEnabled())
-    );
+    localStorage.setItem(this.STORAGE_KEYS.DARK_MODE, String(this.darkModeEnabled()));
   }
 
   /**
@@ -670,10 +676,7 @@ export class ProfilePage implements OnInit {
     const prefs = this.notificationPrefs();
 
     // Save to localStorage for offline access
-    localStorage.setItem(
-      this.STORAGE_KEYS.NOTIFICATIONS,
-      JSON.stringify(prefs)
-    );
+    localStorage.setItem(this.STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(prefs));
 
     // Sync with backend API if online
     if (!this.networkService.isOffline()) {
@@ -688,7 +691,7 @@ export class ProfilePage implements OnInit {
 
         await this.notificationsService.updateSettings(apiSettings);
       } catch (error) {
-        console.error('[Profile] Failed to sync notification preferences:', error);
+        this.logger.error('[Profile] Failed to sync notification preferences:', error);
         // Preferences are saved locally, will sync on next attempt
       }
     }
@@ -706,7 +709,7 @@ export class ProfilePage implements OnInit {
       const { PushNotifications } = await import('@capacitor/push-notifications');
 
       // Check if any notification is enabled
-      const anyEnabled = Object.values(prefs).some(v => v === true);
+      const anyEnabled = Object.values(prefs).some((v) => v === true);
 
       if (anyEnabled) {
         // Request permission and register for push if not already done
@@ -722,7 +725,7 @@ export class ProfilePage implements OnInit {
       // is typically not needed as the server-side filtering handles this
     } catch (error) {
       // Push notifications not available (web or permission denied)
-      console.debug('[Profile] Push notifications not available:', error);
+      this.logger.debug('[Profile] Push notifications not available:', error);
     }
   }
 }

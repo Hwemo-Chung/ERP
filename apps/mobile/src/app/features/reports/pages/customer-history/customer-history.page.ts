@@ -4,10 +4,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
-  IonButton, IonIcon, IonRefresher, IonRefresherContent,
-  ModalController, ToastController,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonSearchbar,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonSpinner,
+  IonButton,
+  IonIcon,
+  IonRefresher,
+  IonRefresherContent,
+  ModalController,
+  ToastController,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { downloadOutline, personOutline, callOutline } from 'ionicons/icons';
@@ -20,14 +35,32 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonSearchbar, IonList, IonItem, IonLabel, IonBadge, IonSpinner,
-    IonButton, IonIcon, IonRefresher, IonRefresherContent, TranslateModule,
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonSearchbar,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonSpinner,
+    IonButton,
+    IonIcon,
+    IonRefresher,
+    IonRefresherContent,
+    TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-back-button defaultHref="/tabs/reports"></ion-back-button></ion-buttons>
+        <ion-buttons slot="start"
+          ><ion-back-button defaultHref="/tabs/reports"></ion-back-button
+        ></ion-buttons>
         <ion-title>고객 이력 조회</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="exportCSV()" [disabled]="customers().length === 0">
@@ -80,11 +113,24 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
       }
     </ion-content>
   `,
-  styles: [`
-    .center { display: flex; justify-content: center; padding: 48px; }
-    .empty { text-align: center; padding: 48px; color: var(--ion-color-medium); }
-    .sub { font-size: 12px; color: var(--ion-color-medium); }
-  `],
+  styles: [
+    `
+      .center {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+      .empty {
+        text-align: center;
+        padding: 48px;
+        color: var(--ion-color-medium);
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+      }
+    `,
+  ],
 })
 export class CustomerHistoryPage implements OnInit {
   private readonly reportsService = inject(ReportsService);
@@ -102,27 +148,29 @@ export class CustomerHistoryPage implements OnInit {
     addIcons({ downloadOutline, personOutline, callOutline });
 
     // Debounced search
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(query => {
-        if (!query || query.length < 2) {
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => {
+          if (!query || query.length < 2) {
+            this.customers.set([]);
+            return [];
+          }
+          this.isLoading.set(true);
+          return this.reportsService.searchCustomers(query);
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          this.customers.set(result?.data || []);
+          this.isLoading.set(false);
+        },
+        error: () => {
           this.customers.set([]);
-          return [];
-        }
-        this.isLoading.set(true);
-        return this.reportsService.searchCustomers(query);
-      }),
-    ).subscribe({
-      next: (result) => {
-        this.customers.set(result?.data || []);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.customers.set([]);
-        this.isLoading.set(false);
-      },
-    });
+          this.isLoading.set(false);
+        },
+      });
   }
 
   ngOnInit() {}
@@ -133,7 +181,7 @@ export class CustomerHistoryPage implements OnInit {
     this.searchSubject.next(query);
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     if (this.searchQuery()) {
       this.searchSubject.next(this.searchQuery());
     }
@@ -143,7 +191,7 @@ export class CustomerHistoryPage implements OnInit {
   viewDetail(customer: CustomerRecord) {
     // Navigate to order list filtered by customer
     this.router.navigate(['/tabs/orders'], {
-      queryParams: { customerId: customer.id, customerName: customer.name }
+      queryParams: { customerId: customer.id, customerName: customer.name },
     });
   }
 
@@ -159,17 +207,17 @@ export class CustomerHistoryPage implements OnInit {
     try {
       // Generate CSV
       const headers = this.translate.instant('REPORTS.CUSTOMER_HISTORY.EXPORT_HEADERS');
-      const rows = this.customers().map(c => [
+      const rows = this.customers().map((c) => [
         c.name,
         c.phone,
         String(c.orderCount),
         c.lastOrderDate || '-',
       ]);
 
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+      const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `customers_${new Date().toISOString().split('T')[0]}.csv`;

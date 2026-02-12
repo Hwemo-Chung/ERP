@@ -2,7 +2,14 @@
  * Split Order Page
  * FR-10: Split multi-product orders to multiple installers
  */
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -30,11 +37,19 @@ import {
   AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { gitBranchOutline, addOutline, removeOutline, saveOutline, checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
+import {
+  gitBranchOutline,
+  addOutline,
+  removeOutline,
+  saveOutline,
+  checkmarkCircleOutline,
+  warningOutline,
+} from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { InstallersStore } from '../../../../store/installers/installers.store';
 import { Order, OrderLine } from '../../../../store/orders/orders.models';
 import { TranslateModule } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface SplitAssignment {
   installerId: string;
@@ -117,7 +132,9 @@ interface SplitLineItem {
             </ion-card-header>
             <ion-card-content>
               <div class="quantity-summary">
-                <span>총 수량: <strong>{{ item.totalQuantity }}개</strong></span>
+                <span
+                  >총 수량: <strong>{{ item.totalQuantity }}개</strong></span
+                >
                 <ion-badge [color]="getAssignmentStatus(item).color">
                   {{ getAssignmentStatus(item).label }}
                 </ion-badge>
@@ -185,7 +202,9 @@ interface SplitLineItem {
           <ion-card [color]="isValid() ? 'success' : 'warning'">
             <ion-card-content>
               <div class="validation-summary">
-                <ion-icon [name]="isValid() ? 'checkmark-circle-outline' : 'warning-outline'"></ion-icon>
+                <ion-icon
+                  [name]="isValid() ? 'checkmark-circle-outline' : 'warning-outline'"
+                ></ion-icon>
                 @if (isValid()) {
                   <span>모든 수량이 올바르게 배정되었습니다</span>
                 } @else {
@@ -196,11 +215,7 @@ interface SplitLineItem {
           </ion-card>
 
           <!-- Save Button -->
-          <ion-button
-            expand="block"
-            [disabled]="!isValid() || isSaving()"
-            (click)="saveSplit()"
-          >
+          <ion-button expand="block" [disabled]="!isValid() || isSaving()" (click)="saveSplit()">
             @if (isSaving()) {
               <ion-spinner name="crescent" slot="start"></ion-spinner>
             } @else {
@@ -212,67 +227,70 @@ interface SplitLineItem {
       }
     </ion-content>
   `,
-  styles: [`
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-    }
-
-    .hint {
-      color: var(--ion-color-medium);
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    .quantity-summary {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--ion-color-light);
-    }
-
-    .quantity-input {
-      max-width: 80px;
-      text-align: right;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
-
-    .validation-summary {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-
-      ion-icon {
-        font-size: 20px;
+  styles: [
+    `
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
       }
-    }
 
-    ion-button[expand="block"] {
-      margin-top: 16px;
-    }
-  `],
+      .hint {
+        color: var(--ion-color-medium);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
+
+      .quantity-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--ion-color-light);
+      }
+
+      .quantity-input {
+        max-width: 80px;
+        text-align: right;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: var(--ion-color-medium);
+      }
+
+      .validation-summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+
+        ion-icon {
+          font-size: 20px;
+        }
+      }
+
+      ion-button[expand='block'] {
+        margin-top: 16px;
+      }
+    `,
+  ],
 })
 export class SplitOrderPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toastCtrl = inject(ToastController);
   private readonly alertCtrl = inject(AlertController);
+  private readonly logger = inject(LoggerService);
   protected readonly ordersStore = inject(OrdersStore);
   protected readonly installersStore = inject(InstallersStore);
 
@@ -342,7 +360,7 @@ export class SplitOrderPage implements OnInit {
             quantity: line.quantity,
           },
         ],
-      }))
+      })),
     );
   }
 
@@ -482,7 +500,7 @@ export class SplitOrderPage implements OnInit {
         await toast.present();
       }
     } catch (error) {
-      console.error('Split error:', error);
+      this.logger.error('Split error:', error);
       const toast = await this.toastCtrl.create({
         message: '분할 중 오류가 발생했습니다',
         duration: 2000,

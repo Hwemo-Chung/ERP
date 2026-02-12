@@ -3,6 +3,7 @@
  * Handles reports API calls - KPI, Progress, Export
  */
 import { Injectable, inject, signal } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, firstValueFrom, map } from 'rxjs';
 import { environment } from '@env/environment';
@@ -47,6 +48,23 @@ export interface WasteStat {
   code: string;
   name: string;
   count: number;
+}
+
+interface ProgressDataItem {
+  key?: string;
+  name?: string;
+  total?: number;
+  completed?: number;
+  pending?: number;
+  completionRate?: number;
+}
+
+interface CustomerOrder {
+  id: string;
+  orderNo: string;
+  status: string;
+  appointmentDate?: string;
+  customerName?: string;
 }
 
 export interface WasteSummary {
@@ -114,6 +132,7 @@ export interface UnreturnedItemsResponse {
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggerService);
   private readonly baseUrl = `${environment.apiUrl}/reports`;
 
   // Local cache
@@ -155,14 +174,14 @@ export class ReportsService {
     // API returns raw Prisma groupBy results, transform to ProgressReport
     return this.http.get<any[]>(`${this.baseUrl}/progress`, { params }).pipe(
       map((data) => {
-        console.log('[ReportsService] Raw API data:', {
+        this.logger.log('[ReportsService] Raw API data:', {
           type: typeof data,
           isArray: Array.isArray(data),
           length: Array.isArray(data) ? data.length : 'N/A',
           first3: Array.isArray(data) ? data.slice(0, 3) : data,
         });
         return this.transformProgressData(data || [], options.groupBy);
-      })
+      }),
     );
   }
 
@@ -171,11 +190,11 @@ export class ReportsService {
    * API now returns pre-computed stats: { key, name, total, completed, pending, completionRate }
    */
   private transformProgressData(
-    data: any[],
-    _groupBy: 'branch' | 'installer' | 'status' | 'date'
+    data: ProgressDataItem[],
+    _groupBy: 'branch' | 'installer' | 'status' | 'date',
   ): ProgressReport {
     // API already provides all needed fields - simple mapping
-    const items: ProgressItem[] = data.map((item: any) => ({
+    const items: ProgressItem[] = data.map((item) => ({
       id: item.key || '',
       name: item.name || item.key || 'Unknown',
       total: item.total || 0,
@@ -196,9 +215,8 @@ export class ReportsService {
       wastePickupRate: 0,
       defectRate: 0,
     };
-    summary.completionRate = summary.total > 0
-      ? Math.round((summary.completed / summary.total) * 100)
-      : 0;
+    summary.completionRate =
+      summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
 
     return { items, summary };
   }
@@ -207,18 +225,16 @@ export class ReportsService {
    * Search customer history
    */
   searchCustomers(query: string, limit = 50): Observable<{ data: CustomerRecord[] }> {
-    const params = new HttpParams()
-      .set('q', query)
-      .set('limit', String(limit));
+    const params = new HttpParams().set('q', query).set('limit', String(limit));
     return this.http.get<{ data: CustomerRecord[] }>(`${this.baseUrl}/customers`, { params });
   }
 
   /**
    * Get customer detail with order history
    */
-  getCustomerDetail(customerId: string): Observable<CustomerRecord & { orders: any[] }> {
-    return this.http.get<CustomerRecord & { orders: any[] }>(
-      `${this.baseUrl}/customers/${customerId}`
+  getCustomerDetail(customerId: string): Observable<CustomerRecord & { orders: CustomerOrder[] }> {
+    return this.http.get<CustomerRecord & { orders: CustomerOrder[] }>(
+      `${this.baseUrl}/customers/${customerId}`,
     );
   }
 
@@ -242,9 +258,7 @@ export class ReportsService {
    * Request export
    */
   async requestExport(request: ExportRequest): Promise<ExportResult> {
-    return firstValueFrom(
-      this.http.post<ExportResult>(`${this.baseUrl}/raw`, request)
-    );
+    return firstValueFrom(this.http.post<ExportResult>(`${this.baseUrl}/raw`, request));
   }
 
   /**
@@ -288,7 +302,7 @@ export class ReportsService {
   markItemAsReturned(orderId: string): Observable<{ success: boolean; message: string }> {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.baseUrl}/unreturned/${orderId}/return`,
-      {}
+      {},
     );
   }
 }

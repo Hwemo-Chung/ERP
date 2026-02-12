@@ -23,6 +23,7 @@ import {
   InfiniteScrollCustomEvent,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { addIcons } from 'ionicons';
 import {
   chevronForwardOutline,
@@ -747,6 +748,7 @@ export class OrderListPage implements OnInit {
   }
 
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   private async loadOrders(): Promise<void> {
     try {
@@ -759,7 +761,7 @@ export class OrderListPage implements OnInit {
         this.installersStore.loadInstallers(branchCode),
       ]);
     } catch (error) {
-      console.error('[OrderList] Failed to load orders:', error);
+      this.logger.error('[OrderList] Failed to load orders:', error);
       this.uiStore.showToast(this.translate.instant('ORDERS.ERROR.LOAD_FAILED'), 'danger');
     }
   }

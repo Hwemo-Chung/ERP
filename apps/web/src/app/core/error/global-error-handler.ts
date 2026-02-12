@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ToastController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import * as Sentry from '@sentry/angular';
+import { LoggerService } from '../services/logger.service';
 
 /**
  * Error codes that should not be reported to Sentry
@@ -32,13 +33,14 @@ const IGNORED_HTTP_STATUSES = [400, 401, 403, 404, 409, 422];
 export class GlobalErrorHandler implements ErrorHandler {
   private readonly toastCtrl = inject(ToastController);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   /**
    * Handle application errors
    * @param error - Error object (can be any type)
    */
   handleError(error: unknown): void {
-    console.error('GlobalErrorHandler:', error);
+    this.logger.error('GlobalErrorHandler:', error);
     this.logToMonitoring(error);
     this.showUserMessage(error);
   }

@@ -1,5 +1,14 @@
 // apps/web/src/app/features/completion/pages/completion-certificate/completion-certificate.page.ts
-import { Component, signal, computed, ChangeDetectionStrategy, inject, ElementRef, ViewChild, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  ElementRef,
+  ViewChild,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -53,7 +62,9 @@ import { TranslateModule } from '@ngx-translate/core';
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>설치 확인서</ion-title>
         <ion-buttons slot="end">
@@ -161,11 +172,7 @@ import { TranslateModule } from '@ngx-translate/core';
             <ion-icon name="print-outline" slot="start"></ion-icon>
             인쇄
           </ion-button>
-          <ion-button 
-            expand="block" 
-            [disabled]="!canIssue()"
-            (click)="issueCertificate()"
-          >
+          <ion-button expand="block" [disabled]="!canIssue()" (click)="issueCertificate()">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
             확인서 발행
           </ion-button>
@@ -173,114 +180,117 @@ import { TranslateModule } from '@ngx-translate/core';
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    .certificate-card {
-      background: white;
-    }
-
-    .certificate {
-      padding: 16px;
-      font-size: 14px;
-
-      h1 {
-        text-align: center;
-        font-size: 20px;
-        margin-bottom: 24px;
-        border-bottom: 2px solid #333;
-        padding-bottom: 12px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
 
-      h3 {
+      .certificate-card {
+        background: white;
+      }
+
+      .certificate {
+        padding: 16px;
         font-size: 14px;
-        margin: 16px 0 8px;
-        color: #333;
+
+        h1 {
+          text-align: center;
+          font-size: 20px;
+          margin-bottom: 24px;
+          border-bottom: 2px solid #333;
+          padding-bottom: 12px;
+        }
+
+        h3 {
+          font-size: 14px;
+          margin: 16px 0 8px;
+          color: #333;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+
+          td,
+          th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+
+          th {
+            background: #f5f5f5;
+          }
+
+          td:first-child {
+            width: 100px;
+            font-weight: 500;
+            background: #fafafa;
+          }
+        }
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
+      .cert-section {
+        margin-bottom: 20px;
+      }
 
-        td, th {
-          border: 1px solid #ddd;
-          padding: 8px;
-          text-align: left;
-        }
+      .signature-section {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+      }
 
-        th {
-          background: #f5f5f5;
-        }
+      .signature-box {
+        flex: 1;
+        text-align: center;
 
-        td:first-child {
-          width: 100px;
+        p {
+          margin-bottom: 8px;
           font-weight: 500;
-          background: #fafafa;
         }
       }
-    }
 
-    .cert-section {
-      margin-bottom: 20px;
-    }
+      .signature-area {
+        border: 1px dashed #ccc;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        cursor: pointer;
 
-    .signature-section {
-      display: flex;
-      gap: 16px;
-      margin-top: 24px;
-    }
+        img {
+          max-width: 100%;
+          max-height: 100%;
+        }
 
-    .signature-box {
-      flex: 1;
-      text-align: center;
-
-      p {
-        margin-bottom: 8px;
-        font-weight: 500;
-      }
-    }
-
-    .signature-area {
-      border: 1px dashed #ccc;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fafafa;
-      cursor: pointer;
-
-      img {
-        max-width: 100%;
-        max-height: 100%;
+        .placeholder {
+          color: #999;
+          font-size: 12px;
+        }
       }
 
-      .placeholder {
-        color: #999;
-        font-size: 12px;
+      .cert-footer {
+        margin-top: 24px;
+        text-align: center;
+
+        .date {
+          margin-top: 8px;
+          font-weight: 500;
+        }
       }
-    }
 
-    .cert-footer {
-      margin-top: 24px;
-      text-align: center;
-
-      .date {
-        margin-top: 8px;
-        font-weight: 500;
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 16px;
       }
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-  `],
+    `,
+  ],
 })
 export class CompletionCertificatePage implements OnInit {
   @ViewChild('certificateContent') certificateContent!: ElementRef;
@@ -327,7 +337,7 @@ export class CompletionCertificatePage implements OnInit {
     const user = this.authService.user();
     return {
       name: user?.fullName || user?.username || '',
-      company: (user as any)?.branchName || user?.branchCode || '',
+      company: user?.branchName || user?.branchCode || '',
     };
   });
 
@@ -393,7 +403,7 @@ export class CompletionCertificatePage implements OnInit {
         customerSignature: this.customerSignature(),
         installerSignature: this.installerSignature(),
       });
-      
+
       const toast = await this.toastCtrl.create({
         message: '확인서가 발행되었습니다.',
         duration: 2000,

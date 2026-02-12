@@ -7,6 +7,7 @@
  */
 import { Injectable, inject, signal } from '@angular/core';
 import { Platform, ActionSheetController } from '@ionic/angular/standalone';
+import { LoggerService } from './logger.service';
 
 export interface PhotoResult {
   success: boolean;
@@ -34,6 +35,7 @@ const DEFAULT_OPTIONS: PhotoOptions = {
 export class CameraService {
   private readonly platform = inject(Platform);
   private readonly actionSheetCtrl = inject(ActionSheetController);
+  private readonly logger = inject(LoggerService);
 
   private readonly _isCapturing = signal(false);
   readonly isCapturing = this._isCapturing.asReadonly();
@@ -146,7 +148,7 @@ export class CameraService {
    */
   private async captureWithNative(
     source: 'camera' | 'gallery',
-    options: PhotoOptions
+    options: PhotoOptions,
   ): Promise<PhotoResult> {
     this._isCapturing.set(true);
 
@@ -173,7 +175,7 @@ export class CameraService {
 
       if (image.dataUrl) {
         // Add to photos array
-        this._photos.update(photos => [...photos, image.dataUrl!]);
+        this._photos.update((photos) => [...photos, image.dataUrl!]);
 
         return {
           success: true,
@@ -186,7 +188,7 @@ export class CameraService {
       return { success: false, error: 'No image data' };
     } catch (error) {
       this._isCapturing.set(false);
-      console.error('Camera capture error:', error);
+      this.logger.error('Camera capture error:', error);
 
       // Fall back to file input on error
       return this.captureWithFileInput(source);
@@ -220,7 +222,7 @@ export class CameraService {
           const dataUrl = await this.fileToDataUrl(file);
 
           // Add to photos array
-          this._photos.update(photos => [...photos, dataUrl]);
+          this._photos.update((photos) => [...photos, dataUrl]);
 
           resolve({
             success: true,
@@ -256,7 +258,7 @@ export class CameraService {
    * Remove a photo by index
    */
   removePhoto(index: number): void {
-    this._photos.update(photos => photos.filter((_, i) => i !== index));
+    this._photos.update((photos) => photos.filter((_, i) => i !== index));
   }
 
   /**

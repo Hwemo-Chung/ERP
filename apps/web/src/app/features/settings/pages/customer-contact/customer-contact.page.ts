@@ -1,6 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import {
@@ -28,7 +34,13 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { addOutline, createOutline, trashOutline, closeOutline, checkmarkOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  createOutline,
+  trashOutline,
+  closeOutline,
+  checkmarkOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { CustomerContact, PaginatedResponse } from './customer-contact.models';
 
@@ -119,7 +131,10 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
           <div class="contact-header">
             <div class="contact-info">
               <h3>{{ contact.customerName }}</h3>
-              <p class="contact-person">{{ 'SETTINGS.CUSTOMER_CONTACT.CONTACT_PERSON' | translate }}: {{ contact.contactName }}</p>
+              <p class="contact-person">
+                {{ 'SETTINGS.CUSTOMER_CONTACT.CONTACT_PERSON' | translate }}:
+                {{ contact.contactName }}
+              </p>
             </div>
             <ion-badge [color]="getBusinessTypeColor(contact.businessType)">
               {{ formatBusinessType(contact.businessType) }}
@@ -127,7 +142,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
           </div>
           <div class="contact-details">
             <div class="detail-row">
-              <span class="label">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.DEPARTMENT' | translate }}</span>
+              <span class="label">{{
+                'SETTINGS.CUSTOMER_CONTACT.FIELD.DEPARTMENT' | translate
+              }}</span>
               <span class="value">{{ contact.department }}</span>
             </div>
             <div class="detail-row">
@@ -183,15 +200,15 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
       </ion-fab>
 
       <!-- Modal for Add/Edit -->
-      <ion-modal
-        #contactModal
-        [isOpen]="showModal"
-        (ionModalDidDismiss)="showModal = false"
-      >
+      <ion-modal #contactModal [isOpen]="showModal" (ionModalDidDismiss)="showModal = false">
         <ng-template>
           <ion-header>
             <ion-toolbar>
-              <ion-title>{{ isEditing ? ('SETTINGS.CUSTOMER_CONTACT.MODAL.EDIT_TITLE' | translate) : ('SETTINGS.CUSTOMER_CONTACT.MODAL.ADD_TITLE' | translate) }}</ion-title>
+              <ion-title>{{
+                isEditing
+                  ? ('SETTINGS.CUSTOMER_CONTACT.MODAL.EDIT_TITLE' | translate)
+                  : ('SETTINGS.CUSTOMER_CONTACT.MODAL.ADD_TITLE' | translate)
+              }}</ion-title>
               <ion-buttons slot="end">
                 <ion-button (click)="closeModal()">
                   <ion-icon name="close-outline"></ion-icon>
@@ -202,7 +219,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
           <ion-content class="ion-padding">
             <form [formGroup]="contactForm" (ngSubmit)="saveContact()">
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_NAME' | translate }} *</ion-label>
+                <ion-label position="stacked"
+                  >{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_NAME' | translate }} *</ion-label
+                >
                 <ion-input
                   formControlName="customerName"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_NAME' | translate"
@@ -210,7 +229,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_CODE' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_CODE' | translate
+                }}</ion-label>
                 <ion-input
                   formControlName="customerCode"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.CUSTOMER_CODE' | translate"
@@ -219,7 +240,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.CONTACT_NAME' | translate }} *</ion-label>
+                <ion-label position="stacked"
+                  >{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.CONTACT_NAME' | translate }} *</ion-label
+                >
                 <ion-input
                   formControlName="contactName"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.CONTACT_NAME' | translate"
@@ -227,7 +250,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.DEPARTMENT' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.CUSTOMER_CONTACT.FIELD.DEPARTMENT' | translate
+                }}</ion-label>
                 <ion-input
                   formControlName="department"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.DEPARTMENT' | translate"
@@ -235,15 +260,16 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.PHONE' | translate }} *</ion-label>
-                <ion-input
-                  formControlName="phone"
-                  placeholder="010-1234-5678"
-                ></ion-input>
+                <ion-label position="stacked"
+                  >{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.PHONE' | translate }} *</ion-label
+                >
+                <ion-input formControlName="phone" placeholder="010-1234-5678"></ion-input>
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.EMAIL' | translate }} *</ion-label>
+                <ion-label position="stacked"
+                  >{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.EMAIL' | translate }} *</ion-label
+                >
                 <ion-input
                   type="email"
                   formControlName="email"
@@ -252,7 +278,9 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.ADDRESS' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.CUSTOMER_CONTACT.FIELD.ADDRESS' | translate
+                }}</ion-label>
                 <ion-input
                   formControlName="address"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.ADDRESS' | translate"
@@ -260,16 +288,26 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.BUSINESS_TYPE' | translate }} *</ion-label>
+                <ion-label position="stacked"
+                  >{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.BUSINESS_TYPE' | translate }} *</ion-label
+                >
                 <ion-select formControlName="businessType">
-                  <ion-select-option value="receiver">{{ 'SETTINGS.CUSTOMER_CONTACT.TYPE.RECEIVER' | translate }}</ion-select-option>
-                  <ion-select-option value="pickup">{{ 'SETTINGS.CUSTOMER_CONTACT.TYPE.PICKUP' | translate }}</ion-select-option>
-                  <ion-select-option value="both">{{ 'SETTINGS.CUSTOMER_CONTACT.TYPE.BOTH' | translate }}</ion-select-option>
+                  <ion-select-option value="receiver">{{
+                    'SETTINGS.CUSTOMER_CONTACT.TYPE.RECEIVER' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="pickup">{{
+                    'SETTINGS.CUSTOMER_CONTACT.TYPE.PICKUP' | translate
+                  }}</ion-select-option>
+                  <ion-select-option value="both">{{
+                    'SETTINGS.CUSTOMER_CONTACT.TYPE.BOTH' | translate
+                  }}</ion-select-option>
                 </ion-select>
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">{{ 'SETTINGS.CUSTOMER_CONTACT.FIELD.MEMO' | translate }}</ion-label>
+                <ion-label position="stacked">{{
+                  'SETTINGS.CUSTOMER_CONTACT.FIELD.MEMO' | translate
+                }}</ion-label>
                 <ion-input
                   formControlName="memo"
                   [placeholder]="'SETTINGS.CUSTOMER_CONTACT.FIELD.MEMO' | translate"
@@ -305,159 +343,161 @@ import { CustomerContact, PaginatedResponse } from './customer-contact.models';
       ></ion-alert>
     </ion-content>
   `,
-  styles: [`
-    ion-searchbar {
-      --background: #f1f5f9;
-      --border-radius: 12px;
-      --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
+  styles: [
+    `
+      ion-searchbar {
+        --background: #f1f5f9;
+        --border-radius: 12px;
+        --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
 
-    .filter-tabs {
-      display: flex;
-      gap: 8px;
-      margin: 16px 0;
-      overflow-x: auto;
-    }
+      .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin: 16px 0;
+        overflow-x: auto;
+      }
 
-    .filter-tabs button {
-      padding: 8px 16px;
-      border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      background: white;
-      cursor: pointer;
-      white-space: nowrap;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
+      .filter-tabs button {
+        padding: 8px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        background: white;
+        cursor: pointer;
+        white-space: nowrap;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
 
-    .filter-tabs button.active {
-      background: #3b82f6;
-      color: white;
-      border-color: #3b82f6;
-    }
+      .filter-tabs button.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+      }
 
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+      }
 
-    .contacts-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+      .contacts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-    .contact-card {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      border-left: 4px solid #3b82f6;
-    }
+      .contact-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border-left: 4px solid #3b82f6;
+      }
 
-    .contact-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
+      .contact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
 
-    .contact-info h3 {
-      margin: 0;
-      font-size: 16px;
-      color: #0f172a;
-    }
+      .contact-info h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #0f172a;
+      }
 
-    .contact-person {
-      margin: 4px 0 0;
-      font-size: 13px;
-      color: #64748b;
-    }
+      .contact-person {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #64748b;
+      }
 
-    ion-badge {
-      font-size: 11px;
-      padding: 4px 8px;
-    }
+      ion-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
 
-    .contact-details {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
+      .contact-details {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
 
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-    }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+      }
 
-    .detail-row .label {
-      color: #64748b;
-      font-weight: 500;
-    }
+      .detail-row .label {
+        color: #64748b;
+        font-weight: 500;
+      }
 
-    .detail-row .value {
-      color: #0f172a;
-      text-align: right;
-      flex: 1;
-      margin-left: 12px;
-    }
+      .detail-row .value {
+        color: #0f172a;
+        text-align: right;
+        flex: 1;
+        margin-left: 12px;
+      }
 
-    .contact-actions {
-      display: flex;
-      gap: 8px;
-    }
+      .contact-actions {
+        display: flex;
+        gap: 8px;
+      }
 
-    .contact-actions ion-button {
-      flex: 1;
-    }
+      .contact-actions ion-button {
+        flex: 1;
+      }
 
-    .load-more {
-      margin-top: 16px;
-    }
+      .load-more {
+        margin-top: 16px;
+      }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 64px 24px;
-      text-align: center;
-      color: #94a3b8;
-    }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 64px 24px;
+        text-align: center;
+        color: #94a3b8;
+      }
 
-    .empty-state ion-icon {
-      font-size: 48px;
-      color: #cbd5e1;
-      margin-bottom: 16px;
-    }
+      .empty-state ion-icon {
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+      }
 
-    .empty-state h3 {
-      margin: 0;
-      color: #475569;
-      font-size: 18px;
-    }
+      .empty-state h3 {
+        margin: 0;
+        color: #475569;
+        font-size: 18px;
+      }
 
-    .empty-state p {
-      margin: 8px 0 0;
-      font-size: 14px;
-    }
+      .empty-state p {
+        margin: 8px 0 0;
+        font-size: 14px;
+      }
 
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 24px;
-    }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 24px;
+      }
 
-    .modal-actions ion-button {
-      flex: 1;
-    }
-  `],
+      .modal-actions ion-button {
+        flex: 1;
+      }
+    `,
+  ],
 })
 export class CustomerContactPage implements OnInit {
   private readonly translate = inject(TranslateService);
-  
+
   contactForm!: FormGroup;
   contacts: CustomerContact[] = [];
   searchTerm = '';
@@ -485,7 +525,7 @@ export class CustomerContactPage implements OnInit {
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
   ) {
     addIcons({ addOutline, createOutline, trashOutline, closeOutline, checkmarkOutline });
     this.initForm();
@@ -520,15 +560,18 @@ export class CustomerContactPage implements OnInit {
       params.set('limit', '20');
 
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<CustomerContact>>(
-          `${this.apiUrl}?${params}`
-        )
+        this.http.get<PaginatedResponse<CustomerContact>>(`${this.apiUrl}?${params}`),
       );
 
       this.contacts = response.data;
       this.hasMore = response.hasMore;
-    } catch (error: any) {
-      this.errorMessage = error?.error?.message || this.translate.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.LOAD_FAILED');
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
+      this.errorMessage =
+        (httpBody?.['message'] as string) ||
+        this.translate.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.LOAD_FAILED');
     } finally {
       this.isLoading = false;
     }
@@ -544,16 +587,19 @@ export class CustomerContactPage implements OnInit {
       params.set('limit', '20');
 
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse<CustomerContact>>(
-          `${this.apiUrl}?${params}`
-        )
+        this.http.get<PaginatedResponse<CustomerContact>>(`${this.apiUrl}?${params}`),
       );
 
       this.contacts = [...this.contacts, ...response.data];
       this.page++;
       this.hasMore = response.hasMore;
-    } catch (error: any) {
-      this.errorMessage = error?.error?.message || this.translate.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.LOAD_MORE_FAILED');
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
+      this.errorMessage =
+        (httpBody?.['message'] as string) ||
+        this.translate.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.LOAD_MORE_FAILED');
     } finally {
       this.isLoading = false;
     }
@@ -586,21 +632,17 @@ export class CustomerContactPage implements OnInit {
     // TranslateService 참조 캡처 (async 핸들러 내 this 문제 방지)
     const translateService = this.translate;
     const toastController = this.toastCtrl;
-    
+
     try {
       const data = this.contactForm.value;
       const method = this.isEditing ? 'PUT' : 'POST';
-      const url = this.isEditing
-        ? `${this.apiUrl}/${data.id}`
-        : this.apiUrl;
+      const url = this.isEditing ? `${this.apiUrl}/${data.id}` : this.apiUrl;
 
       await firstValueFrom(
-        method === 'POST'
-          ? this.http.post(url, data)
-          : this.http.put(url, data)
+        method === 'POST' ? this.http.post(url, data) : this.http.put(url, data),
       );
 
-      const message = this.isEditing 
+      const message = this.isEditing
         ? translateService.instant('SETTINGS.CUSTOMER_CONTACT.SUCCESS.UPDATED')
         : translateService.instant('SETTINGS.CUSTOMER_CONTACT.SUCCESS.CREATED');
       const toast = await toastController.create({
@@ -612,8 +654,13 @@ export class CustomerContactPage implements OnInit {
 
       this.closeModal();
       this.loadContacts();
-    } catch (error: any) {
-      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.SAVE_FAILED');
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
+      this.errorMessage =
+        (httpBody?.['message'] as string) ||
+        translateService.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.SAVE_FAILED');
     } finally {
       this.isSaving = false;
     }
@@ -626,7 +673,7 @@ export class CustomerContactPage implements OnInit {
     // TranslateService 참조 캡처
     const translateService = this.translate;
     const toastController = this.toastCtrl;
-    
+
     try {
       await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
 
@@ -638,8 +685,13 @@ export class CustomerContactPage implements OnInit {
       await toast.present();
 
       this.loadContacts();
-    } catch (error: any) {
-      this.errorMessage = error?.error?.message || translateService.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.DELETE_FAILED');
+    } catch (error: unknown) {
+      const httpBody = (error as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
+      this.errorMessage =
+        (httpBody?.['message'] as string) ||
+        translateService.instant('SETTINGS.CUSTOMER_CONTACT.ERROR.DELETE_FAILED');
     }
   }
 

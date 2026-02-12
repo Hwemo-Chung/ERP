@@ -17,10 +17,10 @@ RUN pnpm install --frozen-lockfile
 COPY apps/api ./apps/api/
 
 # Generate Prisma client
-RUN pnpm --filter api run prisma:generate
+RUN pnpm --filter erp-logistics-api run prisma:generate
 
 # Build
-RUN pnpm --filter api run build
+RUN pnpm --filter erp-logistics-api run build
 
 # Production stage
 FROM node:20-alpine AS production

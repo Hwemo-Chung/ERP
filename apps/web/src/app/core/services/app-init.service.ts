@@ -15,6 +15,7 @@ import { AuthService } from './auth.service';
 import { NetworkService } from './network.service';
 import { BackgroundSyncService } from './background-sync.service';
 import { SyncQueueService } from './sync-queue.service';
+import { LoggerService } from './logger.service';
 
 @Injectable({ providedIn: 'root' })
 export class AppInitService {
@@ -25,48 +26,49 @@ export class AppInitService {
   private readonly swUpdate = inject(SwUpdate);
   private readonly toastCtrl = inject(ToastController);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   /**
    * Initialize app - call from AppComponent.ngOnInit()
    */
   async initialize(): Promise<void> {
-    console.log('[App Init] Starting initialization...');
+    this.logger.log('[App Init] Starting initialization...');
 
     try {
       // 1. Initialize translations
-      console.log('[App Init] Loading translations...');
+      this.logger.log('[App Init] Loading translations...');
       this.translate.use('ko'); // Set default language to Korean
       this.translate.setDefaultLang('ko');
 
       // 2. Restore authentication session
-      console.log('[App Init] Restoring auth session...');
+      this.logger.log('[App Init] Restoring auth session...');
       await this.auth.initialize();
 
       // 3. Initialize network listener
-      console.log('[App Init] Initializing network listener...');
+      this.logger.log('[App Init] Initializing network listener...');
       await this.network.initializeNetworkListener();
 
       // 3. Set up background sync
-      console.log('[App Init] Setting up background sync...');
+      this.logger.log('[App Init] Setting up background sync...');
       // BackgroundSyncService is injected and auto-listens via effects
 
       // 4. Check for pending operations and resume if online
       if (!this.network.isOffline()) {
-        console.log('[App Init] Network online, checking pending operations...');
+        this.logger.log('[App Init] Network online, checking pending operations...');
         const pending = await this.sync.getPendingOperations();
         if (pending.length > 0) {
-          console.log(`[App Init] Found ${pending.length} pending operations, syncing...`);
+          this.logger.log(`[App Init] Found ${pending.length} pending operations, syncing...`);
           await this.sync.onNetworkOnline();
         }
       }
 
       // 5. Check for Service Worker updates
-      console.log('[App Init] Checking for app updates...');
+      this.logger.log('[App Init] Checking for app updates...');
       this.setupUpdateListener();
 
-      console.log('[App Init] ✓ Initialization complete');
+      this.logger.log('[App Init] ✓ Initialization complete');
     } catch (error) {
-      console.error('[App Init] Initialization failed:', error);
+      this.logger.error('[App Init] Initialization failed:', error);
       // Don't throw - app should still work even if init partially fails
     }
   }
@@ -80,17 +82,20 @@ export class AppInitService {
     }
 
     // Check for updates periodically
-    setInterval(() => {
-      this.swUpdate.checkForUpdate();
-    }, 60 * 60 * 1000); // Every hour
+    setInterval(
+      () => {
+        this.swUpdate.checkForUpdate();
+      },
+      60 * 60 * 1000,
+    ); // Every hour
 
     // Listen for new version available
     this.swUpdate.versionUpdates.subscribe((evt: any) => {
       if (evt.type === 'VERSION_READY') {
-        console.log('[App Init] New version available');
+        this.logger.log('[App Init] New version available');
         this.showUpdatePrompt();
       } else if (evt.type === 'VERSION_INSTALLATION_FAILED') {
-        console.error('[App Init] Version installation failed:', evt);
+        this.logger.error('[App Init] Version installation failed:', evt);
       }
     });
   }

@@ -1,7 +1,35 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma, Branch, Installer, WastePickup } from '@prisma/client';
 import PDFDocument from 'pdfkit';
+
+/**
+ * Order with all relations needed for PDF generation
+ */
+interface OrderWithRelations {
+  id: string;
+  orderNo: string;
+  customerName: string;
+  customerPhone: string;
+  address: Prisma.JsonValue;
+  status: OrderStatus;
+  appointmentDate: Date;
+  updatedAt: Date;
+  branch: Branch | null;
+  installer: Installer | null;
+  lines: Array<{
+    id: string;
+    itemName: string;
+    quantity: number;
+    serialNumbers: Array<{ serial: string }>;
+  }>;
+  wastePickups: WastePickup[];
+}
+
+interface DateRangeFilter {
+  gte?: Date;
+  lte?: Date;
+}
 
 const COMPLETED_STATUSES: OrderStatus[] = [
   OrderStatus.COMPLETED,
@@ -38,9 +66,9 @@ export class ReportsService {
     range: DateRange,
     field: 'appointmentDate' | 'createdAt' | 'collectedAt' | 'cancelledAt' = 'appointmentDate',
     endOfDay = false,
-  ): Record<string, any> {
+  ): Record<string, DateRangeFilter> {
     if (!range.dateFrom && !range.dateTo) return {};
-    const filter: Record<string, any> = {};
+    const filter: DateRangeFilter = {};
     if (range.dateFrom) filter.gte = new Date(range.dateFrom);
     if (range.dateTo) {
       const endDate = new Date(range.dateTo);
@@ -50,7 +78,7 @@ export class ReportsService {
     return { [field]: filter };
   }
 
-  private buildBranchFilter(filter: BranchFilter): Record<string, any> {
+  private buildBranchFilter(filter: BranchFilter): Prisma.OrderWhereInput {
     return filter.branchCode ? { branch: { code: filter.branchCode } } : {};
   }
 
@@ -58,7 +86,7 @@ export class ReportsService {
     filters: DateRange & BranchFilter,
     dateField: 'appointmentDate' | 'createdAt' = 'appointmentDate',
     endOfDay = false,
-  ): Record<string, any> {
+  ): Prisma.OrderWhereInput {
     return {
       deletedAt: null,
       ...this.buildBranchFilter(filters),
@@ -86,7 +114,7 @@ export class ReportsService {
     dateFrom?: string;
     dateTo?: string;
   }) {
-    const where: any = {
+    const where: Prisma.OrderWhereInput = {
       ...this.buildBaseOrderWhere(filters),
       ...(filters.installerId && { installerId: filters.installerId }),
     };
@@ -205,7 +233,7 @@ export class ReportsService {
     wasteCode?: string;
   }) {
     const orderWhere = this.buildBaseOrderWhere({ branchCode: filters.branchCode });
-    const where: any = {
+    const where: Prisma.WastePickupWhereInput = {
       ...this.buildDateFilter(filters, 'collectedAt', true),
       ...(filters.wasteCode && { code: filters.wasteCode }),
     };
@@ -247,7 +275,7 @@ export class ReportsService {
     dateFrom?: string;
     dateTo?: string;
   }) {
-    const where: any = {
+    const where: Prisma.OrderWhereInput = {
       ...this.buildBaseOrderWhere(filters, 'createdAt', true),
       ...(filters.customer && {
         OR: [
@@ -330,7 +358,12 @@ export class ReportsService {
     userId: string,
   ) {
     const exportRecord = await this.prisma.export.create({
-      data: { type, filters: filters as any, createdBy: userId, status: 'PROCESSING' },
+      data: {
+        type,
+        filters: filters as Prisma.InputJsonValue,
+        createdBy: userId,
+        status: 'PROCESSING',
+      },
     });
 
     this.logger.log(`Export job created: ${exportRecord.id} type=${type}`);
@@ -377,7 +410,7 @@ export class ReportsService {
     const exportRecord = await this.prisma.export.create({
       data: {
         type: 'INSTALL_CONFIRMATION',
-        filters: { orderId } as any,
+        filters: { orderId } as Prisma.InputJsonValue,
         createdBy: userId,
         status: 'READY',
         fileUrl: `/api/v1/reports/export/${orderId}/download`,
@@ -402,7 +435,7 @@ export class ReportsService {
     };
   }
 
-  private async generatePdfBuffer(order: any): Promise<Buffer> {
+  private async generatePdfBuffer(order: OrderWithRelations): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -411,121 +444,133 @@ export class ReportsService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // Header
-      doc
-        .fontSize(20)
-        .font('Helvetica-Bold')
-        .text('Installation Confirmation Certificate', { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(14).font('Helvetica').text('설치 확인서', { align: 'center' });
-      doc.moveDown(2);
-
-      // Order Information
-      doc.fontSize(12).font('Helvetica-Bold').text('Order Information');
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-      doc.moveDown(0.5);
-
-      doc.font('Helvetica');
-      this.addPdfRow(doc, 'Order Number', order.orderNo);
-      this.addPdfRow(doc, 'Customer Name', order.customerName);
-      this.addPdfRow(doc, 'Customer Phone', order.customerPhone || '-');
-      this.addPdfRow(doc, 'Installation Address', this.formatAddress(order.address));
-      this.addPdfRow(
-        doc,
-        'Appointment Date',
-        order.appointmentDate ? new Date(order.appointmentDate).toLocaleDateString('ko-KR') : '-',
-      );
-      doc.moveDown();
-
-      // Branch & Installer
-      doc.fontSize(12).font('Helvetica-Bold').text('Service Provider');
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-      doc.moveDown(0.5);
-
-      doc.font('Helvetica');
-      this.addPdfRow(doc, 'Branch', order.branch?.name || '-');
-      this.addPdfRow(doc, 'Installer', order.installer?.name || '-');
-      this.addPdfRow(
-        doc,
-        'Completion Date',
-        order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('ko-KR') : '-',
-      );
-      doc.moveDown();
-
-      // Products
-      if (order.lines && order.lines.length > 0) {
-        doc.fontSize(12).font('Helvetica-Bold').text('Installed Products');
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-        doc.moveDown(0.5);
-
-        doc.font('Helvetica');
-        order.lines.forEach((line: any, index: number) => {
-          doc.text(`${index + 1}. ${line.itemName} (Qty: ${line.quantity})`);
-          if (line.serialNumbers && line.serialNumbers.length > 0) {
-            const serials = line.serialNumbers.map((s: any) => s.serialNumber).join(', ');
-            doc.fontSize(10).text(`   S/N: ${serials}`);
-            doc.fontSize(12);
-          }
-        });
-        doc.moveDown();
-      }
-
-      // Waste Pickups
-      if (order.wastePickups && order.wastePickups.length > 0) {
-        doc.fontSize(12).font('Helvetica-Bold').text('Waste Collected');
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-        doc.moveDown(0.5);
-
-        doc.font('Helvetica');
-        order.wastePickups.forEach((waste: any) => {
-          doc.text(`- ${waste.code}: ${waste.quantity} units`);
-        });
-        doc.moveDown();
-      }
-
-      // Signature Section
-      doc.moveDown(2);
-      doc.fontSize(12).font('Helvetica-Bold').text('Confirmation');
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-      doc.moveDown(1);
-
-      doc.font('Helvetica').fontSize(10);
-      doc.text('I confirm that the above products have been installed and are working properly.');
-      doc.text('위 제품이 설치되었으며 정상 작동함을 확인합니다.');
-      doc.moveDown(2);
-
-      // Signature boxes
-      const signatureY = doc.y;
-      doc.text('Customer Signature (고객 서명):', 50, signatureY);
-      doc.rect(50, signatureY + 15, 200, 50).stroke();
-
-      doc.text('Installer Signature (설치기사 서명):', 300, signatureY);
-      doc.rect(300, signatureY + 15, 200, 50).stroke();
-
-      // Footer
-      doc
-        .fontSize(8)
-        .text(
-          `Generated on ${new Date().toISOString()} | Document ID: ${order.id}`,
-          50,
-          doc.page.height - 50,
-          { align: 'center' },
-        );
+      this.buildPdfHeader(doc);
+      this.buildOrderInfoSection(doc, order);
+      this.buildServiceProviderSection(doc, order);
+      this.buildProductsSection(doc, order.lines);
+      this.buildWasteSection(doc, order.wastePickups);
+      this.buildSignatureSection(doc);
+      this.buildPdfFooter(doc, order.id);
 
       doc.end();
     });
+  }
+
+  private buildPdfHeader(doc: PDFKit.PDFDocument): void {
+    doc
+      .fontSize(20)
+      .font('Helvetica-Bold')
+      .text('Installation Confirmation Certificate', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(14).font('Helvetica').text('설치 확인서', { align: 'center' });
+    doc.moveDown(2);
+  }
+
+  private addPdfSectionTitle(doc: PDFKit.PDFDocument, title: string): void {
+    doc.fontSize(12).font('Helvetica-Bold').text(title);
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(0.5);
+    doc.font('Helvetica');
+  }
+
+  private buildOrderInfoSection(doc: PDFKit.PDFDocument, order: OrderWithRelations): void {
+    this.addPdfSectionTitle(doc, 'Order Information');
+    this.addPdfRow(doc, 'Order Number', order.orderNo);
+    this.addPdfRow(doc, 'Customer Name', order.customerName);
+    this.addPdfRow(doc, 'Customer Phone', order.customerPhone || '-');
+    this.addPdfRow(doc, 'Installation Address', this.formatAddress(order.address));
+    this.addPdfRow(
+      doc,
+      'Appointment Date',
+      order.appointmentDate ? new Date(order.appointmentDate).toLocaleDateString('ko-KR') : '-',
+    );
+    doc.moveDown();
+  }
+
+  private buildServiceProviderSection(doc: PDFKit.PDFDocument, order: OrderWithRelations): void {
+    this.addPdfSectionTitle(doc, 'Service Provider');
+    this.addPdfRow(doc, 'Branch', order.branch?.name || '-');
+    this.addPdfRow(doc, 'Installer', order.installer?.name || '-');
+    this.addPdfRow(
+      doc,
+      'Completion Date',
+      order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('ko-KR') : '-',
+    );
+    doc.moveDown();
+  }
+
+  private buildProductsSection(
+    doc: PDFKit.PDFDocument,
+    lines: OrderWithRelations['lines'] | undefined,
+  ): void {
+    if (!lines || lines.length === 0) return;
+
+    this.addPdfSectionTitle(doc, 'Installed Products');
+    lines.forEach((line, index: number) => {
+      doc.text(`${index + 1}. ${line.itemName} (Qty: ${line.quantity})`);
+      if (line.serialNumbers && line.serialNumbers.length > 0) {
+        const serials = line.serialNumbers.map((s) => s.serial).join(', ');
+        doc.fontSize(10).text(`   S/N: ${serials}`);
+        doc.fontSize(12);
+      }
+    });
+    doc.moveDown();
+  }
+
+  private buildWasteSection(
+    doc: PDFKit.PDFDocument,
+    wastePickups: WastePickup[] | undefined,
+  ): void {
+    if (!wastePickups || wastePickups.length === 0) return;
+
+    this.addPdfSectionTitle(doc, 'Waste Collected');
+    wastePickups.forEach((waste) => {
+      doc.text(`- ${waste.code}: ${waste.quantity} units`);
+    });
+    doc.moveDown();
+  }
+
+  private buildSignatureSection(doc: PDFKit.PDFDocument): void {
+    doc.moveDown(2);
+    doc.fontSize(12).font('Helvetica-Bold').text('Confirmation');
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(1);
+
+    doc.font('Helvetica').fontSize(10);
+    doc.text('I confirm that the above products have been installed and are working properly.');
+    doc.text('위 제품이 설치되었으며 정상 작동함을 확인합니다.');
+    doc.moveDown(2);
+
+    const signatureY = doc.y;
+    doc.text('Customer Signature (고객 서명):', 50, signatureY);
+    doc.rect(50, signatureY + 15, 200, 50).stroke();
+
+    doc.text('Installer Signature (설치기사 서명):', 300, signatureY);
+    doc.rect(300, signatureY + 15, 200, 50).stroke();
+  }
+
+  private buildPdfFooter(doc: PDFKit.PDFDocument, orderId: string): void {
+    doc
+      .fontSize(8)
+      .text(
+        `Generated on ${new Date().toISOString()} | Document ID: ${orderId}`,
+        50,
+        doc.page.height - 50,
+        { align: 'center' },
+      );
   }
 
   private addPdfRow(doc: PDFKit.PDFDocument, label: string, value: string) {
     doc.text(`${label}: ${value}`, { continued: false });
   }
 
-  private formatAddress(address: any): string {
+  private formatAddress(address: Prisma.JsonValue): string {
     if (!address) return '-';
     if (typeof address === 'string') return address;
-    if (typeof address === 'object') {
+    if (typeof address === 'object' && !Array.isArray(address)) {
+      const addr = address as Record<string, unknown>;
       return (
-        [address.line1, address.line2, address.city, address.zipCode].filter(Boolean).join(', ') ||
+        [addr.line1, addr.line2, addr.city, addr.zipCode].filter(Boolean).join(', ') ||
         JSON.stringify(address)
       );
     }
@@ -554,7 +599,7 @@ export class ReportsService {
     returnStatus?: 'all' | 'returned' | 'unreturned';
   }) {
     const orderWhere = this.buildBaseOrderWhere({ branchCode: filters.branchCode });
-    const where: any = {
+    const where: Prisma.CancellationRecordWhereInput = {
       ...this.buildDateFilter(filters, 'cancelledAt', true),
       ...(filters.returnStatus === 'unreturned' && { isReturned: false }),
       ...(filters.returnStatus === 'returned' && { isReturned: true }),

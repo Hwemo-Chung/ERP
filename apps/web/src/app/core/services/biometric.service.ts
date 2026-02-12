@@ -1,8 +1,8 @@
 /**
  * FR-22: Biometric Authentication Service
  * PRD: Biometric quick login (Face ID/Fingerprint)
- * 
- * After opt-in, biometric prompt unlocks session without password 
+ *
+ * After opt-in, biometric prompt unlocks session without password
  * if refresh token valid; fallback path logged.
  */
 import { inject, Injectable, signal } from '@angular/core';
@@ -10,6 +10,7 @@ import { Capacitor } from '@capacitor/core';
 import { BiometryType, NativeBiometric } from 'capacitor-native-biometric';
 import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 export interface BiometricConfig {
   enabled: boolean;
@@ -44,6 +45,7 @@ export class BiometricService {
   public readonly biometryType = signal<BiometryType | null>(null);
 
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   constructor() {
     this.initializeBiometric();
@@ -69,7 +71,7 @@ export class BiometricService {
         this.configSubject.next(savedConfig);
       }
     } catch (error) {
-      console.error('Failed to initialize biometric:', error);
+      this.logger.error('Failed to initialize biometric:', error);
       this.isAvailable.set(false);
     }
   }
@@ -123,11 +125,11 @@ export class BiometricService {
       this.configSubject.next(config);
 
       // Log to audit trail
-      console.info(`[BiometricService] Biometric enabled for user: ${userId}`);
-      
+      this.logger.info(`[BiometricService] Biometric enabled for user: ${userId}`);
+
       return true;
     } catch (error) {
-      console.error('Failed to enable biometric:', error);
+      this.logger.error('Failed to enable biometric:', error);
       throw error;
     }
   }
@@ -153,9 +155,9 @@ export class BiometricService {
       this.saveConfig(config);
       this.configSubject.next(config);
 
-      console.info('[BiometricService] Biometric disabled');
+      this.logger.info('[BiometricService] Biometric disabled');
     } catch (error) {
-      console.error('Failed to disable biometric:', error);
+      this.logger.error('Failed to disable biometric:', error);
       throw error;
     }
   }
@@ -188,18 +190,20 @@ export class BiometricService {
       this.configSubject.next(updatedConfig);
 
       // Log to audit trail
-      console.info(`[BiometricService] Biometric auth success for user: ${credentials.username}`);
+      this.logger.info(
+        `[BiometricService] Biometric auth success for user: ${credentials.username}`,
+      );
 
       return {
         userId: credentials.username,
         refreshToken: credentials.password,
       };
     } catch (error) {
-      console.error('Biometric authentication failed:', error);
-      
+      this.logger.error('Biometric authentication failed:', error);
+
       // Log fallback path
-      console.warn('[BiometricService] Falling back to password login');
-      
+      this.logger.warn('[BiometricService] Falling back to password login');
+
       return null;
     }
   }
@@ -222,7 +226,7 @@ export class BiometricService {
    */
   getBiometryTypeName(): string {
     const type = this.biometryType();
-    
+
     if (!type) return '';
 
     switch (type) {
@@ -266,7 +270,7 @@ export class BiometricService {
     try {
       localStorage.setItem(BIOMETRIC_CONFIG_KEY, JSON.stringify(config));
     } catch (error) {
-      console.error('Failed to save biometric config:', error);
+      this.logger.error('Failed to save biometric config:', error);
     }
   }
 
@@ -278,7 +282,7 @@ export class BiometricService {
       await this.disableBiometric();
       localStorage.removeItem(BIOMETRIC_CONFIG_KEY);
     } catch (error) {
-      console.error('Failed to clear biometric data:', error);
+      this.logger.error('Failed to clear biometric data:', error);
     }
   }
 }

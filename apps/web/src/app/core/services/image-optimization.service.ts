@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 
 /**
  * 이미지 최적화 서비스
- * 
+ *
  * 기능:
  * - 이미지 리사이징 (1024px 최대)
  * - WebP 포맷 변환
@@ -26,9 +27,8 @@ export interface OptimizedImage {
   providedIn: 'root',
 })
 export class ImageOptimizationService {
-  private readonly cache = new BehaviorSubject<Map<string, OptimizedImage>>(
-    this.loadCache()
-  );
+  private readonly logger = inject(LoggerService);
+  private readonly cache = new BehaviorSubject<Map<string, OptimizedImage>>(this.loadCache());
   private readonly MAX_CACHE_SIZE = 50; // 최대 50개 이미지
   private readonly CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30일
 
@@ -44,14 +44,9 @@ export class ImageOptimizationService {
       maxHeight?: number;
       quality?: number;
       format?: 'webp' | 'jpeg';
-    } = {}
+    } = {},
   ): Promise<OptimizedImage> {
-    const {
-      maxWidth = 1024,
-      maxHeight = 1024,
-      quality = 0.7,
-      format = 'webp',
-    } = options;
+    const { maxWidth = 1024, maxHeight = 1024, quality = 0.7, format = 'webp' } = options;
 
     // 캐시 확인
     const cacheKey = `${file.name}-${file.size}-${file.lastModified}`;
@@ -74,7 +69,7 @@ export class ImageOptimizationService {
             maxHeight,
             quality,
             format,
-            cacheKey
+            cacheKey,
           );
           resolve(optimized);
         };
@@ -104,7 +99,7 @@ export class ImageOptimizationService {
     maxHeight: number,
     quality: number,
     format: 'webp' | 'jpeg',
-    cacheKey: string
+    cacheKey: string,
   ): OptimizedImage {
     const canvas = document.createElement('canvas');
     let { width, height } = img;
@@ -138,8 +133,7 @@ export class ImageOptimizationService {
 
     // 크기 계산
     const optimizedSize = this.estimateBase64Size(url);
-    const compressionRatio =
-      ((originalFile.size - optimizedSize) / originalFile.size) * 100;
+    const compressionRatio = ((originalFile.size - optimizedSize) / originalFile.size) * 100;
 
     const result: OptimizedImage = {
       id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -184,7 +178,7 @@ export class ImageOptimizationService {
       const data = JSON.stringify(Array.from(cache.entries()));
       localStorage.setItem('image-optimization-cache', data);
     } catch (error) {
-      console.warn('Failed to save image cache:', error);
+      this.logger.warn('Failed to save image cache:', error);
     }
   }
 
@@ -198,7 +192,7 @@ export class ImageOptimizationService {
         return new Map(JSON.parse(data));
       }
     } catch (error) {
-      console.warn('Failed to load image cache:', error);
+      this.logger.warn('Failed to load image cache:', error);
     }
     return new Map();
   }

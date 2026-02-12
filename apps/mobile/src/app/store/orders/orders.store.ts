@@ -16,6 +16,7 @@ import {
 import { db } from '@app/core/db/database';
 import { NetworkService } from '../../core/services/network.service';
 import { SyncQueueService } from '../../core/services/sync-queue.service';
+import { LoggerService } from '../../core/services/logger.service';
 
 const initialState: ExtendedOrdersState = createInitialOrdersState();
 
@@ -43,6 +44,7 @@ export class OrdersStore extends signalStore(
       http = inject(HttpClient),
       networkService = inject(NetworkService),
       syncQueue = inject(SyncQueueService),
+      logger = inject(LoggerService),
     ) => {
       const findOrder = (orderId: string): Order | undefined =>
         store.orders().find((o) => o.id === orderId);
@@ -135,7 +137,7 @@ export class OrdersStore extends signalStore(
               isLoading: false,
             });
           } catch (error) {
-            console.error('Failed to load from cache:', error);
+            logger.error('Failed to load from cache:', error);
           }
         },
 
@@ -152,7 +154,7 @@ export class OrdersStore extends signalStore(
 
             patchState(store, { serverStats: stats });
           } catch (error: unknown) {
-            console.warn('[OrdersStore] Failed to load stats:', error);
+            logger.warn('[OrdersStore] Failed to load stats:', error);
           }
         },
 

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Preferences } from '@capacitor/preferences';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
+import { LoggerService } from './logger.service';
 
 export interface User {
   id: string;
@@ -11,6 +12,7 @@ export interface User {
   fullName: string;
   roles: string[];
   branchCode?: string;
+  branchName?: string;
   locale: string;
 }
 
@@ -37,6 +39,7 @@ interface AuthState {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   // Prevent concurrent refresh attempts
   private _refreshPromise: Promise<boolean> | null = null;
@@ -71,16 +74,16 @@ export class AuthService {
   private safeJsonParse<T>(value: string | null, clearKey?: string): T | null {
     if (!value || value === 'undefined' || value === 'null') {
       if (clearKey) {
-        Preferences.remove({ key: clearKey }).catch(() => {});
+        Preferences.remove({ key: clearKey }).catch((e) => void e);
       }
       return null;
     }
     try {
       return JSON.parse(value) as T;
-    } catch {
-      console.warn('[Auth] Clearing corrupted storage data for key:', clearKey);
+    } catch (error) {
+      this.logger.warn('[Auth] Failed to parse stored data for key:', clearKey, error);
       if (clearKey) {
-        Preferences.remove({ key: clearKey }).catch(() => {});
+        Preferences.remove({ key: clearKey }).catch((e) => void e);
       }
       return null;
     }
@@ -122,7 +125,7 @@ export class AuthService {
       if (accessToken.value && refreshToken.value) {
         // Check if access token is expired
         if (this.isTokenExpired(accessToken.value)) {
-          console.warn('[Auth] Stored access token is expired, clearing session');
+          this.logger.warn('[Auth] Stored access token is expired, clearing session');
           await this.clearStorage();
           this._initialized = true;
           return;
@@ -130,7 +133,7 @@ export class AuthService {
 
         // Check if refresh token is also expired
         if (this.isTokenExpired(refreshToken.value)) {
-          console.warn('[Auth] Stored refresh token is expired, clearing session');
+          this.logger.warn('[Auth] Stored refresh token is expired, clearing session');
           await this.clearStorage();
           this._initialized = true;
           return;
@@ -147,7 +150,7 @@ export class AuthService {
 
       this._initialized = true;
     } catch (error) {
-      console.warn('[Auth] Failed to restore session from storage:', error);
+      this.logger.warn('[Auth] Failed to restore session from storage:', error);
       await this.clearStorage();
       this._initialized = true;
     }
@@ -204,11 +207,14 @@ export class AuthService {
       this._initialized = true;
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const httpBody = (err as Record<string, unknown>)?.['error'] as
+        | Record<string, unknown>
+        | undefined;
       this._state.update((s) => ({
         ...s,
         isLoading: false,
-        error: err.error?.message || 'Login failed',
+        error: (httpBody?.['message'] as string) || 'Login failed',
       }));
       return false;
     }

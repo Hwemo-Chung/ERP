@@ -1,7 +1,7 @@
 /**
  * FR-19: Session Manager Service
  * PRD: 30분 유휴 타임아웃 & 재인증 (폼 데이터 보존)
- * 
+ *
  * 기능:
  * - 유휴 시간 추적
  * - 세션 만료 경고
@@ -12,6 +12,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { ModalController } from '@ionic/angular/standalone';
 import { AuthService } from '@core/services/auth.service';
+import { LoggerService } from '@core/services/logger.service';
 
 export interface SessionState {
   isAuthenticated: boolean;
@@ -25,12 +26,13 @@ const WARNING_BEFORE_MS = 5 * 60 * 1000; // 만료 5분 전 경고
 const STORAGE_KEY = 'session_preserved_data';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SessionManagerService {
   private readonly router = inject(Router);
   private readonly modalCtrl = inject(ModalController);
   private readonly authService = inject(AuthService);
+  private readonly logger = inject(LoggerService);
 
   // State
   private _state = signal<SessionState>({
@@ -62,7 +64,7 @@ export class SessionManagerService {
    * 세션 시작 (로그인 후 호출)
    */
   startSession() {
-    this._state.update(s => ({
+    this._state.update((s) => ({
       ...s,
       isAuthenticated: true,
       lastActivity: new Date(),
@@ -80,7 +82,7 @@ export class SessionManagerService {
     if (clearPreserved) {
       this.clearPreservedData();
     }
-    this._state.update(s => ({
+    this._state.update((s) => ({
       ...s,
       isAuthenticated: false,
     }));
@@ -90,7 +92,7 @@ export class SessionManagerService {
    * 세션 연장 (사용자 활동 또는 명시적 연장)
    */
   extendSession() {
-    this._state.update(s => ({
+    this._state.update((s) => ({
       ...s,
       lastActivity: new Date(),
       expiresAt: new Date(Date.now() + IDLE_TIMEOUT_MS),
@@ -104,7 +106,7 @@ export class SessionManagerService {
    * 폼 데이터 보존 (현재 페이지의 입력값)
    */
   preserveFormData(key: string, data: unknown) {
-    this._state.update(s => ({
+    this._state.update((s) => ({
       ...s,
       preservedFormData: {
         ...s.preservedFormData,
@@ -126,12 +128,12 @@ export class SessionManagerService {
    */
   clearPreservedData(key?: string) {
     if (key) {
-      this._state.update(s => {
+      this._state.update((s) => {
         const { [key]: _, ...rest } = s.preservedFormData;
         return { ...s, preservedFormData: rest };
       });
     } else {
-      this._state.update(s => ({
+      this._state.update((s) => ({
         ...s,
         preservedFormData: {},
       }));
@@ -162,7 +164,7 @@ export class SessionManagerService {
         return false;
       }
     } catch (error) {
-      console.error('[SessionManager] Failed to restore session:', error);
+      this.logger.error('[SessionManager] Failed to restore session:', error);
       await this.authService.logout();
       return false;
     }
@@ -171,14 +173,14 @@ export class SessionManagerService {
   // Private methods
   private setupActivityListeners() {
     const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
-    events.forEach(event => {
+    events.forEach((event) => {
       document.addEventListener(event, () => this.onUserActivity(), { passive: true });
     });
   }
 
   private onUserActivity() {
     if (!this._state().isAuthenticated) return;
-    
+
     // 경고 상태가 아닐 때만 자동 연장
     if (!this.showWarning()) {
       this.extendSession();
@@ -224,9 +226,8 @@ export class SessionManagerService {
 
   private async openWarningModal() {
     // SessionTimeoutModalComponent를 동적으로 로드
-    const { SessionTimeoutModalComponent } = await import(
-      '../components/session-timeout-modal/session-timeout-modal.component'
-    );
+    const { SessionTimeoutModalComponent } =
+      await import('../components/session-timeout-modal/session-timeout-modal.component');
 
     const modal = await this.modalCtrl.create({
       component: SessionTimeoutModalComponent,
@@ -247,19 +248,16 @@ export class SessionManagerService {
   private handleSessionExpired() {
     this.saveToStorage(); // 마지막으로 데이터 저장
     this.endSession(false); // 보존 데이터는 유지
-    this.router.navigate(['/auth/login'], { 
-      queryParams: { sessionExpired: true } 
+    this.router.navigate(['/auth/login'], {
+      queryParams: { sessionExpired: true },
     });
   }
 
   private saveToStorage() {
     try {
-      localStorage.setItem(
-        STORAGE_KEY, 
-        JSON.stringify(this._state().preservedFormData)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this._state().preservedFormData));
     } catch (e) {
-      console.error('Failed to save preserved data:', e);
+      this.logger.error('Failed to save preserved data:', e);
     }
   }
 
@@ -267,13 +265,13 @@ export class SessionManagerService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        this._state.update(s => ({
+        this._state.update((s) => ({
           ...s,
           preservedFormData: JSON.parse(stored),
         }));
       }
     } catch (e) {
-      console.error('Failed to load preserved data:', e);
+      this.logger.error('Failed to load preserved data:', e);
     }
   }
 }

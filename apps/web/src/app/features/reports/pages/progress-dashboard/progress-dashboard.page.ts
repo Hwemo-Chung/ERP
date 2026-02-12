@@ -1,20 +1,48 @@
 // apps/web/src/app/features/reports/pages/progress-dashboard/progress-dashboard.page.ts
 // PRD FR-08, FR-11 - KPI Dashboard with branch/installer progress
-import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonSegment, IonSegmentButton, IonSpinner,
-  IonRefresher, IonRefresherContent, IonIcon, IonButton,
-  IonDatetime, IonModal, IonDatetimeButton,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonSegment,
+  IonSegmentButton,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonIcon,
+  IonButton,
+  IonDatetime,
+  IonModal,
+  IonDatetimeButton,
+  RefresherCustomEvent,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { 
-  calendarOutline, filterOutline, refreshOutline, trendingUpOutline,
-  personOutline, businessOutline, statsChartOutline, checkmarkCircleOutline,
-  warningOutline, closeCircleOutline, timeOutline,
+import {
+  calendarOutline,
+  filterOutline,
+  refreshOutline,
+  trendingUpOutline,
+  personOutline,
+  businessOutline,
+  statsChartOutline,
+  checkmarkCircleOutline,
+  warningOutline,
+  closeCircleOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { ReportsStore } from '../../../../store/reports/reports.store';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -27,11 +55,25 @@ type ViewType = 'installer' | 'branch' | 'status';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TranslateModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonSegment, IonSegmentButton, IonSpinner,
-    IonRefresher, IonRefresherContent, IonIcon, IonButton,
-    IonDatetime, IonModal, IonDatetimeButton,
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonSegment,
+    IonSegmentButton,
+    IonSpinner,
+    IonRefresher,
+    IonRefresherContent,
+    IonIcon,
+    IonButton,
+    IonDatetime,
+    IonModal,
+    IonDatetimeButton,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -55,10 +97,20 @@ type ViewType = 'installer' | 'branch' | 'status';
             {{ dateRangeLabel() }}
           </ion-button>
           <!-- 뷰 타입 세그먼트 (설치기사별/지점별/상태별) -->
-          <ion-segment [value]="viewType()" (ionChange)="onViewTypeChange($any($event).detail.value)" class="view-segment">
-            <ion-segment-button value="installer"><ion-icon name="person-outline"></ion-icon></ion-segment-button>
-            <ion-segment-button value="branch"><ion-icon name="business-outline"></ion-icon></ion-segment-button>
-            <ion-segment-button value="status"><ion-icon name="stats-chart-outline"></ion-icon></ion-segment-button>
+          <ion-segment
+            [value]="viewType()"
+            (ionChange)="onViewTypeChange($any($event).detail.value)"
+            class="view-segment"
+          >
+            <ion-segment-button value="installer"
+              ><ion-icon name="person-outline"></ion-icon
+            ></ion-segment-button>
+            <ion-segment-button value="branch"
+              ><ion-icon name="business-outline"></ion-icon
+            ></ion-segment-button>
+            <ion-segment-button value="status"
+              ><ion-icon name="stats-chart-outline"></ion-icon
+            ></ion-segment-button>
           </ion-segment>
         </div>
       </ion-toolbar>
@@ -120,13 +172,19 @@ type ViewType = 'installer' | 'branch' | 'status';
                 <span class="kpi-value">{{ reportsStore.totalCompletionRate() }}%</span>
               </div>
               <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="reportsStore.totalCompletionRate()"></div>
+                <div
+                  class="progress-fill"
+                  [style.width.%]="reportsStore.totalCompletionRate()"
+                ></div>
               </div>
             </div>
             <div class="kpi-item">
               <div class="kpi-header">
                 <span class="kpi-label">{{ 'REPORTS.PROGRESS.WASTE_PICKUP' | translate }}</span>
-                <span class="kpi-value">{{ reportsStore.wasteTotals().totalItems }}{{ 'REPORTS.PROGRESS.ITEMS_SUFFIX' | translate }}</span>
+                <span class="kpi-value"
+                  >{{ reportsStore.wasteTotals().totalItems
+                  }}{{ 'REPORTS.PROGRESS.ITEMS_SUFFIX' | translate }}</span
+                >
               </div>
               <div class="progress-bar waste">
                 <div class="progress-fill" [style.width.%]="wasteProgress()"></div>
@@ -151,18 +209,22 @@ type ViewType = 'installer' | 'branch' | 'status';
                   </div>
                   @if (viewType() !== 'status') {
                     <div class="progress-bar">
-                      <div class="progress-fill"
-                           [class.success]="item.completionRate >= 80"
-                           [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
-                           [class.danger]="item.completionRate < 50"
-                           [style.width.%]="item.completionRate"></div>
+                      <div
+                        class="progress-fill"
+                        [class.success]="item.completionRate >= 80"
+                        [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                        [class.danger]="item.completionRate < 50"
+                        [style.width.%]="item.completionRate"
+                      ></div>
                     </div>
                     <div class="item-footer">
-                      <span class="rate-badge"
-                            [class.success]="item.completionRate >= 80"
-                            [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
-                            [class.danger]="item.completionRate < 50">
-                        {{ item.completionRate | number:'1.0-0' }}%
+                      <span
+                        class="rate-badge"
+                        [class.success]="item.completionRate >= 80"
+                        [class.warning]="item.completionRate >= 50 && item.completionRate < 80"
+                        [class.danger]="item.completionRate < 50"
+                      >
+                        {{ item.completionRate | number: '1.0-0' }}%
                       </span>
                     </div>
                   }
@@ -185,7 +247,9 @@ type ViewType = 'installer' | 'branch' | 'status';
             <ion-toolbar>
               <ion-title>{{ 'REPORTS.PROGRESS.DATE_SELECT' | translate }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="applyDateFilter()">{{ 'REPORTS.PROGRESS.APPLY' | translate }}</ion-button>
+                <ion-button (click)="applyDateFilter()">{{
+                  'REPORTS.PROGRESS.APPLY' | translate
+                }}</ion-button>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
@@ -196,7 +260,12 @@ type ViewType = 'installer' | 'branch' | 'status';
                 <ion-datetime-button datetime="datetime-from"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
-                    <ion-datetime id="datetime-from" [(ngModel)]="dateFrom" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                    <ion-datetime
+                      id="datetime-from"
+                      [(ngModel)]="dateFrom"
+                      presentation="date"
+                      [showDefaultButtons]="true"
+                    ></ion-datetime>
                   </ng-template>
                 </ion-modal>
               </div>
@@ -205,72 +274,263 @@ type ViewType = 'installer' | 'branch' | 'status';
                 <ion-datetime-button datetime="datetime-to"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
-                    <ion-datetime id="datetime-to" [(ngModel)]="dateTo" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                    <ion-datetime
+                      id="datetime-to"
+                      [(ngModel)]="dateTo"
+                      presentation="date"
+                      [showDefaultButtons]="true"
+                    ></ion-datetime>
                   </ng-template>
                 </ion-modal>
               </div>
             </div>
             <!-- 빠른 필터 버튼들 -->
             <div class="quick-filters">
-              <ion-button fill="outline" size="small" (click)="setQuickDate('today')">{{ 'REPORTS.PROGRESS.TODAY' | translate }}</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{ 'REPORTS.PROGRESS.THIS_WEEK' | translate }}</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{ 'REPORTS.PROGRESS.THIS_MONTH' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('today')">{{
+                'REPORTS.PROGRESS.TODAY' | translate
+              }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{
+                'REPORTS.PROGRESS.THIS_WEEK' | translate
+              }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{
+                'REPORTS.PROGRESS.THIS_MONTH' | translate
+              }}</ion-button>
             </div>
           </ion-content>
         </ng-template>
       </ion-modal>
     </ion-content>
   `,
-  styles: [`
-    .filter-bar { --background: var(--ion-color-light); }
-    .filter-row { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
-    .view-segment { width: auto; min-width: 120px; }
-    .view-segment ion-segment-button { --padding-start: 8px; --padding-end: 8px; min-width: 40px; }
-    .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 24px; }
-    .loading-container p { margin-top: 16px; color: var(--ion-color-medium); }
-    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
-    .summary-card { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-    .card-icon ion-icon { font-size: 24px; color: white; }
-    .summary-card.total .card-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    .summary-card.completed .card-icon { background: linear-gradient(135deg, #10b981, #059669); }
-    .summary-card.pending .card-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .summary-card.cancelled .card-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .card-content { display: flex; flex-direction: column; }
-    .card-content .value { font-size: 24px; font-weight: 700; color: #0f172a; }
-    .card-content .label { font-size: 12px; color: #64748b; }
-    .section { padding: 0 16px 16px; }
-    .section-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: #0f172a; margin: 16px 0 12px; }
-    .section-title ion-icon { font-size: 20px; color: #3b82f6; }
-    .kpi-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .kpi-item { margin-bottom: 16px; }
-    .kpi-item:last-child { margin-bottom: 0; }
-    .kpi-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .kpi-label { font-size: 14px; color: #64748b; }
-    .kpi-value { font-size: 14px; font-weight: 600; color: #0f172a; }
-    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #2563eb); border-radius: 4px; transition: width 0.3s; }
-    .progress-fill.success { background: linear-gradient(90deg, #10b981, #059669); }
-    .progress-fill.warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
-    .progress-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
-    .progress-bar.waste .progress-fill { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
-    .progress-list { display: flex; flex-direction: column; gap: 12px; }
-    .progress-item { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .item-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .item-name { font-size: 14px; font-weight: 600; color: #0f172a; }
-    .item-stats { font-size: 13px; color: #64748b; }
-    .item-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-    .rate-badge { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
-    .rate-badge.success { background: #dcfce7; color: #166534; }
-    .rate-badge.warning { background: #fef3c7; color: #92400e; }
-    .rate-badge.danger { background: #fee2e2; color: #991b1b; }
-    .empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px; color: #94a3b8; }
-    .empty-state ion-icon { font-size: 48px; margin-bottom: 12px; }
-    .date-inputs { display: flex; gap: 16px; margin-bottom: 16px; }
-    .date-field { flex: 1; }
-    .date-field label { display: block; font-size: 13px; color: #64748b; margin-bottom: 8px; }
-    .quick-filters { display: flex; gap: 8px; flex-wrap: wrap; }
-  `],
+  styles: [
+    `
+      .filter-bar {
+        --background: var(--ion-color-light);
+      }
+      .filter-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+      }
+      .view-segment {
+        width: auto;
+        min-width: 120px;
+      }
+      .view-segment ion-segment-button {
+        --padding-start: 8px;
+        --padding-end: 8px;
+        min-width: 40px;
+      }
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 24px;
+      }
+      .loading-container p {
+        margin-top: 16px;
+        color: var(--ion-color-medium);
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 16px;
+      }
+      .summary-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card-icon ion-icon {
+        font-size: 24px;
+        color: white;
+      }
+      .summary-card.total .card-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+      }
+      .summary-card.completed .card-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+      .summary-card.pending .card-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+      .summary-card.cancelled .card-icon {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
+      .card-content {
+        display: flex;
+        flex-direction: column;
+      }
+      .card-content .value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .card-content .label {
+        font-size: 12px;
+        color: #64748b;
+      }
+      .section {
+        padding: 0 16px 16px;
+      }
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 16px 0 12px;
+      }
+      .section-title ion-icon {
+        font-size: 20px;
+        color: #3b82f6;
+      }
+      .kpi-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .kpi-item {
+        margin-bottom: 16px;
+      }
+      .kpi-item:last-child {
+        margin-bottom: 0;
+      }
+      .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .kpi-label {
+        font-size: 14px;
+        color: #64748b;
+      }
+      .kpi-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .progress-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        border-radius: 4px;
+        transition: width 0.3s;
+      }
+      .progress-fill.success {
+        background: linear-gradient(90deg, #10b981, #059669);
+      }
+      .progress-fill.warning {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+      }
+      .progress-fill.danger {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+      }
+      .progress-bar.waste .progress-fill {
+        background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+      }
+      .progress-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .progress-item {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .item-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .item-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .item-stats {
+        font-size: 13px;
+        color: #64748b;
+      }
+      .item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .rate-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      .rate-badge.success {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .rate-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .rate-badge.danger {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 48px;
+        color: #94a3b8;
+      }
+      .empty-state ion-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+      }
+      .date-inputs {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .date-field {
+        flex: 1;
+      }
+      .date-field label {
+        display: block;
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 8px;
+      }
+      .quick-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+    `,
+  ],
 })
 export class ProgressDashboardPage implements OnInit {
   protected readonly reportsStore = inject(ReportsStore);
@@ -284,9 +544,17 @@ export class ProgressDashboardPage implements OnInit {
 
   constructor() {
     addIcons({
-      calendarOutline, filterOutline, refreshOutline, trendingUpOutline,
-      personOutline, businessOutline, statsChartOutline, checkmarkCircleOutline,
-      warningOutline, closeCircleOutline, timeOutline,
+      calendarOutline,
+      filterOutline,
+      refreshOutline,
+      trendingUpOutline,
+      personOutline,
+      businessOutline,
+      statsChartOutline,
+      checkmarkCircleOutline,
+      warningOutline,
+      closeCircleOutline,
+      timeOutline,
     });
   }
 
@@ -327,7 +595,7 @@ export class ProgressDashboardPage implements OnInit {
     const now = new Date();
     this.dateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     this.dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-    
+
     this.loadData();
   }
 
@@ -364,7 +632,7 @@ export class ProgressDashboardPage implements OnInit {
     });
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     this.loadData();
     setTimeout(() => event.target.complete(), 500);
   }

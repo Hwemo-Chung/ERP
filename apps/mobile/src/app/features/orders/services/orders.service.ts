@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '@env/environment';
-import { db } from '@core/db/database';
+import { db, OfflineOrder } from '@core/db/database';
 import { NetworkService } from '@core/services/network.service';
 
 export interface Order {
@@ -68,7 +68,7 @@ export interface UpdateStatusDto {
   version: number;
   memo?: string;
   // Status change fields (FR-04)
-  reasonCode?: string;  // Reason code for status change (e.g., absence reason)
+  reasonCode?: string; // Reason code for status change (e.g., absence reason)
   notes?: string;
   appointmentDate?: string;
 }
@@ -104,7 +104,7 @@ export class OrdersService {
     }
 
     const result = await firstValueFrom(
-      this.http.get<PaginatedResponse<Order>>(this.apiUrl, { params: httpParams })
+      this.http.get<PaginatedResponse<Order>>(this.apiUrl, { params: httpParams }),
     );
 
     // Cache to IndexedDB for offline use
@@ -120,9 +120,7 @@ export class OrdersService {
       return cached ? this.mapOfflineOrder(cached) : null;
     }
 
-    const order = await firstValueFrom(
-      this.http.get<Order>(`${this.apiUrl}/${id}`)
-    );
+    const order = await firstValueFrom(this.http.get<Order>(`${this.apiUrl}/${id}`));
 
     // Cache to IndexedDB
     if (order) {
@@ -133,9 +131,7 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, dto: UpdateStatusDto): Promise<Order> {
-    const result = await firstValueFrom(
-      this.http.patch<Order>(`${this.apiUrl}/${id}/status`, dto)
-    );
+    const result = await firstValueFrom(this.http.patch<Order>(`${this.apiUrl}/${id}/status`, dto));
 
     // Update cache
     await db.orders.update(id, {
@@ -149,9 +145,7 @@ export class OrdersService {
   }
 
   async bulkAssign(orderIds: string[], installerId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post(`${this.apiUrl}/bulk/assign`, { orderIds, installerId })
-    );
+    await firstValueFrom(this.http.post(`${this.apiUrl}/bulk/assign`, { orderIds, installerId }));
   }
 
   private async cacheOrders(orders: Order[]): Promise<void> {
@@ -190,8 +184,7 @@ export class OrdersService {
       const search = params.search.toLowerCase();
       filtered = filtered.filter(
         (o) =>
-          o.orderNo.toLowerCase().includes(search) ||
-          o.customerName.toLowerCase().includes(search)
+          o.orderNo.toLowerCase().includes(search) || o.customerName.toLowerCase().includes(search),
       );
     }
 
@@ -222,7 +215,7 @@ export class OrdersService {
     };
   }
 
-  private mapOfflineOrder(offline: any): Order {
+  private mapOfflineOrder(offline: OfflineOrder): Order {
     return {
       id: offline.id,
       orderNo: offline.orderNo,

@@ -42,6 +42,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { BiometricService } from '../../../../core/services/biometric.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-biometric-settings',
@@ -261,6 +262,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   private readonly toastCtrl = inject(ToastController);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly isLoading = signal(true);
@@ -352,8 +354,9 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
         color: 'success',
       });
       await toast.present();
-    } catch (error: any) {
-      console.error('Failed to enable biometric:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Failed to enable biometric:', msg);
 
       // Revert toggle
       this.isEnabled.set(false);
@@ -361,7 +364,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
       const translateService = this.translate;
 
       const toast = await this.toastCtrl.create({
-        message: error.message || translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),
+        message: msg || translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),
         duration: 3000,
         color: 'danger',
       });
@@ -406,7 +409,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
               });
               await toast.present();
             } catch (error) {
-              console.error('Failed to disable biometric:', error);
+              this.logger.error('Failed to disable biometric:', error);
 
               // Revert toggle
               this.isEnabled.set(true);
@@ -450,8 +453,9 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
       } else {
         throw new Error('Authentication failed');
       }
-    } catch (error: any) {
-      console.error('Biometric test failed:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Biometric test failed:', msg);
 
       const toast = await this.toastCtrl.create({
         message: translateService.instant('SETTINGS.BIOMETRIC.TOAST.ERROR'),

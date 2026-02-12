@@ -40,7 +40,7 @@ export interface IPushProvider {
    * @param payload - Notification payload
    * @returns Send result with success status and optional message ID
    */
-  send(token: any, payload: PushPayload): Promise<PushSendResult>;
+  send(token: unknown, payload: PushPayload): Promise<PushSendResult>;
 
   /**
    * Validate provider configuration

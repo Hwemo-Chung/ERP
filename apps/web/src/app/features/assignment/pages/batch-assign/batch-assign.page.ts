@@ -43,6 +43,7 @@ import { addIcons } from 'ionicons';
 import { peopleOutline, calendarOutline, checkmarkCircleOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BulkOperationService } from '@app/shared/services/bulk-operation.service';
+import { LoggerService } from '@app/core/services/logger.service';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { OrderStatus, Order } from '../../../../store/orders/orders.models';
 
@@ -305,6 +306,7 @@ export class BatchAssignPage implements OnInit {
   protected readonly ordersStore = inject(OrdersStore);
   /** @description 다국어 번역 서비스 */
   private readonly translateService = inject(TranslateService);
+  private readonly logger = inject(LoggerService);
 
   protected readonly isLoading = computed(() => this.ordersStore.isLoading());
   protected readonly orders = signal<UnassignedOrder[]>([]);
@@ -374,7 +376,7 @@ export class BatchAssignPage implements OnInit {
 
       this.installers.set(installerList);
     } catch (error) {
-      console.error('Failed to load installers:', error);
+      this.logger.error('Failed to load installers:', error);
       // Set empty list on error to avoid using dummy data
       this.installers.set([]);
     }
@@ -382,7 +384,7 @@ export class BatchAssignPage implements OnInit {
 
   onSearch(event: CustomEvent): void {
     const query = event.detail.value || '';
-    console.log('Search:', query);
+    this.logger.log('Search:', query);
   }
 
   isAllSelected(): boolean {

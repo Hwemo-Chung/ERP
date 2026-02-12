@@ -30,6 +30,7 @@ import {
   ActionSheetController,
   AlertController,
   ModalController,
+  ActionSheetButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -141,7 +142,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                     <ion-icon name="person-outline"></ion-icon>
                     <div>
                       <ion-note>{{ 'ASSIGNMENT.DETAIL.INSTALLER' | translate }}</ion-note>
-                      <p>{{ order()!.installer?.name || order()!.installerName || ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate) }}</p>
+                      <p>
+                        {{
+                          order()!.installer?.name ||
+                            order()!.installerName ||
+                            ('ASSIGNMENT.DETAIL.NOT_ASSIGNED' | translate)
+                        }}
+                      </p>
                     </div>
                   </div>
                 </ion-col>
@@ -207,7 +214,9 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                 </ion-item>
               } @empty {
                 <ion-item>
-                  <ion-label color="medium">{{ 'ASSIGNMENT.DETAIL.NO_PRODUCTS' | translate }}</ion-label>
+                  <ion-label color="medium">{{
+                    'ASSIGNMENT.DETAIL.NO_PRODUCTS' | translate
+                  }}</ion-label>
                 </ion-item>
               }
             </ion-list>
@@ -266,71 +275,75 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       } @else {
         <div class="empty-state">
           <p>{{ 'ASSIGNMENT.DETAIL.NOT_FOUND' | translate }}</p>
-          <ion-button (click)="goBack()">{{ 'ASSIGNMENT.DETAIL.GO_TO_LIST' | translate }}</ion-button>
+          <ion-button (click)="goBack()">{{
+            'ASSIGNMENT.DETAIL.GO_TO_LIST' | translate
+          }}</ion-button>
         </div>
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 50vh;
-      color: var(--ion-color-medium);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 16px;
-      color: var(--ion-color-medium);
-    }
-
-    .info-item {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-
-      ion-icon {
-        font-size: 20px;
-        color: var(--ion-color-primary);
-        margin-top: 2px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 50vh;
+        color: var(--ion-color-medium);
       }
 
-      ion-note {
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+        color: var(--ion-color-medium);
+      }
+
+      .info-item {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+
+        ion-icon {
+          font-size: 20px;
+          color: var(--ion-color-primary);
+          margin-top: 2px;
+        }
+
+        ion-note {
+          font-size: 12px;
+        }
+
+        p {
+          margin: 4px 0 0;
+          font-weight: 500;
+        }
+      }
+
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .serial {
+        font-family: monospace;
         font-size: 12px;
+        color: var(--ion-color-medium);
       }
 
-      p {
-        margin: 4px 0 0;
-        font-weight: 500;
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 16px;
       }
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .serial {
-      font-family: monospace;
-      font-size: 12px;
-      color: var(--ion-color-medium);
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-  `],
+    `,
+  ],
 })
 export class AssignmentDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -421,7 +434,7 @@ export class AssignmentDetailPage implements OnInit {
     }
 
     // If address is an object (API format), format it
-    const addr = (o as any).address;
+    const addr = o.address;
     if (addr && typeof addr === 'object') {
       const parts = [addr.line1, addr.line2, addr.city].filter(Boolean);
       return parts.join(' ') || '-';
@@ -462,9 +475,11 @@ export class AssignmentDetailPage implements OnInit {
    */
   canChangeAppointment(): boolean {
     const status = this.order()?.status;
-    return status === OrderStatus.UNASSIGNED ||
-           status === OrderStatus.ASSIGNED ||
-           status === OrderStatus.CONFIRMED;
+    return (
+      status === OrderStatus.UNASSIGNED ||
+      status === OrderStatus.ASSIGNED ||
+      status === OrderStatus.CONFIRMED
+    );
   }
 
   /**
@@ -472,24 +487,28 @@ export class AssignmentDetailPage implements OnInit {
    */
   canCancel(): boolean {
     const status = this.order()?.status;
-    return status === OrderStatus.UNASSIGNED ||
-           status === OrderStatus.ASSIGNED ||
-           status === OrderStatus.CONFIRMED ||
-           status === OrderStatus.RELEASED;
+    return (
+      status === OrderStatus.UNASSIGNED ||
+      status === OrderStatus.ASSIGNED ||
+      status === OrderStatus.CONFIRMED ||
+      status === OrderStatus.RELEASED
+    );
   }
 
   /**
    * Open action sheet with available actions
    */
   async openActions(): Promise<void> {
-    const buttons: any[] = [];
+    const buttons: ActionSheetButton[] = [];
 
     if (this.canChangeAppointment()) {
       buttons.push({ text: '약속일 변경', handler: () => this.changeAppointment() });
     }
 
-    if (this.order()?.status === OrderStatus.ASSIGNED ||
-        this.order()?.status === OrderStatus.CONFIRMED) {
+    if (
+      this.order()?.status === OrderStatus.ASSIGNED ||
+      this.order()?.status === OrderStatus.CONFIRMED
+    ) {
       buttons.push({ text: '기사 변경', handler: () => this.changeInstaller() });
     }
 
@@ -637,7 +656,7 @@ export class AssignmentDetailPage implements OnInit {
                 await this.ordersStore.assignOrder(
                   currentOrder.id,
                   currentOrder.installerId || '',
-                  data.appointmentDate
+                  data.appointmentDate,
                 );
                 this.uiStore.showToast('약속일이 변경되었습니다', 'success');
                 await this.refresh();

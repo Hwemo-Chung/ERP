@@ -4,16 +4,32 @@ import { Component, computed, inject, OnInit, ChangeDetectionStrategy } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-  IonSpinner, IonButton, IonIcon,
-  IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonSpinner,
+  IonButton,
+  IonIcon,
+  IonDatetimeButton,
+  IonModal,
+  IonDatetime,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent,
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { 
-  downloadOutline, calendarOutline, trashOutline, cubeOutline, 
-  trendingUpOutline, layersOutline,
+import {
+  downloadOutline,
+  calendarOutline,
+  trashOutline,
+  cubeOutline,
+  trendingUpOutline,
+  layersOutline,
 } from 'ionicons/icons';
 import { ReportsStore } from '../../../../store/reports/reports.store';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -23,10 +39,23 @@ import { AuthService } from '../../../../core/services/auth.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TranslateModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
-    IonSpinner, IonButton, IonIcon,
-    IonDatetimeButton, IonModal, IonDatetime, IonRefresher, IonRefresherContent,
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonBackButton,
+    IonSpinner,
+    IonButton,
+    IonIcon,
+    IonDatetimeButton,
+    IonModal,
+    IonDatetime,
+    IonRefresher,
+    IonRefresherContent,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -82,7 +111,7 @@ import { AuthService } from '../../../../core/services/auth.service';
           <div class="stat-item">
             <ion-icon name="trending-up-outline"></ion-icon>
             <div class="stat-content">
-              <span class="stat-value">{{ avgPerCategory() | number:'1.0-0' }}</span>
+              <span class="stat-value">{{ avgPerCategory() | number: '1.0-0' }}</span>
               <span class="stat-label">{{ 'REPORTS.WASTE.AVERAGE' | translate }}</span>
             </div>
           </div>
@@ -109,12 +138,16 @@ import { AuthService } from '../../../../core/services/auth.service';
                   <div class="chart-info">
                     <div class="chart-header">
                       <span class="chart-name">{{ item.wasteName }}</span>
-                      <span class="chart-count">{{ item.quantity }}{{ 'REPORTS.WASTE.UNIT' | translate }}</span>
+                      <span class="chart-count"
+                        >{{ item.quantity }}{{ 'REPORTS.WASTE.UNIT' | translate }}</span
+                      >
                     </div>
                     <div class="chart-bar">
-                      <div class="chart-fill" 
-                           [style.width.%]="(item.quantity / maxCount()) * 100"
-                           [style.background]="getBarColor(i)"></div>
+                      <div
+                        class="chart-fill"
+                        [style.width.%]="(item.quantity / maxCount()) * 100"
+                        [style.background]="getBarColor(i)"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -157,7 +190,9 @@ import { AuthService } from '../../../../core/services/auth.service';
             <ion-toolbar>
               <ion-title>{{ 'REPORTS.PROGRESS.DATE_SELECT' | translate }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="applyDateFilter()">{{ 'REPORTS.PROGRESS.APPLY' | translate }}</ion-button>
+                <ion-button (click)="applyDateFilter()">{{
+                  'REPORTS.PROGRESS.APPLY' | translate
+                }}</ion-button>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
@@ -168,7 +203,12 @@ import { AuthService } from '../../../../core/services/auth.service';
                 <ion-datetime-button datetime="waste-from"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
-                    <ion-datetime id="waste-from" [(ngModel)]="dateFrom" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                    <ion-datetime
+                      id="waste-from"
+                      [(ngModel)]="dateFrom"
+                      presentation="date"
+                      [showDefaultButtons]="true"
+                    ></ion-datetime>
                   </ng-template>
                 </ion-modal>
               </div>
@@ -177,73 +217,290 @@ import { AuthService } from '../../../../core/services/auth.service';
                 <ion-datetime-button datetime="waste-to"></ion-datetime-button>
                 <ion-modal [keepContentsMounted]="true">
                   <ng-template>
-                    <ion-datetime id="waste-to" [(ngModel)]="dateTo" presentation="date" [showDefaultButtons]="true"></ion-datetime>
+                    <ion-datetime
+                      id="waste-to"
+                      [(ngModel)]="dateTo"
+                      presentation="date"
+                      [showDefaultButtons]="true"
+                    ></ion-datetime>
                   </ng-template>
                 </ion-modal>
               </div>
             </div>
             <!-- 빠른 필터 버튼들 -->
             <div class="quick-filters">
-              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{ 'REPORTS.WASTE.LAST_7_DAYS' | translate }}</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{ 'REPORTS.WASTE.LAST_30_DAYS' | translate }}</ion-button>
-              <ion-button fill="outline" size="small" (click)="setQuickDate('quarter')">{{ 'REPORTS.WASTE.LAST_90_DAYS' | translate }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('week')">{{
+                'REPORTS.WASTE.LAST_7_DAYS' | translate
+              }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('month')">{{
+                'REPORTS.WASTE.LAST_30_DAYS' | translate
+              }}</ion-button>
+              <ion-button fill="outline" size="small" (click)="setQuickDate('quarter')">{{
+                'REPORTS.WASTE.LAST_90_DAYS' | translate
+              }}</ion-button>
             </div>
           </ion-content>
         </ng-template>
       </ion-modal>
     </ion-content>
   `,
-  styles: [`
-    .filter-section { padding: 16px; background: #f8fafc; }
-    .date-filter { display: flex; justify-content: center; }
-    .summary-section { padding: 0 16px 16px; }
-    .total-card { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 20px; padding: 24px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; }
-    .total-icon { width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-    .total-icon ion-icon { font-size: 32px; color: white; }
-    .total-info { display: flex; align-items: baseline; gap: 4px; }
-    .total-value { font-size: 48px; font-weight: 700; color: white; }
-    .total-unit { font-size: 20px; color: rgba(255,255,255,0.8); }
-    .total-label { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px; }
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .stat-item { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .stat-item ion-icon { font-size: 24px; color: #8b5cf6; }
-    .stat-content { display: flex; flex-direction: column; }
-    .stat-value { font-size: 20px; font-weight: 700; color: #0f172a; }
-    .stat-label { font-size: 12px; color: #64748b; }
-    .loading-container { display: flex; flex-direction: column; align-items: center; padding: 48px; color: #64748b; }
-    .section { padding: 0 16px 16px; }
-    .section-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: #0f172a; margin: 16px 0 12px; }
-    .section-title ion-icon { font-size: 20px; color: #8b5cf6; }
-    .chart-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .chart-item { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .chart-item:last-child { margin-bottom: 0; }
-    .chart-rank { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; flex-shrink: 0; }
-    .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .rank-2 { background: linear-gradient(135deg, #64748b, #475569); }
-    .rank-3 { background: linear-gradient(135deg, #a16207, #92400e); }
-    .rank-4, .rank-5 { background: #cbd5e1; color: #475569; }
-    .chart-info { flex: 1; }
-    .chart-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .chart-name { font-size: 14px; font-weight: 500; color: #0f172a; }
-    .chart-count { font-size: 14px; font-weight: 600; color: #8b5cf6; }
-    .chart-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
-    .chart-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-    .category-list { display: flex; flex-direction: column; gap: 8px; }
-    .category-item { background: white; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .category-info { display: flex; flex-direction: column; gap: 2px; }
-    .category-code { font-size: 12px; color: #94a3b8; }
-    .category-name { font-size: 14px; font-weight: 500; color: #0f172a; }
-    .category-count { font-size: 14px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
-    .category-count.high { background: #fee2e2; color: #dc2626; }
-    .category-count.medium { background: #fef3c7; color: #d97706; }
-    .category-count.low { background: #dbeafe; color: #2563eb; }
-    .empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px; color: #94a3b8; }
-    .empty-state ion-icon { font-size: 48px; margin-bottom: 12px; }
-    .date-inputs { display: flex; gap: 16px; margin-bottom: 16px; }
-    .date-field { flex: 1; }
-    .date-field label { display: block; font-size: 13px; color: #64748b; margin-bottom: 8px; }
-    .quick-filters { display: flex; gap: 8px; flex-wrap: wrap; }
-  `],
+  styles: [
+    `
+      .filter-section {
+        padding: 16px;
+        background: #f8fafc;
+      }
+      .date-filter {
+        display: flex;
+        justify-content: center;
+      }
+      .summary-section {
+        padding: 0 16px 16px;
+      }
+      .total-card {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .total-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .total-icon ion-icon {
+        font-size: 32px;
+        color: white;
+      }
+      .total-info {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+      .total-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+      }
+      .total-unit {
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .total-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 4px;
+      }
+      .stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .stat-item {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .stat-item ion-icon {
+        font-size: 24px;
+        color: #8b5cf6;
+      }
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+      }
+      .stat-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #64748b;
+      }
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 48px;
+        color: #64748b;
+      }
+      .section {
+        padding: 0 16px 16px;
+      }
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 16px 0 12px;
+      }
+      .section-title ion-icon {
+        font-size: 20px;
+        color: #8b5cf6;
+      }
+      .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .chart-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .chart-item:last-child {
+        margin-bottom: 0;
+      }
+      .chart-rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+      }
+      .rank-1 {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+      .rank-2 {
+        background: linear-gradient(135deg, #64748b, #475569);
+      }
+      .rank-3 {
+        background: linear-gradient(135deg, #a16207, #92400e);
+      }
+      .rank-4,
+      .rank-5 {
+        background: #cbd5e1;
+        color: #475569;
+      }
+      .chart-info {
+        flex: 1;
+      }
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .chart-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+      }
+      .chart-count {
+        font-size: 14px;
+        font-weight: 600;
+        color: #8b5cf6;
+      }
+      .chart-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .chart-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+      }
+      .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .category-item {
+        background: white;
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .category-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .category-code {
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      .category-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+      }
+      .category-count {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+      .category-count.high {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .category-count.medium {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .category-count.low {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 48px;
+        color: #94a3b8;
+      }
+      .empty-state ion-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+      }
+      .date-inputs {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .date-field {
+        flex: 1;
+      }
+      .date-field label {
+        display: block;
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 8px;
+      }
+      .quick-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+    `,
+  ],
 })
 export class WasteSummaryPage implements OnInit {
   protected readonly reportsStore = inject(ReportsStore);
@@ -256,12 +513,12 @@ export class WasteSummaryPage implements OnInit {
   dateTo = new Date().toISOString();
 
   // Computed
-  protected readonly topCategories = computed(() => 
-    [...this.reportsStore.wasteSummary()].sort((a, b) => b.quantity - a.quantity).slice(0, 5)
+  protected readonly topCategories = computed(() =>
+    [...this.reportsStore.wasteSummary()].sort((a, b) => b.quantity - a.quantity).slice(0, 5),
   );
 
-  protected readonly maxCount = computed(() => 
-    Math.max(...this.reportsStore.wasteSummary().map(s => s.quantity), 1)
+  protected readonly maxCount = computed(() =>
+    Math.max(...this.reportsStore.wasteSummary().map((s) => s.quantity), 1),
   );
 
   protected readonly avgPerCategory = computed(() => {
@@ -278,14 +535,18 @@ export class WasteSummaryPage implements OnInit {
   });
 
   constructor() {
-    addIcons({ 
-      downloadOutline, calendarOutline, trashOutline, cubeOutline, 
-      trendingUpOutline, layersOutline,
+    addIcons({
+      downloadOutline,
+      calendarOutline,
+      trashOutline,
+      cubeOutline,
+      trendingUpOutline,
+      layersOutline,
     });
   }
 
-  ngOnInit() { 
-    this.loadData(); 
+  ngOnInit() {
+    this.loadData();
   }
 
   private getDefaultDateFrom(): string {
@@ -304,7 +565,7 @@ export class WasteSummaryPage implements OnInit {
     this.reportsStore.loadWasteSummary();
   }
 
-  async onRefresh(event: any) {
+  async onRefresh(event: RefresherCustomEvent) {
     this.loadData();
     setTimeout(() => event.target.complete(), 500);
   }
@@ -351,12 +612,14 @@ export class WasteSummaryPage implements OnInit {
         translateService.instant('EXPORT.HEADERS.ITEM'),
         translateService.instant('EXPORT.HEADERS.QUANTITY'),
       ];
-      const rows = this.reportsStore.wasteSummary().map(s => [s.wasteCode, s.wasteName, String(s.quantity)]);
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-      
+      const rows = this.reportsStore
+        .wasteSummary()
+        .map((s) => [s.wasteCode, s.wasteName, String(s.quantity)]);
+      const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `waste_summary_${this.dateFrom.split('T')[0]}_${this.dateTo.split('T')[0]}.csv`;

@@ -1,0 +1,80 @@
+name: erp-api
+version: "1.0.0"
+description: NestJS 11 + Prisma 6 API 패턴 가이드
+
+environment:
+  framework: "NestJS 11"
+  orm: "Prisma 6"
+  database: "PostgreSQL 15"
+  cache: "Redis 7"
+
+response_format:
+  success:
+    structure: |
+      {
+        "data": {
+          "data": [...],
+          "meta": { "total": 100, "page": 1, "limit": 20 }
+        }
+      }
+    access_pattern: "response.data.data"
+  
+  error:
+    structure: |
+      {
+        "statusCode": 400,
+        "message": "Error description",
+        "error": "E2001"
+      }
+
+error_codes:
+  E2001:
+    message: "Invalid state transition"
+    cause: "잘못된 주문 상태 전환 시도"
+    solution: "OrderStateMachine 규칙 확인"
+  
+  E2002:
+    message: "Settlement lock active"
+    cause: "정산 중인 주문 수정 시도"
+    solution: "HQ_ADMIN 권한으로 unlock API 호출"
+  
+  E2003:
+    message: "Optimistic lock conflict"
+    cause: "동시 수정 충돌"
+    solution: "최신 버전 조회 후 재시도"
+
+order_states:
+  flow: "PENDING → CONFIRMED → PROCESSING → SHIPPED → DELIVERED"
+  rules:
+    - "순방향 전환만 가능"
+    - "CANCELLED는 PENDING, CONFIRMED에서만 가능"
+    - "정산 후 상태 변경 불가 (E2002)"
+
+prisma_patterns:
+  soft_delete: |
+    prisma.$use(async (params, next) => {
+      if (params.action === 'delete') {
+        params.action = 'update';
+        params.args['data'] = { deletedAt: new Date() };
+      }
+      return next(params);
+    });
+  
+  optimistic_lock: |
+    const updated = await prisma.order.update({
+      where: { 
+        id: orderId,
+        version: currentVersion 
+      },
+      data: { 
+        ...updateData,
+        version: { increment: 1 }
+      }
+    });
+
+commands:
+  dev: "pnpm api:dev"
+  build: "pnpm api:build"
+  db_generate: "pnpm db:generate"
+  db_migrate: "pnpm db:migrate"
+  db_studio: "pnpm db:studio"

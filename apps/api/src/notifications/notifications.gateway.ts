@@ -109,9 +109,7 @@ export class NotificationsGateway
       };
       client.emit(WsEventType.CONNECTED, connectedPayload);
 
-      this.logger.log(
-        `Client connected: ${client.connectionId} (user: ${payload.username})`,
-      );
+      this.logger.log(`Client connected: ${client.connectionId} (user: ${payload.username})`);
     } catch (error) {
       this.logger.error('Connection error:', error);
       this.sendError(client, 'E5001', 'error.connection_failed');
@@ -172,10 +170,7 @@ export class NotificationsGateway
     }
 
     // Validate branch access (HQ_ADMIN can access all, others only their branch)
-    if (
-      !client.user.roles.includes('HQ_ADMIN') &&
-      client.user.branchCode !== data.branchCode
-    ) {
+    if (!client.user.roles.includes('HQ_ADMIN') && client.user.branchCode !== data.branchCode) {
       throw new WsException('error.branch_access_denied');
     }
 
@@ -242,12 +237,21 @@ export class NotificationsGateway
   // ============================================
 
   /**
-   * Emit order updated event to subscribed clients
+   * Emit order updated event to subscribed clients (by branch)
    */
   emitOrderUpdated(branchCode: string, payload: WsOrderUpdatedPayload): void {
     this.server.to(`branch:${branchCode}`).emit(WsEventType.ORDER_UPDATED, payload);
     this.server.to(`order:${payload.orderId}`).emit(WsEventType.ORDER_UPDATED, payload);
     this.logger.debug(`Order updated event emitted: ${payload.orderId}`);
+  }
+
+  /**
+   * Emit order update event directly by orderId
+   * Convenience method for services that don't have branch context
+   */
+  emitOrderUpdate(orderId: string, data: WsOrderUpdatedPayload): void {
+    this.server.to(`order:${orderId}`).emit(WsEventType.ORDER_UPDATED, data);
+    this.logger.debug(`Order update event emitted for order: ${orderId}`);
   }
 
   /**
