@@ -159,7 +159,7 @@ prisma/migrations/*_migration.sql
 # 📱 MOBILE / CAPACITOR
 # ==========================================
 apps/mobile/ios/
-apps/mobile/android/
+# apps/mobile/android/ — tracked for release APK build
 apps/mobile/.capacitor/
 *.ipa
 *.apk
