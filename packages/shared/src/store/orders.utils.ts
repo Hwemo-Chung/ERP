@@ -54,12 +54,16 @@ export function formatAddress(address: AddressObject | string | undefined | null
   return parts.join(' ');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function transformOrder(order: any): Order {
+export function transformOrder(
+  order: Omit<Partial<Order>, 'status'> & {
+    status?: string;
+    address?: string | { line1?: string; line2?: string; city?: string };
+  },
+): Order {
   return {
     ...order,
     customerAddress: order.customerAddress || formatAddress(order.address),
-  };
+  } as Order;
 }
 
 export function filterOrders(orders: Order[], filters: OrderFilterOptions): Order[] {

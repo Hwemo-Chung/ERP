@@ -422,7 +422,7 @@ export class OrderCompletionModal implements OnInit {
       const { serials, waste, notes } = this.form.value;
 
       // Filter out empty waste entries
-      const wasteEntries = waste.filter((w: any) => w.code);
+      const wasteEntries = waste.filter((w: { code: string; quantity: number }) => w.code);
 
       await this.ordersStore.completeOrder(this.order.id, {
         lines: serials,
