@@ -6,6 +6,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '@env/environment';
+import { Order } from '@erp/shared';
 
 export interface KpiSummary {
   total: number;
@@ -159,18 +160,16 @@ export class ReportsService {
    * Search customer history
    */
   searchCustomers(query: string, limit = 50): Observable<{ data: CustomerRecord[] }> {
-    const params = new HttpParams()
-      .set('q', query)
-      .set('limit', String(limit));
+    const params = new HttpParams().set('q', query).set('limit', String(limit));
     return this.http.get<{ data: CustomerRecord[] }>(`${this.baseUrl}/customers`, { params });
   }
 
   /**
    * Get customer detail with order history
    */
-  getCustomerDetail(customerId: string): Observable<CustomerRecord & { orders: any[] }> {
-    return this.http.get<CustomerRecord & { orders: any[] }>(
-      `${this.baseUrl}/customers/${customerId}`
+  getCustomerDetail(customerId: string): Observable<CustomerRecord & { orders: Order[] }> {
+    return this.http.get<CustomerRecord & { orders: Order[] }>(
+      `${this.baseUrl}/customers/${customerId}`,
     );
   }
 
@@ -194,9 +193,7 @@ export class ReportsService {
    * Request export
    */
   async requestExport(request: ExportRequest): Promise<ExportResult> {
-    return firstValueFrom(
-      this.http.post<ExportResult>(`${this.baseUrl}/raw`, request)
-    );
+    return firstValueFrom(this.http.post<ExportResult>(`${this.baseUrl}/raw`, request));
   }
 
   /**
@@ -236,10 +233,7 @@ export class ReportsService {
    * Requires HQ_ADMIN or BRANCH_MANAGER role
    */
   markItemAsReturned(orderId: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(
-      `${this.baseUrl}/unreturned/${orderId}/return`,
-      {}
-    );
+    return this.http.post<{ success: boolean }>(`${this.baseUrl}/unreturned/${orderId}/return`, {});
   }
 
   /**

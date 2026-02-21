@@ -26,6 +26,20 @@ export interface SyncMetadata {
   dataVersion: number;
 }
 
+interface SyncQueueChange {
+  dataType: string;
+  entityId: string;
+  operation: 'CREATE' | 'UPDATE' | 'DELETE';
+  data: Record<string, unknown>;
+  version?: number;
+}
+
+interface RemoteDataItem {
+  id: string;
+  version?: number;
+  [key: string]: unknown;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OfflineSyncService {
   private http = inject(HttpClient);
@@ -129,7 +143,7 @@ export class OfflineSyncService {
   /**
    * Push individual change to server
    */
-  private async pushChange(change: any) {
+  private async pushChange(change: SyncQueueChange) {
     const url = `${this.apiUrl}/${change.dataType}/${change.entityId}`;
 
     switch (change.operation) {
@@ -164,7 +178,7 @@ export class OfflineSyncService {
         // Fetch changes since last sync
         const response = await firstValueFrom(
           this.http.get<{
-            data: any[];
+            data: RemoteDataItem[];
             timestamp: number;
           }>(`${this.apiUrl}/${dataType}/delta`, {
             params: { since: lastSync.toString() },
@@ -191,7 +205,7 @@ export class OfflineSyncService {
    * Merge remote data with local data
    * Respects local optimistic updates
    */
-  private async mergeRemoteData(dataType: string, remoteData: any[]) {
+  private async mergeRemoteData(dataType: string, remoteData: RemoteDataItem[]) {
     const table = db.table(dataType);
 
     for (const remoteItem of remoteData) {
@@ -286,7 +300,7 @@ export class OfflineSyncService {
     const to = new Date(now.getTime() + daysAfter * 24 * 60 * 60 * 1000);
 
     const response = await firstValueFrom(
-      this.http.get<any[]>(`${this.apiUrl}/${dataType}/prefetch`, {
+      this.http.get<RemoteDataItem[]>(`${this.apiUrl}/${dataType}/prefetch`, {
         params: {
           from: from.toISOString(),
           to: to.toISOString(),

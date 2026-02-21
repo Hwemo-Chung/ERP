@@ -34,6 +34,7 @@ import {
   IonButton,
   AlertController,
   ToastController,
+  ToggleCustomEvent,
 } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
@@ -319,7 +320,7 @@ export class BiometricSettingsPage implements OnInit, OnDestroy {
   /**
    * Handle toggle change
    */
-  async onToggleChange(event: any): Promise<void> {
+  async onToggleChange(event: ToggleCustomEvent): Promise<void> {
     const enabled = event.detail.checked;
 
     if (enabled) {

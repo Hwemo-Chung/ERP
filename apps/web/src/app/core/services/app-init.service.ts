@@ -8,7 +8,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { SwUpdate } from '@angular/service-worker';
+import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { ToastController } from '@ionic/angular/standalone';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from './auth.service';
@@ -90,7 +90,7 @@ export class AppInitService {
     ); // Every hour
 
     // Listen for new version available
-    this.swUpdate.versionUpdates.subscribe((evt: any) => {
+    this.swUpdate.versionUpdates.subscribe((evt: VersionEvent) => {
       if (evt.type === 'VERSION_READY') {
         this.logger.log('[App Init] New version available');
         this.showUpdatePrompt();
