@@ -34,6 +34,7 @@ import {
   ActionSheetController,
   AlertController,
   ToastController,
+  ActionSheetButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -469,7 +470,7 @@ export class AssignmentDetailPage implements OnInit {
     const order = this.assignment();
     if (!order) return;
 
-    const buttons: any[] = [];
+    const buttons: ActionSheetButton[] = [];
 
     // 상태에 따른 액션 버튼 구성
     if (order.status === OrderStatus.UNASSIGNED) {

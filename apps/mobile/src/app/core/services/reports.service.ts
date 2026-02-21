@@ -172,7 +172,7 @@ export class ReportsService {
     if (options.dateTo) params = params.set('dateTo', options.dateTo);
 
     // API returns raw Prisma groupBy results, transform to ProgressReport
-    return this.http.get<any[]>(`${this.baseUrl}/progress`, { params }).pipe(
+    return this.http.get<ProgressDataItem[]>(`${this.baseUrl}/progress`, { params }).pipe(
       map((data) => {
         this.logger.log('[ReportsService] Raw API data:', {
           type: typeof data,
