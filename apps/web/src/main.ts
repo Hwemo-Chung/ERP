@@ -40,6 +40,7 @@ import { offlineInterceptor } from './app/core/interceptors/offline.interceptor'
 import { GlobalErrorHandler } from './app/core/error/global-error-handler';
 
 import { environment } from './environments/environment';
+import { ENVIRONMENT_CONFIG, PLATFORM_CONFIG, TRANSLATE_SERVICE_TOKEN } from '@erp/shared';
 
 /**
  * Initialize Sentry for error monitoring
@@ -127,6 +128,18 @@ bootstrapApplication(AppComponent, {
       useFactory: initializeTranslations,
       deps: [TranslateService],
       multi: true,
+    },
+    { provide: ENVIRONMENT_CONFIG, useValue: environment },
+    { provide: TRANSLATE_SERVICE_TOKEN, useExisting: TranslateService },
+    {
+      provide: PLATFORM_CONFIG,
+      useValue: {
+        platform: 'web',
+        defaultRoute: '/tabs/orders',
+        supportsZoneless: false,
+        hasBiometric: false,
+        hasCapacitor: false,
+      },
     },
   ],
 }).catch((err) => {

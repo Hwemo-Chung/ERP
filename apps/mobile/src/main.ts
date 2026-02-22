@@ -27,6 +27,7 @@ import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { offlineInterceptor } from './app/core/interceptors/offline.interceptor';
 
 import { environment } from './environments/environment';
+import { ENVIRONMENT_CONFIG, PLATFORM_CONFIG } from '@erp/shared';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
@@ -88,6 +89,17 @@ bootstrapApplication(AppComponent, {
       useFactory: initializeTranslations,
       deps: [TranslateService],
       multi: true,
+    },
+    { provide: ENVIRONMENT_CONFIG, useValue: environment },
+    {
+      provide: PLATFORM_CONFIG,
+      useValue: {
+        platform: 'mobile',
+        defaultRoute: '/tabs/assignment',
+        supportsZoneless: true,
+        hasBiometric: true,
+        hasCapacitor: true,
+      },
     },
   ],
 }).catch((err) => {
