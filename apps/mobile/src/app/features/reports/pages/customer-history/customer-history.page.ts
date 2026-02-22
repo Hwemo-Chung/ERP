@@ -1,4 +1,4 @@
-// apps/web/src/app/features/reports/pages/customer-history/customer-history.page.ts
+// apps/mobile/src/app/features/reports/pages/customer-history/customer-history.page.ts
 import { Component, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

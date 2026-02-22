@@ -1,4 +1,4 @@
-// apps/web/src/app/features/completion/pages/completion-certificate/completion-certificate.page.ts
+// apps/mobile/src/app/features/completion/pages/completion-certificate/completion-certificate.page.ts
 import {
   Component,
   signal,
