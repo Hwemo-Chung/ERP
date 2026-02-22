@@ -1,0 +1,10 @@
+    at Object.worker (/Users/solution/Documents/GitHub/ERP-code-quality/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+(node:58709) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/notifications/notifications.processor.spec.ts (8.913 s)
+
+Test Suites: 8 passed, 8 total
+Tests:       264 passed, 264 total
+Snapshots:   0 total
+Time:        10.048 s, estimated 12 s
+Ran all test suites.
