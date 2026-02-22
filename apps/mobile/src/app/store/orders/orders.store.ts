@@ -12,6 +12,9 @@ import {
   filterOrders,
   groupOrdersByStatus,
   calculateKpiMetrics,
+  transformOrder,
+  extractErrorMessage,
+  isHttpError,
 } from '@erp/shared';
 import { db } from '@app/core/db/database';
 import { NetworkService } from '../../core/services/network.service';
@@ -88,7 +91,7 @@ export class OrdersStore extends signalStore(
               }>(`${environment.apiUrl}/orders?${params}`),
             );
 
-            const orders = response.data;
+            const orders = response.data.map(transformOrder);
             const pagination: PaginationInfo = {
               page,
               limit,
@@ -112,8 +115,7 @@ export class OrdersStore extends signalStore(
               syncStatus: 'idle',
             });
           } catch (error: unknown) {
-            const err = error as { error?: { message?: string } };
-            const errorMessage = err?.error?.message || 'Failed to load orders';
+            const errorMessage = extractErrorMessage(error) || 'Failed to load orders';
             patchState(store, {
               error: errorMessage,
               isLoading: false,
@@ -133,7 +135,7 @@ export class OrdersStore extends signalStore(
             }
 
             patchState(store, {
-              orders: orders as Order[],
+              orders: orders.map(transformOrder),
               isLoading: false,
             });
           } catch (error) {
@@ -243,8 +245,7 @@ export class OrdersStore extends signalStore(
                 localUpdatedAt: serverOrder.localUpdatedAt || Date.now(),
               });
             } catch (error: unknown) {
-              const err = error as { status?: number };
-              if (err?.status === 409) {
+              if (isHttpError(error) && error.status === 409) {
                 patchState(store, {
                   orders: store.orders().map((o) => (o.id === orderId ? order : o)),
                   error: 'Order was updated by another user. Please retry.',
@@ -334,7 +335,7 @@ export class OrdersStore extends signalStore(
           };
 
           if (opts?.installerId) body['installerId'] = opts.installerId;
-          if (opts?.reasonCode) body['absenceReason'] = opts.reasonCode;
+          if (opts?.reasonCode) body['reasonCode'] = opts.reasonCode;
           if (opts?.notes) body['notes'] = opts.notes;
           if (opts?.appointmentDate) body['appointmentDate'] = opts.appointmentDate;
 
@@ -485,7 +486,16 @@ export class OrdersStore extends signalStore(
           try {
             const payload = {
               orderId,
-              splits,
+              splits: splits.map((s) => ({
+                lineId: s.lineId,
+                assignments: s.assignments
+                  .filter((a) => a.quantity > 0)
+                  .map((a) => ({
+                    installerId: a.installerId || undefined,
+                    installerName: a.installerName,
+                    quantity: a.quantity,
+                  })),
+              })),
               version: order.version,
             };
 
@@ -524,14 +534,13 @@ export class OrdersStore extends signalStore(
             patchState(store, { isLoading: false });
             return { success: false };
           } catch (error: unknown) {
-            const err = error as { error?: { message?: string }; status?: number };
-            const errorMessage = err?.error?.message || 'Failed to split order';
+            const errorMessage = extractErrorMessage(error) || 'Failed to split order';
             patchState(store, {
               error: errorMessage,
               isLoading: false,
             });
 
-            if (err?.status === 409) {
+            if (isHttpError(error) && error.status === 409) {
               try {
                 const fresh = await firstValueFrom(
                   http.get<Order>(`${environment.apiUrl}/orders/${orderId}`),
@@ -541,7 +550,7 @@ export class OrdersStore extends signalStore(
                   error: 'Order was updated by another user. Please retry.',
                 });
               } catch {
-                // Ignore reload error
+                // Intentionally ignored - reload failure is not critical
               }
             }
 

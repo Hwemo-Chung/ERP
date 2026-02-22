@@ -9,6 +9,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import { firstValueFrom } from 'rxjs';
 
+import { getErrorMessage } from '../../core/utils/error.util';
 import { Installer, InstallersState } from './installers.models';
 import { db } from '@app/core/db/database';
 
@@ -84,12 +85,7 @@ export class InstallersStore extends signalStore(
           lastSyncTime: Date.now(),
         });
       } catch (error: unknown) {
-        const httpBody = (error as Record<string, unknown>)?.['error'] as
-          | Record<string, unknown>
-          | undefined;
-        const errorMessage =
-          (httpBody?.['message'] as string) ||
-          (error instanceof Error ? error.message : 'Failed to load installers');
+        const errorMessage = getErrorMessage(error) || 'Failed to load installers';
         patchState(store, {
           error: errorMessage,
           isLoading: false,
