@@ -1,4 +1,4 @@
-// apps/web/src/app/features/settings/pages/settlement/settlement.page.ts
+// apps/mobile/src/app/features/settings/pages/settlement/settlement.page.ts
 import { Component, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {

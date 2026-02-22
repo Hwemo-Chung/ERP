@@ -1,5 +1,12 @@
-// apps/web/src/app/features/completion/pages/waste-pickup/waste-pickup.page.ts
-import { Component, signal, computed, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+// apps/mobile/src/app/features/completion/pages/waste-pickup/waste-pickup.page.ts
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -26,12 +33,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import {
-  trashOutline,
-  addOutline,
-  removeOutline,
-  saveOutline,
-} from 'ionicons/icons';
+import { trashOutline, addOutline, removeOutline, saveOutline } from 'ionicons/icons';
 import { OrdersStore } from '../../../../store/orders/orders.store';
 import { Order, WasteEntry } from '../../../../store/orders/orders.models';
 import { TranslateModule } from '@ngx-translate/core';
@@ -101,7 +103,9 @@ const WASTE_CODES: { code: string; name: string }[] = [
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button [defaultHref]="'/tabs/completion/process/' + orderId()"></ion-back-button>
+          <ion-back-button
+            [defaultHref]="'/tabs/completion/process/' + orderId()"
+          ></ion-back-button>
         </ion-buttons>
         <ion-title>폐가전 회수</ion-title>
       </ion-toolbar>
@@ -122,9 +126,7 @@ const WASTE_CODES: { code: string; name: string }[] = [
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p class="instruction">
-              회수할 폐가전 품목을 선택하고 수량을 입력해주세요.
-            </p>
+            <p class="instruction">회수할 폐가전 품목을 선택하고 수량을 입력해주세요.</p>
           </ion-card-content>
         </ion-card>
 
@@ -202,58 +204,60 @@ const WASTE_CODES: { code: string; name: string }[] = [
       }
     </ion-content>
   `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 48px;
-    }
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-    }
-
-    .instruction {
-      color: var(--ion-color-medium);
-      font-size: 14px;
-    }
-
-    .add-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-
-      ion-input {
-        flex: 1;
-        max-width: 100px;
+  styles: [
+    `
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
       }
-    }
 
-    .quantity-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      ion-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+      }
 
-      .quantity {
-        min-width: 24px;
+      .instruction {
+        color: var(--ion-color-medium);
+        font-size: 14px;
+      }
+
+      .add-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+
+        ion-input {
+          flex: 1;
+          max-width: 100px;
+        }
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .quantity {
+          min-width: 24px;
+          text-align: center;
+          font-weight: 600;
+        }
+      }
+
+      .empty-state {
         text-align: center;
-        font-weight: 600;
+        padding: 24px;
+        color: var(--ion-color-medium);
       }
-    }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--ion-color-medium);
-    }
-
-    .action-buttons {
-      margin-top: 24px;
-    }
-  `],
+      .action-buttons {
+        margin-top: 24px;
+      }
+    `,
+  ],
 })
 export class WastePickupPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -292,13 +296,15 @@ export class WastePickupPage implements OnInit {
   loadExistingWaste(): void {
     const order = this.order();
     if (order?.completion?.waste?.length) {
-      this.items.set(order.completion.waste.map((w: WasteEntry) => ({
-        id: crypto.randomUUID(),
-        code: w.code,
-        name: WASTE_CODES.find(wc => wc.code === w.code)?.name || w.code,
-        quantity: w.quantity,
-        selected: true,
-      })));
+      this.items.set(
+        order.completion.waste.map((w: WasteEntry) => ({
+          id: crypto.randomUUID(),
+          code: w.code,
+          name: WASTE_CODES.find((wc) => wc.code === w.code)?.name || w.code,
+          quantity: w.quantity,
+          selected: true,
+        })),
+      );
     }
   }
 
@@ -309,16 +315,14 @@ export class WastePickupPage implements OnInit {
   addItem(): void {
     if (!this.selectedCode) return;
 
-    const waste = WASTE_CODES.find(w => w.code === this.selectedCode);
+    const waste = WASTE_CODES.find((w) => w.code === this.selectedCode);
     if (!waste) return;
 
-    this.items.update(items => {
-      const existing = items.find(i => i.code === this.selectedCode);
+    this.items.update((items) => {
+      const existing = items.find((i) => i.code === this.selectedCode);
       if (existing) {
-        return items.map(i =>
-          i.code === this.selectedCode
-            ? { ...i, quantity: i.quantity + this.selectedQuantity }
-            : i
+        return items.map((i) =>
+          i.code === this.selectedCode ? { ...i, quantity: i.quantity + this.selectedQuantity } : i,
         );
       }
       return [
@@ -338,32 +342,28 @@ export class WastePickupPage implements OnInit {
   }
 
   increaseQuantity(item: WasteItem): void {
-    this.items.update(items =>
-      items.map(i =>
-        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-      )
+    this.items.update((items) =>
+      items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)),
     );
   }
 
   decreaseQuantity(item: WasteItem): void {
-    this.items.update(items => {
+    this.items.update((items) => {
       if (item.quantity <= 1) {
-        return items.filter(i => i.id !== item.id);
+        return items.filter((i) => i.id !== item.id);
       }
-      return items.map(i =>
-        i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i
-      );
+      return items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i));
     });
   }
 
   async saveWastePickup(): Promise<void> {
     try {
-      const wasteData = this.items().map(i => ({
+      const wasteData = this.items().map((i) => ({
         code: i.code,
         quantity: i.quantity,
       }));
       await this.ordersStore.updateOrderWaste(this.orderId(), wasteData);
-      
+
       const toast = await this.toastCtrl.create({
         message: '폐가전 회수 정보가 저장되었습니다.',
         duration: 2000,

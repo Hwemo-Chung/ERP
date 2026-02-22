@@ -1,4 +1,4 @@
-// apps/web/src/app/features/reports/pages/waste-summary/waste-summary.page.ts
+// apps/mobile/src/app/features/reports/pages/waste-summary/waste-summary.page.ts
 import {
   Component,
   signal,
