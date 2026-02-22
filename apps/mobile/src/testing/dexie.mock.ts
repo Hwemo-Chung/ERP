@@ -15,9 +15,18 @@ let syncQueueIdCounter = 1;
 const createMockTable = <T, K extends string | number = string | number>(
   storage: Map<K, T>,
   primaryKeyField: keyof T = 'id' as keyof T,
-  autoIncrement: boolean = false
+  autoIncrement: boolean = false,
 ) => {
   let autoIncrementCounter = 1;
+
+  type KeyedItem = Record<string | symbol, unknown>;
+  type Comparable = string | number | boolean;
+
+  const getKey = (item: T): K => (item as KeyedItem)[primaryKeyField as string] as K;
+
+  const setKey = (item: T, key: K): void => {
+    (item as KeyedItem)[primaryKeyField as string] = key;
+  };
 
   return {
     async toArray(): Promise<T[]> {
@@ -30,11 +39,11 @@ const createMockTable = <T, K extends string | number = string | number>(
 
     async put(item: T): Promise<K> {
       let key: K;
-      if (autoIncrement && (item as any)[primaryKeyField] === undefined) {
-        key = (autoIncrementCounter++) as K;
-        (item as any)[primaryKeyField] = key;
+      if (autoIncrement && getKey(item) === undefined) {
+        key = autoIncrementCounter++ as K;
+        setKey(item, key);
       } else {
-        key = (item as any)[primaryKeyField] as K;
+        key = getKey(item);
       }
       storage.set(key, { ...item });
       return key;
@@ -42,10 +51,11 @@ const createMockTable = <T, K extends string | number = string | number>(
 
     async add(item: T): Promise<K> {
       let key: K;
-      if (autoIncrement && (item as any)[primaryKeyField] === undefined) {
-        key = (autoIncrementCounter++) as K;
+      if (autoIncrement && getKey(item) === undefined) {
+        key = autoIncrementCounter++ as K;
+        setKey(item, key);
       } else {
-        key = (item as any)[primaryKeyField] as K;
+        key = getKey(item);
       }
       const itemWithKey = { ...item, [primaryKeyField]: key };
       storage.set(key, itemWithKey);
@@ -55,10 +65,11 @@ const createMockTable = <T, K extends string | number = string | number>(
     async bulkPut(items: T[]): Promise<number> {
       for (const item of items) {
         let key: K;
-        if (autoIncrement && (item as any)[primaryKeyField] === undefined) {
-          key = (autoIncrementCounter++) as K;
+        if (autoIncrement && getKey(item) === undefined) {
+          key = autoIncrementCounter++ as K;
+          setKey(item, key);
         } else {
-          key = (item as any)[primaryKeyField] as K;
+          key = getKey(item);
         }
         const itemWithKey = { ...item, [primaryKeyField]: key };
         storage.set(key, itemWithKey);
@@ -91,13 +102,16 @@ const createMockTable = <T, K extends string | number = string | number>(
     },
 
     orderBy(field: string) {
+      const getField = (item: T): Comparable => (item as Record<string, Comparable>)[field];
       return {
         limit: (n: number) => ({
           toArray: async () => {
             const items = Array.from(storage.values());
-            items.sort((a: any, b: any) => {
-              if (a[field] < b[field]) return -1;
-              if (a[field] > b[field]) return 1;
+            items.sort((a: T, b: T) => {
+              const aVal = getField(a);
+              const bVal = getField(b);
+              if (aVal < bVal) return -1;
+              if (aVal > bVal) return 1;
               return 0;
             });
             return items.slice(0, n);
@@ -105,9 +119,11 @@ const createMockTable = <T, K extends string | number = string | number>(
         }),
         toArray: async () => {
           const items = Array.from(storage.values());
-          items.sort((a: any, b: any) => {
-            if (a[field] < b[field]) return -1;
-            if (a[field] > b[field]) return 1;
+          items.sort((a: T, b: T) => {
+            const aVal = getField(a);
+            const bVal = getField(b);
+            if (aVal < bVal) return -1;
+            if (aVal > bVal) return 1;
             return 0;
           });
           return items;
@@ -116,64 +132,65 @@ const createMockTable = <T, K extends string | number = string | number>(
     },
 
     where(field: string) {
+      const getField = (item: T): Comparable => (item as Record<string, Comparable>)[field];
       return {
-        equals: (value: any) => {
+        equals: (value: Comparable) => {
           const filtered = Array.from(storage.values()).filter(
-            (item: any) => item[field] === value
+            (item: T) => getField(item) === value,
           );
           return {
             toArray: async () => filtered,
             count: async () => filtered.length,
             first: async () => filtered[0],
             sortBy: async (sortField: string) => {
-              return [...filtered].sort((a: any, b: any) => {
-                if (a[sortField] < b[sortField]) return -1;
-                if (a[sortField] > b[sortField]) return 1;
+              const getSortField = (item: T): Comparable =>
+                (item as Record<string, Comparable>)[sortField];
+              return [...filtered].sort((a: T, b: T) => {
+                const aVal = getSortField(a);
+                const bVal = getSortField(b);
+                if (aVal < bVal) return -1;
+                if (aVal > bVal) return 1;
                 return 0;
               });
             },
             delete: async () => {
-              filtered.forEach((item: any) => {
-                const key = item[primaryKeyField];
+              filtered.forEach((item: T) => {
+                const key = getKey(item);
                 if (key !== undefined) {
-                  storage.delete(key as K);
+                  storage.delete(key);
                 }
               });
               return filtered.length;
             },
           };
         },
-        anyOf: (values: any[]) => {
-          const filtered = Array.from(storage.values()).filter((item: any) =>
-            values.includes(item[field])
+        anyOf: (values: Comparable[]) => {
+          const filtered = Array.from(storage.values()).filter((item: T) =>
+            values.includes(getField(item)),
           );
           return {
             toArray: async () => filtered,
             count: async () => filtered.length,
             delete: async () => {
-              filtered.forEach((item: any) => {
-                const key = item[primaryKeyField];
+              filtered.forEach((item: T) => {
+                const key = getKey(item);
                 if (key !== undefined) {
-                  storage.delete(key as K);
+                  storage.delete(key);
                 }
               });
               return filtered.length;
             },
           };
         },
-        above: (value: any) => {
-          const filtered = Array.from(storage.values()).filter(
-            (item: any) => item[field] > value
-          );
+        above: (value: Comparable) => {
+          const filtered = Array.from(storage.values()).filter((item: T) => getField(item) > value);
           return {
             toArray: async () => filtered,
             count: async () => filtered.length,
           };
         },
-        below: (value: any) => {
-          const filtered = Array.from(storage.values()).filter(
-            (item: any) => item[field] < value
-          );
+        below: (value: Comparable) => {
+          const filtered = Array.from(storage.values()).filter((item: T) => getField(item) < value);
           return {
             toArray: async () => filtered,
             count: async () => filtered.length,
@@ -209,7 +226,7 @@ export const __configureDexieMock = {
   resetSyncQueue: () => {
     mockSyncQueue.clear();
     syncQueueIdCounter = 1;
-    (syncQueueTable as any)._resetAutoIncrement();
+    syncQueueTable._resetAutoIncrement();
   },
   resetMetadata: () => {
     mockMetadata.clear();
@@ -219,7 +236,7 @@ export const __configureDexieMock = {
     mockSyncQueue.clear();
     mockMetadata.clear();
     syncQueueIdCounter = 1;
-    (syncQueueTable as any)._resetAutoIncrement();
+    syncQueueTable._resetAutoIncrement();
   },
   getOrders: () => Array.from(mockOrders.values()),
   getSyncQueue: () => Array.from(mockSyncQueue.values()),
