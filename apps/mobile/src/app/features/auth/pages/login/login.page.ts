@@ -861,6 +861,7 @@ export class LoginPage {
     }
 
     const { username, password } = this.loginForm.value;
+
     const success = await this.authService.login({ username, password });
 
     if (success) {

@@ -1,9 +1,17 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
+  HttpErrorResponse,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { from, switchMap, catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
+export const authInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+) => {
   // Skip auth header for static assets (i18n, images, etc.)
   if (req.url.includes('/assets/')) {
     return next(req);
@@ -13,7 +21,11 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const token = authService.getAccessToken();
 
   // Skip auth header for auth endpoints to prevent 401 loops
-  if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh') || req.url.includes('/auth/logout')) {
+  if (
+    req.url.includes('/auth/login') ||
+    req.url.includes('/auth/refresh') ||
+    req.url.includes('/auth/logout')
+  ) {
     return next(req);
   }
 
@@ -41,10 +53,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
               return next(newReq);
             }
             return throwError(() => error);
-          })
+          }),
         );
       }
       return throwError(() => error);
-    })
+    }),
   );
 };

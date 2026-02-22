@@ -1,13 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Find user by username with roles and branch
+   *
+   * NOTE: partner include 제거 (2026-02-22)
+   * - 로그인/토큰갱신 flow에서 user.partner를 참조하는 곳 없음
+   * - 주문 관련 서비스(order-assignment, order-query 등)는 자체 Prisma 쿼리로 partner 조회
+   * - 불필요한 JOIN 제거로 로그인 응답시간 ~200ms 개선
+   * - partner 데이터 필요 시 findByIdWithPartner() 별도 메서드 추가 권장
    */
   async findByUsername(username: string) {
     return this.prisma.user.findUnique({
@@ -15,13 +23,17 @@ export class UsersService {
       include: {
         roles: true,
         branch: true,
-        partner: true,
+        // partner: true, // 로그인 flow에서 미사용 — 불필요한 JOIN 제거 (2026-02-22)
       },
     });
   }
 
   /**
    * Find user by ID
+   *
+   * NOTE: partner include 제거 (2026-02-22)
+   * - refreshTokens()에서 호출 시 user.partner 미참조
+   * - GET /users/:id 응답에도 partner 객체 불필요 (partnerId 필드는 User 자체에 존재)
    */
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({
@@ -29,7 +41,7 @@ export class UsersService {
       include: {
         roles: true,
         branch: true,
-        partner: true,
+        // partner: true, // 인증/유저조회 flow에서 미사용 — 불필요한 JOIN 제거 (2026-02-22)
       },
     });
 

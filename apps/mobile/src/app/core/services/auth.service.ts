@@ -208,6 +208,7 @@ export class AuthService {
 
       return true;
     } catch (err: unknown) {
+      this.logger.error('[Auth] Login failed:', err);
       const httpBody = (err as Record<string, unknown>)?.['error'] as
         | Record<string, unknown>
         | undefined;

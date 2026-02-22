@@ -52,15 +52,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       // Show toast for errors (except 401 which is handled separately)
       if (error.status !== 401) {
-        toastCtrl.create({
-          message,
-          duration: 3000,
-          position: 'bottom',
-          color: 'danger',
-        }).then(toast => toast.present());
+        toastCtrl
+          .create({
+            message,
+            duration: 3000,
+            position: 'bottom',
+            color: 'danger',
+          })
+          .then((toast) => toast.present());
       }
 
       return throwError(() => error);
-    })
+    }),
   );
 };
