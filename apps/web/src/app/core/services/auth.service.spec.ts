@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService, User, AuthTokens } from './auth.service';
 import { __configureMock, GetOptions } from '@capacitor/preferences';
 import { environment } from '@env/environment';
+import { ENVIRONMENT_CONFIG } from '@erp/shared';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -19,7 +20,7 @@ describe('AuthService', () => {
     roles: ['BRANCH_MANAGER'],
     branchId: 'branch-001',
     branchCode: 'BR001',
-  };
+  } as User;
 
   const mockTokens: AuthTokens = {
     accessToken: 'mock-access-token',
@@ -27,7 +28,6 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
-    // Reset mock to default behavior
     __configureMock.resetMocks();
 
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -37,6 +37,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: Router, useValue: routerSpy },
+        { provide: ENVIRONMENT_CONFIG, useValue: environment },
       ],
     }).compileComponents();
 
@@ -94,10 +95,14 @@ describe('AuthService', () => {
     it('should restore session when valid tokens exist in storage', fakeAsync(() => {
       __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
-          case 'erp_access_token': return { value: mockTokens.accessToken };
-          case 'erp_refresh_token': return { value: mockTokens.refreshToken };
-          case 'erp_user': return { value: JSON.stringify(mockUser) };
-          default: return { value: null };
+          case 'erp_access_token':
+            return { value: mockTokens.accessToken };
+          case 'erp_refresh_token':
+            return { value: mockTokens.refreshToken };
+          case 'erp_user':
+            return { value: JSON.stringify(mockUser) };
+          default:
+            return { value: null };
         }
       });
 
@@ -121,10 +126,14 @@ describe('AuthService', () => {
     it('should handle corrupted user JSON gracefully', fakeAsync(() => {
       __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
-          case 'erp_access_token': return { value: mockTokens.accessToken };
-          case 'erp_refresh_token': return { value: mockTokens.refreshToken };
-          case 'erp_user': return { value: 'undefined' };
-          default: return { value: null };
+          case 'erp_access_token':
+            return { value: mockTokens.accessToken };
+          case 'erp_refresh_token':
+            return { value: mockTokens.refreshToken };
+          case 'erp_user':
+            return { value: 'undefined' };
+          default:
+            return { value: null };
         }
       });
 
@@ -230,10 +239,16 @@ describe('AuthService', () => {
     beforeEach(fakeAsync(() => {
       __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
-          case 'erp_access_token': return { value: mockTokens.accessToken };
-          case 'erp_refresh_token': return { value: mockTokens.refreshToken };
-          case 'erp_user': return { value: JSON.stringify({ ...mockUser, roles: ['BRANCH_MANAGER', 'INSTALLER'] }) };
-          default: return { value: null };
+          case 'erp_access_token':
+            return { value: mockTokens.accessToken };
+          case 'erp_refresh_token':
+            return { value: mockTokens.refreshToken };
+          case 'erp_user':
+            return {
+              value: JSON.stringify({ ...mockUser, roles: ['BRANCH_MANAGER', 'INSTALLER'] }),
+            };
+          default:
+            return { value: null };
         }
       });
 
@@ -262,10 +277,14 @@ describe('AuthService', () => {
     it('should return access token when authenticated', fakeAsync(() => {
       __configureMock.setGetMock(async (opts: GetOptions) => {
         switch (opts.key) {
-          case 'erp_access_token': return { value: mockTokens.accessToken };
-          case 'erp_refresh_token': return { value: mockTokens.refreshToken };
-          case 'erp_user': return { value: JSON.stringify(mockUser) };
-          default: return { value: null };
+          case 'erp_access_token':
+            return { value: mockTokens.accessToken };
+          case 'erp_refresh_token':
+            return { value: mockTokens.refreshToken };
+          case 'erp_user':
+            return { value: JSON.stringify(mockUser) };
+          default:
+            return { value: null };
         }
       });
 
