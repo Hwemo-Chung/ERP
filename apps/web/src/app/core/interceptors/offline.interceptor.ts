@@ -27,33 +27,37 @@ export const offlineInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Check if this endpoint supports offline mode
   const offlineConfig = OFFLINE_ENDPOINTS.find(
-    (endpoint) => endpoint.pattern.test(req.url) && endpoint.methods.includes(req.method)
+    (endpoint) => endpoint.pattern.test(req.url) && endpoint.methods.includes(req.method),
   );
 
   if (!offlineConfig) {
     // Return error for unsupported offline operations
-    return of(new HttpResponse({
-      status: 503,
-      statusText: 'Offline',
-      body: { message: 'This operation is not available offline' },
-    }));
+    return of(
+      new HttpResponse({
+        status: 503,
+        statusText: 'Offline',
+        body: { message: 'This operation is not available offline' },
+      }),
+    );
   }
 
   // For write operations, queue for sync
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
     syncQueue.enqueue({
-      method: req.method,
+      method: req.method as 'POST' | 'PUT' | 'PATCH' | 'DELETE',
       url: req.url,
       body: req.body,
       timestamp: Date.now(),
     });
 
     // Return optimistic success response
-    return of(new HttpResponse({
-      status: 202,
-      statusText: 'Queued',
-      body: { message: 'Operation queued for sync', offline: true },
-    }));
+    return of(
+      new HttpResponse({
+        status: 202,
+        statusText: 'Queued',
+        body: { message: 'Operation queued for sync', offline: true },
+      }),
+    );
   }
 
   // For read operations, return from local cache (handled by service)
