@@ -325,6 +325,8 @@
       "QUANTITY": "Quantity",
       "PRICE": "Price",
       "NOTES": "Notes",
+      "APPOINTMENT_INFO": "Appointment Information",
+      "ORDER_NOT_FOUND": "Order not found",
       "INSTALLER_INFO": "Installer Information",
       "INSTALLER": "Installer",
       "NOT_ASSIGNED": "Not Assigned",
@@ -766,6 +768,7 @@
   },
   "REPORTS": {
     "TITLE": "Reports",
+    "SUBTITLE": "Progress tracking and data analysis",
     "DAILY": "Daily Report",
     "WEEKLY": "Weekly Report",
     "MONTHLY": "Monthly Report",
@@ -1373,6 +1376,9 @@
       "STAY": "Stay",
       "LEAVE": "Leave"
     }
+  },
+  "PLACEHOLDERS": {
+    "ALL": "All"
   },
   "SESSION": {
     "MODAL_TITLE": "Session Expiring Soon",
