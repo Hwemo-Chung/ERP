@@ -1,0 +1,774 @@
+
+> web@1.0.0 test /Users/solution/Documents/GitHub/ERP/apps/web
+> ng test "--watch=false" "--browsers=ChromeHeadless"
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+[32m22 02 2026 15:24:37.247:INFO [karma-server]: [39mKarma v6.4.4 server started at http://localhost:9876/
+[32m22 02 2026 15:24:37.249:INFO [launcher]: [39mLaunching browsers ChromeHeadless with concurrency unlimited
+[32m22 02 2026 15:24:37.255:INFO [launcher]: [39mStarting browser ChromeHeadless
+[32m22 02 2026 15:24:38.077:INFO [Chrome Headless 145.0.0.0 (Mac OS 10.15.7)]: [39mConnected on socket _IzMQGB33QNdzm7bAAAB with id 71645328
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 0 of 294[32m SUCCESS[39m (0 secs / 0 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 1 of 294[32m SUCCESS[39m (0 secs / 0.011 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 2 of 294[32m SUCCESS[39m (0 secs / 0.012 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 3 of 294[32m SUCCESS[39m (0 secs / 0.013 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 4 of 294[32m SUCCESS[39m (0 secs / 0.014 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 5 of 294[32m SUCCESS[39m (0 secs / 0.015 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 6 of 294[32m SUCCESS[39m (0 secs / 0.016 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 7 of 294[32m SUCCESS[39m (0 secs / 0.017 secs)
+[1A[2KERROR: [36m'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 7 of 294[32m SUCCESS[39m (0 secs / 0.017 secs)
+ERROR: 'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 8 of 294[32m SUCCESS[39m (0 secs / 0.028 secs)
+[1A[2KERROR: [36m'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 8 of 294[32m SUCCESS[39m (0 secs / 0.028 secs)
+ERROR: 'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 9 of 294[32m SUCCESS[39m (0 secs / 0.029 secs)
+[1A[2KERROR: [36m'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 9 of 294[32m SUCCESS[39m (0 secs / 0.029 secs)
+ERROR: 'Failed to initialize biometric:', Error: Method not implemented.
+Error: Method not implemented.
+    at NativeBiometricWeb.fn [as isAvailable] (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/dist/esm/web.js:7:15)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@capacitor+core@3.9.0/node_modules/@capacitor/core/dist/index.js:196:35)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+    at ProxyZoneSpec.onInvokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2163:39)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:430:38)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 10 of 294[32m SUCCESS[39m (0 secs / 0.03 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 11 of 294[32m SUCCESS[39m (0 secs / 0.031 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 12 of 294[32m SUCCESS[39m (0 secs / 0.031 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 13 of 294[32m SUCCESS[39m (0 secs / 0.085 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 14 of 294[32m SUCCESS[39m (0 secs / 0.089 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 15 of 294[32m SUCCESS[39m (0 secs / 0.092 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 16 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 17 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 18 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 19 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 20 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 21 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 22 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 23 of 294[32m SUCCESS[39m (0 secs / 0.093 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 24 of 294[32m SUCCESS[39m (0 secs / 0.094 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 25 of 294[32m SUCCESS[39m (0 secs / 0.094 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 26 of 294[32m SUCCESS[39m (0 secs / 0.095 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 27 of 294[32m SUCCESS[39m (0 secs / 0.095 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 28 of 294[32m SUCCESS[39m (0 secs / 0.096 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 29 of 294[32m SUCCESS[39m (0 secs / 0.097 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 30 of 294[32m SUCCESS[39m (0 secs / 0.097 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 31 of 294[32m SUCCESS[39m (0 secs / 0.098 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 32 of 294[32m SUCCESS[39m (0 secs / 0.098 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 33 of 294[32m SUCCESS[39m (0 secs / 0.098 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 34 of 294[32m SUCCESS[39m (0 secs / 0.099 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 35 of 294[32m SUCCESS[39m (0 secs / 0.102 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 36 of 294[32m SUCCESS[39m (0 secs / 0.103 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 37 of 294[32m SUCCESS[39m (0 secs / 0.103 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 38 of 294[32m SUCCESS[39m (0 secs / 0.104 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 39 of 294[32m SUCCESS[39m (0 secs / 0.104 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 40 of 294[32m SUCCESS[39m (0 secs / 0.108 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 41 of 294[32m SUCCESS[39m (0 secs / 0.108 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 42 of 294[32m SUCCESS[39m (0 secs / 0.109 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 43 of 294[32m SUCCESS[39m (0 secs / 0.109 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 44 of 294[32m SUCCESS[39m (0 secs / 0.109 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 45 of 294[32m SUCCESS[39m (0 secs / 0.11 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 46 of 294[32m SUCCESS[39m (0 secs / 0.11 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 47 of 294[32m SUCCESS[39m (0 secs / 0.11 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 48 of 294[32m SUCCESS[39m (0 secs / 0.111 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 49 of 294[32m SUCCESS[39m (0 secs / 0.111 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 50 of 294[32m SUCCESS[39m (0 secs / 0.112 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 51 of 294[32m SUCCESS[39m (0 secs / 0.113 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 52 of 294[32m SUCCESS[39m (0 secs / 0.114 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 53 of 294[32m SUCCESS[39m (0 secs / 0.114 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 54 of 294[32m SUCCESS[39m (0 secs / 0.114 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 55 of 294[32m SUCCESS[39m (0 secs / 0.115 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 56 of 294[32m SUCCESS[39m (0 secs / 0.115 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 57 of 294[32m SUCCESS[39m (0 secs / 0.115 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 58 of 294[32m SUCCESS[39m (0 secs / 0.116 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 59 of 294[32m SUCCESS[39m (0 secs / 0.117 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 60 of 294[32m SUCCESS[39m (0 secs / 0.117 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 61 of 294[32m SUCCESS[39m (0 secs / 0.118 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 62 of 294[32m SUCCESS[39m (0 secs / 0.118 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 63 of 294[32m SUCCESS[39m (0 secs / 0.118 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 64 of 294[32m SUCCESS[39m (0 secs / 0.119 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 65 of 294[32m SUCCESS[39m (0 secs / 0.119 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 66 of 294[32m SUCCESS[39m (0 secs / 0.119 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 67 of 294[32m SUCCESS[39m (0 secs / 0.12 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 68 of 294[32m SUCCESS[39m (0 secs / 0.12 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 69 of 294[32m SUCCESS[39m (0 secs / 0.12 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 70 of 294[32m SUCCESS[39m (0 secs / 0.121 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 71 of 294[32m SUCCESS[39m (0 secs / 0.121 secs)
+[1A[2KWARN: [36m'Spec 'SessionManagerService - FR-19 Session extension should extend session and update expiration time' has no expectations.'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 71 of 294[32m SUCCESS[39m (0 secs / 0.121 secs)
+WARN: 'Spec 'SessionManagerService - FR-19 Session extension should extend session and update expiration time' has no expectations.'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 72 of 294[32m SUCCESS[39m (0 secs / 0.121 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 73 of 294[32m SUCCESS[39m (0 secs / 0.121 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 74 of 294[32m SUCCESS[39m (0 secs / 0.122 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 75 of 294[32m SUCCESS[39m (0 secs / 0.122 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 76 of 294[32m SUCCESS[39m (0 secs / 0.122 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 77 of 294[32m SUCCESS[39m (0 secs / 0.123 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 78 of 294[32m SUCCESS[39m (0 secs / 0.123 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 79 of 294[32m SUCCESS[39m (0 secs / 0.124 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 80 of 294[32m SUCCESS[39m (0 secs / 0.125 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 81 of 294[32m SUCCESS[39m (0 secs / 0.126 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 82 of 294[32m SUCCESS[39m (0 secs / 0.126 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 83 of 294[32m SUCCESS[39m (0 secs / 0.126 secs)
+[1A[2KWARN: [36m'[Auth] Failed to restore session from storage:', Error: Storage access denied
+Error: Storage access denied
+    at http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:140:15
+    at Generator.next (<anonymous>)
+    at asyncGeneratorStep (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:3:1)
+    at _next (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:17:1)
+    at executor (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:22:1)
+    at new ZoneAwarePromise (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2701:25)
+    at getMock (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:14:1)
+    at Object.get (http://localhost:9876/_karma_webpack_/webpack:/src/testing/capacitor-preferences.mock.ts:40:33)
+    at http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.ts:93:21
+    at Generator.next (<anonymous>)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 83 of 294[32m SUCCESS[39m (0 secs / 0.126 secs)
+WARN: '[Auth] Failed to restore session from storage:', Error: Storage access denied
+Error: Storage access denied
+    at http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:140:15
+    at Generator.next (<anonymous>)
+    at asyncGeneratorStep (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:3:1)
+    at _next (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:17:1)
+    at executor (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:22:1)
+    at new ZoneAwarePromise (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2701:25)
+    at getMock (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:14:1)
+    at Object.get (http://localhost:9876/_karma_webpack_/webpack:/src/testing/capacitor-preferences.mock.ts:40:33)
+    at http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.ts:93:21
+    at Generator.next (<anonymous>)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 84 of 294[32m SUCCESS[39m (0 secs / 0.127 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 85 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 86 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 87 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 88 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 89 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 90 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 91 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 92 of 294[32m SUCCESS[39m (0 secs / 0.128 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 93 of 294[32m SUCCESS[39m (0 secs / 0.129 secs)
+[1A[2KWARN: [36m'[Auth] Failed to parse stored data for key:', undefined, SyntaxError: Unexpected token 'i', "invalid json {" is not valid JSON
+SyntaxError: Unexpected token 'i', "invalid json {" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at AuthService.safeJsonParse (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.ts:79:19)
+    at callSafeJsonParse (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:54:31)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:79:14)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 93 of 294[32m SUCCESS[39m (0 secs / 0.129 secs)
+WARN: '[Auth] Failed to parse stored data for key:', undefined, SyntaxError: Unexpected token 'i', "invalid json {" is not valid JSON
+SyntaxError: Unexpected token 'i', "invalid json {" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at AuthService.safeJsonParse (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.ts:79:19)
+    at callSafeJsonParse (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:54:31)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/auth.service.spec.ts:79:14)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 94 of 294[32m SUCCESS[39m (0 secs / 0.129 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 95 of 294[32m SUCCESS[39m (0 secs / 0.129 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 96 of 294[32m SUCCESS[39m (0 secs / 0.13 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 97 of 294[32m SUCCESS[39m (0 secs / 0.13 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 98 of 294[32m SUCCESS[39m (0 secs / 0.13 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 99 of 294[32m SUCCESS[39m (0 secs / 0.131 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 100 of 294[32m SUCCESS[39m (0 secs / 0.131 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 101 of 294[32m SUCCESS[39m (0 secs / 0.131 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 102 of 294[32m SUCCESS[39m (0 secs / 0.132 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 103 of 294[32m SUCCESS[39m (0 secs / 0.133 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 104 of 294[32m SUCCESS[39m (0 secs / 0.133 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 105 of 294[32m SUCCESS[39m (0 secs / 0.133 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 106 of 294[32m SUCCESS[39m (0 secs / 0.133 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 107 of 294[32m SUCCESS[39m (0 secs / 0.134 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 108 of 294[32m SUCCESS[39m (0 secs / 0.134 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 109 of 294[32m SUCCESS[39m (0 secs / 0.134 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 110 of 294[32m SUCCESS[39m (0 secs / 0.134 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 111 of 294[32m SUCCESS[39m (0 secs / 0.134 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 112 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 113 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 114 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 115 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 116 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 117 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 118 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 119 of 294[32m SUCCESS[39m (0 secs / 0.135 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 120 of 294[32m SUCCESS[39m (0 secs / 0.136 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 121 of 294[32m SUCCESS[39m (0 secs / 0.136 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 122 of 294[32m SUCCESS[39m (0 secs / 0.136 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 123 of 294[32m SUCCESS[39m (0 secs / 0.136 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 124 of 294[32m SUCCESS[39m (0 secs / 0.137 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 125 of 294[32m SUCCESS[39m (0 secs / 0.137 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 126 of 294[32m SUCCESS[39m (0 secs / 0.137 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 127 of 294[32m SUCCESS[39m (0 secs / 0.137 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 128 of 294[32m SUCCESS[39m (0 secs / 0.138 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 129 of 294[32m SUCCESS[39m (0 secs / 0.138 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 130 of 294[32m SUCCESS[39m (0 secs / 0.138 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 131 of 294[32m SUCCESS[39m (0 secs / 0.138 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 132 of 294[32m SUCCESS[39m (0 secs / 0.139 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 133 of 294[32m SUCCESS[39m (0 secs / 0.139 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 134 of 294[32m SUCCESS[39m (0 secs / 0.139 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 135 of 294[32m SUCCESS[39m (0 secs / 0.14 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 136 of 294[32m SUCCESS[39m (0 secs / 0.141 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 137 of 294[32m SUCCESS[39m (0 secs / 0.141 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 137 of 294[32m SUCCESS[39m (0 secs / 0.141 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 138 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 138 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 139 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 139 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 1000ms (attempt 1/3)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 139 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+LOG: '[Sync] ⟳ Retrying note after 1000ms (attempt 1/3)'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 140 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 140 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KERROR: [36m'[Sync] ✗ Max retries for completion /api/orders/123/notes. Stored for manual review.'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 140 of 294[32m SUCCESS[39m (0 secs / 0.142 secs)
+ERROR: '[Sync] ✗ Max retries for completion /api/orders/123/notes. Stored for manual review.'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 141 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 141 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 300000ms (attempt 11/15)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 141 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: '[Sync] ⟳ Retrying note after 300000ms (attempt 11/15)'
+[1A[2KLOG: [36m'[Sync] No pending operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 141 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: '[Sync] No pending operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 142 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 142 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 1000ms (attempt 1/3)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 142 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: '[Sync] ⟳ Retrying note after 1000ms (attempt 1/3)'
+[1A[2KLOG: [36m'[Sync] No pending operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 142 of 294[32m SUCCESS[39m (0 secs / 0.143 secs)
+LOG: '[Sync] No pending operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 143 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 143 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KERROR: [36m'[Sync] ✗ Max retries for note /api/orders/123/notes. Stored for manual review.'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 143 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+ERROR: '[Sync] ✗ Max retries for note /api/orders/123/notes. Stored for manual review.'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 144 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 144 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 1000ms (attempt 1/10)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 144 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: '[Sync] ⟳ Retrying note after 1000ms (attempt 1/10)'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 5000ms (attempt 2/10)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 144 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: '[Sync] ⟳ Retrying note after 5000ms (attempt 2/10)'
+[1A[2KLOG: [36m'[Sync] ⟳ Retrying note after 15000ms (attempt 3/10)'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 144 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: '[Sync] ⟳ Retrying note after 15000ms (attempt 3/10)'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 145 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 145 of 294[32m SUCCESS[39m (0 secs / 0.144 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 146 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 146 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Service Worker sync complete'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 146 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: '[Sync] Service Worker sync complete'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 147 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 147 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 148 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 148 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KWARN: [36m'[Sync] Sync queue cleared'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 148 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+WARN: '[Sync] Sync queue cleared'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 149 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 149 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 150 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 150 of 294[32m SUCCESS[39m (0 secs / 0.145 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 151 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 151 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 152 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 152 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 153 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 153 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 154 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 154 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 155 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 155 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 156 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 156 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 157 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 157 of 294[32m SUCCESS[39m (0 secs / 0.146 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 158 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 158 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 159 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 159 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 160 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 160 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 160 of 294[32m SUCCESS[39m (0 secs / 0.147 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 161 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 161 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 161 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 162 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 162 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 162 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 163 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 163 of 294[32m SUCCESS[39m (0 secs / 0.148 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 164 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 164 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 165 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 165 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 166 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 166 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 166 of 294[32m SUCCESS[39m (0 secs / 0.149 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 167 of 294[32m SUCCESS[39m (0 secs / 0.152 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 167 of 294[32m SUCCESS[39m (0 secs / 0.152 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 167 of 294[32m SUCCESS[39m (0 secs / 0.152 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 168 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 168 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] ✓ note /api/orders/123/notes'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 168 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+LOG: '[Sync] ✓ note /api/orders/123/notes'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 169 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 169 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Processing 3 operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 169 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+LOG: '[Sync] Processing 3 operations'
+[1A[2KERROR: [36m'[Sync] Failed to process operation:', Object{id: 2, type: 'note', method: 'POST', url: '/api/orders/123/notes', body: Object{note: 'Test note'}, priority: 5, timestamp: 1771741479225, retryCount: 0, maxRetries: 3, status: 'pending'}, Error: Network error
+Error: Network error
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:450:24)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 169 of 294[32m SUCCESS[39m (0 secs / 0.154 secs)
+ERROR: '[Sync] Failed to process operation:', Object{id: 2, type: 'note', method: 'POST', url: '/api/orders/123/notes', body: Object{note: 'Test note'}, priority: 5, timestamp: 1771741479225, retryCount: 0, maxRetries: 3, status: 'pending'}, Error: Network error
+Error: Network error
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:450:24)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 170 of 294[32m SUCCESS[39m (0 secs / 0.155 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 170 of 294[32m SUCCESS[39m (0 secs / 0.155 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Processing 3 operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 170 of 294[32m SUCCESS[39m (0 secs / 0.155 secs)
+LOG: '[Sync] Processing 3 operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 171 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 171 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Processing 3 operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 171 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+LOG: '[Sync] Processing 3 operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 172 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 172 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] No pending operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 172 of 294[32m SUCCESS[39m (0 secs / 0.156 secs)
+LOG: '[Sync] No pending operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 173 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 173 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Network online, starting sync...'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 173 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+LOG: '[Sync] Network online, starting sync...'
+[1A[2KERROR: [36m'[Sync] Sync error:', Error: Sync failed
+Error: Sync failed
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:343:45)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 173 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+ERROR: '[Sync] Sync error:', Error: Sync failed
+Error: Sync failed
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:343:45)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 174 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 174 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Network online, starting sync...'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 174 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+LOG: '[Sync] Network online, starting sync...'
+[1A[2KERROR: [36m'[Sync] Sync error:', Error: DB error
+Error: DB error
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:363:45)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 174 of 294[32m SUCCESS[39m (0 secs / 0.157 secs)
+ERROR: '[Sync] Sync error:', Error: DB error
+Error: DB error
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:363:45)
+    at UserContext.apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:1715:26)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at runInTestZone (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:216:38)
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:234:32)
+    at ZoneQueueRunner.attempt (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7632:40)
+    at ZoneQueueRunner.QueueRunner.run (http://localhost:9876/absolute/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jasmine-core@4.6.1/node_modules/jasmine-core/lib/jasmine-core/jasmine.js?86d98e11f43f2c8cfac9fb4806ed6c0aced74cbe:7670:27)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 175 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 175 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Sync already in progress, skipping...'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 175 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: '[Sync] Sync already in progress, skipping...'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 176 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 176 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Network online, starting sync...'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 176 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: '[Sync] Network online, starting sync...'
+[1A[2KLOG: [36m'[Sync] No pending operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 176 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: '[Sync] No pending operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 177 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 177 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KLOG: [36m'[Sync] Network online, starting sync...'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 177 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: '[Sync] Network online, starting sync...'
+[1A[2KLOG: [36m'[Sync] No pending operations'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 177 of 294[32m SUCCESS[39m (0 secs / 0.158 secs)
+LOG: '[Sync] No pending operations'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 178 of 294[32m SUCCESS[39m (0 secs / 0.159 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 178 of 294[32m SUCCESS[39m (0 secs / 0.159 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 179 of 294[32m SUCCESS[39m (0 secs / 0.16 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 179 of 294[32m SUCCESS[39m (0 secs / 0.16 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 180 of 294[32m SUCCESS[39m (0 secs / 0.16 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 180 of 294[32m SUCCESS[39m (0 secs / 0.16 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 181 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 181 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 182 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 182 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 183 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 183 of 294[32m SUCCESS[39m (0 secs / 0.161 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 184 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 184 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 185 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+[1A[2KLOG: [36m'Skipping Service Worker registration in development mode'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 185 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+LOG: 'Skipping Service Worker registration in development mode'
+[1A[2KWARN: [36m'Background Sync not available:', Error: Sync not available
+Error: Sync not available
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:284:24)
+    at Generator.next (<anonymous>)
+    at asyncGeneratorStep (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:3:1)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:17:1)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 185 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+WARN: 'Background Sync not available:', Error: Sync not available
+Error: Sync not available
+    at UserContext.<anonymous> (http://localhost:9876/_karma_webpack_/webpack:/src/app/core/services/background-sync.service.spec.ts:284:24)
+    at Generator.next (<anonymous>)
+    at asyncGeneratorStep (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:3:1)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/@babel+runtime@7.26.10/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js:17:1)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:398:28)
+    at ProxyZoneSpec.onInvoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone-testing.js:2132:39)
+    at _ZoneDelegate.invoke (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:397:34)
+    at ZoneImpl.run (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:113:43)
+    at apply (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:2537:40)
+    at _ZoneDelegate.invokeTask (http://localhost:9876/_karma_webpack_/webpack:/node_modules/.pnpm/zone.js@0.15.1/node_modules/zone.js/fesm2015/zone.js:431:33)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 186 of 294[32m SUCCESS[39m (0 secs / 0.162 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 187 of 294[32m SUCCESS[39m (0 secs / 0.163 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 188 of 294[32m SUCCESS[39m (0 secs / 0.163 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 189 of 294[32m SUCCESS[39m (0 secs / 0.164 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 190 of 294[32m SUCCESS[39m (0 secs / 0.164 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 191 of 294[32m SUCCESS[39m (0 secs / 0.164 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 192 of 294[32m SUCCESS[39m (0 secs / 0.165 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 193 of 294[32m SUCCESS[39m (0 secs / 0.165 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 194 of 294[32m SUCCESS[39m (0 secs / 0.165 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 195 of 294[32m SUCCESS[39m (0 secs / 0.166 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 196 of 294[32m SUCCESS[39m (0 secs / 0.167 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 197 of 294[32m SUCCESS[39m (0 secs / 0.167 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 198 of 294[32m SUCCESS[39m (0 secs / 0.167 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 199 of 294[32m SUCCESS[39m (0 secs / 0.167 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 200 of 294[32m SUCCESS[39m (0 secs / 0.167 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 201 of 294[32m SUCCESS[39m (0 secs / 0.168 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 202 of 294[32m SUCCESS[39m (0 secs / 0.168 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 203 of 294[32m SUCCESS[39m (0 secs / 0.168 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 204 of 294[32m SUCCESS[39m (0 secs / 0.168 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 205 of 294[32m SUCCESS[39m (0 secs / 0.169 secs)
+[1A[2KWARN: [36m'Spec 'OrdersStore loadMoreOrders() should not load if no more pages available' has no expectations.'[39m
+Chrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 205 of 294[32m SUCCESS[39m (0 secs / 0.169 secs)
+WARN: 'Spec 'OrdersStore loadMoreOrders() should not load if no more pages available' has no expectations.'
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 206 of 294[32m SUCCESS[39m (0 secs / 0.169 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 207 of 294[32m SUCCESS[39m (0 secs / 0.169 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 208 of 294[32m SUCCESS[39m (0 secs / 0.169 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 209 of 294[32m SUCCESS[39m (0 secs / 0.17 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 210 of 294[32m SUCCESS[39m (0 secs / 0.17 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 211 of 294[32m SUCCESS[39m (0 secs / 0.17 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 212 of 294[32m SUCCESS[39m (0 secs / 0.171 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 213 of 294[32m SUCCESS[39m (0 secs / 0.171 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 214 of 294[32m SUCCESS[39m (0 secs / 0.171 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 215 of 294[32m SUCCESS[39m (0 secs / 0.172 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 216 of 294[32m SUCCESS[39m (0 secs / 0.172 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 217 of 294[32m SUCCESS[39m (0 secs / 0.172 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 218 of 294[32m SUCCESS[39m (0 secs / 0.173 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 219 of 294[32m SUCCESS[39m (0 secs / 0.173 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 220 of 294[32m SUCCESS[39m (0 secs / 0.173 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 221 of 294[32m SUCCESS[39m (0 secs / 0.174 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 222 of 294[32m SUCCESS[39m (0 secs / 0.174 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 223 of 294[32m SUCCESS[39m (0 secs / 0.175 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 224 of 294[32m SUCCESS[39m (0 secs / 0.175 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 225 of 294[32m SUCCESS[39m (0 secs / 0.175 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 226 of 294[32m SUCCESS[39m (0 secs / 0.175 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 227 of 294[32m SUCCESS[39m (0 secs / 0.175 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 228 of 294[32m SUCCESS[39m (0 secs / 0.176 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 229 of 294[32m SUCCESS[39m (0 secs / 0.176 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 230 of 294[32m SUCCESS[39m (0 secs / 0.176 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 231 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 232 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 233 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 234 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 235 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 236 of 294[32m SUCCESS[39m (0 secs / 0.177 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 237 of 294[32m SUCCESS[39m (0 secs / 0.181 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 238 of 294[32m SUCCESS[39m (0 secs / 0.184 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 239 of 294[32m SUCCESS[39m (0 secs / 0.186 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 240 of 294[32m SUCCESS[39m (0 secs / 0.187 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 241 of 294[32m SUCCESS[39m (0 secs / 0.188 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 242 of 294[32m SUCCESS[39m (0 secs / 0.189 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 243 of 294[32m SUCCESS[39m (0 secs / 0.19 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 244 of 294[32m SUCCESS[39m (0 secs / 0.19 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 245 of 294[32m SUCCESS[39m (0 secs / 0.191 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 246 of 294[32m SUCCESS[39m (0 secs / 0.191 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 247 of 294[32m SUCCESS[39m (0 secs / 0.192 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 248 of 294[32m SUCCESS[39m (0 secs / 0.194 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 249 of 294[32m SUCCESS[39m (0 secs / 0.196 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 250 of 294[32m SUCCESS[39m (0 secs / 0.197 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 251 of 294[32m SUCCESS[39m (0 secs / 0.197 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 252 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 253 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 254 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 255 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 256 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 257 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 258 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 259 of 294[32m SUCCESS[39m (0 secs / 0.198 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 260 of 294[32m SUCCESS[39m (0 secs / 0.2 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 261 of 294[32m SUCCESS[39m (0 secs / 0.201 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 262 of 294[32m SUCCESS[39m (0 secs / 0.201 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 263 of 294[32m SUCCESS[39m (0 secs / 0.201 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 264 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 265 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 266 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 267 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 268 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 269 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 270 of 294[32m SUCCESS[39m (0 secs / 0.202 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 271 of 294[32m SUCCESS[39m (0 secs / 0.203 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 272 of 294[32m SUCCESS[39m (0 secs / 0.203 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 273 of 294[32m SUCCESS[39m (0 secs / 0.204 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 274 of 294[32m SUCCESS[39m (0 secs / 0.204 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 275 of 294[32m SUCCESS[39m (0 secs / 0.204 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 276 of 294[32m SUCCESS[39m (0 secs / 0.205 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 277 of 294[32m SUCCESS[39m (0 secs / 0.205 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 278 of 294[32m SUCCESS[39m (0 secs / 0.205 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 279 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 280 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 281 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 282 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 283 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 284 of 294[32m SUCCESS[39m (0 secs / 0.206 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 285 of 294[32m SUCCESS[39m (0 secs / 0.211 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 286 of 294[32m SUCCESS[39m (0 secs / 0.214 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 287 of 294[32m SUCCESS[39m (0 secs / 0.216 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 288 of 294[32m SUCCESS[39m (0 secs / 0.217 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 289 of 294[32m SUCCESS[39m (0 secs / 0.219 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 290 of 294[32m SUCCESS[39m (0 secs / 0.222 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 291 of 294[32m SUCCESS[39m (0 secs / 0.228 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 292 of 294[32m SUCCESS[39m (0 secs / 0.231 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 293 of 294[32m SUCCESS[39m (0 secs / 0.235 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 294 of 294[32m SUCCESS[39m (0 secs / 0.239 secs)
+[1A[2KChrome Headless 145.0.0.0 (Mac OS 10.15.7): Executed 294 of 294[32m SUCCESS[39m (0.323 secs / 0.239 secs)
+[32mTOTAL: 294 SUCCESS[39m
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.

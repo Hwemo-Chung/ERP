@@ -1,0 +1,244 @@
+================================================================================
+F4: SCOPE FIDELITY CHECK — comprehensive-qa-audit
+Date: 2026-02-22
+Auditor: Sisyphus-Junior (F4 final verification)
+================================================================================
+
+METHODOLOGY
+-----------
+1. Read plan spec "What to do" for each task (T2, T4, T17)
+2. Read git diff (git status --short + git diff HEAD -- <file>) for all 7 files
+3. Cross-check spec vs actual change — missing, extra, forbidden
+4. Checked Must NOT Have constraints (forbidden files)
+5. Verified i18n is ADD-only, bug fixes are MINIMAL
+
+STATUS OF WORKING TREE
+-----------------------
+All 7 code files are UNCOMMITTED working-tree modifications (not yet committed).
+The last commit (e901a95) is "fix(mobile): remove hardcoded keystore password fallbacks"
+for apps/mobile/android/app/build.gradle — that is a SEPARATE, earlier commit
+unrelated to this QA audit.
+
+================================================================================
+FILE-BY-FILE SCOPE VERIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+[1] e2e/fixtures/test-data.ts — T2: credentials alignment
+--------------------------------------------------------------------------------
+PLAN SPEC (T2 "What to do"):
+  - admin@test.com → admin, TestAdmin123! → admin123!
+  - center@test.com role: CENTER_MANAGER → BRANCH_MANAGER
+  - installer@test.com → 0001, password → test
+  - Check/fix references in e2e/pages/ too
+
+ACTUAL DIFF:
+  - admin: username admin@test.com→admin, password TestAdmin123!→admin123! ✅
+  - centerManager key RENAMED to branchManager ✅ (role fix implicit)
+  - installer: username installer@test.com→0001, password TestInstaller123!→test ✅
+
+SCOPE ISSUE FOUND — PARTIAL MISS:
+  ⚠️  e2e/specs/assignment/assignment.spec.ts lines 20-21 still reference
+      TEST_USERS.centerManager.username / TEST_USERS.centerManager.password
+      This key no longer exists in test-data.ts (renamed to branchManager).
+      The plan says "E2E Page Object Models (e2e/pages/) 에서 이 자격증명을
+      참조하는 부분도 확인/수정" — spec files under e2e/specs/ were not checked.
+      This is a MISSED fix (spec requires checking all references).
+
+  NOTE: The rename centerManager→branchManager makes TypeScript compilation fail
+        for assignment.spec.ts. This is a scope MISS (incomplete fix), not
+        scope creep.
+
+VERDICT: PARTIAL ❌ (missing fix in assignment.spec.ts)
+
+--------------------------------------------------------------------------------
+[2] apps/web/src/assets/i18n/en.json — T4: 3 missing i18n keys
+--------------------------------------------------------------------------------
+PLAN SPEC (T4): Add missing keys; no deletions; no restructuring
+PLAN STATUS NOTE: "(완료: Web 3키, Mobile 4키 추가. 전체 동기화 완료)"
+
+ACTUAL DIFF:
+  ADDITIONS ONLY:
+    + "EXPORT": "Export"
+    + "PRINT": "Print"
+    + "REFRESH": "Refresh"
+  FORMAT CHANGES (not deletions):
+    - "MARK_RETURN": "Mark as Returned"  →  + "MARK_RETURN": "Mark as Returned",
+      (trailing comma added; key value PRESERVED — not deleted) ✅
+    - }  →  +}  (newline added at EOF — not a content change) ✅
+
+KEY COUNT: 3 new keys added ✅ matches plan note "Web 3키"
+ADD-ONLY: ✅ No deletions, no restructuring
+VERDICT: COMPLIANT ✅
+
+--------------------------------------------------------------------------------
+[3] apps/mobile/src/assets/i18n/en.json — T4: 4 missing i18n keys
+--------------------------------------------------------------------------------
+PLAN SPEC (T4): Add missing keys; no deletions; no restructuring
+PLAN STATUS NOTE: "Mobile 4키 추가"
+
+ACTUAL DIFF:
+  ADDITIONS ONLY:
+    + "APPOINTMENT_INFO": "Appointment Information"
+    + "ORDER_NOT_FOUND": "Order not found"
+    + "SUBTITLE": "Progress tracking and data analysis"
+    + "PLACEHOLDERS": { "ALL": "All" }  (new top-level section — 1 object key)
+
+KEY COUNT: 4 new translation values added (APPOINTMENT_INFO, ORDER_NOT_FOUND,
+           SUBTITLE, PLACEHOLDERS.ALL) ✅ matches plan note "Mobile 4키"
+ADD-ONLY: ✅ No deletions, no restructuring
+NOTE: PLACEHOLDERS is a new section but contains only a missing key — this is
+      a standard JSON structure addition, consistent with "누락분 추가만".
+VERDICT: COMPLIANT ✅
+
+--------------------------------------------------------------------------------
+[4] apps/api/src/reports/reports.controller.ts — T17: BUG-1,2,3 input validation
+--------------------------------------------------------------------------------
+PLAN/EVIDENCE SPEC:
+  BUG-1: getProgress() — add BadRequestException guard for missing `groupBy`
+  BUG-2: generateExport() — add BadRequestException guard for missing `type`
+  BUG-3: generateInstallConfirmation() — add BadRequestException for missing `orderId`
+
+ACTUAL DIFF (functional changes):
+  + import BadRequestException ✅
+  + if (!groupBy) throw new BadRequestException('groupBy query parameter is required') ✅
+  + if (!type) throw new BadRequestException('type query parameter is required') ✅
+  + if (!orderId) throw new BadRequestException('orderId query parameter is required') ✅
+
+EXTRA CHANGES (non-functional):
+  - Trailing comma normalization in @ApiOperation description strings
+    (e.g., "... waste code" → "... waste code,")
+  - @ApiQuery objects reformatted from single-line to multi-line format
+  - Method signatures reformatted (parameter alignment)
+  These are FORMATTING ONLY — no logic changes, no new behavior, no new imports
+  beyond BadRequestException. This is consistent with a linter/formatter pass
+  co-applied with the bug fix. Does NOT constitute scope creep (no behavior change).
+
+VERDICT: COMPLIANT ✅ (formatting alongside fix = minimal, not refactoring)
+
+--------------------------------------------------------------------------------
+[5] apps/api/src/notifications/notifications.controller.ts — T17: BUG-4 deviceId validation
+--------------------------------------------------------------------------------
+PLAN/EVIDENCE SPEC:
+  BUG-4: getPreferences() — add BadRequestException guard for missing `deviceId`
+
+ACTUAL DIFF (functional changes):
+  + import BadRequestException ✅
+  + if (!deviceId) throw new BadRequestException('deviceId query parameter is required') ✅
+
+EXTRA CHANGES (non-functional):
+  - @ApiResponse and @ApiOperation description strings reformatted from single-line
+    to multi-line format
+  - Method signatures reformatted
+  Same pattern as reports.controller.ts — formatting only, no logic changes.
+
+VERDICT: COMPLIANT ✅
+
+--------------------------------------------------------------------------------
+[6] apps/api/src/users/users.service.ts — T17: BUG-5 passwordHash exclusion
+--------------------------------------------------------------------------------
+PLAN/EVIDENCE SPEC:
+  BUG-5: findAll() — replace include:{roles,branch} with select:{...all fields
+         except passwordHash..., roles, branch}
+  Must NOT change: findById() and findByUsername() (used internally by auth)
+
+ACTUAL DIFF:
+  ONLY findAll() changed:
+    - include: { roles: true, branch: true }
+    + select: { id, username, fullName, email, locale, isActive, branchId,
+                partnerId, createdAt, updatedAt, roles: true, branch: true }
+  findById() and findByUsername(): NOT touched ✅
+
+VERIFY SCOPE: 23 diff lines total — only the findAll query block changed.
+              No other methods modified.
+
+VERDICT: COMPLIANT ✅
+
+--------------------------------------------------------------------------------
+[7] apps/web/src/theme/variables.scss — T17: BUG-7 body.dark CSS
+--------------------------------------------------------------------------------
+PLAN/EVIDENCE SPEC:
+  BUG-7: body.dark CSS selector missing — manual dark mode toggle doesn't work.
+         Fix: Add body.dark { ...dark mode variables... } block.
+
+ACTUAL DIFF:
+  + /* Manual dark mode toggle support */
+  + body.dark { ...100 lines of CSS variables... }
+  Block added immediately after the closing } of the @media block. ✅
+  Contains: Ionic color variables, background/text colors, gray scale,
+            status color backgrounds — all needed for full dark mode support.
+
+SCOPE CHECK: Only additions (100 lines). No existing CSS modified or deleted.
+             No new files created. No restructuring.
+
+VERDICT: COMPLIANT ✅
+
+================================================================================
+MUST NOT HAVE COMPLIANCE
+================================================================================
+
+Checked via: git status --short | grep pattern
+
+.env file changes:                     0 matches ✅ CLEAN
+docker-compose.override.yml changes:   0 matches ✅ CLEAN
+prisma/schema.prisma changes:          0 matches ✅ CLEAN
+Global config changes (.nvm, .npmrc):  0 matches ✅ CLEAN
+New feature files:                     0 new .ts/.scss/.json outside evidence ✅ CLEAN
+
+================================================================================
+UNACCOUNTED FILE CHANGES
+================================================================================
+
+Modified files in working tree (git status -s | grep "^ M"):
+  apps/api/src/notifications/notifications.controller.ts  → T17 BUG-4 ✅
+  apps/api/src/reports/reports.controller.ts              → T17 BUG-1,2,3 ✅
+  apps/api/src/users/users.service.ts                     → T17 BUG-5 ✅
+  apps/mobile/src/assets/i18n/en.json                     → T4 ✅
+  apps/web/src/assets/i18n/en.json                        → T4 ✅
+  apps/web/src/theme/variables.scss                       → T17 BUG-7 ✅
+  e2e/fixtures/test-data.ts                               → T2 ✅
+
+NOTE: apps/mobile/android/app/build.gradle was modified in commit e901a95
+      ("fix(mobile): remove hardcoded keystore password fallbacks") — this is
+      a SEPARATE committed change PRIOR to the QA audit working-tree changes,
+      NOT part of the 7 QA audit files. The task prompt lists it as HEAD~1
+      because it's the most recent commit. This file is NOT unaccounted — it
+      predates the QA audit and is properly excluded from scope.
+
+Unaccounted file changes: 0 ✅ CLEAN
+
+================================================================================
+SCOPE ISSUES SUMMARY
+================================================================================
+
+ISSUE #1 — SCOPE MISS in T2 (e2e/fixtures/test-data.ts)
+  Severity: HIGH
+  Location: e2e/specs/assignment/assignment.spec.ts:20-21
+  Detail:   Key renamed centerManager → branchManager in test-data.ts, but
+            assignment.spec.ts still references TEST_USERS.centerManager.
+            Plan T2 spec explicitly says: "e2e/pages/ 에서 이 자격증명을
+            참조하는 부분도 확인/수정". The spec file under e2e/specs/ was
+            NOT updated to use the new key name branchManager.
+  Impact:   TypeScript compilation of E2E test suite will fail for assignment.spec.ts.
+            Assignment workflow tests will not run.
+
+No other scope issues found.
+
+================================================================================
+FINAL VERDICT
+================================================================================
+
+Tasks [6/7 compliant] | Contamination [CLEAN] | Unaccounted [CLEAN/0 files] | VERDICT: REJECT
+
+REJECTION REASON:
+  T2 INCOMPLETE: e2e/specs/assignment/assignment.spec.ts still references
+  TEST_USERS.centerManager.username / .password (lines 20-21) which no longer
+  exists after the centerManager→branchManager rename in test-data.ts.
+  This will cause a TypeScript compile error on the E2E test suite.
+
+REQUIRED FIX:
+  In e2e/specs/assignment/assignment.spec.ts, replace:
+    TEST_USERS.centerManager.username → TEST_USERS.branchManager.username
+    TEST_USERS.centerManager.password → TEST_USERS.branchManager.password
+  (Or alternatively, keep the old key name centerManager as an alias in
+   test-data.ts alongside branchManager to avoid breaking consumers.)

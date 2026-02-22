@@ -1,0 +1,108 @@
+INVESTIGATION: /users/me ENDPOINT USAGE
+========================================
+
+SUMMARY: NO /users/me ENDPOINT CALLS FOUND IN CODEBASE
+STATUS: VERIFIED - No bug exists
+
+DETAILED FINDINGS:
+==================
+
+1. GREP SEARCHES PERFORMED
+   ✓ Searched: "users/me" across all .ts/.tsx files
+     Result: ZERO matches
+   
+   ✓ Searched: "/users/me" with quotes variation
+     Result: ZERO matches
+   
+   ✓ Searched: users.*me and me.*users patterns
+     Result: ZERO matches
+   
+   ✓ Searched: .get.*'me' patterns for HTTP calls
+     Result: ZERO matches
+
+2. CURRENT ENDPOINTS VERIFIED
+   
+   a) /auth/me (WORKING)
+      Location: apps/api/src/auth/auth.controller.ts:60-72
+      Status: ✓ IMPLEMENTED
+      Method: @Get('me')
+      Guards: @UseGuards(JwtAuthGuard)
+      Response: Returns { id, username, roles, branchCode }
+      
+   b) /users/:id (WORKING)
+      Location: apps/api/src/users/users.controller.ts:24-29
+      Status: ✓ IMPLEMENTED
+      Method: @Get(':id')
+      Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+      Roles: HQ_ADMIN, BRANCH_MANAGER only
+      
+   c) /users (WORKING)
+      Location: apps/api/src/users/users.controller.ts:16-22
+      Status: ✓ IMPLEMENTED
+      Method: @Get() - list all users
+      Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+      Roles: HQ_ADMIN, BRANCH_MANAGER only
+
+3. API CONSTANT DEFINITIONS
+   
+   File: apps/web/src/app/shared/constants/app.constants.ts
+   
+   AUTH endpoints (Line 140-145):
+   - LOGIN: '/auth/login'
+   - LOGOUT: '/auth/logout'
+   - REFRESH: '/auth/refresh'
+   - ME: '/auth/me'  ← Current endpoint (confirmed)
+   
+   USERS endpoints (Line 171-174):
+   - ROOT: '/users'
+   - PROFILE: '/users/profile'
+   
+   NOTE: NO '/users/me' defined in constants
+
+4. APP INITIALIZATION
+   
+   File: apps/web/src/app/core/services/app-init.service.ts
+   - Initializes auth session via authService.initialize()
+   - Restores tokens from Capacitor Preferences storage
+   - Does NOT make any API calls to fetch user data
+   - User data is already stored from login response
+
+5. AUTH SERVICE IMPLEMENTATION
+   
+   File: apps/web/src/app/core/services/auth.service.ts
+   - Lines 89-111: initialize() - restores from storage only, no API call
+   - Lines 113-156: login() - receives user data from login response
+   - Login response includes full user object: { accessToken, refreshToken, user }
+   - User data is stored locally and available from signal
+   - No separate /me endpoint call after authentication
+
+6. PARTNER INCLUDE OPTIMIZATION VERIFIED
+   
+   File: apps/api/src/users/users.service.ts
+   
+   Status: ✓ CORRECT - partner: true is commented out
+   
+   Evidence:
+   - Line 26: findByUsername() - partner include removed with reason:
+     "로그인 flow에서 user.partner를 참조하는 곳 없음"
+   - Line 44: findById() - partner include removed with reason:
+     "인증/유저조회 flow에서 미사용"
+   
+   Decision rationale documented:
+   - No auth/token refresh flow references user.partner
+   - Order services have their own Prisma queries
+   - Reduces login response time ~200ms
+   
+   This decision is CORRECT and causes no issues.
+
+CONCLUSION:
+===========
+✓ VERIFIED: No /users/me calls in codebase
+✓ VERIFIED: App uses /auth/me (working correctly)
+✓ VERIFIED: Partner optimization is safe and intentional
+✓ NO BUG EXISTS
+
+The app properly uses /auth/me endpoint and stores user data locally.
+No code changes required.
+
+Investigation date: 2026-02-22

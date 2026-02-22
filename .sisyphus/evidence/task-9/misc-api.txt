@@ -1,0 +1,512 @@
+================================================================================
+T9: API SETTLEMENT/METADATA/REPORTS/NOTIFICATIONS - EVIDENCE
+Date: 2026-02-22
+Base URL: https://erp-logistics-api.onrender.com/api/v1
+Tester: QA Automated
+================================================================================
+
+AUTH SETUP
+----------
+Admin login: POST /auth/login {"username":"admin","password":"admin123!"}
+  Response: 200 OK
+  Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (expires: 1h)
+  User: admin / HQ_ADMIN / branch: HQ
+
+Installer login: POST /auth/login {"username":"0001","password":"test"}
+  Response: 200 OK
+  Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (expires: 1h)
+  User: 0001 / INSTALLER / branch: SEL01
+
+================================================================================
+SECTION 1: SETTLEMENT ENDPOINTS
+================================================================================
+
+[S1] GET /settlement/current
+  Auth: Bearer admin token
+  Headers: X-App-Version: 1.0.0, X-Device-Id: qa-test-device-001, X-Platform: web
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":null,"timestamp":"2026-02-22T06:25:53.462Z"}
+  NOTES: No active settlement period currently (data=null is valid - no ongoing lock)
+
+[S2] GET /settlement/history
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"data":[],"totalCount":0},"timestamp":"..."}
+  NOTES: Empty history - no settlement periods have been locked yet in this environment
+         Response uses double-nesting: data.data[] pattern
+
+[S2b] GET /settlement/history?limit=10
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"data":[],"totalCount":0},...}
+  NOTES: Same empty result with pagination param
+
+[S3] GET /settlement/current (no auth)
+  Auth: NONE
+  STATUS: 401 Unauthorized ✅ PASS
+  RESPONSE: {"message":"Unauthorized","statusCode":401}
+  NOTES: Auth guard working correctly
+
+[S4] GET /settlement/00000000-0000-0000-0000-000000000001
+  Auth: Bearer admin token
+  STATUS: 404 Not Found ✅ PASS
+  RESPONSE: {"message":"Settlement period 00000000-0000-0000-0000-000000000001 not found","error":"Not Found","statusCode":404}
+  NOTES: Proper 404 with descriptive message
+
+[S5] GET /settlement (root)
+  Auth: Bearer admin token
+  STATUS: 404 Not Found ✅ PASS
+  RESPONSE: {"message":"Cannot GET /api/v1/settlement",...}
+  NOTES: No root /settlement route - only /settlement/current, /settlement/history, /settlement/:id
+
+[S6] POST /settlement/00000000-0000-0000-0000-000000000001/lock (behavior test on non-existent ID)
+  Auth: Bearer admin token
+  STATUS: 404 Not Found ✅ PASS
+  RESPONSE: {"message":"Settlement period 00000000-0000-0000-0000-000000000001 not found",...}
+  NOTES: Lock endpoint correctly validates existence before attempting lock
+         (Read-only test - did NOT lock any real data)
+
+--- SETTLEMENT SUMMARY ---
+E2002 BEHAVIOR DOCUMENTATION:
+  - E2002 error code is returned when attempting to modify an order that belongs
+    to a locked settlement period (previous Monday auto-lock)
+  - Error: {"code":"E2002","message":"Settlement period is locked"}
+  - Fix: HQ_ADMIN must call POST /settlement/:id/unlock
+  - Current state: No settlement periods exist (history empty, current=null)
+  - Settlement auto-locks every Monday for previous week's data
+
+================================================================================
+SECTION 2: METADATA ENDPOINTS
+================================================================================
+
+[M1] GET /metadata
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":{"branches":[{"id":"6a6e9344...","code":"HQ","name":"본사","region":"서울"},...],...}}
+  NOTES: Root endpoint returns ALL metadata combined (branches, installers, partners, waste-types, etc.)
+         Single call for full app initialization
+
+[M2] GET /metadata/branches
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[{"id":"6a6e9344...","code":"HQ","name":"본사","region":"서울"},
+    {"id":"6adbf469...","code":"GNJ01","name":"김해 센터","region":"경남"},
+    {"id":"f7c6189b...","code":"JJD01","name":"제주 센터","region":"제주"},
+    {"id":"dfb9ff2a...","code":"GGN03","name":"경기 고양센터","region":"경기"},
+    ...]}
+  NOTES: Returns flat array (NOT data.data pattern). Multiple branches across regions.
+
+[M3] GET /metadata/installers
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[{"id":"installer-14","name":"강유준 기사",
+    "phone":"019-3286-9236","skillTags":["에어컨","냉장고","세탁기"],"capacityPerDay":8,
+    "isActive":true,"branch":{...},"partner":{...}},...]}
+  NOTES: Includes branch and partner nested objects. skillTags array present.
+
+[M4] GET /metadata/partners
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[{"id":"9dd0516c...","code":"PTN30","name":"설치왕",
+    "contactName":"정예준 대표","phone":"016-3363-9052","email":"partner30@example.com","isActive":true},
+    ...]}
+  NOTES: Partner companies with contact info
+
+[M5] GET /metadata/waste-types
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"id":"474db055...","code":"P01","descriptionKo":"에어컨 실외기","descriptionEn":"AC Outdoor Unit"},
+    {"id":"8b4212dd...","code":"P02","descriptionKo":"에어컨 실내기","descriptionEn":"AC Indoor Unit"},
+    {"id":"8c83b3ac...","code":"P03","descriptionKo":"냉장고","descriptionEn":"Refrigerator"},
+    {"id":"78fa723c...","code":"P04","descriptionKo":"세탁기","descriptionEn":"Washing Machine"},
+    {"id":"328ac113...","code":"P05","descriptionKo":"TV","descriptionEn":"Television"},
+    ...]}
+  NOTES: Bilingual waste type descriptions (Korean + English)
+
+[M6] GET /metadata/order-statuses
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"value":"UNASSIGNED","label":"Unassigned","description":"Order imported, no installer assigned","color":"#9e9e9e","category":"active"},
+    {"value":"ASSIGNED","label":"Assigned","description":"Installer assigned by coordinator","color":"#2196f3","category":"active"},
+    {"value":"CONFIRMED","label":"Confirmed","description":"Installer confirmed the assignment","color":"#03a9f4","category":"active"},
+    {"value":"RELEASED","label":"Released","description":"Ready for dispatch","color":"#00bcd4","category":"active"},
+    {"value":"DISPATCHED","label":"Dispatched",...},
+    ...]}
+  NOTES: Includes color codes for UI and category tags
+
+[M7] GET /metadata/roles
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"value":"HQ_ADMIN","label":"HQ Administrator","permissions":["users:manage","branches:manage","orders:all","reports:all","settings:manage"]},
+    {"value":"BRANCH_MANAGER","label":"Branch Manager","permissions":["users:read","orders:branch","reports:branch","export:branch"]},
+    {"value":"PARTNER_COORDINATOR","label":"Partner Coordinator","permissions":["orders:partner","orders:assign",...]},
+    ...]}
+  NOTES: Permission strings for each role
+
+[M8] GET /waste/codes
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[same as /metadata/waste-types]}
+  NOTES: Alias endpoint on separate /waste controller - returns identical data to /metadata/waste-types
+
+[M9] POST /metadata/refresh (HQ_ADMIN)
+  Auth: Bearer admin token
+  STATUS: 201 Created ✅ PASS
+  RESPONSE: {"success":true,"timestamp":"2026-02-22T06:26:46.325Z"}
+  NOTES: Triggers cache refresh. No data body needed. Returns 201 (not 200).
+
+================================================================================
+SECTION 3: REPORTS ENDPOINTS
+================================================================================
+
+[R1] GET /reports/summary
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"summary":{"total":2040,"completed":510,"pending":1190,"cancelled":340,
+    "completionRate":"25.0","cancellationRate":"16.7"},
+    "waste":{"totalPickups":340,"totalQuantity":678},
+    "statusBreakdown":{"PARTIAL":170,"CONFIRMED":170,"UNASSIGNED":170,"RELEASED":170,
+    "CANCELLED":170,"ASSIGNED":170,"ABSENT":170,"REQUEST_CANCEL":170,"COLLECTED":170,
+    "POSTPONED":170,"COMPLETED":170,"DISPATCHED":170}}}
+  NOTES: 2040 total orders, 25% completion rate, 170 orders per status
+
+[R2] GET /reports/progress (no params)
+  Auth: Bearer admin token
+  STATUS: 500 Internal Server Error ❌ FAIL (BUG)
+  RESPONSE: {"statusCode":500,"message":"Internal server error"}
+  NOTES: Missing required groupBy parameter causes 500 (should be 400 Bad Request)
+  FIX NEEDED: Should validate groupBy param and return 400 with guidance
+
+[R3] GET /reports/progress?groupBy=branch
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"key":"853613ff...","name":"서울 서초센터","total":72,"completed":18,"pending":54,"completionRate":25},
+    {"key":"a3d3d5a3...","name":"서울 송파센터","total":72,"completed":18,"pending":54,"completionRate":25},
+    ...]}
+  NOTES: Group by branch shows 25% completion per branch
+
+[R4] GET /reports/progress?groupBy=status
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"key":"UNASSIGNED","name":"UNASSIGNED","total":170,"completed":0,"pending":170,"completionRate":0},
+    {"key":"ASSIGNED","name":"ASSIGNED","total":170,"completed":0,"pending":170,"completionRate":0},
+    ...]}
+  NOTES: Group by status - each status has 170 orders
+
+[R5] GET /reports/waste-summary
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"wasteCode":"P01","description":"에어컨 실외기","quantity":36,"orderCount":18},
+    {"wasteCode":"P02","description":"에어컨 실내기","quantity":36,"orderCount":18},
+    {"wasteCode":"P03","description":"냉장고","quantity":36,"orderCount":18},
+    ...]}
+  NOTES: Aggregated waste pickup counts by code
+
+[R6] GET /reports/customer-history
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"orderId":"6813d0bb...","orderNo":"ORD-20260222-1020","customerId":"...","customerName":"김민준",
+    "customerPhone":"017-7302-3553","customerAddress":"수성구 243로, 주택 22동 411호, 대구광역시",
+    "status":"REQUEST_CANCEL","appointmentDate":"2026-02-23T00:00:00.000Z",
+    "branchCode":"GGN01","branchName":"경기 수원센터","installerName":"홍수아 기사",
+    "products":[{"name":"벽걸이 에어컨","quantity":1}]},...]}
+  NOTES: Full customer order history with installer and product details
+
+[R7] GET /reports/release-summary
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[
+    {"installerId":"installer-7","installerName":"황서연 기사","branchCode":"CHN02",
+    "branchName":"천안 동남센터","releaseCount":4},
+    {"installerId":"installer-8","installerName":"류유준 기사","branchCode":"JJU01",
+    "branchName":"전주 덕진센터","releaseCount":4},...]}
+  NOTES: How many orders each installer has in RELEASED state
+
+[R8] GET /reports/raw (no params)
+  Auth: Bearer admin token
+  STATUS: 500 Internal Server Error ❌ FAIL (BUG)
+  RESPONSE: {"statusCode":500,"message":"Internal server error"}
+  NOTES: Missing required 'type' parameter causes 500 (should be 400 Bad Request)
+  FIX NEEDED: Should validate 'type' param and return 400
+
+[R9] GET /reports/raw?type=ecoas&branchCode=HQ&dateFrom=2026-02-01&dateTo=2026-02-28
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"exportId":"f82c5db1-1fa6-4793-ad64-b9139e0c5b8e",
+    "status":"PROCESSING","message":"Export is being generated. Poll /reports/export/:id for status."}}
+  NOTES: Async export job initiated - returns exportId for polling
+
+[R10] GET /reports/export/:exportId (polling status)
+  Auth: Bearer admin token
+  Export ID: f82c5db1-1fa6-4793-ad64-b9139e0c5b8e
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"exportId":"f82c5db1...","type":"ecoas","status":"PROCESSING",
+    "downloadUrl":null,"expiresAt":null,"createdAt":"2026-02-22T06:27:43.139Z"}}
+  NOTES: Export remained in PROCESSING state (likely background worker issue on free tier)
+
+[R11] GET /reports/raw?type=completed (with params)
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"exportId":"11e40f19...","status":"PROCESSING","message":"..."}}
+  NOTES: Another async export job created. Pattern confirmed working.
+
+[R12] GET /reports/install-confirmation (no orderId)
+  Auth: Bearer admin token
+  STATUS: 500 Internal Server Error ❌ FAIL (BUG)
+  RESPONSE: {"statusCode":500,"message":"Internal server error"}
+  NOTES: Missing required 'orderId' param causes 500
+  FIX NEEDED: Should validate orderId and return 400
+
+[R13] GET /reports/install-confirmation?orderId=bf269e96-9e78-43b0-a4bd-2454abff059a (COMPLETED order)
+  Auth: Bearer admin token
+  Order: ORD-20260221-0667 (COMPLETED)
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"exportId":"e0e5f9a0-5c26-4871-814d-486e1867201d",
+    "status":"READY","downloadUrl":"/api/v1/reports/export/e0e5f9a0.../download",
+    "expiresAt":"2026-03-01T06:28:12.637Z",
+    "order":{"orderNumber":"ORD-20260221-0667","customerName":"황현우","branch":"서울 강남센터",
+    "installer":"강지우 기사","completedAt":"2026-02-21T18:33:13.458Z"}}}
+  NOTES: Returns immediately READY for completed orders! PDF export link included.
+         Note: install-confirmation uses orderId (not exportId) in the path pattern.
+
+[R14] GET /reports/export/:orderId/download (PDF download)
+  Auth: Bearer admin token
+  Order ID: bf269e96-9e78-43b0-a4bd-2454abff059a
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: PDF binary data (Content-Type: application/pdf)
+  RESPONSE SAMPLE: StreamableFile with buffer starting: [37,80,68,70 = %PDF-1.3...]
+  NOTES: PDF is generated and downloadable. File size ~2865 bytes.
+         Route pattern: /reports/export/:orderId/download uses ORDER ID (not exportId)
+
+[R15] GET /reports/unreturned
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"items":[
+    {"orderId":"6813d0bb...","orderNo":"ORD-20260222-1020","customerId":"...",
+    "customerName":"김민준","productName":"벽걸이 에어컨","productCode":"AC-001",
+    "cancelledAt":"2026-02-22T00:59:46.044Z","cancelReason":"OTHER","isReturned":false,
+    "returnedAt":null,"returnedBy":null,"branchCode":"GGN01","branchName":"경기 수원센터"},...]}}
+  NOTES: Cancelled orders with unreturned products
+
+================================================================================
+SECTION 4: NOTIFICATIONS ENDPOINTS
+================================================================================
+
+[N1] GET /notifications
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"data":[],"pagination":{"nextCursor":null,"hasMore":false}}}
+  NOTES: Empty for admin user. Pagination via cursor pattern.
+         Double-nesting: data.data[] pattern (matches API spec)
+
+[N2] GET /notifications?unreadOnly=true
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"data":[],"pagination":{"nextCursor":null,"hasMore":false}}}
+  NOTES: Filter by unread - also empty
+
+[N3] GET /notifications/preferences
+  Auth: Bearer admin token
+  STATUS: 500 Internal Server Error ❌ FAIL (BUG)
+  RESPONSE: {"statusCode":500,"message":"Internal server error"}
+  NOTES: Preferences endpoint has server-side error
+  FIX NEEDED: Check notification preferences model/service initialization
+
+[N4] GET /notifications (no auth)
+  Auth: NONE
+  STATUS: 401 Unauthorized ✅ PASS
+  RESPONSE: {"message":"Unauthorized","statusCode":401}
+
+[N5] PATCH /notifications/00000000-0000-0000-0000-000000000001/ack (fake ID)
+  Auth: Bearer admin token
+  STATUS: 404 Not Found ✅ PASS
+  RESPONSE: {"message":"error.notification_not_found","error":"Not Found","statusCode":404}
+  NOTES: Proper 404 with i18n error key
+
+================================================================================
+SECTION 5: HEALTH ENDPOINTS
+================================================================================
+
+[H1] GET /health
+  Auth: NONE (public endpoint)
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"status":"ok","info":{"database":{"status":"up"},
+    "memory_heap":{"status":"up"},"memory_rss":{"status":"up"},"storage":{"status":"up"}},
+    "error":{},"details":{"database":{"status":"up"},"memory_heap":{"status":"up"},
+    "memory_rss":{"status":"up"},"storage":{"status":"up"}}}
+  NOTES: All 4 health checks passing: database, memory_heap, memory_rss, storage
+
+[H2] GET /health/ready
+  Auth: NONE (public endpoint)
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"status":"ready","timestamp":"2026-02-22T06:29:09.946Z"}
+  NOTES: Kubernetes readiness probe format
+
+[H3] GET /health/live
+  Auth: NONE (public endpoint)
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"status":"alive","timestamp":"2026-02-22T06:29:10.443Z"}
+  NOTES: Kubernetes liveness probe format
+
+================================================================================
+SECTION 6: USERS ENDPOINTS
+================================================================================
+
+[U1] GET /users (admin role)
+  Auth: Bearer admin token (HQ_ADMIN)
+  STATUS: 200 OK ✅ PASS
+  RESPONSE SAMPLE: {"success":true,"data":[{"id":"46f62b30...","username":"0001",
+    "passwordHash":"$argon2id$v=19$m=65536,t=3,p=4$...","fullName":"테스트 기사",
+    "email":"test@erp-logistics.com","locale":"ko","branchId":"533f554b...",
+    "isActive":true,"roles":[{"role":"INSTALLER"}],"branch":{...}},...]}
+  NOTES: WARNING: Response includes passwordHash field - potential security concern!
+         Should hash be excluded from list response?
+
+[U2] GET /users (installer role - expect 403)
+  Auth: Bearer installer token (INSTALLER role)
+  STATUS: 403 Forbidden ✅ PASS
+  RESPONSE: {"message":"error.insufficient_permissions","error":"Forbidden","statusCode":403}
+  NOTES: Role guard working correctly. i18n error key used.
+
+[U3] GET /users (no auth - expect 401)
+  Auth: NONE
+  STATUS: 401 Unauthorized ✅ PASS
+  RESPONSE: {"message":"Unauthorized","statusCode":401}
+
+[U4] GET /users/:id (admin)
+  Auth: Bearer admin token
+  User ID: 46f62b30-5531-42ec-926f-85d077b9aff4
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: Full user object with roles and branch details
+  NOTES: Same passwordHash exposure issue as /users list
+
+================================================================================
+SECTION 7: AUTH ENDPOINTS (ADDITIONAL)
+================================================================================
+
+[A1] GET /auth/me
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"id":"ac0664e8...","username":"admin",
+    "roles":["HQ_ADMIN"],"branchCode":"HQ"}}
+  NOTES: Minimal user info (id, username, roles, branchCode) - does NOT expose passwordHash
+         Contrast with /users/:id which exposes passwordHash
+
+================================================================================
+SECTION 8: OTHER ENDPOINTS
+================================================================================
+
+[O1] GET /orders/stats
+  Auth: Bearer admin token
+  STATUS: 200 OK ✅ PASS
+  RESPONSE: {"success":true,"data":{"total":2040,"unassigned":170,"assigned":170,
+    "confirmed":170,"released":170,"dispatched":170,"completed":170,"cancelled":170,"pending":170}}
+  NOTES: Quick status count for dashboard widgets
+
+[J1] GET /jobs/:jobId (fake ID)
+  Auth: Bearer admin token
+  STATUS: 404 Not Found ✅ PASS
+  RESPONSE: {"message":"Job test-job-001 not found","error":"Not Found","statusCode":404}
+  NOTES: Background job polling endpoint. Used to track batch-sync and other async operations.
+
+================================================================================
+SETTLEMENT LOCK BEHAVIOR DOCUMENTATION (E2002)
+================================================================================
+
+WHAT IS E2002:
+  Error code E2002 is returned when attempting to modify (PATCH/POST state change) an order
+  that belongs to a settlement period that has been locked.
+
+WHEN IT TRIGGERS:
+  - Settlement auto-locks every Monday for the previous week's data
+  - Any write operation on locked orders returns E2002
+  - Error format: {"code":"E2002","message":"Settlement period is locked","statusCode":400}
+
+HOW TO RESOLVE:
+  - HQ_ADMIN must call: POST /settlement/:id/unlock
+  - After unlock, modifications are allowed again
+  - Lock can be re-applied with: POST /settlement/:id/lock (BRANCH_MANAGER or HQ_ADMIN)
+
+CURRENT STATE IN THIS ENVIRONMENT:
+  - GET /settlement/current → data: null (no active period)
+  - GET /settlement/history → data: [] (no historical periods)
+  - This means E2002 cannot be triggered currently as no periods have been locked
+  - Settlement feature is implemented but no periods have been created/locked yet
+
+SETTLEMENT DATA STRUCTURE (from source code analysis):
+  - Settlement periods are weekly
+  - GET /settlement/current: current open period or null
+  - GET /settlement/history: past periods with lock status
+  - GET /settlement/:id: single period with order count and amount totals
+
+================================================================================
+BUGS FOUND
+================================================================================
+
+BUG-1: /reports/progress without groupBy → 500 (should be 400)
+  Route: GET /reports/progress
+  Symptom: Missing required groupBy causes 500 Internal Server Error
+  Expected: 400 Bad Request with message "groupBy is required (branch|installer|status|date)"
+  Severity: Medium
+
+BUG-2: /reports/raw without type → 500 (should be 400)
+  Route: GET /reports/raw
+  Symptom: Missing required type param causes 500
+  Expected: 400 Bad Request with message "type is required (ecoas|completed|pending|waste)"
+  Severity: Medium
+
+BUG-3: /reports/install-confirmation without orderId → 500 (should be 400)
+  Route: GET /reports/install-confirmation
+  Symptom: Missing required orderId causes 500
+  Expected: 400 Bad Request with message "orderId is required"
+  Severity: Medium
+
+BUG-4: /notifications/preferences → 500
+  Route: GET /notifications/preferences
+  Symptom: Always returns 500 Internal Server Error
+  Expected: 200 with user's notification preferences object
+  Severity: High (feature broken)
+
+BUG-5: /users and /users/:id expose passwordHash
+  Route: GET /users, GET /users/:id
+  Symptom: Response includes "passwordHash":"$argon2id$..." field
+  Expected: passwordHash should be excluded from all API responses
+  Severity: Medium (argon2id hash is safe, but still a data hygiene issue)
+
+BUG-6: /reports/export/:exportId stuck in PROCESSING
+  Route: GET /reports/export/:exportId after POST /reports/raw?type=ecoas
+  Symptom: Export status never changes from PROCESSING to READY
+  Expected: Background worker processes export and sets status to READY with downloadUrl
+  Severity: Medium (install-confirmation works fine; raw data export broken)
+  Likely cause: Background worker (Bull/BullMQ) may not be running on free tier Render instance
+
+================================================================================
+SUMMARY SCORECARD
+================================================================================
+
+Category         Tests  Pass  Fail  Notes
+-----------      -----  ----  ----  -----
+Settlement       6      6     0     No periods exist; E2002 behavior documented
+Metadata         9      9     0     All endpoints working including refresh
+Reports          15     11    4     3x missing-param 500 bugs, 1x export stuck
+Notifications    5      4     1     preferences endpoint broken (500)
+Health           3      3     0     All health checks passing
+Users            4      4     0     Works correctly (role guards functional)
+Auth (extra)     1      1     0     /auth/me works
+Orders/Jobs      2      2     0     Stats and job polling work
+
+TOTAL            45     40    5     89% pass rate
+
+OVERALL RESULT: PARTIAL PASS
+  - Core functionality works correctly
+  - 4 endpoints return 500 instead of 400 for missing required params (validation gap)
+  - 1 feature endpoint broken (notifications preferences)
+  - 1 background job worker appears stuck/not running (export PROCESSING forever)
+  - Security note: passwordHash exposed in user responses

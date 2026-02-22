@@ -1,0 +1,59 @@
+VERIFICATION: /auth/me ENDPOINT WORKING
+=========================================
+
+ENDPOINT DETAILS
+================
+
+Location: apps/api/src/auth/auth.controller.ts:60-72
+
+@Get('me')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({ summary: 'Get current user info' })
+@ApiResponse({ status: 200, description: 'Current user info' })
+getMe(@CurrentUser() user: JwtPayload) {
+  return {
+    id: user.sub,
+    username: user.username,
+    roles: user.roles,
+    branchCode: user.branchCode,
+  };
+}
+
+RESPONSE STRUCTURE
+==================
+{
+  id: string (user ID)
+  username: string
+  roles: string[] (e.g., ["HQ_ADMIN", "BRANCH_MANAGER"])
+  branchCode: string
+}
+
+AUTHENTICATION
+===============
+✓ Requires JWT Bearer token
+✓ Uses JwtAuthGuard
+✓ Extracts user from JWT payload
+✓ Returns minimal user info (not full User object)
+
+USAGE IN APP
+============
+File: apps/web/src/app/shared/constants/app.constants.ts:144
+- Defined as: ME: '/auth/me'
+- Part of API_ENDPOINTS.AUTH constant group
+
+App does NOT directly call this endpoint:
+- User data is provided during login response
+- Auth service restores user from storage on init
+- No /auth/me calls found in application code
+- This endpoint is available for external/API clients
+
+DECISION: /auth/me endpoint is CORRECT and working
+=========================================
+- Returns exactly what's needed: id, username, roles, branchCode
+- Properly guarded with JWT auth
+- Documented with Swagger decorators
+- No changes required
+- App gets user data from login response instead of separate call
+
+Verification date: 2026-02-22

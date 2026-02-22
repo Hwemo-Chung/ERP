@@ -1,0 +1,76 @@
+QA Bug Fix Summary — Task 17
+Date: 2026-02-22
+Tests: 264/264 passed after all fixes
+
+================================================================================
+BUG-1: GET /reports/progress (no params) → 500 instead of 400
+================================================================================
+File:       apps/api/src/reports/reports.controller.ts
+Root Cause: `groupBy` query parameter had no validation. When omitted, `undefined`
+            was passed to the service causing an internal error.
+Fix:        Added `BadRequestException` to the @nestjs/common import and inserted
+            an early-return guard at the top of `getProgress()`:
+              if (!groupBy) throw new BadRequestException('groupBy query parameter is required');
+Result:     Missing `groupBy` now returns HTTP 400 with descriptive message.
+
+================================================================================
+BUG-2: GET /reports/raw (no params) → 500 instead of 400
+================================================================================
+File:       apps/api/src/reports/reports.controller.ts
+Root Cause: `type` query parameter had no validation. When omitted, `undefined`
+            was passed to the service causing an internal error.
+Fix:        Added guard at the top of `generateExport()`:
+              if (!type) throw new BadRequestException('type query parameter is required');
+Result:     Missing `type` now returns HTTP 400 with descriptive message.
+
+================================================================================
+BUG-3: GET /reports/install-confirmation (no orderId) → 500 instead of 400
+================================================================================
+File:       apps/api/src/reports/reports.controller.ts
+Root Cause: `orderId` was marked required in @ApiQuery but not validated in handler.
+            Undefined `orderId` was passed to the service, causing an error.
+Fix:        Added guard at the top of `generateInstallConfirmation()`:
+              if (!orderId) throw new BadRequestException('orderId query parameter is required');
+Result:     Missing `orderId` now returns HTTP 400 with descriptive message.
+
+================================================================================
+BUG-4: GET /notifications/preferences → 500
+================================================================================
+File:       apps/api/src/notifications/notifications.controller.ts
+Root Cause: `deviceId` was required for Prisma compound key lookup but had no
+            validation. When omitted, Prisma received `undefined` and threw 500.
+Fix:        Added `BadRequestException` to the @nestjs/common import and inserted
+            a guard at the top of `getPreferences()`:
+              if (!deviceId) throw new BadRequestException('deviceId query parameter is required');
+Result:     Missing `deviceId` now returns HTTP 400 with descriptive message.
+
+================================================================================
+BUG-5: GET /users exposes passwordHash field
+================================================================================
+File:       apps/api/src/users/users.service.ts
+Root Cause: `findAll()` used `include: { roles, branch }` which returns the full
+            Prisma user model including the `passwordHash` column.
+Fix:        Replaced `include` with an explicit `select` clause in `findAll()` that
+            lists all fields except `passwordHash`. Methods `findById()` and
+            `findByUsername()` are left unchanged (used internally by auth).
+Result:     GET /users no longer returns `passwordHash` in the response body.
+
+================================================================================
+BUG-7: Dark mode CSS doesn't respond to body.dark class
+================================================================================
+File:       apps/web/src/theme/variables.scss
+Root Cause: All dark-mode CSS variables were scoped only inside
+            `@media (prefers-color-scheme: dark) { :root { ... } }`.
+            The manual toggle adds `body.dark` but no matching CSS selector existed.
+Fix:        Duplicated the entire dark-mode variables block (lines 228-318) into a
+            new top-level `body.dark { ... }` selector placed immediately after the
+            closing `}` of the `@media` block. Variables are set directly on
+            `body.dark` (not nested under `:root`) to ensure cascade priority.
+Result:     Applying `body.dark` class programmatically now activates dark theme
+            regardless of OS-level `prefers-color-scheme` preference.
+
+================================================================================
+Not Fixed
+================================================================================
+BUG-6: Export stuck in PROCESSING — infrastructure issue (no worker on free tier).
+        Out of scope per task specification.

@@ -1,0 +1,267 @@
+================================================================================
+T14: Mobile App QA - Code Analysis Report
+Generated: 2026-02-22
+================================================================================
+
+================================================================================
+PART A: ROUTE / PAGE VERIFICATION
+================================================================================
+
+ROUTING TREE:
+/
+└── '' → redirect to /tabs
+├── /auth  (canActivate: noAuthGuard)
+│   └── /auth/login          → LoginPage  ✓ (FILE EXISTS)
+└── /tabs  (canActivate: authGuard)
+    └── TabsPage
+        ├── /tabs/assignment
+        │   ├── ''                     → AssignmentListPage       ✓
+        │   ├── detail/:id             → AssignmentDetailPage     ✓
+        │   ├── release-confirm        → ReleaseConfirmPage       ✓
+        │   └── batch-assign           → BatchAssignPage          ✓
+        ├── /tabs/completion
+        │   ├── ''                     → CompletionListPage       ✓
+        │   ├── process/:id            → CompletionProcessPage    ✓
+        │   ├── serial-input/:id       → SerialInputPage          ✓
+        │   ├── waste-pickup/:id       → WastePickupPage          ✓
+        │   └── certificate/:id        → CompletionCertificatePage ✓
+        ├── /tabs/orders
+        │   ├── ''                     → OrderListPage            ✓
+        │   └── :id                    → OrderDetailPage          ✓
+        ├── /tabs/dashboard            → DashboardPage            ✓
+        ├── /tabs/reports
+        │   ├── ''                     → ReportsMenuPage          ✓
+        │   ├── progress               → ProgressDashboardPage    ✓
+        │   ├── customer-history       → CustomerHistoryPage      ✓
+        │   ├── waste-summary          → WasteSummaryPage         ✓
+        │   ├── unreturned-items       → UnreturnedItemsPage      ✓
+        │   └── export                 → ExportPagePage           ✓
+        ├── /tabs/settings
+        │   ├── ''                     → SettingsMenuPage         ✓
+        │   ├── settlement             → SettlementPage           ✓
+        │   ├── split-order/:id        → SplitOrderPage           ✓
+        │   └── notifications          → NotificationCenterPage   ✓
+        └── /tabs/profile              → ProfilePage              ✓
+
+TOTAL PAGES: 23 pages + 1 tabs shell
+ALL ROUTE COMPONENT FILES EXIST: ✓
+
+ROUTING CONFIG FILES:
+  apps/mobile/src/app/app.routes.ts              ✓
+  apps/mobile/src/app/features/tabs/tabs.routes.ts     ✓
+  apps/mobile/src/app/features/auth/auth.routes.ts     ✓
+  apps/mobile/src/app/features/orders/orders.routes.ts ✓
+  apps/mobile/src/app/features/completion/completion.routes.ts ✓
+  apps/mobile/src/app/features/assignment/assignment.routes.ts ✓
+  apps/mobile/src/app/features/settings/settings.routes.ts ✓
+  apps/mobile/src/app/features/reports/reports.routes.ts ✓
+  apps/mobile/src/app/features/profile/profile.routes.ts ✓
+
+DEFAULT REDIRECT: '/' → /tabs → /tabs/assignment  ✓
+WILDCARD: '**' → /tabs  ✓
+
+VERDICT: PASS ✓
+
+
+================================================================================
+PART B: LOGIN FLOW VERIFICATION
+================================================================================
+
+LOGIN PAGE: apps/mobile/src/app/features/auth/pages/login/login.page.ts  ✓
+
+COMPONENT VERIFICATION:
+  - Standalone Angular component: ✓
+  - ChangeDetection: default (not OnPush, acceptable for auth)
+  - Template: inline (glassmorphism UI with form)
+  - Form: ReactiveFormsModule, FormGroup with username/password fields ✓
+  - Validators: required + minLength on both fields ✓
+  - i18n: TranslateModule integration ✓
+
+AUTH FLOW:
+  1. User fills form → onSubmit() called
+  2. Form validation checked (markAllAsTouched if invalid)
+  3. authService.login({ username, password }) called  ✓
+  4. On success → router.navigate(['/tabs/orders'])  ✓
+  5. On failure → error shown via authService.error() signal  ✓
+
+AUTH SERVICE: apps/mobile/src/app/core/services/auth.service.ts  ✓
+  - POST ${environment.apiUrl}/auth/login  ✓
+  - Token storage: Capacitor Preferences (secure native storage)  ✓
+    - Keys: erp_access_token, erp_refresh_token, erp_user
+  - Signals: user, isAuthenticated, isLoading, error  ✓
+  - Token expiry check: isTokenExpired() - 30s buffer  ✓
+  - Token refresh: refreshTokens() → POST /auth/refresh  ✓
+  - Logout: POST /auth/logout + clear storage + navigate  ✓
+  - _initialized flag prevents re-init guard loops  ✓
+
+TOKEN STORAGE MECHANISM: Capacitor Preferences (wraps Keychain/Keystore on native)  ✓
+
+AUTH GUARD: apps/mobile/src/app/core/guards/auth.guard.ts  ✓
+  - CanActivateFn (functional guard, Angular 15+ style)
+  - Calls authService.initialize() → checks storage
+  - Returns true if authenticated, else UrlTree(['/auth/login'])
+  - Protects all /tabs/** routes  ✓
+
+NO-AUTH GUARD: apps/mobile/src/app/core/guards/no-auth.guard.ts  ✓
+  - Redirects already-logged-in users to /tabs/orders
+  - Prevents double login  ✓
+
+VERDICT: PASS ✓
+
+
+================================================================================
+PART C: KEY FEATURE VERIFICATION
+================================================================================
+
+--- C1: ORDER LIST PAGE ---
+FILE: apps/mobile/src/app/features/orders/pages/order-list/order-list.page.ts  ✓
+
+API Calls (via OrdersStore):
+  - ordersStore.loadStats(branchCode)      → GET /orders/stats  ✓
+  - ordersStore.loadOrders(branchCode)     → GET /orders        ✓
+  - installersStore.loadInstallers()       → GET /installers    ✓
+
+Features:
+  - OnInit triggers loadOrders()  ✓
+  - Pull-to-refresh: onRefresh()  ✓
+  - Infinite scroll: loadMore()   ✓
+  - Search: ordersStore.setFilters({ customerName })  ✓
+  - Filter segments: all/pending/assigned  ✓
+  - KPI chips (total/pending/completed) from ordersStore.kpiMetrics()  ✓
+  - Offline indicator: networkService.isOffline()  ✓
+  - ChangeDetectionStrategy.OnPush  ✓
+
+--- C2: ORDER DETAIL PAGE ---
+FILE: apps/mobile/src/app/features/orders/pages/order-detail/order-detail.page.ts  ✓
+
+API Calls:
+  - ordersService.getOrder(id)             → GET /orders/:id   ✓
+  - ordersService.updateStatus(id, dto)    → PATCH /orders/:id/status  ✓
+
+Features:
+  - Loads order by route :id param  ✓
+  - State machine transitions enforced via ALLOWED_TRANSITIONS map  ✓
+  - Status change confirmation dialog (AlertController)  ✓
+  - ABSENT status special flow (reason selection + notes)  ✓
+  - Call customer: tel: link  ✓
+  - Navigate: Google Maps link  ✓
+  - Serial numbers displayed per order line  ✓
+  - Version field passed in updatePayload (optimistic locking)  ✓
+
+--- C3: ORDER COMPLETION / SERIAL NUMBER CAPTURE ---
+FILE: apps/mobile/src/app/features/completion/pages/serial-input/serial-input.page.ts  ✓
+
+Features (PRD FR-04):
+  - Barcode scanner via BarcodeScannerService (Capacitor MLKit)  ✓
+  - Manual input with real-time validation  ✓
+  - Validation: /^[A-Za-z0-9]{10,20}$/ (alphanumeric, 10-20 chars)  ✓
+  - Auto-advance to next unscanned on valid scan  ✓
+  - All-valid check before save enabled  ✓
+  - Save: ordersStore.updateOrderSerials()  ✓
+  - Navigate back to completion-process on save  ✓
+
+--- C4: OFFLINE SYNC ---
+FILE: apps/mobile/src/app/core/db/database.ts  ✓
+FILE: apps/mobile/src/app/core/services/background-sync.service.ts  ✓
+FILE: apps/mobile/src/app/core/services/sync-queue.service.ts  ✓
+FILE: apps/mobile/src/app/core/interceptors/offline.interceptor.ts  ✓
+
+Dexie.js (IndexedDB) Integration:
+  - ERPDatabase extends Dexie  ✓
+  - DB name: 'ERPLogistics'  ✓
+  - Schema v1: orders, syncQueue, metadata tables  ✓
+  - Schema v2: added status/priority indexes to syncQueue  ✓
+
+  Tables:
+    orders: OfflineOrder {id, orderNo, status, appointmentDate, ...}  ✓
+    syncQueue: SyncQueueEntry {method, url, body, priority, retryCount, ...}  ✓
+    metadata: MetadataCache {key, data, updatedAt}  ✓
+
+BackgroundSyncService:
+  - Effect on networkService.isOffline() → triggers onNetworkOnline()  ✓
+  - enqueue(): adds to syncQueue, registers Background Sync API  ✓
+  - processPendingOperations(): sorted by priority, sequential  ✓
+  - Retry logic: exponential backoff [1s, 5s, 15s, 60s, 300s]  ✓
+  - Max retries: 3 (configurable per op)  ✓
+  - Failed ops: stored for manual review  ✓
+  - Service Worker Background Sync API support  ✓
+  - getAuthToken() reads from Capacitor Preferences  ✓
+
+OrdersService offline support:
+  - getOrders(): if offline → getOrdersOffline() from IndexedDB  ✓
+  - getOrder(): if offline → db.orders.get(id)  ✓
+  - Caching: after API success → db.orders.bulkPut()  ✓
+  - Offline filtering/pagination in IndexedDB  ✓
+
+Sync operation types: completion, status_change, waste, attachment, note  ✓
+Priority ordering: completion(1) > status_change(2) > waste(3) > attachment(4) > note(5)  ✓
+
+VERDICT: PASS ✓
+
+
+================================================================================
+PART D: BUILD VERIFICATION
+================================================================================
+
+Command: pnpm --filter mobile build
+Target: browser (Angular + Ionic web build)
+Output: apps/mobile/www/browser/
+
+RESULT: ✓ BUILD SUCCEEDED
+
+Build output location: /Users/solution/Documents/GitHub/ERP/apps/mobile/www
+
+Warnings (non-fatal, build still succeeds):
+  - Some unused Ionic component imports (IonNote in SettingsMenuPage)
+  - Some component CSS budget exceeded (order-detail, dashboard, login - inline styles)
+  - These are WARNINGS only, not errors
+
+Errors: NONE
+
+VERDICT: PASS ✓
+
+
+================================================================================
+PART E: APK EXISTENCE CHECK
+================================================================================
+
+Release APK:
+  Path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+  Size: 3,596,364 bytes (3.43 MB)
+  Date: Feb 22 01:01
+  Status: EXISTS ✓
+
+Debug APK:
+  Path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+  Size: 7,752,454 bytes (7.39 MB)
+  Date: Feb 22 10:38
+  Status: EXISTS ✓
+
+VERDICT: PASS ✓
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+| Check                        | Result | Notes                                    |
+|------------------------------|--------|------------------------------------------|
+| Routes/Pages (23 pages)      | PASS   | All component files exist                |
+| Auth Guards configured       | PASS   | authGuard + noAuthGuard functional       |
+| Login Flow                   | PASS   | POST /auth/login, Capacitor Preferences  |
+| Token Storage                | PASS   | Capacitor Preferences (Keychain/Keystore)|
+| Token Expiry Check           | PASS   | isTokenExpired() with 30s buffer         |
+| Token Refresh                | PASS   | POST /auth/refresh, race condition safe  |
+| Order List (GET /orders)     | PASS   | NgRx SignalStore, infinite scroll, KPI   |
+| Order Detail (GET /orders/:id)| PASS  | State machine, version locking           |
+| Serial Number Capture        | PASS   | Barcode scan + manual input (FR-04)      |
+| Offline Dexie.js DB          | PASS   | ERPDatabase, schema v1+v2               |
+| Background Sync              | PASS   | Retry backoff, priority queue, SW sync   |
+| Offline Interceptor          | PASS   | Queues mutations for sync               |
+| Build (browser target)       | PASS   | Warnings only, no errors                |
+| Release APK                  | PASS   | 3.43 MB, Feb 22 01:01                   |
+| Debug APK                    | PASS   | 7.39 MB, Feb 22 10:38                   |
+
+OVERALL: ALL CHECKS PASSED ✓
+
+================================================================================

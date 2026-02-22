@@ -1,0 +1,17 @@
+=== FINAL WEB i18n VALIDATION ===
+Total keys in ko.json: 1107
+Total keys in en.json: 1107
+
+MISSING KEYS (BEFORE): COMMON.BUTTONS.EXPORT, COMMON.BUTTONS.PRINT, COMMON.BUTTONS.REFRESH
+MISSING KEYS (AFTER): ✓ NONE
+
+MISSING IN KO: ✓ NONE
+
+EMPTY VALUES IN EN: 3
+(Note: These are Korean suffix particles - acceptable as empty in English)
+  - COMMON.COUNT_SUFFIX: ""
+  - COMMON.UNIT.TIMES: ""
+  - ORDERS.SPLIT.QTY_SUFFIX: ""
+
+STATUS: ✓ COMPLETE
+All keys synchronized between ko.json and en.json

@@ -1,0 +1,529 @@
+==============================================================================
+OFFLINE-FIRST SYNC QUEUE & CONFLICT RESOLUTION — COMPREHENSIVE FINDINGS REPORT
+ERP Logistics (Angular 19 + Ionic 8 + Capacitor 6)
+Analysis Date: 2026-02-22
+==============================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. OFFLINE DATA STORAGE MECHANISM (Dexie.js / IndexedDB)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILE: apps/web/src/app/core/db/database.ts
+
+Dexie database name: "ERPLogistics"
+Dexie version history (schema migrations):
+  Version 1 (lines 74-78): orders, syncQueue, metadata tables
+  Version 2 (lines 81-85): syncQueue gains 'status' and 'priority' indexes
+  Version 3 (lines 88-93): backgroundSyncQueue table added
+
+Tables defined:
+  ┌─────────────────────┬────────────────────────────────────────────────────┐
+  │ Table               │ Schema / Key Indexes                               │
+  ├─────────────────────┼────────────────────────────────────────────────────┤
+  │ orders              │ id (PK), orderNo, status, appointmentDate,         │
+  │                     │ installerId, branchId, localUpdatedAt              │
+  ├─────────────────────┼────────────────────────────────────────────────────┤
+  │ syncQueue           │ ++id (auto-increment PK), timestamp, method,       │
+  │                     │ status, priority                                    │
+  ├─────────────────────┼────────────────────────────────────────────────────┤
+  │ metadata            │ key (PK), updatedAt                                │
+  ├─────────────────────┼────────────────────────────────────────────────────┤
+  │ backgroundSyncQueue │ id (PK), dataType, createdAt                       │
+  └─────────────────────┴────────────────────────────────────────────────────┘
+
+Key TypeScript interfaces (database.ts lines 4-62):
+  - OfflineOrder: id, orderNo, status, version, localUpdatedAt, syncedAt,
+                  orderLines (supports both itemCode/itemName and legacy
+                  productCode/productName field names)
+  - SyncQueueEntry: id?, type, method, url, body, priority, timestamp,
+                    retryCount, maxRetries, status ('pending'|'syncing'|'failed'),
+                    lastError?
+  - MetadataCache: key, data, updatedAt
+  - BackgroundSyncTask: id?, dataType, operation, data, retries, maxRetries,
+                        lastAttempt?, createdAt
+
+NOTE — Schema gap: OfflineSyncService references db.table('syncMetadata') and
+db.table('conflictQueue') (offline-sync.service.ts lines 72, 79, 127, 244) but
+NEITHER TABLE IS DECLARED in the Dexie schema (database.ts). This will throw a
+runtime error in Dexie 4.x when those table accesses are attempted.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. SYNC QUEUE IMPLEMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+There are TWO parallel sync queue implementations that partially overlap:
+
+────────────────────────────────────────────────────────────────────────────
+2a. SyncQueueService
+    FILE: apps/web/src/app/core/services/sync-queue.service.ts
+────────────────────────────────────────────────────────────────────────────
+
+Signals (Angular 19 reactive state):
+  - _pendingCount  (line 18): tracks number of items in queue
+  - _isSyncing     (line 19): mutex flag to prevent concurrent processing
+
+Queue entry flow:
+  enqueue() [lines 24-41]
+    → Creates SyncQueueEntry with defaults: type='note', priority=5,
+      retryCount=0, maxRetries=3, status='pending'
+    → Calls db.syncQueue.add(entry)  [Dexie IndexedDB write]
+    → Updates pendingCount signal
+
+  processQueue() [lines 43-75]
+    → Guards against concurrent execution via _isSyncing signal
+    → Fetches up to 10 operations ordered by timestamp (NOT by priority!)
+    → For each op: calls executeOperation() → on success: db.syncQueue.delete()
+    → On error: increments retryCount; if retryCount >= 3 → deletes (dead letter)
+    → Uses logger.error() for dead-letter logging (no persistent dead-letter store)
+
+  executeOperation() [lines 77-94]
+    → Uses Angular HttpClient for POST/PUT/PATCH/DELETE
+    → Resolves relative URLs by prepending environment.apiUrl
+
+  processPendingOperations() [line 109-111]
+    → Alias for processQueue()
+
+ISSUE: processQueue() fetches by timestamp order (line 49: .orderBy('timestamp'))
+but does NOT sort by priority. BackgroundSyncService (see 2b) does sort by
+priority. The two services are inconsistent.
+
+────────────────────────────────────────────────────────────────────────────
+2b. BackgroundSyncService
+    FILE: apps/web/src/app/core/services/background-sync.service.ts
+────────────────────────────────────────────────────────────────────────────
+
+Priority mapping (lines 14-20):
+  completion    → priority 1 (highest)
+  status_change → priority 2
+  waste         → priority 3
+  attachment    → priority 4
+  note          → priority 5 (lowest)
+
+Retry backoff schedule (line 30):
+  RETRY_BACKOFF_MS = [1000, 5000, 15000, 60000, 300000]
+  → 1s, 5s, 15s, 1min, 5min (exponential-ish)
+
+enqueue() [lines 145-165]
+  → Calculates priority via PRIORITY_MAP
+  → Writes to db.syncQueue via db.syncQueue.add()
+  → Calls requestBackgroundSync() to register Web Background Sync API
+
+requestBackgroundSync() [lines 213-226]
+  → Uses navigator.serviceWorker.ready + registration.sync.register('erp-sync')
+  → Gracefully handles unavailability (warn only)
+
+processPendingOperations() [lines 228-247]
+  → Queries db.syncQueue WHERE status='pending'
+  → Sorts by priority (ascending = higher priority first)
+  → Calls processSingleOperation() for each; on failure → handleOperationFailure()
+
+processSingleOperation() [lines 249-267]
+  → Marks op as 'syncing' in IndexedDB
+  → Uses native fetch() (NOT HttpClient) with Authorization from Capacitor Preferences
+  → On success: db.syncQueue.delete(op.id)
+  → On non-ok HTTP status: throws Error with status code
+
+handleOperationFailure() [lines 269-296]
+  → Increments retryCount; if >= maxRetries: sets status='failed', shows danger toast
+  → Otherwise: updates retryCount + lastError in IndexedDB, schedules setTimeout
+    retry only if network is online
+
+onNetworkOnline() [lines 167-185]
+  → Called when network comes back up (via Angular effect() on isOffline signal)
+  → Guards with syncInProgress boolean flag
+  → Calls processPendingOperations(), shows success/warning toast via UIStore
+
+registerSyncListener() [lines 304-313]
+  → Listens for ServiceWorker 'message' events of type 'SYNC_COMPLETE'
+  → On receipt: calls onNetworkOnline()
+
+initialize() [lines 61-81]
+  → Skips SW registration in non-production environments
+  → Registers '/ngsw-worker.js' (Angular Service Worker) for background sync tag
+
+DUAL-QUEUE CONCERN: Both SyncQueueService AND BackgroundSyncService write to
+the SAME db.syncQueue Dexie table. SyncQueueService.processQueue() uses
+HttpClient; BackgroundSyncService.processSingleOperation() uses native fetch().
+There is no coordination/lock between them — both can dequeue the same item
+concurrently if both are triggered.
+
+────────────────────────────────────────────────────────────────────────────
+2c. OfflineSyncService (higher-level orchestrator)
+    FILE: apps/web/src/app/core/services/offline-sync.service.ts
+────────────────────────────────────────────────────────────────────────────
+
+Implements ±3 day "sync window" policy (PRD Section 5.4).
+
+syncData() [lines 86-109]
+  Step 1: pushLocalChanges()  — push local pending changes
+  Step 2: pullRemoteChanges() — delta sync from server
+  Step 3: syncQueue.processPendingOperations() — flush queue
+
+pushLocalChanges() [lines 115-141]
+  → Queries db.table('syncQueue').where('synced').equals(0)  ← BUG: 'synced' is
+    NOT a field on SyncQueueEntry! The actual status field is 'status'. This
+    query will always return empty results.
+  → On 409: adds to db.table('conflictQueue') ← conflictQueue not in schema
+
+pullRemoteChanges() [lines 170-202]
+  → Iterates over ['orders', 'assignments', 'completions', 'notifications']
+  → Calls GET /{dataType}/delta?since={lastSync}
+  → NOTE: '/delta' endpoints are NOT listed in any API controller found in
+    apps/api/src/ — these endpoints may not exist
+
+mergeRemoteData() [lines 208-237]
+  → For each remote item:
+    - If not in local: add
+    - If local version < remote version AND no pending sync: update local
+    - If no version info: simple overwrite
+  → "Preserve local edits if pending" logic checks db.table('syncQueue')
+    WHERE {entityId: id, synced: 0} — same 'synced' field bug as above
+
+prefetchDataForOffline() [lines 297-317]
+  → Calls GET /{dataType}/prefetch?from=...&to=...
+  → NOTE: '/prefetch' endpoints also not found in API controllers
+
+Auto-sync trigger [lines 55-59]
+  → subscribes to networkService.onOnline$ observable
+  → Calls syncData() on network recovery
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. CONFLICT RESOLUTION STRATEGY (409 / Optimistic Locking)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Optimistic locking pattern (version field on every Order):
+  - Every mutation increments version locally: order.version + 1  (store, lines
+    191, 277, 318, 358, 393, 421, 453)
+  - Server receives expectedVersion in body to detect stale clients
+  - Server returns 409 Conflict when versions don't match
+
+────────────────────────────────────────────────────────────────────────────
+3a. ConflictResolverService (FR-17)
+    FILE: apps/web/src/app/shared/services/conflict-resolver.service.ts
+────────────────────────────────────────────────────────────────────────────
+
+Interfaces:
+  VersionedEntity: { id, version, updatedAt }
+  ConflictError:   { code: 'CONFLICT', message, serverVersion, serverData,
+                     clientVersion }
+
+resolveConflict<T>() [lines 55-102]
+  → Finds changed fields (skips: version, updatedAt, createdAt, id)
+  → Creates conflictData with field-by-field local vs server comparison
+  → Opens ConflictDialogComponent in an Ionic Modal
+  → Returns ConflictResolution: 'overwrite' | 'refresh' | 'cancel'
+
+autoResolveServerWins<T>() [lines 107-115]
+  → Server-wins strategy with warning toast (no user interaction)
+
+createForceUpdateRequest<T>() [lines 120-130]
+  → Builds payload with _forceUpdate=true, _expectedVersion for retry
+
+findChangedFields() [lines 135-153]
+  → Deep-compares local vs server objects, skipping metadata fields
+
+────────────────────────────────────────────────────────────────────────────
+3b. 409 Handling in OrdersService (FR-17)
+    FILE: apps/web/src/app/features/orders/services/orders.service.ts
+────────────────────────────────────────────────────────────────────────────
+
+updateStatus() [lines 130-181] — FULL conflict resolution flow:
+  1. Calls PATCH /orders/{id}/status
+  2. On 409: extracts serverOrder from error.error?.data
+  3. Fetches localOrder from IndexedDB
+  4. Calls conflictResolver.resolveConflict() → opens dialog
+  5. resolution='overwrite': recursive retry with serverOrder.version
+  6. resolution='refresh':   returns serverOrder (discards local changes)
+  7. resolution='cancel':    throws translated error
+
+────────────────────────────────────────────────────────────────────────────
+3c. 409 Handling in OrdersStore (NgRx SignalStore)
+    FILE: apps/web/src/app/store/orders/orders.store.ts
+────────────────────────────────────────────────────────────────────────────
+
+assignOrder() [lines 238-259]
+  → On 409: rollbacks to original order in store, fetches fresh from API,
+    updates store with fresh. NO dialog shown to user. Sets error message.
+
+splitOrder() [lines 540-552]
+  → On 409: fetches fresh order and patches store silently. Same silent
+    rollback as assignOrder().
+
+NOTE: OrdersStore's 409 handling is SILENT (no user dialog), while
+OrdersService.updateStatus() shows a full conflict dialog. Inconsistency.
+
+updateOrderStatus() [lines 293-343]
+  → Sends expectedVersion in body
+  → Falls through to persistAndEnqueue() — does NOT handle 409 specifically
+
+persistAndEnqueue() [lines 55-63]
+  → Optimistic: writes to IndexedDB first, then queues API call
+  → If offline: only queues; if online: uses SyncQueueService
+
+────────────────────────────────────────────────────────────────────────────
+3d. Global Error Handling for 409
+    FILE: apps/web/src/app/core/interceptors/error.interceptor.ts (line 39-41)
+    FILE: apps/web/src/app/core/error/global-error-handler.ts (lines 180-181)
+────────────────────────────────────────────────────────────────────────────
+
+error.interceptor.ts: Shows generic toast "Conflict - data may have been
+  modified" for ALL 409 responses, regardless of whether they are handled
+  upstream (e.g., by OrdersService which already shows dialog). This means
+  the user sees BOTH a toast AND a dialog in the OrdersService flow — double
+  error notification.
+
+global-error-handler.ts: E2006 is listed in IGNORED_ERROR_CODES (line 12),
+  and 409 is in IGNORED_HTTP_STATUSES (line 18), so the global handler
+  correctly suppresses these.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. BACKGROUND SYNC TRIGGER MECHANISM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Three independent sync trigger paths:
+
+┌────┬────────────────────────────────┬──────────────────────────────────────┐
+│ #  │ Trigger                        │ Handler                              │
+├────┼────────────────────────────────┼──────────────────────────────────────┤
+│ T1 │ Capacitor Network plugin       │ BackgroundSyncService: Angular        │
+│    │ networkStatusChange event      │ effect() on isOffline signal →       │
+│    │ (network.service.ts:24)        │ onNetworkOnline() [bgs.ts:50-55]     │
+├────┼────────────────────────────────┼──────────────────────────────────────┤
+│ T2 │ networkService.onOnline$       │ OfflineSyncService constructor        │
+│    │ Observable (network.service.ts │ subscribes → syncData() [oss.ts:57]  │
+│    │ :13)                           │                                       │
+├────┼────────────────────────────────┼──────────────────────────────────────┤
+│ T3 │ OrdersStore Angular effect()   │ this.syncPending() →                 │
+│    │ on isOffline signal            │ syncQueue.processQueue()              │
+│    │ (orders.store.ts:587-592)      │ [store.ts:568-577]                   │
+├────┼────────────────────────────────┼──────────────────────────────────────┤
+│ T4 │ ServiceWorker 'SYNC_COMPLETE'  │ BackgroundSyncService.onNetworkOnline│
+│    │ message (bgs.ts:307-312)       │ → processPendingOperations()         │
+├────┼────────────────────────────────┼──────────────────────────────────────┤
+│ T5 │ Web Background Sync API        │ Service Worker 'ngsw-worker.js' with │
+│    │ registration.sync.register()   │ tag 'erp-sync' or 'sync-{dataType}' │
+│    │ (bgs.ts:216-225)               │ (production only)                    │
+└────┴────────────────────────────────┴──────────────────────────────────────┘
+
+Network detection:
+  FILE: apps/web/src/app/core/services/network.service.ts
+  - Uses Capacitor Network plugin (NOT navigator.onLine)
+  - Network.getStatus() for initial state
+  - Network.addListener('networkStatusChange') for ongoing monitoring
+  - Emits onOnline$ Subject only on offline→online transition
+  - isOffline: Angular Signal (reactive)
+  - checkConnection(): async method returning boolean
+
+Offline interceptor:
+  FILE: apps/web/src/app/core/interceptors/offline.interceptor.ts
+  - OFFLINE_ENDPOINTS whitelist [lines 8-12]:
+    - GET /orders, GET|PATCH /orders/{id}, GET /metadata
+  - Write ops (POST/PUT/PATCH/DELETE): queued via SyncQueueService, returns 202
+  - Read ops on whitelisted endpoints: passed through (assumes local cache)
+  - Unsupported offline ops: returns 503
+  - NOTE: type is hardcoded to default (no type param), so all offline-queued
+    ops get type='note' and priority=5, losing priority context.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. MERGE UI FOR CONFLICTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILE: apps/web/src/app/shared/components/conflict-dialog/conflict-dialog.component.ts
+
+Conflict dialog IS implemented and functional:
+  - Ionic Modal with backdropDismiss=false (user must choose)
+  - Shows: entity name, local version vs server version, updatedAt timestamps
+  - Field-by-field comparison: "내 변경" (local, blue border) vs
+    "서버 값" (server, warning/yellow border) with git-compare icon
+  - Three action buttons:
+    [내 변경으로 덮어쓰기] → resolution='overwrite'
+    [서버 값으로 새로고침]  → resolution='refresh'
+    [취소]                → resolution='cancel'
+  - Lazy-loaded via dynamic import() in ConflictResolverService [line 64]
+  - CSS class 'conflict-dialog-modal' for custom styling
+  - Handles empty fields gracefully ('(비어있음)')
+  - Fully responsive (mobile stack layout at ≤767px)
+
+Resolution outcomes in OrdersService.updateStatus():
+  - 'overwrite': recursive call with serverOrder.version → force update
+  - 'refresh':   return serverOrder data, discard local change
+  - 'cancel':    throw translated 'CONFLICT.CANCELLED' error
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. GAPS AND ISSUES FOUND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL BUGS:
+━━━━━━━━━━━━━
+[BUG-1] Missing Dexie tables: 'syncMetadata' and 'conflictQueue'
+  FILE: apps/web/src/app/core/services/offline-sync.service.ts
+  Lines: 72-73, 79, 127-134, 244, 258-269
+  OfflineSyncService calls db.table('syncMetadata') and db.table('conflictQueue')
+  but ERPDatabase (database.ts) only declares: orders, syncQueue, metadata,
+  backgroundSyncQueue. This will throw Dexie InvalidTableError at runtime
+  whenever OfflineSyncService.initializeSyncMetadata(), getSyncMetadata(), or
+  pushLocalChanges() is called.
+
+[BUG-2] Wrong field name in syncQueue queries inside OfflineSyncService
+  FILE: apps/web/src/app/core/services/offline-sync.service.ts
+  Lines: 116, 221-224
+  db.table('syncQueue').where('synced').equals(0) — the SyncQueueEntry interface
+  has NO 'synced' field. The actual status field is 'status' (values: 'pending',
+  'syncing', 'failed'). This query returns empty array always, meaning
+  pushLocalChanges() never pushes anything, and mergeRemoteData() always thinks
+  there are no pending edits to preserve.
+
+[BUG-3] Missing API endpoints for delta and prefetch sync
+  FILE: apps/web/src/app/core/services/offline-sync.service.ts
+  Lines: 183, 303
+  pullRemoteChanges() calls GET /{dataType}/delta
+  prefetchDataForOffline() calls GET /{dataType}/prefetch
+  Neither endpoint exists in the API (checked apps/api/src/orders/orders.controller.ts
+  and other controllers). These calls will return 404.
+
+DESIGN ISSUES:
+━━━━━━━━━━━━━━
+[ISSUE-4] Dual sync queue writers with no coordination
+  BackgroundSyncService (bgs.ts:163) and SyncQueueService (sync-queue.service.ts:39)
+  both write to db.syncQueue. BackgroundSyncService.processSingleOperation() uses
+  native fetch(); SyncQueueService.executeOperation() uses Angular HttpClient.
+  Both can be triggered by the same network-online event (T1 triggers bgs,
+  T2 triggers OfflineSyncService which calls syncQueue, T3 triggers OrdersStore).
+  Risk of double-processing the same queue entry.
+
+[ISSUE-5] SyncQueueService.processQueue() ignores priority
+  FILE: apps/web/src/app/core/services/sync-queue.service.ts
+  Line 49: operations fetched by .orderBy('timestamp') — uses timestamp not priority.
+  BackgroundSyncService correctly sorts by priority. These are inconsistent.
+
+[ISSUE-6] Offline interceptor loses operation type/priority context
+  FILE: apps/web/src/app/core/interceptors/offline.interceptor.ts
+  Lines 43-50: syncQueue.enqueue() called without type field → defaults to
+  type='note', priority=5 (lowest). Even completion and status_change operations
+  queued via offline interceptor get lowest priority.
+
+[ISSUE-7] Double error notification on 409 in updateStatus flow
+  FILE: apps/web/src/app/core/interceptors/error.interceptor.ts (line 39-40)
+  FILE: apps/web/src/app/features/orders/services/orders.service.ts (lines 146-176)
+  error.interceptor shows a toast for ALL 409 responses. When OrdersService
+  catches 409 before it propagates to the interceptor (via try/catch), the
+  interceptor still fires. User sees both a danger toast AND the conflict dialog.
+
+[ISSUE-8] Inconsistent 409 handling: dialog vs silent rollback
+  OrdersService.updateStatus() → shows conflict dialog (user choice)
+  OrdersStore.assignOrder() / splitOrder() → silent rollback with error message
+  No unified 409 handling strategy.
+
+[ISSUE-9] Dead letter operations permanently deleted in SyncQueueService
+  FILE: apps/web/src/app/core/services/sync-queue.service.ts
+  Lines 63-65: When maxRetries reached, op is deleted with logger.error().
+  There is no dead letter store, no UI to see failed ops. BackgroundSyncService
+  at least sets status='failed' and exposes getFailedOperations() + retryFailed().
+  The two services handle dead letters differently.
+
+[ISSUE-10] OfflineSyncService.resolveConflict() uses a different strategy than ConflictResolverService
+  FILE: apps/web/src/app/core/services/offline-sync.service.ts
+  Lines 243-273: Uses 'use-local' | 'use-server' | 'merge' options
+  FILE: apps/web/src/app/shared/services/conflict-resolver.service.ts
+  Uses 'overwrite' | 'refresh' | 'cancel' options via dialog
+  These are parallel implementations with incompatible interfaces.
+
+[ISSUE-11] OrdersStore auto-sync on network online has no guard for large queues
+  FILE: apps/web/src/app/store/orders/orders.store.ts
+  Lines 587-592: effect() calls syncPending() every time isOffline changes to
+  false. BackgroundSyncService also calls onNetworkOnline(). Both fire
+  simultaneously for the same db.syncQueue, with no coordination.
+
+MINOR OBSERVATIONS:
+━━━━━━━━━━━━━━━━━━━
+[OBS-1] Optimistic version increment is always +1 locally without server
+  confirmation. This means if multiple offline changes are made, version drifts
+  arbitrarily. The server's expected version check uses order.version (before
+  local increment) which is correct, but IndexedDB stores version+1.
+
+[OBS-2] Test mocking (testing/dexie.mock.ts, testing/capacitor-network.mock.ts)
+  exists and is actively used in spec files, showing good test coverage for
+  sync queue and background sync flows. Test coverage appears solid for
+  SyncQueueService and BackgroundSyncService.
+
+[OBS-3] BackgroundSyncService.initialize() skips SW registration in development
+  (line 64-68). This means background sync via Web Background Sync API only
+  works in production builds.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUMMARY TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Category              Status         Notes
+────────────────────  ─────────────  ──────────────────────────────────────────
+IndexedDB setup       ✅ Implemented  Dexie 3 tables + 1 missing (schema gap)
+Sync queue (basic)    ✅ Implemented  SyncQueueService + BackgroundSyncService
+Priority ordering     ⚠️  Partial     BGS orders by priority; SyncQueueSvc doesn't
+Retry with backoff    ✅ Implemented  BGS: 5-level exponential backoff
+Dead letter queue     ⚠️  Partial     BGS has status='failed'; SyncQueueSvc deletes
+Offline detection     ✅ Implemented  Capacitor Network plugin (NOT navigator.onLine)
+Offline interceptor   ✅ Implemented  Whitelist approach, 202 optimistic response
+Delta sync pull       ❌ Broken       /delta endpoints don't exist in API
+Conflict detection    ✅ Implemented  Version field + 409 from server
+Conflict UI dialog    ✅ Implemented  Full Ionic modal with field comparison
+Overwrite/Refresh     ✅ Implemented  OrdersService.updateStatus() handles both
+Auto-resolve server   ✅ Implemented  autoResolveServerWins() available
+Background SW sync    ⚠️  Partial     Production only, ngsw-worker.js integration
+conflictQueue table   ❌ Missing       Referenced but not in Dexie schema
+syncMetadata table    ❌ Missing       Referenced but not in Dexie schema
+/delta API endpoint   ❌ Missing       Not implemented in NestJS API
+/prefetch endpoint    ❌ Missing       Not implemented in NestJS API
+Double notification   ❌ Bug          error.interceptor + dialog both fire on 409
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE REFERENCE INDEX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+apps/web/src/app/core/db/database.ts
+  - ERPDatabase class, all Dexie table definitions (lines 64-95)
+  - OfflineOrder, SyncQueueEntry, MetadataCache, BackgroundSyncTask interfaces
+
+apps/web/src/app/core/services/network.service.ts
+  - Capacitor Network plugin usage (lines 20-33)
+  - onOnline$ Subject / isOffline Signal
+
+apps/web/src/app/core/services/sync-queue.service.ts
+  - enqueue(), processQueue(), executeOperation() (lines 24-94)
+  - pendingCount, isSyncing signals
+
+apps/web/src/app/core/services/background-sync.service.ts
+  - PRIORITY_MAP, RETRY_BACKOFF_MS (lines 14-30)
+  - enqueue(), onNetworkOnline(), processPendingOperations() (lines 145-296)
+  - requestBackgroundSync(), getAuthToken() (lines 213-301)
+
+apps/web/src/app/core/services/offline-sync.service.ts
+  - syncData(), pushLocalChanges(), pullRemoteChanges() (lines 86-202)
+  - mergeRemoteData(), resolveConflict() (lines 208-273)
+  - ±3 day sync window logic (lines 282-292)
+
+apps/web/src/app/core/interceptors/offline.interceptor.ts
+  - OFFLINE_ENDPOINTS whitelist, queue-on-write, 202 response (lines 8-57)
+
+apps/web/src/app/core/interceptors/error.interceptor.ts
+  - 409 toast handler (lines 39-41)
+
+apps/web/src/app/shared/services/conflict-resolver.service.ts
+  - FR-17 ConflictResolverService (lines 1-182)
+  - resolveConflict(), autoResolveServerWins(), createForceUpdateRequest()
+
+apps/web/src/app/shared/components/conflict-dialog/conflict-dialog.component.ts
+  - ConflictDialogComponent with field-comparison UI (lines 54-267)
+  - ConflictResolution type: 'overwrite' | 'refresh' | 'cancel'
+
+apps/web/src/app/features/orders/services/orders.service.ts
+  - Full 409 → dialog flow in updateStatus() (lines 130-181)
+  - Offline read from IndexedDB in getOrders/getOrder() (lines 81-128)
+
+apps/web/src/app/store/orders/orders.store.ts
+  - Optimistic updates with version+1 throughout (lines 191, 277, 318, etc.)
+  - Silent 409 rollback in assignOrder(), splitOrder() (lines 239-258, 540-551)
+  - effect()-driven auto-sync on network restore (lines 587-592)
+
+==============================================================================
+END OF REPORT
+==============================================================================

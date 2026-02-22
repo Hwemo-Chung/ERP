@@ -1,0 +1,115 @@
+Code Quality Review — comprehensive-qa-audit changes
+Generated: 2026-02-22
+Reviewer: Sisyphus-Junior (claude-sonnet-4.6)
+
+════════════════════════════════════════════════════════════════
+SUMMARY
+════════════════════════════════════════════════════════════════
+Build [PASS] | Tests [264 pass/0 fail] | Files [7 clean/0 issues] | VERDICT: APPROVE
+
+════════════════════════════════════════════════════════════════
+1. TEST RUN
+════════════════════════════════════════════════════════════════
+Command : cd apps/api && npx jest --passWithNoTests
+Suites  : 8 passed, 8 total
+Tests   : 264 passed, 264 total
+Snapshots: 0 total
+Time    : ~11s
+Result  : PASS
+
+════════════════════════════════════════════════════════════════
+2. FILE-BY-FILE REVIEW
+════════════════════════════════════════════════════════════════
+
+FILE 1: e2e/fixtures/test-data.ts (T2 — Fixed credentials)
+  ✅ No `as any` / @ts-ignore / @ts-expect-error
+  ✅ No empty catch blocks
+  ✅ No console.log
+  ✅ No commented-out code
+  ✅ No unused imports
+  ✅ LSP diagnostics: clean (0 errors)
+  NOTES: Uses `as const` appropriately throughout. Credentials are
+         plain text in E2E fixture file — acceptable for test data.
+  STATUS: CLEAN
+
+FILE 2: apps/web/src/assets/i18n/en.json (T4 — Added EXPORT/PRINT/REFRESH keys)
+  ✅ Valid JSON (node JSON.parse: no errors)
+  ✅ 3 keys added: COMMON.BUTTONS.EXPORT, COMMON.BUTTONS.PRINT, COMMON.BUTTONS.REFRESH
+     (lines 26-28)
+  NOTES: EXPORT, PRINT, REFRESH already existed at COMMON root level (lines 41-43).
+         The new BUTTONS.* keys are an intentional addition for the buttons sub-group.
+         No structural issues.
+  STATUS: CLEAN
+
+FILE 3: apps/mobile/src/assets/i18n/en.json (T4 — Added 4 i18n keys)
+  ✅ Valid JSON (node JSON.parse: no errors)
+  ✅ Keys COMMON.REFRESH, COMMON.EXPORT, COMMON.IMPORT, COMMON.PRINT at lines 44-47
+  STATUS: CLEAN
+
+FILE 4: apps/api/src/reports/reports.controller.ts (T17 — BUG-1,2,3 fixed)
+  ✅ No `as any` / @ts-ignore / @ts-expect-error
+  ✅ No empty catch blocks
+  ✅ No console.log
+  ✅ LSP diagnostics: clean (0 errors)
+  ✅ BadRequestException validations added:
+       - getProgress():             line 76-78  — groupBy required check
+       - generateExport():          line 180-182 — type required check
+       - generateInstallConfirmation(): line 235-237 — orderId required check
+  ✅ All imports used (BadRequestException imported at line 12, used in 3 places)
+  ✅ Intentional comment block at lines 241-244 (Unreturned Items section header — acceptable)
+  STATUS: CLEAN
+
+FILE 5: apps/api/src/notifications/notifications.controller.ts (T17 — BUG-4 fixed)
+  ✅ No `as any` / @ts-ignore / @ts-expect-error
+  ✅ No empty catch blocks
+  ✅ No console.log
+  ✅ LSP diagnostics: clean (0 errors)
+  ✅ BadRequestException validation added:
+       - getPreferences():          line 86-88 — deviceId required check
+  ✅ BadRequestException imported at line 14, used at line 87
+  STATUS: CLEAN
+
+FILE 6: apps/api/src/users/users.service.ts (T17 — BUG-5 fixed)
+  ✅ No `as any` / @ts-ignore / @ts-expect-error
+  ✅ No empty catch blocks
+  ✅ No console.log
+  ✅ LSP diagnostics: clean (0 errors)
+  ✅ findAll() uses `select` (not `findMany` default) to explicitly exclude passwordHash
+       — lines 59-76 select only safe fields
+  ✅ Commented-out partner includes are intentional documentation (lines 26, 44)
+       — each has explanatory note explaining WHY partner was removed and performance gain
+  STATUS: CLEAN
+
+FILE 7: apps/web/src/theme/variables.scss (T17 — BUG-7 fixed)
+  ✅ Valid SCSS (dart sass 1.85.0, exit 0)
+  ✅ body.dark block added at lines 322-413 with full CSS variable overrides
+  ✅ Matches @media (prefers-color-scheme: dark) content exactly — correct parity
+  STATUS: CLEAN
+
+════════════════════════════════════════════════════════════════
+3. LSP DIAGNOSTICS SUMMARY
+════════════════════════════════════════════════════════════════
+apps/api/src/reports/reports.controller.ts      — 0 errors
+apps/api/src/notifications/notifications.controller.ts — 0 errors
+apps/api/src/users/users.service.ts             — 0 errors
+e2e/fixtures/test-data.ts                       — 0 errors
+
+════════════════════════════════════════════════════════════════
+4. PATTERN SCAN RESULTS
+════════════════════════════════════════════════════════════════
+`as any`               — NONE FOUND
+`@ts-ignore`           — NONE FOUND
+`@ts-expect-error`     — NONE FOUND
+empty catch blocks     — NONE FOUND
+`console.log`          — NONE FOUND
+Commented-out code     — 2 instances (users.service.ts lines 26, 44)
+                         INTENTIONAL: documented partner include removal with rationale
+                         NOT flagged as AI slop — purposeful performance optimization note
+
+════════════════════════════════════════════════════════════════
+5. VERDICT
+════════════════════════════════════════════════════════════════
+Build [PASS] | Tests [264 pass/0 fail] | Files [7 clean/0 issues] | VERDICT: APPROVE
+
+All 7 files pass quality review. No reject conditions found.
+Tests green (264/264). LSP clean. JSON valid. SCSS valid.

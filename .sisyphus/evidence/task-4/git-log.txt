@@ -1,0 +1,3 @@
+038e6ff merge: code quality improvements (any removal + CI)
+3b3a4ed fix(web,mobile,shared): remove all production any types (12 instances)
+63e41aa ci: add GitHub Actions CI pipeline with lint, type-check, test, build
