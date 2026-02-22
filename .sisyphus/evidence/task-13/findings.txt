@@ -1,0 +1,68 @@
+T13: Web 설정/다크모드/반응형 QA — Findings
+=============================================
+Date: 2026-02-22
+
+## 반응형 레이아웃 테스트
+
+### 모바일 뷰포트 (375x812)
+- 설정 페이지: ✅ 레이아웃 깨짐 없음
+- 프로필 카드, 관리 메뉴, 계정 섹션 모두 정상 렌더링
+- 하단 탭바 5개 탭 정상 표시
+- Evidence: web-settings-mobile.png
+
+### 데스크탑 뷰포트 (1280x800)
+- 설정 페이지: ✅ 레이아웃 깨짐 없음
+- 카드 컴포넌트 전체 너비로 확장, 정상 표시
+- Evidence: web-settings-desktop.png
+
+## 다크모드 테스트
+
+### 토글 위치
+- 설정 페이지(/tabs/settings)에는 다크모드 토글 없음
+- 프로필 페이지(/tabs/profile)에 "다크 모드" 스위치 존재
+- 코드 위치: apps/web/src/app/features/profile/profile.page.ts line 243
+- 저장 키: localStorage 'dark_mode' (apps/web/src/app/shared/constants/app.constants.ts line 127)
+
+### 토글 동작
+- 토글 ON → body.dark 클래스 추가됨 ✅
+- 토글 OFF → body.dark 클래스 제거됨 ✅
+- document.body.classList.contains('dark') = true when toggled ON ✅
+
+### 🐛 BUG-7: 다크모드 CSS가 body.dark에 반응하지 않음
+- SEVERITY: Medium
+- 원인: apps/web/src/theme/variables.scss line 226에서 다크모드 CSS 변수가
+  `@media (prefers-color-scheme: dark)` 안에만 정의됨
+- body.dark 클래스 선택자가 없어서 수동 토글 시 실제 테마 변경 안 됨
+- 토글은 body.dark 클래스를 추가하지만, CSS는 OS 설정만 감지
+- 수정 방법: `body.dark` 선택자를 @media 쿼리와 동일한 CSS 변수로 추가
+  예: `body.dark { :root { --ion-background-color: #0f172a; ... } }`
+- Evidence: web-darkmode-on.png (토글 ON이지만 배경 흰색 유지)
+
+### 다크모드 Persist 테스트
+- 토글 ON 시 localStorage에 저장되는지: 코드 분석상 Capacitor Preferences API 사용
+- 실제 persist 동작: body.dark 클래스는 추가되나 CSS 미반응으로 시각적 확인 불가
+- BUG-7 수정 후 persist 재검증 필요
+
+## 설정 페이지 구성 확인
+
+### /tabs/settings (설정 탭)
+- 프로필 카드: 관리자 / HQ_ADMIN ✅
+- 관리 섹션 (4개 메뉴):
+  - 정산 관리 (주간 정산 기간 관리) → /tabs/settings/settlement
+  - 알림 센터 (푸시 알림 설정 및 이력) [badge: 3] → /tabs/settings/notifications
+  - 알림 설정 (카테고리별 알림 활성화/무음) → /tabs/settings/notification-settings
+  - 생체 인증 (빠른 로그인 설정) → /tabs/settings/biometric
+- 계정 섹션: 로그아웃 버튼
+- 앱 버전 1.0.0
+
+### /tabs/profile (내 정보)
+- 프로필: 관리자 / HQ_ADMIN
+- 동기화 상태: 동기화 대기중 (0개 작업)
+- 설정: 푸시 알림 (ON), 다크 모드 (OFF)
+- 정보: 버전 1.0.0-test
+- 로그아웃 버튼
+
+## Summary
+- 반응형: ✅ PASS (모바일/데스크탑 모두 깨짐 없음)
+- 다크모드 persist: ⚠️ PARTIAL (토글 동작하나 CSS 미반응 — BUG-7)
+- 레이아웃: ✅ PASS

@@ -1,0 +1,243 @@
+================================================================================
+ERP API SECURITY & RATE LIMIT TEST REPORT
+Generated: 2026-02-22
+Target: https://erp-logistics-api.onrender.com/api/v1
+================================================================================
+
+WARMUP
+------
+GET /health → HTTP 200 (API is live, no cold start delay observed)
+Response: {"status":"ok","info":{"database":{"status":"up"},"memory_heap":{"status":"up"},"memory_rss":{"status":"up"},"storage":{"status":"up"}},...}
+
+================================================================================
+TEST 1: AUTH RATE LIMITING
+Goal: Trigger 429 with 6+ rapid failed login attempts to POST /auth/login
+Expected: 429 Too Many Requests after 5 req/min threshold
+================================================================================
+
+Method: POST /auth/login
+Payload: {"username":"admin@example.com","password":"wrongpassword"}
+Headers: Content-Type, X-App-Version: 1.2.3, X-Device-Id, X-Platform: web
+Delay between requests: 200ms
+
+--- With 200ms delay (6 attempts) ---
+Attempt 1: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Attempt 2: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Attempt 3: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Attempt 4: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Attempt 5: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Attempt 6: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+
+--- Rapid burst (no delay, 8 attempts) ---
+Burst 1: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 2: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 3: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 4: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 5: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 6: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 7: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+Burst 8: HTTP 401 | {"message":"error.invalid_credentials","error":"Unauthorized","statusCode":401}
+
+RESULT: FAIL — No 429 was triggered after 14 total failed auth attempts (including bursts).
+         Rate limiting on auth endpoint does NOT appear to be enforced in production.
+         No X-RateLimit-* headers present in any response.
+
+OBSERVATION: Auth endpoint correctly validates payload structure — sending {"email":...} 
+             returns HTTP 400 with validation errors listing required "username" field.
+             Field name is "username", not "email".
+
+SECURITY CONCERN: Auth endpoint is not rate-limited. Brute force attacks are possible.
+
+================================================================================
+TEST 2: INVALID JWT TOKEN HANDLING
+Goal: Verify 401 returned for malformed/invalid JWT
+================================================================================
+
+Request: GET /orders
+Header: Authorization: Bearer invalid_token_here
+Headers: X-App-Version: 1.2.3, X-Device-Id, X-Platform: web
+
+Response Headers:
+  HTTP/2 401
+  content-type: application/json; charset=utf-8
+  access-control-allow-credentials: true
+  vary: Origin
+
+Response Body: {"message":"Unauthorized","statusCode":401}
+
+RESULT: PASS — Correctly returns 401 for invalid/malformed JWT tokens.
+NOTE: Error message is generic "Unauthorized" (does not leak token validation details). Good.
+
+================================================================================
+TEST 3: MISSING AUTH HEADER HANDLING
+Goal: Verify 401 returned when no Authorization header provided
+================================================================================
+
+Request: GET /orders
+No Authorization header
+
+Response Headers:
+  HTTP/2 401
+  content-type: application/json; charset=utf-8
+  access-control-allow-credentials: true
+  vary: Origin
+
+Response Body: {"message":"Unauthorized","statusCode":401}
+
+RESULT: PASS — Correctly returns 401 when no auth header is present.
+NOTE: Same generic error message as invalid token — does not distinguish between
+      "no token" and "bad token" (good for security, prevents enumeration).
+
+================================================================================
+TEST 4: EXPIRED JWT TOKEN HANDLING
+Goal: Verify 401 returned for expired JWT token
+================================================================================
+
+Expired token used:
+  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE2MDAwMDAwMDF9.invalid
+  (Payload: sub=test, iat=2020-09-13, exp=2020-09-13+1s — expired ~5.5 years ago)
+
+Request: GET /orders
+Header: Authorization: Bearer <expired_token>
+
+Response Headers:
+  HTTP/2 401
+  content-type: application/json; charset=utf-8
+  access-control-allow-credentials: true
+
+Response Body: {"message":"Unauthorized","statusCode":401}
+
+RESULT: PASS — Correctly returns 401 for expired JWT.
+NOTE: Generic message — does not distinguish "expired" from "invalid" (good for security).
+      Client-side error code E1002 (token expired) must be determined by client logic.
+
+================================================================================
+TEST 5: CORS BEHAVIOR
+Goal: Verify CORS correctly blocks untrusted origins
+================================================================================
+
+--- Test 5a: OPTIONS preflight from http://evil.com ---
+Request: OPTIONS /auth/login
+Headers: Origin: http://evil.com, Access-Control-Request-Method: POST
+
+Response Headers:
+  HTTP/2 204
+  access-control-allow-credentials: true
+  access-control-allow-headers: Content-Type,Authorization,X-App-Version,X-Device-Id,X-Platform,X-Idempotency-Key,X-Correlation-Id
+  access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+  vary: Origin
+  [NO access-control-allow-origin header]
+
+RESULT: PARTIAL PASS — Preflight returns 204 (not rejected), but critically:
+        - access-control-allow-origin is NOT set for evil.com origin.
+        - Browsers will block the actual follow-up request (CORS enforcement works at browser level).
+        - However, the 204 response with no ACAO header may confuse some clients.
+        - Ideally should return 403 for untrusted origins, not 204.
+
+--- Test 5b: OPTIONS preflight from http://localhost:4200 (allowed origin) ---
+Request: OPTIONS /auth/login
+Headers: Origin: http://localhost:4200, Access-Control-Request-Method: POST
+
+Response Headers:
+  HTTP/2 204
+  access-control-allow-credentials: true
+  access-control-allow-headers: Content-Type,Authorization,X-App-Version,X-Device-Id,X-Platform,X-Idempotency-Key,X-Correlation-Id
+  access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+  access-control-allow-origin: http://localhost:4200
+  vary: Origin
+
+RESULT: PASS — Correct: localhost:4200 gets access-control-allow-origin set.
+
+--- Test 5c: GET /health from http://evil.com (actual request, not preflight) ---
+Request: GET /health
+Header: Origin: http://evil.com
+
+Response: HTTP/2 200
+  access-control-allow-credentials: true
+  vary: Origin
+  [NO access-control-allow-origin header]
+
+RESULT: PARTIAL — Server responds 200 to the request, but no ACAO header.
+        Browsers will block reading the response (correct CORS behavior).
+        Non-browser clients (curl, Postman, scripts) can still read the response.
+
+SECURITY OBSERVATION: CORS is not a server-side enforcement mechanism — it only 
+controls browser behavior. The API does NOT reject requests from unknown origins 
+at the server level; it simply omits the ACAO header. This is standard behavior
+but means server-side resources can be accessed by non-browser tools regardless.
+
+================================================================================
+TEST 6: GENERAL API RATE LIMITING
+Goal: Verify 429 on rapid bursts to non-auth endpoints
+================================================================================
+
+Method: GET /health (6 rapid sequential requests, no delay)
+
+Request 1: HTTP 200 (ok)
+Request 2: HTTP 200 (ok)
+Request 3: HTTP 200 (ok)
+Request 4: HTTP 200 (ok)
+Request 5: HTTP 200 (ok)
+Request 6: HTTP 200 (ok)
+
+RESULT: FAIL — No 429 triggered on 6 rapid requests to /health.
+        No X-RateLimit-* response headers present in any response.
+        Configured 5 req/sec general limit does not appear to be enforced.
+
+================================================================================
+SUMMARY OF FINDINGS
+================================================================================
+
+| Test                          | Result        | HTTP Code | Notes                              |
+|-------------------------------|---------------|-----------|------------------------------------|
+| Auth rate limit (5 req/min)   | NOT ENFORCED  | 401 only  | No 429 after 14 attempts           |
+| General rate limit (5 req/sec)| NOT ENFORCED  | 200 only  | No 429 after 6 rapid /health hits  |
+| Invalid JWT token             | PASS          | 401       | Generic message, no info leak      |
+| Missing auth header           | PASS          | 401       | Same message as invalid token      |
+| Expired JWT token             | PASS          | 401       | Generic message, no info leak      |
+| CORS - evil.com preflight     | PARTIAL PASS  | 204       | No ACAO header, but returns 204    |
+| CORS - localhost:4200          | PASS          | 204       | Correct ACAO header set            |
+| CORS - actual request         | PARTIAL PASS  | 200       | Server doesn't reject, no ACAO     |
+
+================================================================================
+SECURITY CONCERNS
+================================================================================
+
+1. [HIGH] AUTH RATE LIMITING NOT ENFORCED
+   - 14+ failed login attempts produce no 429
+   - No X-RateLimit-* headers indicating any throttling
+   - Brute force attacks on login endpoint are not mitigated
+   - Action: Verify throttler config is deployed correctly; check if Cloudflare WAF
+     is rate limiting (may mask server-level responses if 429 comes from CDN)
+
+2. [MEDIUM] GENERAL RATE LIMITING NOT ENFORCED  
+   - 6 rapid API requests trigger no 429
+   - No rate limit headers in responses
+   - Suggests @nestjs/throttler or equivalent is not active in production
+
+3. [LOW] CORS RETURNS 204 (NOT 403) FOR UNTRUSTED ORIGINS
+   - OPTIONS preflight from evil.com returns 204 with full method/header allowlist
+   - Missing access-control-allow-origin is the correct signal for browsers
+   - But 204 instead of 403 may be permissive for automated scanning tools
+   - Recommend: return 403 for completely unknown origins on preflight
+
+4. [INFO] NO RATE LIMIT RESPONSE HEADERS
+   - No X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset headers
+   - Makes it hard for clients to self-throttle or implement backoff strategies
+   - Recommend: add standard rate limit headers even when not throttling
+
+5. [INFO] X-POWERED-BY: EXPRESS EXPOSED
+   - Response header x-powered-by: Express leaks framework information
+   - Recommend: disable with app.disable('x-powered-by') in NestJS
+
+================================================================================
+INFRASTRUCTURE NOTES
+================================================================================
+- API is behind Cloudflare CDN (cf-ray headers present)
+- Hosted on Render.com (x-render-origin-server, rndr-id headers)  
+- Rate limiting may be intended to be enforced at Cloudflare level (not NestJS)
+- If Cloudflare WAF is the rate limiter, 429 responses would come from CF, not app
+- Cloudflare IP-based rate limiting may not trigger when testing from same IP
+
+Total requests sent: ~32 (well under 50 limit)
+================================================================================

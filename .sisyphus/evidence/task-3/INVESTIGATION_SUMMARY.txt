@@ -1,0 +1,48 @@
+T3: /users/me 404 BUG INVESTIGATION - FINAL REPORT
+====================================================
+
+TASK: Investigate whether the app calls /users/me (404) or /auth/me (working)
+
+RESULT: ✅ NO BUG FOUND - Verified: no /users/me calls
+
+INVESTIGATION METHODOLOGY
+==========================
+1. Comprehensive grep searches across all TypeScript files
+2. Analyzed web and mobile app auth services
+3. Reviewed API endpoints in controllers
+4. Examined app initialization flow
+5. Verified API constant definitions
+6. Checked partner optimization decision
+
+FINDINGS SUMMARY
+=================
+
+ENDPOINT STATUS:
+  /auth/me     ✓ WORKING - Implemented in auth.controller.ts:60-72
+  /users/:id   ✓ WORKING - Implemented in users.controller.ts:24-29
+  /users/me    ✗ NOT CALLED - Zero references found in codebase
+
+APP BEHAVIOR:
+  • Login flow returns complete user object
+  • User data stored locally in Capacitor Preferences
+  • App init restores user from storage (no API call needed)
+  • /auth/me endpoint exists but not used by app (available for clients)
+  • No API calls to fetch current user - data already available
+
+PARTNER OPTIMIZATION:
+  ✓ VERIFIED CORRECT - partner: true is safely commented out
+  • Reduces login response time ~200ms
+  • No code references user.partner in auth/token flows
+  • Order services have own Prisma queries for partner data
+  • Decision documented with rationale
+
+CODE CHANGES REQUIRED: NONE
+
+All functionality working as designed. The partner optimization is correct
+and causes no issues. App properly uses stored user data instead of making
+separate /me endpoint calls.
+
+Investigation completed: 2026-02-22 23:18 UTC
+Evidence files:
+  - users-me.txt (detailed /users/me investigation)
+  - auth-me.txt (detailed /auth/me verification)

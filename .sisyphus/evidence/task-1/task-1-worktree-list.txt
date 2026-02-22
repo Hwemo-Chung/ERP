@@ -1,0 +1,3 @@
+/Users/solution/Documents/GitHub/ERP               53de052 [main]
+/Users/solution/Documents/GitHub/ERP-android-apk   53de052 [feat/android-apk]
+/Users/solution/Documents/GitHub/ERP-code-quality  53de052 [fix/code-quality]

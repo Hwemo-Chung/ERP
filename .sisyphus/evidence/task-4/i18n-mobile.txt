@@ -1,0 +1,23 @@
+=== FINAL MOBILE i18n VALIDATION ===
+Total keys in ko.json: 1088
+Total keys in en.json: 1088
+
+MISSING KEYS (BEFORE): ORDERS.DETAIL.APPOINTMENT_INFO, ORDERS.DETAIL.ORDER_NOT_FOUND, REPORTS.SUBTITLE, PLACEHOLDERS.ALL
+MISSING KEYS (AFTER): ✓ NONE
+
+KEYS ADDED:
+  ✓ ORDERS.DETAIL.APPOINTMENT_INFO: "Appointment Information"
+  ✓ ORDERS.DETAIL.ORDER_NOT_FOUND: "Order not found"
+  ✓ REPORTS.SUBTITLE: "Progress tracking and data analysis"
+  ✓ PLACEHOLDERS.ALL: "All"
+
+MISSING IN KO: ✓ NONE
+
+EMPTY VALUES IN EN: 3
+(Note: These are Korean suffix particles - acceptable as empty in English)
+  - COMMON.COUNT_SUFFIX: ""
+  - COMMON.UNIT.TIMES: ""
+  - ORDERS.SPLIT.QTY_SUFFIX: ""
+
+STATUS: ✓ COMPLETE
+All keys synchronized between ko.json and en.json

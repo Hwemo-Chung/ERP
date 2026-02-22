@@ -1,0 +1,118 @@
+================================================================================
+ENDPOINT INVENTORY - T9: API Settlement/Metadata/Reports/Notifications
+Date: 2026-02-22
+Base URL: https://erp-logistics-api.onrender.com/api/v1
+================================================================================
+
+DISCOVERED CONTROLLERS (from source code):
+  apps/api/src/auth/auth.controller.ts
+  apps/api/src/completion/completion.controller.ts
+  apps/api/src/health/health.controller.ts
+  apps/api/src/jobs/jobs.controller.ts
+  apps/api/src/metadata/metadata.controller.ts
+  apps/api/src/metadata/waste.controller.ts
+  apps/api/src/notifications/notifications.controller.ts
+  apps/api/src/orders/orders.controller.ts
+  apps/api/src/reports/reports.controller.ts
+  apps/api/src/settlement/settlement.controller.ts
+  apps/api/src/users/users.controller.ts
+
+================================================================================
+COMPLETE ENDPOINT INVENTORY
+================================================================================
+
+AUTH (auth.controller.ts) - @Controller('auth')
+  [TESTED] POST   /auth/login                   @Public - Login
+  [TESTED] POST   /auth/refresh                 @Public - Refresh token
+           POST   /auth/logout                  Logout
+  [TESTED] GET    /auth/me                      Get current user info
+
+HEALTH (health.controller.ts) - @Controller('health')
+  [TESTED] GET    /health                       @Public - Full health check
+  [TESTED] GET    /health/ready                 @Public - Readiness probe
+  [TESTED] GET    /health/live                  @Public - Liveness probe
+
+USERS (users.controller.ts) - @Controller('users')
+  [TESTED] GET    /users                        @Roles(HQ_ADMIN, BRANCH_MANAGER)
+  [TESTED] GET    /users/:id                    @Roles(HQ_ADMIN, BRANCH_MANAGER)
+
+METADATA (metadata.controller.ts) - @Controller('metadata')
+  [TESTED] GET    /metadata                     Root - all metadata combined
+  [TESTED] GET    /metadata/branches            Branch list
+  [TESTED] GET    /metadata/installers          Installer list
+  [TESTED] GET    /metadata/partners            Partner list
+  [TESTED] GET    /metadata/waste-types         Waste type codes
+  [TESTED] GET    /metadata/order-statuses      Order status definitions
+  [TESTED] GET    /metadata/roles               Role definitions
+  [TESTED] POST   /metadata/refresh             @Roles(HQ_ADMIN) - Refresh cache
+
+WASTE (waste.controller.ts) - @Controller('waste')
+  [TESTED] GET    /waste/codes                  Waste codes list (same data as waste-types)
+
+SETTLEMENT (settlement.controller.ts) - @Controller('settlement')
+  [TESTED] GET    /settlement/current           Current settlement period
+  [TESTED] GET    /settlement/history           Settlement history (paginated)
+  [TESTED] GET    /settlement/:id               Settlement period detail
+           POST   /settlement/:id/lock          @Roles(BRANCH_MANAGER, HQ_ADMIN) - Lock period
+           POST   /settlement/:id/unlock        @Roles(HQ_ADMIN) - Unlock period
+
+ORDERS (orders.controller.ts) - @Controller('orders')
+  [TESTED] GET    /orders/stats                 Order statistics by status
+           GET    /orders                       List orders (paginated)
+           GET    /orders/:id                   Order detail
+           POST   /orders                       @Roles(HQ_ADMIN, BRANCH_MANAGER) - Create
+           PATCH  /orders/:id                   Update order
+           POST   /orders/bulk-status           @Roles(HQ_ADMIN, BM, PC) - Bulk status change
+           POST   /orders/batch-sync            Batch sync
+           POST   /orders/:id/split             @Roles(HQ_ADMIN, BM) - Split order
+           POST   /orders/:id/events            @Roles(HQ_ADMIN, BM, INSTALLER) - Add event
+           POST   /orders/:id/cancel            @Roles(HQ_ADMIN, BM) - Cancel
+           POST   /orders/:id/revert            @Roles(HQ_ADMIN, BM) - Revert state
+           POST   /orders/:id/reassign          @Roles(HQ_ADMIN, BM) - Reassign installer
+           DELETE /orders/:id                   @Roles(HQ_ADMIN) - Delete
+           POST   /orders/:id/attachments       Upload attachment
+           GET    /orders/:id/attachments       List attachments
+           GET    /orders/:id/attachments/:aid  Get single attachment
+           DELETE /orders/:id/attachments/:aid  Delete attachment
+
+COMPLETION (completion.controller.ts) - @Controller('orders/:orderId')
+           POST   /orders/:orderId/complete     @Roles(INSTALLER, BM, HQ_ADMIN)
+           POST   /orders/:orderId/waste        @Roles(INSTALLER, BM, HQ_ADMIN)
+           PATCH  /orders/:orderId/completion   @Roles(INSTALLER, BM, HQ_ADMIN)
+           GET    /orders/:orderId/completion   Get completion data
+
+REPORTS (reports.controller.ts) - @Controller('reports')
+  [TESTED] GET    /reports/summary              Overall summary stats
+  [TESTED] GET    /reports/progress             Progress by groupBy param (branch/installer/status/date)
+  [TESTED] GET    /reports/waste-summary        Waste pickup summary
+  [TESTED] GET    /reports/customer-history     Customer order history
+  [TESTED] GET    /reports/release-summary      Release summary by installer
+  [TESTED] GET    /reports/raw                  @Roles(HQ_ADMIN, BM) - Raw data export (async)
+  [TESTED] GET    /reports/export/:exportId     Poll export job status
+  [TESTED] GET    /reports/export/:orderId/download  Download exported report (PDF)
+  [TESTED] GET    /reports/install-confirmation  Generate install confirmation PDF
+  [TESTED] GET    /reports/unreturned           Unreturned items report
+           POST   /reports/unreturned/:orderId/return  @Roles(HQ_ADMIN, BM) - Mark as returned
+
+NOTIFICATIONS (notifications.controller.ts) - @Controller('notifications')
+  [TESTED] GET    /notifications                List notifications (paginated)
+  [TESTED] GET    /notifications/preferences    User notification preferences
+  [TESTED] PATCH  /notifications/:id/ack        Acknowledge notification
+           POST   /notifications/subscribe      Subscribe push notifications
+           DELETE /notifications/subscribe/:id  Unsubscribe push notifications
+           PUT    /notifications/preferences    Update preferences
+
+JOBS (jobs.controller.ts) - @Controller('jobs')
+  [TESTED] GET    /jobs/:jobId                  Get background job status
+
+================================================================================
+TESTING COVERAGE
+================================================================================
+Total endpoints discovered: ~55
+Tested in T9 (this task): 35
+Previously tested (T7/T8): Auth, Orders core
+Untested (write/mutation): ~15 (POST/PATCH/DELETE mutations excluded per task rules)
+
+Legend:
+  [TESTED] = Tested in T9
+  (no prefix) = Discovered but not tested in T9 (write operations or previously tested)

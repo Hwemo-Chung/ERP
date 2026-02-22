@@ -1,0 +1,55 @@
+PASS src/common/services/redis-lock.service.spec.ts (8.827 s)
+PASS src/settlement/settlement.service.spec.ts (9.05 s)
+PASS src/completion/completion.service.spec.ts (9.094 s)
+PASS src/auth/auth.service.spec.ts (9.194 s)
+PASS src/orders/order-state-machine.spec.ts (9.083 s)
+[31m[Nest] 95206  - [39m02/22/2026, 3:24:10 PM [31m  ERROR[39m [38;5;3m[NotificationsProcessor] [39m[31mFailed to send push to device-123: Invalid registration token[39m
+[31m[Nest] 95206  - [39m02/22/2026, 3:24:10 PM [31m  ERROR[39m [38;5;3m[NotificationsProcessor] [39m[31mUnexpected error sending push to device-123: Network error[39m
+[31m[Nest] 95206  - [39m02/22/2026, 3:24:10 PM [31m  ERROR[39m [38;5;3m[NotificationsProcessor] [39m[31mJob job-1 failed (attempt 2/3): Push send failed[39m
+Error: Push send failed
+    at Object.<anonymous> (/Users/solution/Documents/GitHub/ERP/apps/api/src/notifications/notifications.processor.spec.ts:267:21)
+    at Promise.then.completed (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at _runTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 95206  - [39m02/22/2026, 3:24:10 PM [31m  ERROR[39m [38;5;3m[NotificationsProcessor] [39m[31mJob job-1 failed after max attempts (3): Push send failed after max retries[39m
+Error: Push send failed after max retries
+    at Object.<anonymous> (/Users/solution/Documents/GitHub/ERP/apps/api/src/notifications/notifications.processor.spec.ts:287:21)
+    at Promise.then.completed (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at _runTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/solution/Documents/GitHub/ERP/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+(node:95206) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS src/notifications/notifications.processor.spec.ts (9.501 s)
+[31m[Nest] 95204  - [39m02/22/2026, 3:24:10 PM [31m  ERROR[39m [38;5;3m[OrderLifecycleService] [39m[31mBatch sync error for order-fail: Database connection error[39m
+PASS src/orders/orders.service.spec.ts (9.84 s)
+PASS src/orders/orders.controller.spec.ts (9.863 s)
+
+Test Suites: 8 passed, 8 total
+Tests:       264 passed, 264 total
+Snapshots:   0 total
+Time:        10.828 s
+Ran all test suites.

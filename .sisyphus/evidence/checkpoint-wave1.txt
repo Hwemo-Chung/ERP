@@ -1,0 +1,46 @@
+=== CHECKPOINT A: Wave 1 Verification ===
+Date: 2026-02-22
+Status: PASS (with T1 deviation)
+
+--- T1: Docker 기동 + 로컬 환경 설정 ---
+Result: PARTIAL PASS
+- ✓ Node v24.13.1 ready
+- ✓ pnpm 9.14.4 + 1700+ deps installed
+- ✗ Docker daemon unavailable (Docker Desktop not installed)
+- ✗ PostgreSQL/Redis containers not started
+- DEVIATION: User approved using production API instead of local
+  API URL: https://erp-logistics-api.onrender.com/api/v1
+Evidence: .sisyphus/evidence/task-1/local-env.txt
+
+--- T2: Playwright test-data.ts 자격증명 수정 ---
+Result: PASS
+- ✓ admin@test.com → admin, TestAdmin123! → admin123!
+- ✓ CENTER_MANAGER → BRANCH_MANAGER
+- ✓ installer@test.com → 0001, password → test
+- ✓ grep for old credentials: 0 results
+Evidence: .sisyphus/evidence/task-2/test-data-fix.txt
+
+--- T3: /users/me 404 버그 수정 ---
+Result: PASS (No Bug)
+- ✓ No code calls /users/me anywhere in codebase
+- ✓ App uses /auth/me (working correctly)
+- ✓ No fix needed
+Evidence: .sisyphus/evidence/task-3/auth-me.txt, users-me.txt
+
+--- T4: i18n 키 완전성 검증 + 수정 ---
+Result: PASS
+- ✓ Web: 1107/1107 keys synchronized (3 added: EXPORT, PRINT, REFRESH)
+- ✓ Mobile: 1088/1088 keys synchronized (4 added)
+- ✓ JSON parse valid for all files
+- ✓ Empty suffix particles (3 each) acceptable for English
+Evidence: .sisyphus/evidence/task-4/i18n-web.txt, i18n-mobile.txt
+
+--- Aggregate ---
+- ✓ T1~T4 Evidence files all exist
+- ✓ T2-T4 failure items: 0
+- ✗ T1 Docker: FAIL (accepted deviation — production API)
+- ✓ task-2: credentials aligned (MATCHES confirmed)
+- ✓ task-3: /auth/me references found ("200" confirmed)
+- ✓ task-4: "NONE" for missing keys (0 missing confirmed)
+
+CHECKPOINT A VERDICT: PASS — Proceed to Wave 2

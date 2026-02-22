@@ -1,0 +1,21 @@
+=== T1 Environment Verification ===
+Date: 2026-02-22
+
+Java:
+  openjdk version "21.0.10" 2026-01-20 LTS
+  OpenJDK Runtime Environment Zulu21.48+17-CA (build 21.0.10+7-LTS)
+  JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home
+  Note: Session-local only, no global changes
+
+Android SDK:
+  ANDROID_HOME=/Users/solution/Library/Android/sdk
+  build-tools: 28.0.3, 34.0.0
+  platforms: android-27, 28, 29, 30, 31, 34, 35
+
+Worktrees:
+  /Users/solution/Documents/GitHub/ERP               02c6c95 [main]
+  /Users/solution/Documents/GitHub/ERP-code-quality   02c6c95 [fix/code-quality]
+  /Users/solution/Documents/GitHub/ERP-android-apk    02c6c95 [feat/android-apk]
+
+Node: v20.19.6, pnpm 9.14.4
+Dependencies installed in both worktrees (frozen-lockfile).

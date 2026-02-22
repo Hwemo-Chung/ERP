@@ -1,0 +1,76 @@
+=== CHECKPOINT B: Wave 2 Verification ===
+Date: 2026-02-22
+Status: PASS (with 6 bugs discovered)
+
+--- T5: 기존 테스트 스위트 실행 ---
+Result: PASS
+- ✓ API (Jest): 264/264 passing
+- ✓ Web (Karma): 294/294 passing
+- ✓ Mobile (Karma): 138/138 passing
+- ✓ Total: 696/696, zero fixes needed
+Evidence: .sisyphus/evidence/task-5/
+
+--- T6: API 인증 엔드포인트 전체 테스트 ---
+Result: PASS (14/14)
+- ✓ Valid login 200 + tokens
+- ✓ Wrong password 401
+- ✓ Non-existent user 401
+- ✓ Empty body 400
+- ✓ Missing password 400
+- ✓ /auth/me with/without token 200/401
+- ✓ Invalid/malformed token 401
+- ✓ Refresh valid/invalid 200/401
+- ✓ Logout 204 (not 200, but correct REST)
+- Note: Auth endpoints use single nesting (response.data.accessToken)
+Evidence: .sisyphus/evidence/task-6/auth-api.txt
+
+--- T7: API 주문 CRUD 엔드포인트 테스트 ---
+Result: PASS (14/14)
+- ✓ Default list 200 + 2040 orders
+- ✓ Limit=5, cursor pagination working
+- ✓ Status filter (ASSIGNED: 170)
+- ✓ Branch filter (branchCode=GGN01: 72)
+- ✓ Date range filter working
+- ✓ Detail 200, 404 for non-existent
+- ✓ Stats 200 (total: 2040 > 1000 seed)
+- ✓ No auth 401
+- ✓ Installer role: 70 orders (data isolation confirmed)
+- Note: branchCode (not branchId), appointmentDateFrom/To for dates
+Evidence: .sisyphus/evidence/task-7/orders-crud.txt
+
+--- T8: API 주문 상태머신 전이 테스트 ---
+Result: PASS (code analysis + read-only API)
+- ✓ 29 transitions documented (28 planned + REQUEST_CANCEL→DISPATCHED)
+- ✓ 16 guard conditions verified in code
+- ✓ All 12 statuses exist with 170 orders each
+- ✓ Guards: serialsCaptured, appointmentDate, retryCount<3, role checks, reasonCode
+- ✓ Revert windows: 5 days completion, 15 days appointment
+Evidence: .sisyphus/evidence/task-8/state-machine.txt
+
+--- T9: API 정산/메타데이터/리포트/알림 테스트 ---
+Result: PARTIAL PASS (40/45 — 89%)
+- ✓ Settlement: 6/6 pass (no active periods in env)
+- ✓ Metadata: 9/9 pass (all endpoints working)
+- ⚠ Reports: 11/15 (4 failures)
+- ⚠ Notifications: 4/5 (1 failure)
+- ✓ Health: 3/3 pass
+- ✓ Users: 4/4 pass
+
+BUGS DISCOVERED:
+- BUG-1: GET /reports/progress (no params) → 500 (should be 400)
+- BUG-2: GET /reports/raw (no params) → 500 (should be 400)
+- BUG-3: GET /reports/install-confirmation (no orderId) → 500 (should be 400)
+- BUG-4: GET /notifications/preferences → 500 (feature broken)
+- BUG-5: GET /users exposes passwordHash field (security hygiene)
+- BUG-6: Reports export stuck in PROCESSING (worker not running on free tier)
+
+Evidence: .sisyphus/evidence/task-9/misc-api.txt, endpoint-inventory.txt
+
+--- Aggregate ---
+- ✓ task-5: "PASS" confirmed (696/696)
+- ✓ task-6: "401" cases confirmed (6 instances)
+- ✓ task-8: state machine analysis with guard documentation
+- ✓ All evidence files exist
+- ⚠ 6 bugs discovered → to be addressed in Wave 4 (T17 bug fixes)
+
+CHECKPOINT B VERDICT: PASS — Proceed to Wave 3

@@ -1,0 +1,46 @@
+CHECKPOINT D — Wave 4 Verification
+Date: 2026-02-22
+Status: PASS
+
+T15: Offline/Sync Code Analysis — COMPLETE
+  - Dexie.js schema verified (v1→v3, 4 tables)
+  - Dual sync queue architecture analyzed (SyncQueueService + BackgroundSyncService)
+  - Conflict resolution UI verified (ConflictResolverService + ConflictDialogComponent)
+  - 3 critical bugs found (undeclared Dexie tables, wrong field name, missing API endpoints)
+  - 6 design issues documented
+  - Evidence: task-15/offline-sync.txt
+
+T16: Rate Limiting & Security — COMPLETE
+  - Auth rate limit test: NOT ENFORCED (14 failed logins, zero 429s)
+  - General rate limit test: NOT ENFORCED (6 rapid /health hits, no throttle)
+  - Invalid JWT: 401 (correct)
+  - Missing auth header: 401 (correct)
+  - Expired JWT: 401 (correct)
+  - CORS evil.com: 204 with no allow-origin (browser blocks, but should be 403)
+  - CORS localhost:4200: correct allow-origin set
+  - X-Powered-By: Express header exposed
+  - Evidence: task-16/rate-limit.txt
+
+T17: Bug Fixes — COMPLETE
+  - BUG-1: reports.controller.ts — groupBy null-check → FIXED
+  - BUG-2: reports.controller.ts — type null-check → FIXED
+  - BUG-3: reports.controller.ts — orderId null-check → FIXED
+  - BUG-4: notifications.controller.ts — deviceId null-check → FIXED
+  - BUG-5: users.service.ts — passwordHash excluded from findAll() → FIXED
+  - BUG-6: export PROCESSING stuck — SKIPPED (infra issue, no worker on free tier)
+  - BUG-7: variables.scss — body.dark CSS block added → FIXED
+  - 264/264 API tests pass after fixes
+  - Zero LSP errors on all modified files
+  - Evidence: task-17/bug-fixes.txt
+
+T18: Evidence INDEX.md — COMPLETE
+  - Generated .sisyphus/evidence/INDEX.md
+  - All 17 task evidence directories indexed
+  - Bug registry, security findings, file modifications documented
+
+Verification:
+  [x] All 4 tasks (T15-T18) complete
+  [x] 264/264 API tests pass
+  [x] Zero LSP diagnostics on modified files
+  [x] Evidence files generated for all tasks
+  [x] No regressions introduced
