@@ -11,7 +11,9 @@ import { LoggerService } from './logger.service';
 export type SyncOperation = SyncQueueEntry;
 export type { BackgroundSyncTask } from '@app/core/db/database';
 
-const PRIORITY_MAP: Record<SyncOperation['type'], number> = {
+type SyncOperationType = NonNullable<SyncQueueEntry['type']>;
+
+const PRIORITY_MAP: Record<SyncOperationType, number> = {
   completion: 1,
   status_change: 2,
   waste: 3,
@@ -19,7 +21,7 @@ const PRIORITY_MAP: Record<SyncOperation['type'], number> = {
   note: 5,
 };
 
-const OPERATION_LABEL_MAP: Record<SyncOperation['type'], string> = {
+const OPERATION_LABEL_MAP: Record<SyncOperationType, string> = {
   completion: 'SYNC.OPERATION.COMPLETION',
   status_change: 'SYNC.OPERATION.STATUS_CHANGE',
   waste: 'SYNC.OPERATION.WASTE',
@@ -153,7 +155,7 @@ export class BackgroundSyncService {
       method: operation.method,
       url: operation.url,
       body: operation.body,
-      priority: PRIORITY_MAP[operation.type] || 99,
+      priority: (operation.type && PRIORITY_MAP[operation.type]) || 99,
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries: 3,
@@ -233,7 +235,7 @@ export class BackgroundSyncService {
       return;
     }
 
-    const sorted = operations.sort((a, b) => a.priority - b.priority);
+    const sorted = operations.sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
     this.logger.log(`[Sync] Processing ${sorted.length} operations`);
 
     for (const op of sorted) {
@@ -255,7 +257,7 @@ export class BackgroundSyncService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${await this.getAuthToken()}`,
       },
-      body: op.method !== 'GET' && op.method !== 'DELETE' ? JSON.stringify(op.body) : undefined,
+      body: op.method !== 'DELETE' ? JSON.stringify(op.body) : undefined,
     });
 
     if (!response.ok) {
@@ -269,11 +271,14 @@ export class BackgroundSyncService {
   private async handleOperationFailure(op: SyncOperation): Promise<void> {
     const retryCount = op.retryCount + 1;
 
-    if (retryCount >= op.maxRetries) {
+    const maxRetries = op.maxRetries ?? 3;
+
+    if (retryCount >= maxRetries) {
       await db.syncQueue.update(op.id!, { status: 'failed', lastError: 'Max retries exceeded' });
       this.logger.error(`[Sync] ✗ Max retries for ${op.type} ${op.url}. Stored for manual review.`);
 
-      const label = this.translate.instant(OPERATION_LABEL_MAP[op.type] || op.type);
+      const opType = op.type ?? 'note';
+      const label = this.translate.instant(OPERATION_LABEL_MAP[opType] || opType);
       this.uiStore.showToast(`${label} 동기화 실패. 관리자에 문의하세요.`, 'danger', 5000);
       return;
     }
@@ -281,11 +286,11 @@ export class BackgroundSyncService {
     const backoffMs = RETRY_BACKOFF_MS[Math.min(retryCount - 1, RETRY_BACKOFF_MS.length - 1)];
     await db.syncQueue.update(op.id!, {
       retryCount,
-      lastError: `Retry ${retryCount}/${op.maxRetries} in ${backoffMs}ms`,
+      lastError: `Retry ${retryCount}/${maxRetries} in ${backoffMs}ms`,
     });
 
     this.logger.log(
-      `[Sync] ⟳ Retrying ${op.type} after ${backoffMs}ms (attempt ${retryCount}/${op.maxRetries})`,
+      `[Sync] ⟳ Retrying ${op.type} after ${backoffMs}ms (attempt ${retryCount}/${maxRetries})`,
     );
 
     setTimeout(() => {
