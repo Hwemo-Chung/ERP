@@ -17,8 +17,8 @@ test.describe('Assignment Workflow', () => {
     // Login as center manager
     await loginPage.goto();
     await loginPage.loginAndExpectSuccess(
-      TEST_USERS.centerManager.username,
-      TEST_USERS.centerManager.password
+      TEST_USERS.branchManager.username,
+      TEST_USERS.branchManager.password,
     );
 
     await assignmentPage.goto();
@@ -29,7 +29,9 @@ test.describe('Assignment Workflow', () => {
       await assignmentPage.waitForLoad();
 
       // Check that orders are displayed
-      const orderCount = await page.locator('.order-card, app-order-card, ion-item.order-item').count();
+      const orderCount = await page
+        .locator('.order-card, app-order-card, ion-item.order-item')
+        .count();
       expect(orderCount).toBeGreaterThanOrEqual(0);
     });
 
@@ -42,7 +44,7 @@ test.describe('Assignment Workflow', () => {
 
       // All visible orders should have pending status
       const orderStatuses = page.locator('.order-status, ion-badge');
-      for (let i = 0; i < await orderStatuses.count(); i++) {
+      for (let i = 0; i < (await orderStatuses.count()); i++) {
         const status = await orderStatuses.nth(i).textContent();
         expect(status?.toLowerCase()).toContain('pending');
       }
@@ -167,8 +169,10 @@ test.describe('Assignment Workflow', () => {
       await assignmentPage.waitForLoad();
 
       // Find and confirm release
-      const releaseButton = page.locator('ion-button:has-text("Release"), ion-button:has-text("출고")');
-      if (await releaseButton.count() > 0) {
+      const releaseButton = page.locator(
+        'ion-button:has-text("Release"), ion-button:has-text("출고")',
+      );
+      if ((await releaseButton.count()) > 0) {
         await releaseButton.first().click();
 
         // Confirm modal

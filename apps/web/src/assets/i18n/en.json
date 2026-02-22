@@ -22,7 +22,10 @@
       "DELETE": "Delete",
       "CLOSE": "Close",
       "CONFIRM": "Confirm",
-      "MARK_RETURN": "Mark as Returned"
+      "MARK_RETURN": "Mark as Returned",
+      "EXPORT": "Export",
+      "PRINT": "Print",
+      "REFRESH": "Refresh"
     },
     "WARNING": "Warning",
     "UNIT_ITEM": " items",

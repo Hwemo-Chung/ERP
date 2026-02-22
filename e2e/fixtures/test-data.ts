@@ -4,18 +4,18 @@
 
 export const TEST_USERS = {
   admin: {
-    username: 'admin@test.com',
-    password: 'TestAdmin123!',
+    username: 'admin',
+    password: 'admin123!',
     role: 'HQ_ADMIN',
   },
-  centerManager: {
-    username: 'center@test.com',
-    password: 'TestCenter123!',
-    role: 'CENTER_MANAGER',
+  branchManager: {
+    username: 'manager01',
+    password: 'manager123!',
+    role: 'BRANCH_MANAGER',
   },
   installer: {
-    username: 'installer@test.com',
-    password: 'TestInstaller123!',
+    username: '0001',
+    password: 'test',
     role: 'INSTALLER',
   },
 } as const;
