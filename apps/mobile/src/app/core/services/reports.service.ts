@@ -1,166 +1,41 @@
-/**
- * Reports Service
- * Handles reports API calls - KPI, Progress, Export
- */
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { LoggerService } from './logger.service';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, firstValueFrom, map } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { BaseReportsService } from '@erp/shared';
+import type {
+  ProgressReport,
+  ProgressDataItem,
+  KpiSummary,
+  ProgressItem,
+  CustomerRecord,
+  CustomerOrder,
+  UnreturnedItemsResponse,
+} from '@erp/shared';
 
-export interface KpiSummary {
-  total: number;
-  completed: number;
-  pending: number;
-  inProgress: number;
-  cancelled: number;
-  completionRate: number;
-  appointmentRate: number;
-  wastePickupRate: number;
-  defectRate: number;
-}
-
-export interface ProgressItem {
-  id: string;
-  name: string;
-  total: number;
-  completed: number;
-  pending: number;
-  rate: number;
-}
-
-export interface ProgressReport {
-  items: ProgressItem[];
-  summary: KpiSummary;
-}
-
-export interface CustomerRecord {
-  id: string;
-  name: string;
-  phone: string;
-  address?: string;
-  orderCount: number;
-  lastOrderDate: string;
-  lastOrderNumber: string;
-}
-
-export interface WasteStat {
-  code: string;
-  name: string;
-  count: number;
-}
-
-interface ProgressDataItem {
-  key?: string;
-  name?: string;
-  total?: number;
-  completed?: number;
-  pending?: number;
-  completionRate?: number;
-}
-
-interface CustomerOrder {
-  id: string;
-  orderNo: string;
-  status: string;
-  appointmentDate?: string;
-  customerName?: string;
-}
-
-export interface WasteSummary {
-  totalCount: number;
-  byCategory: WasteStat[];
-  byDate?: { date: string; count: number }[];
-}
-
-export interface ExportRequest {
-  type: 'ecoas' | 'completed' | 'pending' | 'waste' | 'unreturned' | 'raw';
-  format: 'csv' | 'xlsx' | 'pdf';
-  branchCode?: string;
-  dateFrom?: string;
-  dateTo?: string;
-}
-
-export interface ExportResult {
-  id: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
-  downloadUrl?: string;
-  fileName?: string;
-  error?: string;
-}
-
-/**
- * Unreturned Item - cancelled order with pending item return
- * Manual Reference: Slide 19 (2017.10.26 v0.9)
- */
-export interface UnreturnedItem {
-  orderId: string;
-  orderNo: string;
-  customerId: string;
-  customerName: string;
-  customerPhone?: string;
-  productName?: string;
-  productCode?: string;
-  cancelledAt: string;
-  cancelReason?: string;
-  isReturned: boolean;
-  returnedAt?: string;
-  returnedBy?: string;
-  branchCode?: string;
-  branchName?: string;
-}
-
-export interface UnreturnedSummary {
-  totalCount: number;
-  unreturnedCount: number;
-  returnedCount: number;
-}
-
-export interface UnreturnedItemsResponse {
-  items: UnreturnedItem[];
-  totalCount: number;
-  unreturnedCount: number;
-  returnedCount: number;
-  byBranch: {
-    branchCode: string;
-    branchName: string;
-    unreturnedCount: number;
-    returnedCount: number;
-  }[];
-}
+export type {
+  KpiSummary,
+  ProgressItem,
+  ProgressReport,
+  ProgressDataItem,
+  CustomerRecord,
+  CustomerOrder,
+  WasteStat,
+  WasteSummary,
+  ExportRequest,
+  ExportResult,
+  BranchOption,
+  UnreturnedItem,
+  UnreturnedSummary,
+  UnreturnedItemsResponse,
+} from '@erp/shared';
 
 @Injectable({ providedIn: 'root' })
-export class ReportsService {
-  private readonly http = inject(HttpClient);
+export class ReportsService extends BaseReportsService {
   private readonly logger = inject(LoggerService);
-  private readonly baseUrl = `${environment.apiUrl}/reports`;
 
-  // Local cache
-  private readonly _kpiSummary = signal<KpiSummary | null>(null);
-  readonly kpiSummary = this._kpiSummary.asReadonly();
-
-  /**
-   * Get KPI Summary
-   */
-  getSummary(options: {
-    level: 'nation' | 'branch' | 'installer';
-    branchCode?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  }): Observable<KpiSummary> {
-    let params = new HttpParams().set('level', options.level);
-    if (options.branchCode) params = params.set('branchCode', options.branchCode);
-    if (options.dateFrom) params = params.set('dateFrom', options.dateFrom);
-    if (options.dateTo) params = params.set('dateTo', options.dateTo);
-
-    return this.http.get<KpiSummary>(`${this.baseUrl}/summary`, { params });
-  }
-
-  /**
-   * Get Progress Report
-   * Transforms raw Prisma groupBy results into ProgressReport structure
-   */
-  getProgress(options: {
+  override getProgress(options: {
     groupBy: 'branch' | 'installer' | 'status' | 'date';
     branchCode?: string;
     dateFrom?: string;
@@ -171,7 +46,6 @@ export class ReportsService {
     if (options.dateFrom) params = params.set('dateFrom', options.dateFrom);
     if (options.dateTo) params = params.set('dateTo', options.dateTo);
 
-    // API returns raw Prisma groupBy results, transform to ProgressReport
     return this.http.get<ProgressDataItem[]>(`${this.baseUrl}/progress`, { params }).pipe(
       map((data) => {
         this.logger.log('[ReportsService] Raw API data:', {
@@ -185,15 +59,10 @@ export class ReportsService {
     );
   }
 
-  /**
-   * Transform API progress response to ProgressReport structure
-   * API now returns pre-computed stats: { key, name, total, completed, pending, completionRate }
-   */
   private transformProgressData(
     data: ProgressDataItem[],
     _groupBy: 'branch' | 'installer' | 'status' | 'date',
   ): ProgressReport {
-    // API already provides all needed fields - simple mapping
     const items: ProgressItem[] = data.map((item) => ({
       id: item.key || '',
       name: item.name || item.key || 'Unknown',
@@ -203,7 +72,6 @@ export class ReportsService {
       rate: item.completionRate || 0,
     }));
 
-    // Calculate summary from items
     const summary: KpiSummary = {
       total: items.reduce((sum, i) => sum + i.total, 0),
       completed: items.reduce((sum, i) => sum + i.completed, 0),
@@ -221,67 +89,15 @@ export class ReportsService {
     return { items, summary };
   }
 
-  /**
-   * Search customer history
-   */
-  searchCustomers(query: string, limit = 50): Observable<{ data: CustomerRecord[] }> {
-    const params = new HttpParams().set('q', query).set('limit', String(limit));
-    return this.http.get<{ data: CustomerRecord[] }>(`${this.baseUrl}/customers`, { params });
-  }
-
-  /**
-   * Get customer detail with order history
-   */
-  getCustomerDetail(customerId: string): Observable<CustomerRecord & { orders: CustomerOrder[] }> {
+  override getCustomerDetail(
+    customerId: string,
+  ): Observable<CustomerRecord & { orders: CustomerOrder[] }> {
     return this.http.get<CustomerRecord & { orders: CustomerOrder[] }>(
       `${this.baseUrl}/customers/${customerId}`,
     );
   }
 
-  /**
-   * Get waste summary
-   */
-  getWasteSummary(options: {
-    branchCode?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  }): Observable<WasteSummary> {
-    let params = new HttpParams();
-    if (options.branchCode) params = params.set('branchCode', options.branchCode);
-    if (options.dateFrom) params = params.set('dateFrom', options.dateFrom);
-    if (options.dateTo) params = params.set('dateTo', options.dateTo);
-
-    return this.http.get<WasteSummary>(`${this.baseUrl}/waste-summary`, { params });
-  }
-
-  /**
-   * Request export
-   */
-  async requestExport(request: ExportRequest): Promise<ExportResult> {
-    return firstValueFrom(this.http.post<ExportResult>(`${this.baseUrl}/raw`, request));
-  }
-
-  /**
-   * Check export status
-   */
-  getExportStatus(exportId: string): Observable<ExportResult> {
-    return this.http.get<ExportResult>(`${this.baseUrl}/export/${exportId}`);
-  }
-
-  /**
-   * Download export file (returns blob)
-   */
-  downloadExport(exportId: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/export/${exportId}/download`, {
-      responseType: 'blob',
-    });
-  }
-
-  /**
-   * Get unreturned items (미환입 현황)
-   * Manual Reference: Slide 19 (2017.10.26 v0.9)
-   */
-  getUnreturnedItems(options: {
+  override getUnreturnedItems(options: {
     branchCode?: string;
     dateFrom?: string;
     dateTo?: string;
@@ -296,10 +112,7 @@ export class ReportsService {
     return this.http.get<UnreturnedItemsResponse>(`${this.baseUrl}/unreturned`, { params });
   }
 
-  /**
-   * Mark a cancelled order item as returned (환입 처리)
-   */
-  markItemAsReturned(orderId: string): Observable<{ success: boolean; message: string }> {
+  override markItemAsReturned(orderId: string): Observable<{ success: boolean; message: string }> {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.baseUrl}/unreturned/${orderId}/return`,
       {},
