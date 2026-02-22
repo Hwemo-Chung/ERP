@@ -1,5 +1,24 @@
-import { Controller, Get, Post, Query, Param, UseGuards, HttpCode, HttpStatus, Res, StreamableFile } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse, ApiProduces } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Res,
+  StreamableFile,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiResponse,
+  ApiProduces,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -54,13 +73,16 @@ export class ReportsController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
+    if (!groupBy) {
+      throw new BadRequestException('groupBy query parameter is required');
+    }
     return this.reportsService.getProgress({ groupBy, branchCode, dateFrom, dateTo });
   }
 
   @Get('waste-summary')
   @ApiOperation({
     summary: 'Get waste pickup summary',
-    description: 'Returns aggregated waste pickup data by waste code'
+    description: 'Returns aggregated waste pickup data by waste code',
   })
   @ApiQuery({ name: 'branchCode', required: false })
   @ApiQuery({ name: 'dateFrom', required: false })
@@ -88,7 +110,7 @@ export class ReportsController {
   @Get('customer-history')
   @ApiOperation({
     summary: 'Search customer order history',
-    description: 'Search order history by customer name, phone, or vendor code'
+    description: 'Search order history by customer name, phone, or vendor code',
   })
   @ApiQuery({ name: 'customer', required: false, description: 'Customer name or phone to search' })
   @ApiQuery({ name: 'vendorCode', required: false })
@@ -119,7 +141,7 @@ export class ReportsController {
   @Get('release-summary')
   @ApiOperation({
     summary: 'Get release summary by FDC',
-    description: 'Returns release counts grouped by FDC/installer'
+    description: 'Returns release counts grouped by FDC/installer',
   })
   @ApiQuery({ name: 'branchCode', required: false })
   @ApiQuery({ name: 'dateFrom', required: false })
@@ -155,11 +177,10 @@ export class ReportsController {
     @Query('dateTo') dateTo: string,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.reportsService.generateExport(
-      type,
-      { branchCode, dateFrom, dateTo },
-      user.sub,
-    );
+    if (!type) {
+      throw new BadRequestException('type query parameter is required');
+    }
+    return this.reportsService.generateExport(type, { branchCode, dateFrom, dateTo }, user.sub);
   }
 
   @Get('export/:exportId')
@@ -194,7 +215,7 @@ export class ReportsController {
   @Get('install-confirmation')
   @ApiOperation({
     summary: 'Generate installation confirmation report (PDF)',
-    description: 'Generate a PDF installation confirmation certificate for a specific order'
+    description: 'Generate a PDF installation confirmation certificate for a specific order',
   })
   @ApiQuery({ name: 'orderId', required: true })
   @ApiResponse({
@@ -210,10 +231,10 @@ export class ReportsController {
       },
     },
   })
-  generateInstallConfirmation(
-    @Query('orderId') orderId: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  generateInstallConfirmation(@Query('orderId') orderId: string, @CurrentUser() user: JwtPayload) {
+    if (!orderId) {
+      throw new BadRequestException('orderId query parameter is required');
+    }
     return this.reportsService.generateInstallConfirmation(orderId, user.sub);
   }
 
@@ -225,12 +246,26 @@ export class ReportsController {
   @Get('unreturned')
   @ApiOperation({
     summary: 'Get unreturned items list (미환입 현황)',
-    description: 'Get list of cancelled orders with pending item returns. Supports filtering by date range, branch, and return status.'
+    description:
+      'Get list of cancelled orders with pending item returns. Supports filtering by date range, branch, and return status.',
   })
   @ApiQuery({ name: 'branchCode', required: false, description: 'Filter by branch code' })
-  @ApiQuery({ name: 'dateFrom', required: false, description: 'Start date for cancellation date filter (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'dateTo', required: false, description: 'End date for cancellation date filter (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'returnStatus', required: false, enum: ['all', 'returned', 'unreturned'], description: 'Filter by return status' })
+  @ApiQuery({
+    name: 'dateFrom',
+    required: false,
+    description: 'Start date for cancellation date filter (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'dateTo',
+    required: false,
+    description: 'End date for cancellation date filter (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'returnStatus',
+    required: false,
+    enum: ['all', 'returned', 'unreturned'],
+    description: 'Filter by return status',
+  })
   @ApiResponse({
     status: 200,
     description: 'Unreturned items list with summary',
@@ -297,7 +332,8 @@ export class ReportsController {
   @Roles(Role.HQ_ADMIN, Role.BRANCH_MANAGER)
   @ApiOperation({
     summary: 'Mark cancelled order item as returned (환입 처리)',
-    description: 'Mark a cancelled order item as returned. Only HQ_ADMIN and BRANCH_MANAGER can perform this action.'
+    description:
+      'Mark a cancelled order item as returned. Only HQ_ADMIN and BRANCH_MANAGER can perform this action.',
   })
   @ApiResponse({
     status: 200,
@@ -311,10 +347,7 @@ export class ReportsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Cancellation record not found' })
-  markItemAsReturned(
-    @Param('orderId') orderId: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  markItemAsReturned(@Param('orderId') orderId: string, @CurrentUser() user: JwtPayload) {
     return this.reportsService.markItemAsReturned(orderId, user.sub);
   }
 }

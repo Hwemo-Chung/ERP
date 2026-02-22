@@ -58,7 +58,17 @@ export class UsersService {
   async findAll(branchId?: string) {
     return this.prisma.user.findMany({
       where: branchId ? { branchId } : undefined,
-      include: {
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        email: true,
+        locale: true,
+        isActive: true,
+        branchId: true,
+        partnerId: true,
+        createdAt: true,
+        updatedAt: true,
         roles: true,
         branch: true,
       },
