@@ -1,18 +1,18 @@
-# vive-md 프로젝트 가이드
+# vive-md Project Guide
 
-## 프로젝트 개요
-바이브코딩용 개발 가이드 & 워터폴 산출물 템플릿 프로젝트. Claude Code가 각 기술 스택에 맞게 바로 코딩하거나, 워터폴 방법론에 따른 산출물을 생성할 수 있도록 상세한 가이드를 제공한다.
+## Project Overview
+Development guide and waterfall deliverable template project for vibe coding. It provides detailed guidance so Claude Code can code directly for each technology stack or generate deliverables according to the waterfall methodology.
 
-## 구조
+## Structure
 ```
 templates/
-├── spring-boot/Spring-Boot-개발가이드.md     # Spring Boot 3.x (3000줄+)
-├── vue/Vue3-개발가이드.md                     # Vue 3 + TypeScript (3000줄+)
-├── react/React-개발가이드.md                  # React 18+ + TypeScript (3000줄+)
-├── nextjs/NextJS-개발가이드.md                # Next.js 14+ App Router (2600줄+)
-├── design-system/디자인시스템-가이드.md        # UI/UX, 접근성, 다크모드 (2500줄+)
-├── security/보안-가이드.md                     # OWASP, 인증/인가, API 보안 (2900줄+)
-└── waterfall/                                  # 워터폴 방법론 산출물 템플릿
+├── spring-boot/Spring-Boot-개발가이드.md     # Spring Boot 3.x (3000+ lines)
+├── vue/Vue3-개발가이드.md                     # Vue 3 + TypeScript (3000+ lines)
+├── react/React-개발가이드.md                  # React 18+ + TypeScript (3000+ lines)
+├── nextjs/NextJS-개발가이드.md                # Next.js 14+ App Router (2600+ lines)
+├── design-system/디자인시스템-가이드.md        # UI/UX, accessibility, dark mode (2500+ lines)
+├── security/보안-가이드.md                     # OWASP, authentication/authorization, API security (2900+ lines)
+└── waterfall/                                       # Waterfall methodology deliverable templates
     ├── 01-요구사항분석/
     │   ├── 요구사항명세서-SRS.md
     │   ├── 유스케이스명세서.md
@@ -39,31 +39,31 @@ templates/
         └── 프로젝트관리-산출물.md
 ```
 
-## 문서 카테고리
+## Document Categories
 
-### 기술 스택 가이드 (6개)
-개발 가이드 문서. 프로젝트에 복사하면 Claude Code가 보안/생산성/성능 모범 사례를 적용.
-- 각 문서 2500~3200줄 분량
-- 6개 섹션: 프로젝트 개요, 코딩 컨벤션, 보안 필수사항, 생산성 가이드, 성능 최적화, Gotchas
+### Technology Stack Guides (6)
+Development guide documents. When copied into a project, Claude Code applies best practices for security, productivity, and performance.
+- Each document is 2500-3200 lines.
+- 6 sections: project overview, coding conventions, security requirements, productivity guide, performance optimization, and gotchas.
 
-### 워터폴 산출물 템플릿 (14개+)
-워터폴 방법론 각 단계별 산출물의 표준 템플릿. Claude Code에게 "SRS 작성해줘" 요청 시 해당 템플릿 기반으로 산출물 생성.
-- [placeholder] 표시로 프로젝트별 내용을 채울 위치 명시
-- Mermaid 다이어그램 포함 (flowchart, sequenceDiagram, erDiagram, classDiagram, gantt)
+### Waterfall Deliverable Templates (14+)
+Standard templates for deliverables at each waterfall phase. When asked to "write an SRS", Claude Code generates the deliverable from the matching template.
+- `[placeholder]` markers identify where project-specific content should be filled in.
+- Includes Mermaid diagrams: flowchart, sequenceDiagram, erDiagram, classDiagram, and gantt.
 
-### 검토 문서 (3개)
-단계별 검토 체크리스트, UX 검토서, 프로젝트 관리 산출물.
-- 닐슨의 10가지 휴리스틱 평가
-- WCAG 2.1 AA 접근성 체크리스트
-- 위험 관리, WBS, 변경 관리
+### Review Documents (3)
+Phase review checklist, UX review document, and project management deliverables.
+- Nielsen's 10 usability heuristics evaluation.
+- WCAG 2.1 AA accessibility checklist.
+- Risk management, WBS, and change management.
 
-## 작성 원칙
-- 한국어로 작성, 기술 용어는 영어 유지
-- 마크다운 형식, `##` / `###` / `####`로 섹션 구분
-- 코드 예시는 실무에서 바로 복사해서 쓸 수 있는 완전한 형태
-- 각 스택 고유의 패턴에 집중 (일반적인 소프트웨어 상식은 생략)
+## Writing Principles
+- Write in Korean and keep technical terms in English.
+- Use Markdown, with sections divided by `##`, `###`, and `####`.
+- Code examples should be complete enough to copy directly into real work.
+- Focus on patterns specific to each stack; omit generic software knowledge.
 
-## 새 템플릿 추가 시
-1. `templates/{category}/` 디렉토리 생성
-2. 의미 있는 한국어 파일명으로 `.md` 작성
-3. `README.md`의 지원 템플릿 테이블에 추가
+## When Adding a New Template
+1. Create a `templates/{category}/` directory.
+2. Write an `.md` file with a meaningful Korean filename; preserve existing filename/path literals when referencing them.
+3. Add it to the supported templates table in `README.md`.
