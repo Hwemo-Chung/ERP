@@ -2,6 +2,8 @@ import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
+import { TransactionImportService } from './transaction-import.service';
+import { StatementExportService } from '../settlement-fees/statement-export.service';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 describe('TransactionsController', () => {
@@ -10,7 +12,11 @@ describe('TransactionsController', () => {
 
   beforeEach(() => {
     service = { findAll: jest.fn().mockResolvedValue({ data: [], totalCount: 0 }), create: jest.fn() };
-    controller = new TransactionsController(service as unknown as TransactionsService);
+    controller = new TransactionsController(
+      service as unknown as TransactionsService,
+      {} as unknown as TransactionImportService,
+      {} as unknown as StatementExportService,
+    );
   });
 
   it('forces scope.partnerId to the coordinator own partnerId, ignoring the query param', async () => {

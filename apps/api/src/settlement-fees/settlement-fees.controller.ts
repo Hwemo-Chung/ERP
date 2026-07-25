@@ -1,12 +1,25 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { SettlementFeesService } from './settlement-fees.service';
+import { StatementExportService } from './statement-export.service';
 import { YearMonthDto } from './dto/year-month.dto';
 import { GetStatementDto } from './dto/get-statement.dto';
 
@@ -15,7 +28,10 @@ import { GetStatementDto } from './dto/get-statement.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('settlement-fees')
 export class SettlementFeesController {
-  constructor(private readonly service: SettlementFeesService) {}
+  constructor(
+    private readonly service: SettlementFeesService,
+    private readonly statementExport: StatementExportService,
+  ) {}
 
   private scopeFor(user: JwtPayload): { partnerId?: string } {
     if (user.roles.includes(Role.PARTNER_COORDINATOR)) {
@@ -49,5 +65,21 @@ export class SettlementFeesController {
   @Roles(Role.HQ_ADMIN, Role.PARTNER_COORDINATOR)
   statement(@Query() q: GetStatementDto, @CurrentUser() user: JwtPayload) {
     return this.service.getStatement(q.partnerId, q.yearMonth, this.scopeFor(user));
+  }
+
+  @Get('statement/download')
+  @Roles(Role.HQ_ADMIN, Role.PARTNER_COORDINATOR)
+  async downloadStatement(
+    @Query() q: GetStatementDto,
+    @CurrentUser() user: JwtPayload,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const buffer = await this.statementExport.buildStatementXlsx(q.partnerId, q.yearMonth, this.scopeFor(user));
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="statement-${q.partnerId}-${q.yearMonth}.xlsx"`,
+      'Content-Length': buffer.length,
+    });
+    return new StreamableFile(buffer);
   }
 }
