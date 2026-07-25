@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@core/guards/auth.guard';
 import { noAuthGuard } from '@core/guards/no-auth.guard';
+import { roleGuard } from '@core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -17,6 +18,12 @@ export const routes: Routes = [
     path: 'tabs',
     canActivate: [authGuard],
     loadChildren: () => import('./features/tabs/tabs.routes').then(m => m.TABS_ROUTES),
+  },
+  {
+    path: 'master-data',
+    canActivate: [authGuard, roleGuard('HQ_ADMIN')],
+    loadChildren: () =>
+      import('./features/master-data/master-data.routes').then(m => m.MASTER_DATA_ROUTES),
   },
   {
     path: '**',

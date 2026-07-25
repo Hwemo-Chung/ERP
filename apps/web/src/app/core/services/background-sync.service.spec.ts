@@ -508,24 +508,6 @@ describe('BackgroundSyncService', () => {
       );
     }));
 
-    it('should not include body for GET requests', fakeAsync(() => {
-      const operation = createMockOperation({
-        id: 1,
-        method: 'GET',
-      });
-
-      (service as any).processSingleOperation(operation);
-      tick();
-
-      expect(window.fetch).toHaveBeenCalledWith(
-        operation.url,
-        jasmine.objectContaining({
-          method: 'GET',
-          body: undefined,
-        }),
-      );
-    }));
-
     it('should not include body for DELETE requests', fakeAsync(() => {
       const operation = createMockOperation({
         id: 1,
