@@ -69,7 +69,7 @@ describe('sample excel data (docs/samples) — 이관 리허설', () => {
       partnersMock.create.mockResolvedValue({ id: 'x' });
       const result = await service.commitPartners(validRows, {
         contractType: 'PALLET_DAILY', palletDailyRate: '1000', startDate: '2026-07-01',
-      } as any);
+      });
       expect(result.created).toBe(8);
       expect(result.failed).toHaveLength(0);
       expect(partnersMock.create).toHaveBeenCalledTimes(8);
