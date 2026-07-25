@@ -279,6 +279,34 @@ async function main() {
   }
   console.log(`✅ Created ${partners.length} partners (Korean names)`);
 
+  // Create 2 PARTNER_COORDINATOR accounts (data-isolation e2e: partner-a / partner-b)
+  const partnerCoordPassword = await argon2.hash('test1234');
+  const partnerCoordAccounts = [
+    { username: 'partner-a', fullName: '한국전자서비스 담당자', partner: partners[0] },
+    { username: 'partner-b', fullName: '대한설치 담당자', partner: partners[1] },
+  ];
+  for (const acc of partnerCoordAccounts) {
+    const user = await prisma.user.upsert({
+      where: { username: acc.username },
+      update: { partnerId: acc.partner.id },
+      create: {
+        username: acc.username,
+        passwordHash: partnerCoordPassword,
+        fullName: acc.fullName,
+        email: `${acc.username}@erp-logistics.com`,
+        locale: 'ko',
+        partnerId: acc.partner.id,
+        isActive: true,
+      },
+    });
+    await prisma.userRole.upsert({
+      where: { userId_role: { userId: user.id, role: Role.PARTNER_COORDINATOR } },
+      update: {},
+      create: { userId: user.id, role: Role.PARTNER_COORDINATOR },
+    });
+  }
+  console.log(`✅ Created ${partnerCoordAccounts.length} partner coordinator accounts (partner-a, partner-b / password: test1234)`);
+
   // Create 50 Installers with Korean names
   const installers = [];
   for (let i = 1; i <= 50; i++) {

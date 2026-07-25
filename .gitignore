@@ -141,6 +141,7 @@ htmlcov/
 test-results/
 test-reports/
 junit.xml
+playwright-report/
 
 # ==========================================
 # 🗄️ DATABASE

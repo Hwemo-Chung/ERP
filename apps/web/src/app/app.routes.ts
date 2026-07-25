@@ -38,6 +38,12 @@ export const routes: Routes = [
       import('./features/settlement-fees/settlement-fees.routes').then(m => m.SETTLEMENT_FEES_ROUTES),
   },
   {
+    path: 'portal',
+    canActivate: [authGuard, roleGuard('PARTNER_COORDINATOR')],
+    loadChildren: () =>
+      import('./features/partner-portal/partner-portal.routes').then(m => m.PARTNER_PORTAL_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: 'tabs',
   },

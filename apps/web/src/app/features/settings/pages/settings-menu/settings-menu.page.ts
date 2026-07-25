@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonIcon, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline } from 'ionicons/icons';
+import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline, storefrontOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -115,6 +115,19 @@ import { AuthService } from '../../../../core/services/auth.service';
               <div class="card-content">
                 <h3>정산 관리</h3>
                 <p>대시보드 / 월 마감 / 정산서 / 상세 내역</p>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+            </a>
+          }
+
+          @if (isPartnerCoordinator()) {
+            <a class="menu-card" [routerLink]="['/portal']">
+              <div class="card-icon success">
+                <ion-icon name="storefront-outline"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>거래처 포털</h3>
+                <p>내 물량 / 내 정산서 조회</p>
               </div>
               <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
             </a>
@@ -319,7 +332,7 @@ export class SettingsMenuPage {
   private readonly translateService = inject(TranslateService);
 
   constructor() {
-    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline });
+    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline, storefrontOutline });
   }
 
   /** 마스터데이터 메뉴 노출 여부 (HQ_ADMIN 전용) */
@@ -330,6 +343,11 @@ export class SettingsMenuPage {
   /** 입출고 실적 메뉴 노출 여부 (HQ_ADMIN 또는 WAREHOUSE_STAFF) */
   canManageWarehouse() {
     return this.authService.hasAnyRole(['HQ_ADMIN', 'WAREHOUSE_STAFF']);
+  }
+
+  /** 거래처 포털 메뉴 노출 여부 (PARTNER_COORDINATOR 전용) */
+  isPartnerCoordinator() {
+    return this.authService.hasAnyRole(['PARTNER_COORDINATOR']);
   }
 
   /**

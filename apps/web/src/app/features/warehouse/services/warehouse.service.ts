@@ -80,4 +80,23 @@ export class WarehouseService {
   importCommit(rows: object[]): Promise<ImportCommitResult> {
     return firstValueFrom(this.http.post<ImportCommitResult>(`${this.base}/import/commit`, { rows }));
   }
+
+  // ponytail: blob-download mirrors SettlementFeesService.downloadStatement's pattern
+  // (createObjectURL -> anchor click -> revokeObjectURL). partnerId is optional here —
+  // the server force-scopes it to the caller's own partnerId for PARTNER_COORDINATOR
+  // regardless of what's sent (transactions.controller.ts downloadShipmentList), so a
+  // partner-portal caller can omit it; HQ_ADMIN/WAREHOUSE_STAFF callers must pass one
+  // (server 400s E4001 otherwise).
+  downloadShipmentList(q: { partnerId?: string; dateFrom?: string; dateTo?: string }): void {
+    this.http
+      .get(`${this.base}/shipment-list/download`, { params: toParams(q), responseType: 'blob' })
+      .subscribe((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `shipment-list-${q.partnerId ?? 'export'}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+  }
 }

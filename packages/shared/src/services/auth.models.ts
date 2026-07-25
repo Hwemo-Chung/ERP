@@ -11,6 +11,8 @@ export interface User {
   branchCode: string;
   branchName?: string;
   locale: string;
+  /** Partner UUID for PARTNER_COORDINATOR data isolation (undefined for non-partner roles) */
+  partnerId?: string;
 }
 
 export interface AuthTokens {

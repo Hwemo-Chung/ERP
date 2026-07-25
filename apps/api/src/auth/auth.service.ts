@@ -62,6 +62,7 @@ export class AuthService {
         roles,
         branchCode: user.branch?.code,
         locale: user.locale,
+        partnerId: user.partnerId ?? undefined,
       },
     };
   }
@@ -95,6 +96,7 @@ export class AuthService {
         roles,
         branchCode: user.branch?.code,
         locale: user.locale,
+        partnerId: user.partnerId ?? undefined,
       },
     };
   }

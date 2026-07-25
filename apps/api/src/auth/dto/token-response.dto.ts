@@ -19,6 +19,9 @@ export class UserInfoDto {
 
   @ApiProperty()
   locale!: string;
+
+  @ApiProperty({ required: false, description: 'Partner UUID for PARTNER_COORDINATOR data isolation' })
+  partnerId?: string;
 }
 
 export class TokenResponseDto {
