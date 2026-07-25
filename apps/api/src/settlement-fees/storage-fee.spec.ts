@@ -19,6 +19,18 @@ describe('buildDailyStock', () => {
     const stock = buildDailyStock([], new Map([['p1', 50]]), 2026, 7);
     expect(stock.get('p1')![0]).toBe(50);
   });
+
+  it('ignores transactions outside the target year/month', () => {
+    const txs = [
+      { productId: 'p1', type: 'INBOUND' as const, quantity: 100, transactionDate: new Date('2026-07-05') },
+      // August tx must not leak into July's reconstructed stock via getUTCDate() day-of-month collision
+      { productId: 'p1', type: 'INBOUND' as const, quantity: 999, transactionDate: new Date('2026-08-05') },
+    ];
+    const stock = buildDailyStock(txs, new Map(), 2026, 7);
+    const days = stock.get('p1')!;
+    expect(days[4]).toBe(100);  // 7/5 only — not 1099
+    expect(days[30]).toBe(100); // 7/31 unaffected by August tx
+  });
 });
 
 describe('calcStorageFeePalletDaily', () => {
@@ -41,7 +53,15 @@ describe('calcStorageFeePalletDaily', () => {
     const products = new Map([['p1', { maxUnitsPerPallet: null, palletThreshold: null }]]);
     const r = calcStorageFeePalletDaily(dailyStock, products, 70, '1000');
     expect(r.amount).toBe('0');
-    expect((r.detail as any).skippedProducts).toEqual(['p1']);
+    expect(r.detail.skippedProducts).toEqual(['p1']);
+  });
+
+  it('records negative-stock (over-outbound) products without billing them', () => {
+    const dailyStock = new Map([['p1', [-10, 50]]]); // day 1 over-outbound, day 2 under threshold
+    const products = new Map([['p1', { maxUnitsPerPallet: 100, palletThreshold: null }]]);
+    const r = calcStorageFeePalletDaily(dailyStock, products, 70, '1000');
+    expect(r.amount).toBe('0');
+    expect(r.detail.negativeStockProducts).toEqual(['p1']);
   });
 });
 
