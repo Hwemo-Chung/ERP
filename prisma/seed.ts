@@ -280,10 +280,14 @@ async function main() {
   console.log(`✅ Created ${partners.length} partners (Korean names)`);
 
   // Create 2 PARTNER_COORDINATOR accounts (data-isolation e2e: partner-a / partner-b)
+  // ponytail: partners[1]/[2], not [0] — partners[0] is seeded inactive
+  // (`isActive: i % 10 !== 0` above makes index 0 the one inactive partner in every
+  // batch of 10), which would make these fixture accounts an edge case, not the
+  // ordinary case the e2e spec is meant to exercise.
   const partnerCoordPassword = await argon2.hash('test1234');
   const partnerCoordAccounts = [
-    { username: 'partner-a', fullName: '한국전자서비스 담당자', partner: partners[0] },
-    { username: 'partner-b', fullName: '대한설치 담당자', partner: partners[1] },
+    { username: 'partner-a', fullName: '대한설치 담당자', partner: partners[1] },
+    { username: 'partner-b', fullName: '우리홈서비스 담당자', partner: partners[2] },
   ];
   for (const acc of partnerCoordAccounts) {
     const user = await prisma.user.upsert({
