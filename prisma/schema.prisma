@@ -16,18 +16,18 @@ datasource db {
 // ============================================
 
 enum OrderStatus {
-  UNASSIGNED      @map("미배정")
-  ASSIGNED        @map("배정")
-  CONFIRMED       @map("배정확정")
-  RELEASED        @map("출고확정")
-  DISPATCHED      @map("출문")
-  POSTPONED       @map("연기")
-  ABSENT          @map("부재")
-  COMPLETED       @map("인수")
-  PARTIAL         @map("부분인수")
-  COLLECTED       @map("회수")
-  CANCELLED       @map("취소")
-  REQUEST_CANCEL  @map("의뢰취소")
+  UNASSIGNED     @map("미배정")
+  ASSIGNED       @map("배정")
+  CONFIRMED      @map("배정확정")
+  RELEASED       @map("출고확정")
+  DISPATCHED     @map("출문")
+  POSTPONED      @map("연기")
+  ABSENT         @map("부재")
+  COMPLETED      @map("인수")
+  PARTIAL        @map("부분인수")
+  COLLECTED      @map("회수")
+  CANCELLED      @map("취소")
+  REQUEST_CANCEL @map("의뢰취소")
 }
 
 enum Role {
@@ -35,6 +35,7 @@ enum Role {
   BRANCH_MANAGER
   PARTNER_COORDINATOR
   INSTALLER
+  WAREHOUSE_STAFF
 }
 
 enum SettlementStatus {
@@ -104,8 +105,8 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  branch  Branch?  @relation(fields: [branchId], references: [id])
-  partner Partner? @relation(fields: [partnerId], references: [id])
+  branch  Branch?    @relation(fields: [branchId], references: [id])
+  partner Partner?   @relation(fields: [partnerId], references: [id])
   roles   UserRole[]
 
   // Reverse relations
@@ -118,12 +119,12 @@ model User {
   auditLogs           AuditLog[]
   offlineSyncQueue    OfflineSyncQueue[]
   attachments         Attachment[]
-  settlementLocks     SettlementPeriod[]   @relation("LockedBy")
-  settlementUnlocks   SettlementPeriod[]   @relation("UnlockedBy")
+  settlementLocks     SettlementPeriod[]         @relation("LockedBy")
+  settlementUnlocks   SettlementPeriod[]         @relation("UnlockedBy")
   notificationSubs    NotificationSubscription[]
-  orderEventsCreated  OrderEvent[]         @relation("OrderEventCreatedBy")
-  cancellationRecords CancellationRecord[] @relation("CancellationRecordCancelledBy")
-  returnRecords       CancellationRecord[] @relation("CancellationRecordReturnedBy")
+  orderEventsCreated  OrderEvent[]               @relation("OrderEventCreatedBy")
+  cancellationRecords CancellationRecord[]       @relation("CancellationRecordCancelledBy")
+  returnRecords       CancellationRecord[]       @relation("CancellationRecordReturnedBy")
 
   @@map("users")
 }
@@ -164,23 +165,35 @@ model Partner {
   email       String? @db.VarChar(120)
   isActive    Boolean @default(true) @map("is_active")
 
+  businessRegistrationNo String?  @unique @map("business_registration_no") @db.VarChar(10)
+  representativeName     String?  @map("representative_name") @db.VarChar(80)
+  businessType           String?  @map("business_type") @db.VarChar(80)
+  businessCategory       String?  @map("business_category") @db.VarChar(80)
+  address                String?  @db.VarChar(300)
+  defaultTransportRate   Decimal? @map("default_transport_rate") @db.Decimal(14, 2)
+  createdAt              DateTime @default(now()) @map("created_at")
+
   // Relations
-  users      User[]
-  installers Installer[]
-  orders     Order[]
+  users             User[]
+  installers        Installer[]
+  orders            Order[]
+  products          Product[]
+  storageContracts  StorageContract[]
+  transactions      WarehouseTransaction[]
+  settlementRecords SettlementRecord[]
 
   @@map("partners")
 }
 
 model Installer {
-  id            String   @id @default(uuid())
-  partnerId     String   @map("partner_id")
-  branchId      String   @map("branch_id")
-  name          String   @db.VarChar(120)
-  phone         String   @db.VarChar(30)
-  skillTags     String[] @map("skill_tags")
-  capacityPerDay Int     @default(10) @map("capacity_per_day")
-  isActive      Boolean  @default(true) @map("is_active")
+  id             String   @id @default(uuid())
+  partnerId      String   @map("partner_id")
+  branchId       String   @map("branch_id")
+  name           String   @db.VarChar(120)
+  phone          String   @db.VarChar(30)
+  skillTags      String[] @map("skill_tags")
+  capacityPerDay Int      @default(10) @map("capacity_per_day")
+  isActive       Boolean  @default(true) @map("is_active")
 
   // Relations
   partner      Partner       @relation(fields: [partnerId], references: [id])
@@ -201,7 +214,7 @@ model Order {
   orderNo               String      @unique @map("order_no") @db.VarChar(30)
   customerName          String      @map("customer_name") @db.VarChar(120)
   customerPhone         String      @map("customer_phone") @db.VarChar(30)
-  address               Json        // {line1, line2, city, postal}
+  address               Json // {line1, line2, city, postal}
   vendor                String      @db.VarChar(80)
   branchId              String      @map("branch_id")
   partnerId             String?     @map("partner_id")
@@ -224,15 +237,15 @@ model Order {
   installer Installer? @relation(fields: [installerId], references: [id])
 
   // Reverse relations
-  lines          OrderLine[]
-  statusHistory  OrderStatusHistory[]
-  appointments   Appointment[]
-  parentSplits   SplitOrder[]         @relation("ParentOrder")
-  childSplits    SplitOrder[]         @relation("ChildOrder")
-  wastePickups   WastePickup[]
-  notifications  Notification[]
-  attachments    Attachment[]
-  events         OrderEvent[]
+  lines              OrderLine[]
+  statusHistory      OrderStatusHistory[]
+  appointments       Appointment[]
+  parentSplits       SplitOrder[]         @relation("ParentOrder")
+  childSplits        SplitOrder[]         @relation("ChildOrder")
+  wastePickups       WastePickup[]
+  notifications      Notification[]
+  attachments        Attachment[]
+  events             OrderEvent[]
   cancellationRecord CancellationRecord?
 
   @@index([branchId, status, appointmentDate])
@@ -245,7 +258,7 @@ model OrderEvent {
   id        String   @id @default(uuid())
   orderId   String   @map("order_id")
   eventType String   @map("event_type") @db.VarChar(30) // REMARK, NOTE, ISSUE, etc.
-  note      String   // Special notes/remarks (특이사항)
+  note      String // Special notes/remarks (특이사항)
   createdBy String   @map("created_by")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -270,14 +283,14 @@ model CancellationRecord {
   refundProcessed Boolean  @default(false) @map("refund_processed")
 
   // Return tracking (환입 추적) - Manual Slide 19
-  isReturned      Boolean  @default(false) @map("is_returned")
-  returnedAt      DateTime? @map("returned_at")
-  returnedBy      String?  @map("returned_by")
+  isReturned Boolean   @default(false) @map("is_returned")
+  returnedAt DateTime? @map("returned_at")
+  returnedBy String?   @map("returned_by")
 
   // Relations
-  order       Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user        User  @relation("CancellationRecordCancelledBy", fields: [cancelledBy], references: [id])
-  returnUser  User? @relation("CancellationRecordReturnedBy", fields: [returnedBy], references: [id])
+  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user       User  @relation("CancellationRecordCancelledBy", fields: [cancelledBy], references: [id])
+  returnUser User? @relation("CancellationRecordReturnedBy", fields: [returnedBy], references: [id])
 
   @@index([orderId])
   @@index([cancelledAt(sort: Desc)])
@@ -286,10 +299,10 @@ model CancellationRecord {
 }
 
 model OrderLine {
-  id       String @id @default(uuid())
-  orderId  String @map("order_id")
-  itemCode String @map("item_code") @db.VarChar(30)
-  itemName String @map("item_name") @db.VarChar(150)
+  id       String   @id @default(uuid())
+  orderId  String   @map("order_id")
+  itemCode String   @map("item_code") @db.VarChar(30)
+  itemName String   @map("item_name") @db.VarChar(150)
   quantity Int
   weight   Decimal? @db.Decimal(8, 2)
 
@@ -411,18 +424,18 @@ model Notification {
 }
 
 model NotificationSubscription {
-  id                 String       @id @default(uuid())
-  userId             String       @map("user_id")
-  deviceId           String       @map("device_id") @db.VarChar(64)
-  platform           Platform
-  pushProvider       PushProvider @map("push_provider")
-  token              Json         // endpoint, keys for VAPID; token string for FCM/APNs
-  categoriesEnabled  String[]     @map("categories_enabled")
-  quietHours         Json?        @map("quiet_hours") // { start: "22:00", end: "07:00", timezone: "Asia/Seoul" }
-  isActive           Boolean      @default(true) @map("is_active")
-  createdAt          DateTime     @default(now()) @map("created_at")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
-  expiresAt          DateTime?    @map("expires_at")
+  id                String       @id @default(uuid())
+  userId            String       @map("user_id")
+  deviceId          String       @map("device_id") @db.VarChar(64)
+  platform          Platform
+  pushProvider      PushProvider @map("push_provider")
+  token             Json // endpoint, keys for VAPID; token string for FCM/APNs
+  categoriesEnabled String[]     @map("categories_enabled")
+  quietHours        Json?        @map("quiet_hours") // { start: "22:00", end: "07:00", timezone: "Asia/Seoul" }
+  isActive          Boolean      @default(true) @map("is_active")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  expiresAt         DateTime?    @map("expires_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -458,7 +471,7 @@ model AuditLog {
   tableName String   @map("table_name") @db.VarChar(50)
   recordId  String   @map("record_id")
   action    String   @db.VarChar(20) // CREATE, UPDATE, DELETE
-  diff      Json     // {field: {old, new}}
+  diff      Json // {field: {old, new}}
   actor     String
   timestamp DateTime @default(now())
 
@@ -490,6 +503,7 @@ model SettlementPeriod {
   lockedUser   User?  @relation("LockedBy", fields: [lockedBy], references: [id])
   unlockedUser User?  @relation("UnlockedBy", fields: [unlockedBy], references: [id])
 
+  @@unique([branchId, periodStart])
   @@index([branchId, periodStart, periodEnd])
   @@map("settlement_periods")
 }
@@ -559,4 +573,146 @@ model WasteCode {
   isActive      Boolean @default(true) @map("is_active")
 
   @@map("waste_codes")
+}
+
+// ============================================
+// MASTER DATA & SETTLEMENT
+// ============================================
+
+enum StorageContractType {
+  PALLET_DAILY
+  AREA_MONTHLY
+  AREA_YEARLY
+}
+
+enum TransactionType {
+  INBOUND
+  OUTBOUND
+}
+
+enum TransactionSource {
+  PWA
+  EXCEL
+}
+
+enum FeeType {
+  TRANSPORT
+  STORAGE
+}
+
+model Category {
+  id       String  @id @default(uuid())
+  code     String  @unique @db.VarChar(20) // A, A-01, A-01-003
+  name     String  @db.VarChar(120)
+  parentId String? @map("parent_id")
+  depth    Int // 1~3
+  isActive Boolean @default(true) @map("is_active")
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  code              String   @unique @db.VarChar(30)
+  name              String   @db.VarChar(200)
+  categoryId        String   @map("category_id")
+  partnerId         String   @map("partner_id")
+  unitPrice         Decimal  @map("unit_price") @db.Decimal(14, 2)
+  costPrice         Decimal  @map("cost_price") @db.Decimal(14, 2)
+  transportRate     Decimal? @map("transport_rate") @db.Decimal(14, 2)
+  palletThreshold   Decimal? @map("pallet_threshold") @db.Decimal(5, 2) // % override
+  maxUnitsPerPallet Int?     @map("max_units_per_pallet")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  category     Category               @relation(fields: [categoryId], references: [id])
+  partner      Partner                @relation(fields: [partnerId], references: [id])
+  transactions WarehouseTransaction[]
+
+  @@index([partnerId])
+  @@map("products")
+}
+
+model TransportRateCard {
+  id               String   @id @default(uuid())
+  vehicleType      String   @map("vehicle_type") @db.VarChar(60)
+  tonnage          Decimal? @db.Decimal(5, 1) // 1.0 ~ 25.0
+  containerSize    String?  @map("container_size") @db.VarChar(40)
+  specialEquipment String?  @map("special_equipment") @db.VarChar(60)
+  rate             Decimal  @db.Decimal(14, 2)
+  isActive         Boolean  @default(true) @map("is_active")
+
+  transactions WarehouseTransaction[]
+
+  @@map("transport_rate_cards")
+}
+
+model StorageContract {
+  id              String              @id @default(uuid())
+  partnerId       String              @map("partner_id")
+  contractType    StorageContractType @map("contract_type")
+  palletDailyRate Decimal?            @map("pallet_daily_rate") @db.Decimal(14, 2)
+  areaPyeong      Decimal?            @map("area_pyeong") @db.Decimal(10, 2)
+  areaRate        Decimal?            @map("area_rate") @db.Decimal(14, 2)
+  startDate       DateTime            @map("start_date") @db.Date
+  endDate         DateTime?           @map("end_date") @db.Date
+  isActive        Boolean             @default(true) @map("is_active")
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@index([partnerId, isActive])
+  @@map("storage_contracts")
+}
+
+model WarehouseTransaction {
+  id              String            @id @default(uuid())
+  type            TransactionType
+  partnerId       String            @map("partner_id")
+  productId       String            @map("product_id")
+  quantity        Int
+  transactionDate DateTime          @map("transaction_date")
+  vehicleRateId   String?           @map("vehicle_rate_id")
+  source          TransactionSource @default(PWA)
+  createdBy       String            @map("created_by")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  partner           Partner            @relation(fields: [partnerId], references: [id])
+  product           Product            @relation(fields: [productId], references: [id])
+  vehicleRate       TransportRateCard? @relation(fields: [vehicleRateId], references: [id])
+  settlementRecords SettlementRecord[]
+
+  @@index([partnerId, transactionDate])
+  @@index([productId, transactionDate])
+  @@map("warehouse_transactions")
+}
+
+model SettlementRecord {
+  id                String   @id @default(uuid())
+  transactionId     String?  @map("transaction_id")
+  partnerId         String   @map("partner_id")
+  periodYearMonth   String   @map("period_year_month") @db.VarChar(7) // "2026-07"
+  feeType           FeeType  @map("fee_type")
+  amount            Decimal  @db.Decimal(14, 2)
+  calculationDetail Json     @map("calculation_detail")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  transaction WarehouseTransaction? @relation(fields: [transactionId], references: [id])
+  partner     Partner               @relation(fields: [partnerId], references: [id])
+
+  @@index([partnerId, periodYearMonth])
+  @@map("settlement_records")
+}
+
+model SystemSetting {
+  key       String   @id @db.VarChar(60)
+  value     String   @db.VarChar(200)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }
