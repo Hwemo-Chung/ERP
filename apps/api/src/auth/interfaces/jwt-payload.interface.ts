@@ -6,6 +6,7 @@ export interface JwtPayload {
   roles: Role[];
   branchId?: string;     // Branch UUID for direct DB queries
   branchCode?: string;   // Branch code for display
+  partnerId?: string;    // Partner UUID for PARTNER_COORDINATOR data isolation
   iat?: number;          // Issued at
   exp?: number;          // Expiration
 }

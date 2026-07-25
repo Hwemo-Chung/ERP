@@ -48,6 +48,7 @@ export class AuthService {
       roles,
       branchId: user.branchId ?? undefined,
       branchCode: user.branch?.code,
+      partnerId: user.partnerId ?? undefined,
     });
 
     this.logger.log(`User logged in: ${user.username}`);
@@ -82,6 +83,7 @@ export class AuthService {
       roles,
       branchId: user.branchId ?? undefined,
       branchCode: user.branch?.code,
+      partnerId: user.partnerId ?? undefined,
     });
 
     return {
