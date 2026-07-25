@@ -76,6 +76,8 @@ export class FeeDashboardPage implements OnInit {
   // ponytail: preview API returns fee totals per partner, not raw shipment quantity —
   // "물량 상위 5" is approximated by combined fee total (transport + storage), the best
   // volume proxy available without a dedicated quantity endpoint.
+  // ponytail: same JS-number-sum ceiling as sumField() below — safe while backend
+  // amounts are toFixed(0) integer strings.
   top5 = computed(() => {
     const names = this.partnerNames();
     return [...this.partners()]
@@ -92,7 +94,9 @@ export class FeeDashboardPage implements OnInit {
     try {
       const [preview, partnerPage] = await Promise.all([
         this.settlementFees.preview(this.yearMonth),
-        this.masterData.getPartners({ page: 1 }),
+        // ponytail: pageSize:100 is the backend max (partners.service.ts caps at 100) —
+        // move to a typeahead/search-backed lookup if the partner count ever exceeds it.
+        this.masterData.getPartners({ page: 1, pageSize: 100 }),
       ]);
       this.partners.set(preview.partners);
       this.partnerNames.set(Object.fromEntries(partnerPage.data.map((p) => [p.id, p.name])));
@@ -101,6 +105,11 @@ export class FeeDashboardPage implements OnInit {
     }
   }
 
+  // ponytail: JS number sum over whole-won integer strings — safe while the backend
+  // emits toFixed(0) (settlement-fees.service.ts previewMonth/computeMonth), since
+  // Number-parsed integer won amounts stay well under Number.MAX_SAFE_INTEGER here.
+  // Move to a backend aggregate endpoint (or a Decimal.js sum) if fractional amounts
+  // ever appear.
   private sumField(field: 'transportTotal' | 'storageTotal'): string {
     return this.partners().reduce((sum, p) => sum + Number(p[field]), 0).toFixed(0);
   }

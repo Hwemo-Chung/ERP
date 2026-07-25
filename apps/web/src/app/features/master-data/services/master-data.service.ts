@@ -61,7 +61,7 @@ export class MasterDataService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/master-data`;
 
-  getPartners(q: { search?: string; page?: number }): Promise<Paged<PartnerRow>> {
+  getPartners(q: { search?: string; page?: number; pageSize?: number }): Promise<Paged<PartnerRow>> {
     return firstValueFrom(this.http.get<Paged<PartnerRow>>(`${this.base}/partners`, { params: toParams(q) }));
   }
   createPartner(dto: Omit<PartnerRow, 'id'> & { storageContract: StorageContractRow }): Promise<PartnerRow> {

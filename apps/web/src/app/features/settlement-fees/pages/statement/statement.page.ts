@@ -89,7 +89,9 @@ export class StatementPage implements OnInit {
   yearMonth = this.monthValue.slice(0, 7);
 
   async ngOnInit() {
-    this.partners.set((await this.masterData.getPartners({ page: 1 })).data);
+    // ponytail: pageSize:100 is the backend max (partners.service.ts caps at 100) —
+    // move to a typeahead/search-backed lookup if the partner count ever exceeds it.
+    this.partners.set((await this.masterData.getPartners({ page: 1, pageSize: 100 })).data);
     const qp = this.route.snapshot.queryParamMap;
     const partnerId = qp.get('partnerId');
     const yearMonth = qp.get('yearMonth');

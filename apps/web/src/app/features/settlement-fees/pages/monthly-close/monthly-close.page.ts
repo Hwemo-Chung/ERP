@@ -91,7 +91,9 @@ export class MonthlyClosePage implements OnInit {
   totalErrors = computed(() => this.preview()?.partners.reduce((n, p) => n + p.errors.length, 0) ?? 0);
 
   async ngOnInit() {
-    const partnerPage = await this.masterData.getPartners({ page: 1 });
+    // ponytail: pageSize:100 is the backend max (partners.service.ts caps at 100) —
+    // move to a typeahead/search-backed lookup if the partner count ever exceeds it.
+    const partnerPage = await this.masterData.getPartners({ page: 1, pageSize: 100 });
     this.partnerNames.set(Object.fromEntries(partnerPage.data.map((p) => [p.id, p.name])));
   }
 
