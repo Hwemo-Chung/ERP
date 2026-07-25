@@ -16,6 +16,7 @@ import { SettlementModule } from './settlement/settlement.module';
 import { JobsModule } from './jobs/jobs.module';
 import { MasterDataModule } from './master-data/master-data.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
+import { SettlementFeesModule } from './settlement-fees/settlement-fees.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -67,6 +68,7 @@ import configuration from './config/configuration';
     JobsModule,
     MasterDataModule,
     WarehouseModule,
+    SettlementFeesModule,
   ],
 })
 export class AppModule {}
