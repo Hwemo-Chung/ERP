@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export const PALLET_THRESHOLD_KEY = 'pallet_threshold_default';
@@ -24,15 +24,22 @@ export class RatesService {
     });
   }
 
-  updateRateCard(
+  async updateRateCard(
     id: string,
     dto: Partial<{ vehicleType: string; tonnage: string; containerSize: string; specialEquipment: string; rate: string }>,
   ) {
+    await this.assertExists(id);
     return this.prisma.transportRateCard.update({ where: { id }, data: dto });
   }
 
-  deactivateRateCard(id: string) {
+  async deactivateRateCard(id: string) {
+    await this.assertExists(id);
     return this.prisma.transportRateCard.update({ where: { id }, data: { isActive: false } });
+  }
+
+  private async assertExists(id: string) {
+    const existing = await this.prisma.transportRateCard.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException({ code: 'E4104', message: 'rate card not found' });
   }
 
   async getPalletThreshold(): Promise<number> {
