@@ -72,7 +72,8 @@ export class ExcelImportService {
     for (const { rowIndex, raw } of rows) {
       const errors: string[] = [];
       if (!raw.name) errors.push('상품명 누락');
-      if (raw.categoryName) categorySet.add(raw.categoryName);
+      if (!raw.categoryName) errors.push('categoryName 누락');
+      else categorySet.add(raw.categoryName);
       if (raw.unitPrice && isNaN(Number(raw.unitPrice))) errors.push('단가 숫자 아님');
       if (raw.costPrice && isNaN(Number(raw.costPrice))) errors.push('원가 숫자 아님');
       if (errors.length) invalidRows.push({ rowIndex, errors, raw });
@@ -124,8 +125,21 @@ export class ExcelImportService {
           categoryId = created.id;
           nameToId.set(row.categoryName, categoryId);
         }
-        const { categoryName: _categoryName, ...productDto } = row;
-        await this.products.create({ ...productDto, categoryId, partnerId: defaultPartnerId });
+        // ponytail: explicit whitelist, not a spread — this is a service-to-service call so
+        // CreateProductDto's class-validator whitelist never runs; a bare `...row` spread
+        // would let a posted row set unrelated Product columns (e.g. isActive, id).
+        const { code, name, unitPrice, costPrice, transportRate, palletThreshold, maxUnitsPerPallet } = row;
+        await this.products.create({
+          code,
+          name,
+          unitPrice,
+          costPrice,
+          transportRate,
+          palletThreshold,
+          maxUnitsPerPallet,
+          categoryId,
+          partnerId: defaultPartnerId,
+        });
         results.created++;
       } catch (e: any) {
         results.failed.push({ row, error: e.message });

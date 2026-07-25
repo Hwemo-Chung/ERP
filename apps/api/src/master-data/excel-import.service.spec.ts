@@ -75,6 +75,17 @@ describe('ExcelImportService', () => {
       expect(r.validRows).toHaveLength(0);
       expect(r.invalidRows[0].errors).toContain('단가 숫자 아님');
     });
+
+    it('flags a blank mapped categoryName cell instead of letting it reach commit', async () => {
+      const buf = await buildXlsx([
+        ['품목코드', '상품명', '분류'],
+        ['A1', '냉장고', ''],
+      ]);
+      const r = await service.parseProducts(buf, { code: 'A', name: 'B', categoryName: 'C' });
+      expect(r.validRows).toHaveLength(0);
+      expect(r.invalidRows[0].errors).toContain('categoryName 누락');
+      expect(r.extractedCategories).toEqual([]);
+    });
   });
 
   describe('commitPartners', () => {
@@ -141,6 +152,27 @@ describe('ExcelImportService', () => {
       const results = await service.commitProducts(rows, defaultPartnerId);
       expect(results.created).toBe(0);
       expect(results.failed[0].error).toBe('duplicate product code');
+    });
+
+    it('ignores extra/unwhitelisted keys on a posted row (e.g. isActive, partnerId override)', async () => {
+      categoriesMock.findTree.mockResolvedValue([{ id: 'cat-1', name: '대형가전', children: [] }]);
+      productsMock.create.mockResolvedValue({ id: 'prod-1' });
+      const rows = [
+        {
+          code: 'A1',
+          name: '냉장고',
+          categoryName: '대형가전',
+          isActive: false,
+          partnerId: 'attacker-supplied-partner',
+          id: 'attacker-supplied-id',
+        },
+      ];
+      const results = await service.commitProducts(rows, defaultPartnerId);
+      expect(results.created).toBe(1);
+      const createArg = productsMock.create.mock.calls[0][0];
+      expect(createArg).not.toHaveProperty('isActive');
+      expect(createArg).not.toHaveProperty('id');
+      expect(createArg.partnerId).toBe(defaultPartnerId);
     });
   });
 });
