@@ -106,6 +106,19 @@ import { AuthService } from '../../../../core/services/auth.service';
               <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
             </a>
           }
+
+          @if (isHqAdmin()) {
+            <a class="menu-card" [routerLink]="['/settlement-fees']">
+              <div class="card-icon warning">
+                <ion-icon name="wallet-outline"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>정산 관리</h3>
+                <p>대시보드 / 월 마감 / 정산서 / 상세 내역</p>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+            </a>
+          }
         </div>
       </div>
 

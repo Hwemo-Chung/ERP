@@ -32,6 +32,12 @@ export const routes: Routes = [
       import('./features/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES),
   },
   {
+    path: 'settlement-fees',
+    canActivate: [authGuard, roleGuard('HQ_ADMIN')],
+    loadChildren: () =>
+      import('./features/settlement-fees/settlement-fees.routes').then(m => m.SETTLEMENT_FEES_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: 'tabs',
   },
