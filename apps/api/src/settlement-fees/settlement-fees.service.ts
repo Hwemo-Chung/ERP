@@ -145,6 +145,21 @@ export class SettlementFeesService {
         errors,
       });
     }
+
+    // 비활성 거래처인데 당월 거래가 있는 경우 — 위 루프가 isActive 파트너만 순회하므로
+    // 조용히 건너뛰면 미청구 누락이 된다. E4111과 동일하게 에러로 수집해 E4109 경로로 마감 차단.
+    const activePartnerIds = new Set(partners.map((p) => p.id));
+    const inactivePartnerIdsWithTx = new Set(
+      txs.filter((t) => !activePartnerIds.has(t.partnerId)).map((t) => t.partnerId),
+    );
+    for (const partnerId of inactivePartnerIdsWithTx) {
+      results.push({
+        partnerId,
+        transportTotal: '0',
+        storageTotal: '0',
+        errors: [{ code: 'E4112', message: 'E4112: inactive partner has transactions in period' }],
+      });
+    }
     return { results, records, start, end };
   }
 
@@ -178,22 +193,28 @@ export class SettlementFeesService {
         errors: allErrors,
       });
     }
-    await this.prisma.$transaction(async (tx) => {
-      await tx.settlementRecord.deleteMany({ where: { periodYearMonth: yearMonth } });
-      await tx.settlementRecord.createMany({ data: records });
-      await tx.settlementPeriod.upsert({
-        where: { branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start } },
-        create: {
-          branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID,
-          periodStart: start,
-          periodEnd: end,
-          status: 'LOCKED',
-          lockedBy: userId,
-          lockedAt: new Date(),
-        },
-        update: { status: 'LOCKED', lockedBy: userId, lockedAt: new Date() },
-      });
-    });
+    await this.prisma.$transaction(
+      async (tx) => {
+        await tx.settlementRecord.deleteMany({ where: { periodYearMonth: yearMonth } });
+        await tx.settlementRecord.createMany({ data: records });
+        await tx.settlementPeriod.upsert({
+          where: { branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start } },
+          create: {
+            branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID,
+            periodStart: start,
+            periodEnd: end,
+            status: 'LOCKED',
+            lockedBy: userId,
+            lockedAt: new Date(),
+          },
+          update: { status: 'LOCKED', lockedBy: userId, lockedAt: new Date() },
+        });
+      },
+      // ponytail: 120s ceiling — Prisma's default interactive-tx timeout (5s) can't finish
+      // deleteMany+createMany+upsert at spec scale (~30만 SettlementRecord/월). Raise further
+      // if a close job ever needs more than 2 minutes on real hardware.
+      { timeout: 120_000, maxWait: 10_000 },
+    );
     return { yearMonth, partners: results };
   }
 

@@ -80,6 +80,16 @@ describe('SettlementFeesService', () => {
     await expect(service.closeMonth('2026-07', 'u1')).rejects.toThrow(/E4109/);
   });
 
+  it('collects E4112 and blocks close when an inactive partner has in-month transactions', async () => {
+    // partner.findMany only returns active partners (p1); the tx below belongs to p2, which
+    // is not in that active set (e.g. deactivated mid-month) — must not be silently unbilled.
+    prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture({ partnerId: 'p2' })]);
+    const r = await service.previewMonth('2026-07');
+    const p2Result = r.partners.find((p: any) => p.partnerId === 'p2');
+    expect(p2Result?.errors[0]).toMatchObject({ code: 'E4112' });
+    await expect(service.closeMonth('2026-07', 'u1')).rejects.toThrow(/E4109/);
+  });
+
   it('getStatement denies other partner for scoped caller', async () => {
     await expect(
       service.getStatement('OTHER', '2026-07', { partnerId: 'p1' }),

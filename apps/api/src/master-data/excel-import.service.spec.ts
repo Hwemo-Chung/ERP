@@ -64,6 +64,10 @@ describe('ExcelImportService', () => {
       ]);
       const r = await service.parseProducts(buf, { code: 'A', name: 'B', categoryName: 'C' });
       expect(r.extractedCategories).toEqual(['대형가전', '소형가전']);
+      // unitPrice/costPrice aren't mapped in this sheet — categoryName extraction still runs
+      // (it happens before the price check), but every row is correctly rejected since 단가/원가
+      // are required DB columns; an unmapped column must not silently pass as "valid".
+      expect(r.validRows).toHaveLength(0);
     });
 
     it('flags non-numeric unitPrice/costPrice', async () => {
@@ -85,6 +89,16 @@ describe('ExcelImportService', () => {
       expect(r.validRows).toHaveLength(0);
       expect(r.invalidRows[0].errors).toContain('categoryName 누락');
       expect(r.extractedCategories).toEqual([]);
+    });
+
+    it('rejects a blank unitPrice cell instead of letting Number(\'\') === 0 pass through', async () => {
+      const buf = await buildXlsx([
+        ['품목코드', '상품명', '분류', '단가', '원가'],
+        ['A1', '냉장고', '대형가전', '', '900000'],
+      ]);
+      const r = await service.parseProducts(buf, { code: 'A', name: 'B', categoryName: 'C', unitPrice: 'D', costPrice: 'E' });
+      expect(r.validRows).toHaveLength(0);
+      expect(r.invalidRows[0].errors).toContain('단가 숫자 아님');
     });
   });
 
@@ -152,6 +166,37 @@ describe('ExcelImportService', () => {
       const results = await service.commitProducts(rows, defaultPartnerId);
       expect(results.created).toBe(0);
       expect(results.failed[0].error).toBe('duplicate product code');
+    });
+
+    it('coerces a string maxUnitsPerPallet cell to an int in the create call', async () => {
+      categoriesMock.findTree.mockResolvedValue([{ id: 'cat-1', name: '대형가전', children: [] }]);
+      productsMock.create.mockResolvedValue({ id: 'prod-1' });
+      const rows = [{ code: 'A1', name: '냉장고', categoryName: '대형가전', maxUnitsPerPallet: '12' }];
+      const results = await service.commitProducts(rows, defaultPartnerId);
+      expect(results.created).toBe(1);
+      const createArg = productsMock.create.mock.calls[0][0];
+      expect(createArg.maxUnitsPerPallet).toBe(12);
+      expect(typeof createArg.maxUnitsPerPallet).toBe('number');
+    });
+
+    it('turns an invalid maxUnitsPerPallet cell into a row failure instead of forwarding it to Prisma', async () => {
+      categoriesMock.findTree.mockResolvedValue([{ id: 'cat-1', name: '대형가전', children: [] }]);
+      const rows = [{ code: 'A1', name: '냉장고', categoryName: '대형가전', maxUnitsPerPallet: 'abc' }];
+      const results = await service.commitProducts(rows, defaultPartnerId);
+      expect(results.created).toBe(0);
+      expect(results.failed).toHaveLength(1);
+      expect(productsMock.create).not.toHaveBeenCalled();
+    });
+
+    it('maps blank transportRate/palletThreshold cells to undefined instead of an empty string', async () => {
+      categoriesMock.findTree.mockResolvedValue([{ id: 'cat-1', name: '대형가전', children: [] }]);
+      productsMock.create.mockResolvedValue({ id: 'prod-1' });
+      const rows = [{ code: 'A1', name: '냉장고', categoryName: '대형가전', transportRate: '', palletThreshold: '' }];
+      const results = await service.commitProducts(rows, defaultPartnerId);
+      expect(results.created).toBe(1);
+      const createArg = productsMock.create.mock.calls[0][0];
+      expect(createArg.transportRate).toBeUndefined();
+      expect(createArg.palletThreshold).toBeUndefined();
     });
 
     it('ignores extra/unwhitelisted keys on a posted row (e.g. isActive, partnerId override)', async () => {

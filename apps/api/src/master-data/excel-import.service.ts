@@ -74,8 +74,10 @@ export class ExcelImportService {
       if (!raw.name) errors.push('상품명 누락');
       if (!raw.categoryName) errors.push('categoryName 누락');
       else categorySet.add(raw.categoryName);
-      if (raw.unitPrice && isNaN(Number(raw.unitPrice))) errors.push('단가 숫자 아님');
-      if (raw.costPrice && isNaN(Number(raw.costPrice))) errors.push('원가 숫자 아님');
+      // 단가/원가는 필수 — 값이 없거나(blank) 숫자가 아니면 거부 (falsy만 통과시키던 이전 버전은
+      // Number('') === 0이라 blank 셀이 조용히 통과했다).
+      if (!raw.unitPrice || isNaN(Number(raw.unitPrice))) errors.push('단가 숫자 아님');
+      if (!raw.costPrice || isNaN(Number(raw.costPrice))) errors.push('원가 숫자 아님');
       if (errors.length) invalidRows.push({ rowIndex, errors, raw });
       else validRows.push(raw);
     }
@@ -129,14 +131,27 @@ export class ExcelImportService {
         // CreateProductDto's class-validator whitelist never runs; a bare `...row` spread
         // would let a posted row set unrelated Product columns (e.g. isActive, id).
         const { code, name, unitPrice, costPrice, transportRate, palletThreshold, maxUnitsPerPallet } = row;
+
+        // readRows() stringifies every cell, so maxUnitsPerPallet arrives as e.g. "12" — Prisma's
+        // Int? column does not coerce String, it would reject the whole row. Coerce here instead
+        // of silently forwarding a bad value; an invalid cell becomes a row error (caught below),
+        // not a silent skip.
+        let maxUnitsPerPalletNum: number | undefined;
+        if (maxUnitsPerPallet !== undefined && maxUnitsPerPallet !== '') {
+          maxUnitsPerPalletNum = Number(maxUnitsPerPallet);
+          if (!Number.isInteger(maxUnitsPerPalletNum) || maxUnitsPerPalletNum < 1) {
+            throw new Error('maxUnitsPerPallet 숫자 아님 (1 이상 정수 필요)');
+          }
+        }
+
         await this.products.create({
           code,
           name,
           unitPrice,
           costPrice,
-          transportRate,
-          palletThreshold,
-          maxUnitsPerPallet,
+          transportRate: transportRate === '' ? undefined : transportRate,
+          palletThreshold: palletThreshold === '' ? undefined : palletThreshold,
+          maxUnitsPerPallet: maxUnitsPerPalletNum,
           categoryId,
           partnerId: defaultPartnerId,
         });
