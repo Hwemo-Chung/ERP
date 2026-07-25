@@ -72,6 +72,14 @@ describe('SettlementFeesService', () => {
     expect(prismaMock.settlementPeriod.upsert).toHaveBeenCalled();
   });
 
+  it('collects E4111 when a partner has transactions but no active storage contract', async () => {
+    prismaMock.storageContract.findMany.mockResolvedValue([]); // no contract for p1
+    prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
+    const r = await service.previewMonth('2026-07');
+    expect(r.partners[0].errors.find((e: any) => e.code === 'E4111')).toBeDefined();
+    await expect(service.closeMonth('2026-07', 'u1')).rejects.toThrow(/E4109/);
+  });
+
   it('getStatement denies other partner for scoped caller', async () => {
     await expect(
       service.getStatement('OTHER', '2026-07', { partnerId: 'p1' }),

@@ -23,12 +23,19 @@ export class TransactionsService {
     }
 
     const txDate = new Date(dto.transactionDate);
+    // COUPLED INVARIANT with settlement-fees.service.ts (Task 11 closeMonth): periodEnd is
+    // stored as an EXCLUSIVE boundary — the first instant of the month *after* the closed one
+    // (e.g. a July close stores periodEnd = Aug 1st 00:00 UTC), not July's last instant. `gt`
+    // (strictly greater) is the correct comparison for an exclusive boundary regardless of
+    // whether Postgres/Prisma normalize @db.Date operands to date-only or keep full timestamp
+    // precision. If the periodEnd write convention ever changes to inclusive, change this back
+    // to `gte` — keep both sides in sync.
     const locked = await this.prisma.settlementPeriod.findFirst({
       where: {
         branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID,
         status: 'LOCKED',
         periodStart: { lte: txDate },
-        periodEnd: { gte: txDate },
+        periodEnd: { gt: txDate },
       },
     });
     if (locked) {

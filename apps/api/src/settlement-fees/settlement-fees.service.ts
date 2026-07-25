@@ -7,7 +7,7 @@ import { calcTransportFee } from './transport-fee';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
 
 interface CalcError {
-  transactionId: string;
+  transactionId?: string;
   code: string;
   message: string;
 }
@@ -23,12 +23,13 @@ export class SettlementFeesService {
     const [y, m] = yearMonth.split('-').map(Number);
     const start = new Date(Date.UTC(y, m - 1, 1));
     // `end` is the exclusive start of the *next* month, not the last instant of this one.
-    // SettlementPeriod.periodEnd is @db.Date — Postgres truncates any time-of-day we write,
-    // so persisting "this month's last day 23:59:59" collapses to that day's midnight anyway,
-    // and the Task 7 lock gate (transactions.service.ts) checks `periodEnd: { gte: txDate }`
-    // against a full DateTime. A same-day-with-time transaction on the last day would slip
-    // past a midnight periodEnd. Using next-month's first instant as the (exclusive) boundary
-    // for both the tx-range query and the persisted periodEnd closes that gap.
+    // COUPLED INVARIANT with the Task 7 lock gate (warehouse/transactions.service.ts):
+    // that gate compares `periodEnd: { gt: txDate }` (strictly greater — exclusive boundary).
+    // periodEnd stored here MUST stay "next month's first instant" for that comparison to be
+    // correct regardless of whether Postgres/Prisma normalize @db.Date operands to date-only
+    // or keep full timestamp precision — `gt` on an exclusive boundary is correct either way
+    // (see task-11-review.md Scenario A/B). If you change this to an inclusive "last day
+    // 23:59:59" convention, you must also change the gate back to `gte` — keep both in sync.
     const end = new Date(Date.UTC(y, m, 1));
     return { y, m, start, end };
   }
@@ -132,6 +133,9 @@ export class SettlementFeesService {
           amount: storage.amount,
           calculationDetail: storage.detail as unknown as Prisma.InputJsonValue,
         });
+      } else if (partnerTxs.length > 0) {
+        // 당월 거래는 있는데 활성 보관 계약이 없음 — 조용히 STORAGE를 건너뛰면 미청구 누락이 되므로 에러로 수집
+        errors.push({ code: 'E4111', message: 'E4111: no active storage contract' });
       }
 
       results.push({
