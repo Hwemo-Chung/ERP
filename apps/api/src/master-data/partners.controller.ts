@@ -1,0 +1,41 @@
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { PartnersService } from './partners.service';
+import { CreatePartnerDto } from './dto/create-partner.dto';
+
+@ApiTags('MasterData')
+@Controller('master-data/partners')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
+@Roles(Role.HQ_ADMIN)
+export class PartnersController {
+  constructor(private readonly service: PartnersService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create partner with mandatory storage contract' })
+  create(@Body() dto: CreatePartnerDto) {
+    return this.service.create(dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List partners' })
+  findAll(@Query() q: { search?: string; page?: number; pageSize?: number }) {
+    return this.service.findAll(q);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update partner' })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: Partial<CreatePartnerDto>,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.update(id, dto, user.sub);
+  }
+}

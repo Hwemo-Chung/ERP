@@ -20,7 +20,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@app/*": ["src/*"],
-      "@prisma/*": ["../prisma/*"]
+      "@prisma/*": ["../prisma/*"],
+      "@erp/shared/utils": ["../../packages/shared/src/utils/index.ts"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true

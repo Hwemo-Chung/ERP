@@ -14,6 +14,7 @@ import { MetadataModule } from './metadata/metadata.module';
 import { HealthModule } from './health/health.module';
 import { SettlementModule } from './settlement/settlement.module';
 import { JobsModule } from './jobs/jobs.module';
+import { MasterDataModule } from './master-data/master-data.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -63,6 +64,7 @@ import configuration from './config/configuration';
     HealthModule,
     SettlementModule,
     JobsModule,
+    MasterDataModule,
   ],
 })
 export class AppModule {}

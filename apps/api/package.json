@@ -22,6 +22,7 @@
     "prisma:seed": "npx tsx ../../prisma/seed.ts"
   },
   "dependencies": {
+    "@erp/shared": "workspace:*",
     "@nestjs/bull": "^11.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
