@@ -24,6 +24,7 @@ export class RatesController {
   }
 
   @Get('rate-cards')
+  @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF) // method-level override: warehouse staff need the optional vehicle select for transaction entry (read-only; write stays HQ_ADMIN via class-level @Roles above)
   @ApiOperation({ summary: 'List active transport rate cards' })
   findAll() {
     return this.service.listRateCards();

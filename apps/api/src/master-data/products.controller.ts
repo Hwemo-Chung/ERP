@@ -26,6 +26,7 @@ export class ProductsController {
   }
 
   @Get()
+  @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF) // method-level override: warehouse staff need product search-within-partner for transaction entry (read-only; write stays HQ_ADMIN via class-level @Roles above)
   @ApiOperation({ summary: 'List products' })
   findAll(@Query() q: GetProductsDto) {
     return this.service.findAll(q);

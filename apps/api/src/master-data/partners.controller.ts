@@ -26,6 +26,7 @@ export class PartnersController {
   }
 
   @Get()
+  @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF) // method-level override: warehouse staff need the partner dropdown for transaction entry (read-only; write stays HQ_ADMIN via class-level @Roles above)
   @ApiOperation({ summary: 'List partners' })
   findAll(@Query() q: GetPartnersDto) {
     return this.service.findAll(q);

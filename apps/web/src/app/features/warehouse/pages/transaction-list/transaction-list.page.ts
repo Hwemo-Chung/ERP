@@ -47,6 +47,7 @@ const PAGE_SIZE = 50;
           <ion-item><ion-label>조회된 실적이 없습니다.</ion-label></ion-item>
         }
       </ion-list>
+      @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
       @if (hasMore()) {
         <ion-infinite-scroll (ionInfinite)="loadMore($event)">
           <ion-infinite-scroll-content></ion-infinite-scroll-content>
@@ -62,6 +63,7 @@ export class TransactionListPage implements OnInit {
   partners = signal<PartnerRow[]>([]);
   transactions = signal<TransactionRow[]>([]);
   hasMore = signal(false);
+  error = signal('');
 
   partnerId?: string;
   dateFrom?: string;
@@ -74,18 +76,30 @@ export class TransactionListPage implements OnInit {
   }
 
   async reload() {
+    this.error.set('');
     this.page = 1;
-    const res = await this.fetch(this.page);
-    this.transactions.set(res.data);
-    this.hasMore.set(this.page * PAGE_SIZE < res.totalCount);
+    try {
+      const res = await this.fetch(this.page);
+      this.transactions.set(res.data);
+      this.hasMore.set(this.page * PAGE_SIZE < res.totalCount);
+    } catch (e: any) {
+      this.error.set(e?.error?.message ?? '조회 실패');
+    }
   }
 
   async loadMore(event: InfiniteScrollCustomEvent) {
+    this.error.set('');
     this.page += 1;
-    const res = await this.fetch(this.page);
-    this.transactions.set([...this.transactions(), ...res.data]);
-    this.hasMore.set(this.page * PAGE_SIZE < res.totalCount);
-    event.target.complete();
+    try {
+      const res = await this.fetch(this.page);
+      this.transactions.set([...this.transactions(), ...res.data]);
+      this.hasMore.set(this.page * PAGE_SIZE < res.totalCount);
+    } catch (e: any) {
+      this.page -= 1; // roll back — this page never loaded
+      this.error.set(e?.error?.message ?? '추가 조회 실패');
+    } finally {
+      event.target.complete();
+    }
   }
 
   private fetch(page: number) {

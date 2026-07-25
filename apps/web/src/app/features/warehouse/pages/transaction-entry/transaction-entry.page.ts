@@ -51,7 +51,7 @@ const today = () => {
             <ion-segment-button value="OUTBOUND"><ion-label>출고</ion-label></ion-segment-button>
           </ion-segment>
         </ion-item>
-        <ion-item><ion-input label="수량 *" type="number" [(ngModel)]="quantity" /></ion-item>
+        <ion-item><ion-input label="수량 *" type="number" min="1" step="1" [(ngModel)]="quantity" /></ion-item>
         <ion-item><ion-input label="일자 *" type="date" [(ngModel)]="transactionDate" /></ion-item>
         <ion-item>
           <ion-select label="차량 (선택)" [(ngModel)]="vehicleRateId" interface="popover">
@@ -129,13 +129,18 @@ export class TransactionEntryPage implements OnInit {
       this.error.set('필수 항목을 입력하세요.');
       return;
     }
+    const quantity = Number(this.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      this.error.set('수량은 1 이상의 정수로 입력하세요.');
+      return;
+    }
     this.saving.set(true);
     try {
       await this.warehouse.createTransaction({
         type: this.type,
         partnerId: this.partnerId,
         productId: this.productId,
-        quantity: Number(this.quantity),
+        quantity,
         transactionDate: this.transactionDate,
         ...(this.vehicleRateId ? { vehicleRateId: this.vehicleRateId } : {}),
       });
