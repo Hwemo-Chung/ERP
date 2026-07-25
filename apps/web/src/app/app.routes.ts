@@ -26,6 +26,12 @@ export const routes: Routes = [
       import('./features/master-data/master-data.routes').then(m => m.MASTER_DATA_ROUTES),
   },
   {
+    path: 'warehouse',
+    canActivate: [authGuard, roleGuard('HQ_ADMIN', 'WAREHOUSE_STAFF')],
+    loadChildren: () =>
+      import('./features/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: 'tabs',
   },

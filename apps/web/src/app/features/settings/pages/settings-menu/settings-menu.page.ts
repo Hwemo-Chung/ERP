@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonIcon, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline } from 'ionicons/icons';
+import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -89,6 +89,19 @@ import { AuthService } from '../../../../core/services/auth.service';
               <div class="card-content">
                 <h3>마스터데이터</h3>
                 <p>거래처 / 품목 / 카테고리 / 단가표 / 엑셀 이관</p>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+            </a>
+          }
+
+          @if (canManageWarehouse()) {
+            <a class="menu-card" [routerLink]="['/warehouse']">
+              <div class="card-icon primary">
+                <ion-icon name="cube-outline"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>입출고 실적</h3>
+                <p>실적 입력 / 목록 조회 / 엑셀 일괄 등록</p>
               </div>
               <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
             </a>
@@ -293,12 +306,17 @@ export class SettingsMenuPage {
   private readonly translateService = inject(TranslateService);
 
   constructor() {
-    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline });
+    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline, cubeOutline });
   }
 
   /** 마스터데이터 메뉴 노출 여부 (HQ_ADMIN 전용) */
   isHqAdmin() {
     return this.authService.hasAnyRole(['HQ_ADMIN']);
+  }
+
+  /** 입출고 실적 메뉴 노출 여부 (HQ_ADMIN 또는 WAREHOUSE_STAFF) */
+  canManageWarehouse() {
+    return this.authService.hasAnyRole(['HQ_ADMIN', 'WAREHOUSE_STAFF']);
   }
 
   /**
