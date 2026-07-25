@@ -85,7 +85,10 @@ describe('PartnersService', () => {
   });
 
   describe('findAll — F1 role-aware projection (spec §2: no 요율 for staff)', () => {
-    const rows = [{ id: 'p1', code: 'P-0001', name: 'A', defaultTransportRate: '3000' }];
+    const rows = [{
+      id: 'p1', code: 'P-0001', name: 'A', defaultTransportRate: '3000',
+      storageContracts: [{ id: 'c1', contractType: 'PALLET_DAILY', palletDailyRate: '1500', areaPyeong: null, areaRate: null }],
+    }];
 
     beforeEach(() => {
       prismaMock.partner.findMany.mockResolvedValue(rows);
@@ -97,9 +100,19 @@ describe('PartnersService', () => {
       expect(r.data[0]).not.toHaveProperty('defaultTransportRate');
     });
 
+    it('strips storageContracts (palletDailyRate/areaRate/areaPyeong) for a WAREHOUSE_STAFF-only caller', async () => {
+      const r = await service.findAll({}, [Role.WAREHOUSE_STAFF]);
+      expect(r.data[0]).not.toHaveProperty('storageContracts');
+    });
+
     it('keeps defaultTransportRate for HQ_ADMIN', async () => {
       const r = await service.findAll({}, [Role.HQ_ADMIN]);
       expect(r.data[0]).toHaveProperty('defaultTransportRate', '3000');
+    });
+
+    it('keeps storageContracts for HQ_ADMIN', async () => {
+      const r = await service.findAll({}, [Role.HQ_ADMIN]);
+      expect(r.data[0]).toHaveProperty('storageContracts', rows[0].storageContracts);
     });
 
     it('keeps defaultTransportRate when the caller carries both roles', async () => {

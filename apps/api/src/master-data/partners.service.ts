@@ -103,9 +103,10 @@ export class PartnersService {
       this.prisma.partner.count({ where }),
     ]);
     // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 요율 fields — the dropdown
-    // this feeds only needs id/code/name.
+    // this feeds only needs id/code/name. storageContracts (palletDailyRate/areaRate/areaPyeong)
+    // is dropped entirely, not just trimmed — the entry screen never reads it.
     const data = isStaffOnly(callerRoles)
-      ? rows.map(({ defaultTransportRate: _defaultTransportRate, ...rest }) => rest)
+      ? rows.map(({ defaultTransportRate: _defaultTransportRate, storageContracts: _storageContracts, ...rest }) => rest)
       : rows;
     return { data, totalCount };
   }
