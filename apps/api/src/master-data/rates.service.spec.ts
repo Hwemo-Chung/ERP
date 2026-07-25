@@ -38,6 +38,25 @@ describe('RatesService', () => {
     });
   });
 
+  it('returns default REPLACE when vehicle rate mode unset', async () => {
+    prismaMock.systemSetting.findUnique.mockResolvedValue(null);
+    expect(await service.getVehicleRateMode()).toBe('REPLACE');
+  });
+
+  it('returns stored vehicle rate mode', async () => {
+    prismaMock.systemSetting.findUnique.mockResolvedValue({ key: 'vehicle_rate_mode', value: 'ADD' });
+    expect(await service.getVehicleRateMode()).toBe('ADD');
+  });
+
+  it('upserts vehicle rate mode on set', async () => {
+    await service.setVehicleRateMode('ADD');
+    expect(prismaMock.systemSetting.upsert).toHaveBeenCalledWith({
+      where: { key: 'vehicle_rate_mode' },
+      create: { key: 'vehicle_rate_mode', value: 'ADD' },
+      update: { value: 'ADD' },
+    });
+  });
+
   it('rejects deactivate of unknown rate card with E4104', async () => {
     prismaMock.transportRateCard.findUnique.mockResolvedValue(null);
     await expect(service.deactivateRateCard('missing-id')).rejects.toThrow(NotFoundException);

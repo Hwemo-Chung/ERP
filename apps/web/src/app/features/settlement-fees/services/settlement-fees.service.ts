@@ -38,7 +38,9 @@ export interface CloseResponse {
 export interface TransportFeeDetail {
   rateSource: 'VEHICLE' | 'PRODUCT' | 'PARTNER_DEFAULT';
   appliedRate: string;
-  vehicleRateMode: 'REPLACE';
+  vehicleRateMode: 'REPLACE' | 'ADD';
+  baseRate?: string;
+  vehicleRate?: string;
   formula: string;
 }
 export interface PalletDailyDetail {

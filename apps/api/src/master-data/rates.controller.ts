@@ -10,6 +10,7 @@ import { RatesService } from './rates.service';
 import { CreateRateCardDto } from './dto/create-rate-card.dto';
 import { UpdateRateCardDto } from './dto/update-rate-card.dto';
 import { SetPalletThresholdDto } from './dto/set-pallet-threshold.dto';
+import { SetVehicleRateModeDto } from './dto/set-vehicle-rate-mode.dto';
 
 @ApiTags('MasterData')
 @Controller('master-data')
@@ -54,6 +55,19 @@ export class RatesController {
   @ApiOperation({ summary: 'Set pallet threshold default (%)' })
   async setPalletThreshold(@Body() dto: SetPalletThresholdDto) {
     await this.service.setPalletThreshold(dto.value);
+    return { value: dto.value };
+  }
+
+  @Get('settings/vehicle-rate-mode')
+  @ApiOperation({ summary: 'Get vehicle rate mode (REPLACE|ADD)' })
+  async getVehicleRateMode() {
+    return { value: await this.service.getVehicleRateMode() };
+  }
+
+  @Put('settings/vehicle-rate-mode')
+  @ApiOperation({ summary: 'Set vehicle rate mode (REPLACE|ADD)' })
+  async setVehicleRateMode(@Body() dto: SetVehicleRateModeDto) {
+    await this.service.setVehicleRateMode(dto.value);
     return { value: dto.value };
   }
 }

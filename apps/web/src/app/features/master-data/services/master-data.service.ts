@@ -114,6 +114,15 @@ export class MasterDataService {
     return firstValueFrom(this.http.put<{ value: number }>(`${this.base}/settings/pallet-threshold`, { value }));
   }
 
+  getVehicleRateMode(): Promise<{ value: 'REPLACE' | 'ADD' }> {
+    return firstValueFrom(this.http.get<{ value: 'REPLACE' | 'ADD' }>(`${this.base}/settings/vehicle-rate-mode`));
+  }
+  setVehicleRateMode(value: 'REPLACE' | 'ADD'): Promise<{ value: 'REPLACE' | 'ADD' }> {
+    return firstValueFrom(
+      this.http.put<{ value: 'REPLACE' | 'ADD' }>(`${this.base}/settings/vehicle-rate-mode`, { value }),
+    );
+  }
+
   importParse(kind: 'partners' | 'products', file: File, mapping: Record<string, string>): Promise<ImportParseResult> {
     const form = new FormData();
     form.append('file', file);

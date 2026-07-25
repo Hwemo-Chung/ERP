@@ -13,7 +13,10 @@ const prismaMock: any = {
   settlementPeriod: { upsert: jest.fn() },
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
-const ratesMock = { getPalletThreshold: jest.fn().mockResolvedValue(70) };
+const ratesMock = {
+  getPalletThreshold: jest.fn().mockResolvedValue(70),
+  getVehicleRateMode: jest.fn().mockResolvedValue('REPLACE'),
+};
 
 function txFixture(over: object = {}) {
   return {
@@ -88,6 +91,19 @@ describe('SettlementFeesService', () => {
     const p2Result = r.partners.find((p: any) => p.partnerId === 'p2');
     expect(p2Result?.errors[0]).toMatchObject({ code: 'E4112' });
     await expect(service.closeMonth('2026-07', 'u1')).rejects.toThrow(/E4109/);
+  });
+
+  it('fetches vehicle rate mode once per run and forwards it into calcTransportFee (ADD mode sums vehicle+product)', async () => {
+    ratesMock.getVehicleRateMode.mockResolvedValueOnce('ADD');
+    prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+      txFixture({ vehicleRateId: 'v1', vehicleRate: { rate: '100000' } }),
+    ]);
+    await service.closeMonth('2026-07', 'u1');
+    expect(ratesMock.getVehicleRateMode).toHaveBeenCalledTimes(1);
+    const rows = prismaMock.settlementRecord.createMany.mock.calls.at(-1)![0].data;
+    const transportRow = rows.find((r: any) => r.feeType === 'TRANSPORT');
+    expect(transportRow.amount).toBe('105000'); // 100000 (vehicle) + 5000 (product)
+    expect(transportRow.calculationDetail.vehicleRateMode).toBe('ADD');
   });
 
   it('getStatement denies other partner for scoped caller', async () => {

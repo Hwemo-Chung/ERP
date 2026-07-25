@@ -15,6 +15,11 @@ const RATE_SOURCE_LABEL: Record<TransportFeeDetail['rateSource'], string> = {
   PARTNER_DEFAULT: '거래처 기본 단가',
 };
 
+const VEHICLE_RATE_MODE_LABEL: Record<TransportFeeDetail['vehicleRateMode'], string> = {
+  REPLACE: '차량 단가로 대체',
+  ADD: '건당 요율에 합산',
+};
+
 @Component({
   selector: 'app-breakdown',
   standalone: true,
@@ -54,9 +59,23 @@ const RATE_SOURCE_LABEL: Record<TransportFeeDetail['rateSource'], string> = {
               <ion-note slot="end">{{ rateSourceLabel(td.rateSource) }}</ion-note>
             </ion-item>
             <ion-item>
+              <ion-label>운송료 계산 방식</ion-label>
+              <ion-note slot="end">{{ vehicleRateModeLabel(td.vehicleRateMode) }}</ion-note>
+            </ion-item>
+            <ion-item>
               <ion-label>적용 요율</ion-label>
               <ion-note slot="end">{{ td.appliedRate }}</ion-note>
             </ion-item>
+            @if (td.vehicleRateMode === 'ADD' && td.baseRate) {
+              <ion-item>
+                <ion-label>차량 단가</ion-label>
+                <ion-note slot="end">{{ td.vehicleRate }}</ion-note>
+              </ion-item>
+              <ion-item>
+                <ion-label>건당 요율</ion-label>
+                <ion-note slot="end">{{ td.baseRate }}</ion-note>
+              </ion-item>
+            }
             <ion-item>
               <ion-label>계산식</ion-label>
               <ion-note slot="end">{{ td.formula }}</ion-note>
@@ -162,6 +181,10 @@ export class BreakdownPage implements OnInit {
 
   rateSourceLabel(source: TransportFeeDetail['rateSource']): string {
     return RATE_SOURCE_LABEL[source];
+  }
+
+  vehicleRateModeLabel(mode: TransportFeeDetail['vehicleRateMode']): string {
+    return VEHICLE_RATE_MODE_LABEL[mode];
   }
 
   productEntries(perProduct: PalletDailyDetail['perProduct']) {

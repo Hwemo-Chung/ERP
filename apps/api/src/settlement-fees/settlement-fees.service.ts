@@ -38,6 +38,7 @@ export class SettlementFeesService {
   private async computeMonth(yearMonth: string) {
     const { y, m, start, end } = this.monthRange(yearMonth);
     const globalThreshold = await this.rates.getPalletThreshold();
+    const vehicleRateMode = await this.rates.getVehicleRateMode();
     const partners = await this.prisma.partner.findMany({ where: { isActive: true } });
     const contracts = await this.prisma.storageContract.findMany({ where: { isActive: true } });
     const contractByPartner = new Map(contracts.map((c) => [c.partnerId, c]));
@@ -62,11 +63,14 @@ export class SettlementFeesService {
       // 운송료: 출고 건당
       for (const tx of partnerTxs.filter((t) => t.type === 'OUTBOUND')) {
         try {
-          const fee = calcTransportFee({
-            productRate: tx.product.transportRate?.toString() ?? null,
-            partnerDefaultRate: tx.partner.defaultTransportRate?.toString() ?? null,
-            vehicleRate: tx.vehicleRate?.rate?.toString() ?? null,
-          });
+          const fee = calcTransportFee(
+            {
+              productRate: tx.product.transportRate?.toString() ?? null,
+              partnerDefaultRate: tx.partner.defaultTransportRate?.toString() ?? null,
+              vehicleRate: tx.vehicleRate?.rate?.toString() ?? null,
+            },
+            vehicleRateMode,
+          );
           transportTotal = transportTotal.add(fee.amount);
           records.push({
             transactionId: tx.id,

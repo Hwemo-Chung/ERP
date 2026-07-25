@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { isStaffOnly } from '../common/staff-price-visibility.util';
 
 export const PALLET_THRESHOLD_KEY = 'pallet_threshold_default';
+export const VEHICLE_RATE_MODE_KEY = 'vehicle_rate_mode';
+export type VehicleRateModeSetting = 'REPLACE' | 'ADD';
 
 @Injectable()
 export class RatesService {
@@ -58,6 +60,19 @@ export class RatesService {
       where: { key: PALLET_THRESHOLD_KEY },
       create: { key: PALLET_THRESHOLD_KEY, value: String(pct) },
       update: { value: String(pct) },
+    });
+  }
+
+  async getVehicleRateMode(): Promise<VehicleRateModeSetting> {
+    const s = await this.prisma.systemSetting.findUnique({ where: { key: VEHICLE_RATE_MODE_KEY } });
+    return (s?.value as VehicleRateModeSetting) ?? 'REPLACE';
+  }
+
+  async setVehicleRateMode(mode: VehicleRateModeSetting): Promise<void> {
+    await this.prisma.systemSetting.upsert({
+      where: { key: VEHICLE_RATE_MODE_KEY },
+      create: { key: VEHICLE_RATE_MODE_KEY, value: mode },
+      update: { value: mode },
     });
   }
 }

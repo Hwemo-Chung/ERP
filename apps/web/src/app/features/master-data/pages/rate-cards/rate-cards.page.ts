@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonInput,
-  IonButton, IonNote, IonBackButton, IonButtons, IonIcon, AlertController,
+  IonButton, IonNote, IonBackButton, IonButtons, IonIcon, IonSelect, IonSelectOption, AlertController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { createOutline, closeCircleOutline } from 'ionicons/icons';
@@ -13,7 +13,7 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
   selector: 'app-rate-cards',
   standalone: true,
   imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-    IonLabel, IonInput, IonButton, IonNote, IonBackButton, IonButtons, IonIcon],
+    IonLabel, IonInput, IonButton, IonNote, IonBackButton, IonButtons, IonIcon, IonSelect, IonSelectOption],
   template: `
     <ion-header><ion-toolbar>
       <ion-buttons slot="start"><ion-back-button defaultHref="/tabs" /></ion-buttons>
@@ -24,6 +24,13 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
         <ion-item>
           <ion-input label="전역 파렛트 적재 기준(%)" type="number" [(ngModel)]="palletThreshold" />
           <ion-button slot="end" fill="clear" [disabled]="savingThreshold()" (click)="savePalletThreshold()">저장</ion-button>
+        </ion-item>
+        <ion-item>
+          <ion-select label="운송료 계산 방식" [(ngModel)]="vehicleRateMode" interface="popover">
+            <ion-select-option value="REPLACE">차량 단가로 대체</ion-select-option>
+            <ion-select-option value="ADD">건당 요율에 합산</ion-select-option>
+          </ion-select>
+          <ion-button slot="end" fill="clear" [disabled]="savingVehicleRateMode()" (click)="saveVehicleRateMode()">저장</ion-button>
         </ion-item>
       </ion-list>
 
@@ -86,12 +93,15 @@ export class RateCardsPage implements OnInit {
   palletThreshold = '';
   savingThreshold = signal(false);
 
+  vehicleRateMode: 'REPLACE' | 'ADD' = 'REPLACE';
+  savingVehicleRateMode = signal(false);
+
   constructor() {
     addIcons({ createOutline, closeCircleOutline });
   }
 
   async ngOnInit() {
-    await Promise.all([this.load(), this.loadPalletThreshold()]);
+    await Promise.all([this.load(), this.loadPalletThreshold(), this.loadVehicleRateMode()]);
   }
 
   async load() {
@@ -110,6 +120,20 @@ export class RateCardsPage implements OnInit {
       await this.api.setPalletThreshold(Number(this.palletThreshold));
     } finally {
       this.savingThreshold.set(false);
+    }
+  }
+
+  async loadVehicleRateMode() {
+    const res = await this.api.getVehicleRateMode();
+    this.vehicleRateMode = res.value;
+  }
+
+  async saveVehicleRateMode() {
+    this.savingVehicleRateMode.set(true);
+    try {
+      await this.api.setVehicleRateMode(this.vehicleRateMode);
+    } finally {
+      this.savingVehicleRateMode.set(false);
     }
   }
 
