@@ -60,9 +60,9 @@ export class TransactionsController {
         throw new ForbiddenException('error.insufficient_permissions');
       }
       const scope: TransactionScope = { partnerId: user.partnerId };
-      return this.service.findAll(q, scope);
+      return this.service.findAll(q, scope, user.roles);
     }
-    return this.service.findAll(q, {});
+    return this.service.findAll(q, {}, user.roles);
   }
 
   @Post('import/parse')

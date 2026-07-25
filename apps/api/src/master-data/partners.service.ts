@@ -1,9 +1,11 @@
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 // ponytail: import from the `/utils` subpath, not the `@erp/shared` root barrel — the root
 // re-exports Angular-only interceptors (packages/shared/src/interceptors) which pull in
 // @angular/core and fail to transform under this app's plain ts-jest (CJS) config.
 import { validateBusinessRegistrationNo, normalizeBrn } from '@erp/shared/utils';
+import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreatePartnerDto, StorageContractDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { GetPartnersDto } from './dto/get-partners.dto';
@@ -84,13 +86,13 @@ export class PartnersService {
     return `P-${String(n).padStart(4, '0')}`;
   }
 
-  async findAll(query: GetPartnersDto) {
+  async findAll(query: GetPartnersDto, callerRoles: Role[] = []) {
     const page = query.page ?? 1;
     const pageSize = Math.min(query.pageSize ?? 20, 100);
     const where = query.search
       ? { OR: [{ name: { contains: query.search } }, { code: { contains: query.search } }] }
       : {};
-    const [data, totalCount] = await Promise.all([
+    const [rows, totalCount] = await Promise.all([
       this.prisma.partner.findMany({
         where,
         skip: (page - 1) * pageSize,
@@ -100,6 +102,11 @@ export class PartnersService {
       }),
       this.prisma.partner.count({ where }),
     ]);
+    // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 요율 fields — the dropdown
+    // this feeds only needs id/code/name.
+    const data = isStaffOnly(callerRoles)
+      ? rows.map(({ defaultTransportRate: _defaultTransportRate, ...rest }) => rest)
+      : rows;
     return { data, totalCount };
   }
 

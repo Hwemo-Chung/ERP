@@ -1,5 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { GetProductsDto } from './dto/get-products.dto';
@@ -28,7 +30,7 @@ export class ProductsService {
     return `I-${String(n).padStart(5, '0')}`;
   }
 
-  async findAll(query: GetProductsDto) {
+  async findAll(query: GetProductsDto, callerRoles: Role[] = []) {
     const page = query.page ?? 1;
     const pageSize = Math.min(query.pageSize ?? 20, 100);
     const where = {
@@ -36,7 +38,7 @@ export class ProductsService {
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(query.search ? { OR: [{ name: { contains: query.search } }, { code: { contains: query.search } }] } : {}),
     };
-    const [data, totalCount] = await Promise.all([
+    const [rows, totalCount] = await Promise.all([
       this.prisma.product.findMany({
         where,
         skip: (page - 1) * pageSize,
@@ -46,6 +48,11 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
+    // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 단가/원가/요율 — the
+    // entry-screen dropdown this feeds only needs id/code/name.
+    const data = isStaffOnly(callerRoles)
+      ? rows.map(({ unitPrice: _unitPrice, costPrice: _costPrice, transportRate: _transportRate, ...rest }) => rest)
+      : rows;
     return { data, totalCount };
   }
 

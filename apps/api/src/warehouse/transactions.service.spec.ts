@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { TransactionsService } from './transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
@@ -106,5 +107,34 @@ describe('TransactionsService', () => {
     expect(prismaMock.warehouseTransaction.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ partnerId: 'p1' }) }),
     );
+  });
+
+  describe('findAll — F1 role-aware projection (spec §2: no 요율 for staff)', () => {
+    const row = {
+      id: 't1', partnerId: 'p1',
+      vehicleRate: { id: 'r1', vehicleType: '트럭', tonnage: '5', containerSize: null, specialEquipment: null, rate: '50000' },
+    };
+
+    beforeEach(() => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([row]);
+      prismaMock.warehouseTransaction.count.mockResolvedValue(1);
+    });
+
+    it('strips vehicleRate.rate for a WAREHOUSE_STAFF-only caller, keeping id/type/tonnage labels', async () => {
+      const r = await service.findAll({}, {}, [Role.WAREHOUSE_STAFF]);
+      expect(r.data[0].vehicleRate).not.toHaveProperty('rate');
+      expect(r.data[0].vehicleRate).toMatchObject({ id: 'r1', vehicleType: '트럭', tonnage: '5' });
+    });
+
+    it('keeps vehicleRate.rate for HQ_ADMIN', async () => {
+      const r = await service.findAll({}, {}, [Role.HQ_ADMIN]);
+      expect(r.data[0].vehicleRate).toHaveProperty('rate', '50000');
+    });
+
+    it('does not choke when vehicleRate is null', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([{ id: 't2', partnerId: 'p1', vehicleRate: null }]);
+      const r = await service.findAll({}, {}, [Role.WAREHOUSE_STAFF]);
+      expect(r.data[0].vehicleRate).toBeNull();
+    });
   });
 });

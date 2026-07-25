@@ -4,6 +4,8 @@ import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { RatesService } from './rates.service';
 import { CreateRateCardDto } from './dto/create-rate-card.dto';
 import { UpdateRateCardDto } from './dto/update-rate-card.dto';
@@ -26,8 +28,8 @@ export class RatesController {
   @Get('rate-cards')
   @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF) // method-level override: warehouse staff need the optional vehicle select for transaction entry (read-only; write stays HQ_ADMIN via class-level @Roles above)
   @ApiOperation({ summary: 'List active transport rate cards' })
-  findAll() {
-    return this.service.listRateCards();
+  findAll(@CurrentUser() user: JwtPayload) {
+    return this.service.listRateCards(user.roles);
   }
 
   @Patch('rate-cards/:id')

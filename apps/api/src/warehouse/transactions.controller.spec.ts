@@ -32,6 +32,7 @@ describe('TransactionsController', () => {
     expect(service.findAll).toHaveBeenCalledWith(
       { partnerId: 'REQUESTED-OTHER' },
       { partnerId: 'p1' },
+      [Role.PARTNER_COORDINATOR],
     );
   });
 
@@ -52,6 +53,6 @@ describe('TransactionsController', () => {
 
     await controller.findAll({ partnerId: 'ANY' } as any, user);
 
-    expect(service.findAll).toHaveBeenCalledWith({ partnerId: 'ANY' }, {});
+    expect(service.findAll).toHaveBeenCalledWith({ partnerId: 'ANY' }, {}, [Role.HQ_ADMIN]);
   });
 });

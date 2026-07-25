@@ -1,10 +1,18 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PartnersService } from './partners.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const prismaMock = {
-  partner: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), findMany: jest.fn() },
+  partner: {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
   storageContract: { create: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -74,5 +82,34 @@ describe('PartnersService', () => {
     expect(prismaMock.partner.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ code: 'KM001' }) }),
     );
+  });
+
+  describe('findAll — F1 role-aware projection (spec §2: no 요율 for staff)', () => {
+    const rows = [{ id: 'p1', code: 'P-0001', name: 'A', defaultTransportRate: '3000' }];
+
+    beforeEach(() => {
+      prismaMock.partner.findMany.mockResolvedValue(rows);
+      prismaMock.partner.count.mockResolvedValue(1);
+    });
+
+    it('strips defaultTransportRate for a WAREHOUSE_STAFF-only caller', async () => {
+      const r = await service.findAll({}, [Role.WAREHOUSE_STAFF]);
+      expect(r.data[0]).not.toHaveProperty('defaultTransportRate');
+    });
+
+    it('keeps defaultTransportRate for HQ_ADMIN', async () => {
+      const r = await service.findAll({}, [Role.HQ_ADMIN]);
+      expect(r.data[0]).toHaveProperty('defaultTransportRate', '3000');
+    });
+
+    it('keeps defaultTransportRate when the caller carries both roles', async () => {
+      const r = await service.findAll({}, [Role.HQ_ADMIN, Role.WAREHOUSE_STAFF]);
+      expect(r.data[0]).toHaveProperty('defaultTransportRate', '3000');
+    });
+
+    it('defaults to unfiltered when no roles are passed', async () => {
+      const r = await service.findAll({});
+      expect(r.data[0]).toHaveProperty('defaultTransportRate', '3000');
+    });
   });
 });

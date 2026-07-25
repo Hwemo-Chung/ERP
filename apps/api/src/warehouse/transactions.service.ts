@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { TransactionSource } from '@prisma/client';
+import { Role, TransactionSource } from '@prisma/client';
+import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { GetTransactionsDto } from './dto/get-transactions.dto';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
@@ -59,7 +60,7 @@ export class TransactionsService {
     });
   }
 
-  async findAll(q: GetTransactionsDto, scope: TransactionScope) {
+  async findAll(q: GetTransactionsDto, scope: TransactionScope, callerRoles: Role[] = []) {
     const page = q.page ?? 1;
     const pageSize = Math.min(q.pageSize ?? 50, 200);
     const partnerId = scope.partnerId ?? q.partnerId; // 강제 스코프 우선
@@ -75,7 +76,7 @@ export class TransactionsService {
           }
         : {}),
     };
-    const [data, totalCount] = await Promise.all([
+    const [rows, totalCount] = await Promise.all([
       this.prisma.warehouseTransaction.findMany({
         where,
         skip: (page - 1) * pageSize,
@@ -85,6 +86,16 @@ export class TransactionsService {
       }),
       this.prisma.warehouseTransaction.count({ where }),
     ]);
+    // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 요율 — vehicleRate stays for
+    // its id/vehicleType/tonnage/containerSize/specialEquipment labels, minus `rate`.
+    const data = isStaffOnly(callerRoles)
+      ? rows.map((t) => (t.vehicleRate ? { ...t, vehicleRate: stripRate(t.vehicleRate) } : t))
+      : rows;
     return { data, totalCount };
   }
+}
+
+function stripRate<T extends { rate: unknown }>(vehicleRate: T): Omit<T, 'rate'> {
+  const { rate: _rate, ...rest } = vehicleRate;
+  return rest;
 }

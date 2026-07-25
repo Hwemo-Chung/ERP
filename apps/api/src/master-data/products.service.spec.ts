@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -62,5 +63,34 @@ describe('ProductsService', () => {
   it('throws NotFoundException when updating a missing product', async () => {
     prismaMock.product.findUnique.mockResolvedValue(null);
     await expect(service.update('missing', { name: 'x' }, 'user1')).rejects.toThrow(NotFoundException);
+  });
+
+  describe('findAll — F1 role-aware projection (spec §2: no 단가/원가/요율 for staff)', () => {
+    const rows = [
+      { id: 'prod1', code: 'I-00001', name: '냉장고', unitPrice: '1200000', costPrice: '900000', transportRate: '5000' },
+    ];
+
+    beforeEach(() => {
+      prismaMock.product.findMany.mockResolvedValue(rows);
+      prismaMock.product.count.mockResolvedValue(1);
+    });
+
+    it('strips unitPrice/costPrice/transportRate for a WAREHOUSE_STAFF-only caller', async () => {
+      const r = await service.findAll({}, [Role.WAREHOUSE_STAFF]);
+      expect(r.data[0]).not.toHaveProperty('unitPrice');
+      expect(r.data[0]).not.toHaveProperty('costPrice');
+      expect(r.data[0]).not.toHaveProperty('transportRate');
+      expect(r.data[0]).toMatchObject({ id: 'prod1', code: 'I-00001', name: '냉장고' });
+    });
+
+    it('keeps unitPrice/costPrice/transportRate for HQ_ADMIN', async () => {
+      const r = await service.findAll({}, [Role.HQ_ADMIN]);
+      expect(r.data[0]).toMatchObject({ unitPrice: '1200000', costPrice: '900000', transportRate: '5000' });
+    });
+
+    it('keeps fields when the caller carries both roles', async () => {
+      const r = await service.findAll({}, [Role.HQ_ADMIN, Role.WAREHOUSE_STAFF]);
+      expect(r.data[0]).toHaveProperty('unitPrice');
+    });
   });
 });

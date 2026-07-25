@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { isStaffOnly } from '../common/staff-price-visibility.util';
 
 export const PALLET_THRESHOLD_KEY = 'pallet_threshold_default';
 
@@ -17,11 +19,15 @@ export class RatesService {
     return this.prisma.transportRateCard.create({ data: dto });
   }
 
-  listRateCards() {
-    return this.prisma.transportRateCard.findMany({
+  async listRateCards(callerRoles: Role[] = []) {
+    const cards = await this.prisma.transportRateCard.findMany({
       where: { isActive: true },
       orderBy: [{ vehicleType: 'asc' }, { tonnage: 'asc' }],
     });
+    // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 요율 — the vehicle-select
+    // dropdown only needs id/vehicleType/tonnage/containerSize/specialEquipment labels.
+    if (!isStaffOnly(callerRoles)) return cards;
+    return cards.map(({ rate: _rate, ...rest }) => rest);
   }
 
   async updateRateCard(
