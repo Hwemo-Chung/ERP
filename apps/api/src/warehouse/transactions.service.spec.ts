@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
 
 const prismaMock = {
   warehouseTransaction: { create: jest.fn(), findMany: jest.fn(), count: jest.fn() },
@@ -49,6 +50,12 @@ describe('TransactionsService', () => {
       expect(error).toBeInstanceOf(ConflictException);
       expect(error.response?.code).toBe('E2002');
     }
+
+    expect(prismaMock.settlementPeriod.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, status: 'LOCKED' }),
+      }),
+    );
   });
 
   it('creates transaction with source PWA and creator', async () => {

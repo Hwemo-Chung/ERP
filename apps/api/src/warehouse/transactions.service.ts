@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TransactionSource } from '@prisma/client';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { GetTransactionsDto } from './dto/get-transactions.dto';
+import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
 
 export interface TransactionScope {
   partnerId?: string;
@@ -23,7 +24,12 @@ export class TransactionsService {
 
     const txDate = new Date(dto.transactionDate);
     const locked = await this.prisma.settlementPeriod.findFirst({
-      where: { status: 'LOCKED', periodStart: { lte: txDate }, periodEnd: { gte: txDate } },
+      where: {
+        branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID,
+        status: 'LOCKED',
+        periodStart: { lte: txDate },
+        periodEnd: { gte: txDate },
+      },
     });
     if (locked) {
       throw new ConflictException({
