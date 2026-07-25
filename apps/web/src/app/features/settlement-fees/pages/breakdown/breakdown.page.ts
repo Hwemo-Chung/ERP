@@ -136,6 +136,16 @@ const VEHICLE_RATE_MODE_LABEL: Record<TransportFeeDetail['vehicleRateMode'], str
               <ion-note slot="end">{{ ad.areaRate }}</ion-note>
             </ion-item>
             <ion-item>
+              <ion-label>청구 방식</ion-label>
+              <ion-note slot="end">{{ ad.areaBillingMode === 'DAILY_PRORATED' ? '일할 계산' : '월할 고정' }}</ion-note>
+            </ion-item>
+            @if (ad.areaBillingMode === 'DAILY_PRORATED' && ad.coveredDays !== undefined) {
+              <ion-item>
+                <ion-label>대상 일수</ion-label>
+                <ion-note slot="end">{{ ad.coveredDays }}일 / {{ ad.daysInMonth }}일</ion-note>
+              </ion-item>
+            }
+            <ion-item>
               <ion-label>계산식</ion-label>
               <ion-note slot="end">{{ ad.formula }}</ion-note>
             </ion-item>

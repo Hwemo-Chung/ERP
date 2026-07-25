@@ -126,6 +126,9 @@ export class SettlementFeesService {
             contract.contractType as 'AREA_MONTHLY' | 'AREA_YEARLY',
             y,
             m,
+            contract.areaBillingMode ?? 'FULL_MONTH',
+            contract.startDate,
+            contract.endDate,
           );
         }
         storageTotal = new Prisma.Decimal(storage.amount);

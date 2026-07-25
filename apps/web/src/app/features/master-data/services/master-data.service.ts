@@ -16,6 +16,7 @@ export interface PartnerRow {
 export interface StorageContractRow {
   contractType: 'PALLET_DAILY' | 'AREA_MONTHLY' | 'AREA_YEARLY';
   palletDailyRate?: string; areaPyeong?: string; areaRate?: string;
+  areaBillingMode?: 'FULL_MONTH' | 'DAILY_PRORATED';
   startDate: string; endDate?: string;
 }
 export interface ProductRow {

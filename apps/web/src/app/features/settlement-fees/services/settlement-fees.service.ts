@@ -57,6 +57,9 @@ export interface AreaFeeDetail {
   areaPyeong: string;
   areaRate: string;
   period: string;
+  areaBillingMode: 'FULL_MONTH' | 'DAILY_PRORATED';
+  coveredDays?: number;
+  daysInMonth?: number;
   formula: string;
 }
 

@@ -54,6 +54,12 @@ import { MasterDataService, PartnerRow, StorageContractRow } from '../../service
             } @else {
               <ion-item><ion-input label="계약 면적(평) *" type="number" [(ngModel)]="areaPyeong" /></ion-item>
               <ion-item><ion-input label="평당 단가 *" type="number" [(ngModel)]="areaRate" /></ion-item>
+              <ion-item>
+                <ion-select label="청구 방식" [(ngModel)]="areaBillingMode" interface="popover">
+                  <ion-select-option value="FULL_MONTH">월할 고정</ion-select-option>
+                  <ion-select-option value="DAILY_PRORATED">일할 계산</ion-select-option>
+                </ion-select>
+              </ion-item>
             }
             <ion-item><ion-input label="계약 시작일 *" type="date" [(ngModel)]="startDate" /></ion-item>
           } @else {
@@ -80,6 +86,7 @@ export class PartnerFormPage implements OnInit {
   defaultTransportRate = '';
   contractType: StorageContractRow['contractType'] = 'PALLET_DAILY';
   palletDailyRate = ''; areaPyeong = ''; areaRate = ''; startDate = '';
+  areaBillingMode: NonNullable<StorageContractRow['areaBillingMode']> = 'FULL_MONTH';
 
   saving = signal(false);
   error = signal('');
@@ -143,7 +150,7 @@ export class PartnerFormPage implements OnInit {
             contractType: this.contractType,
             ...(this.contractType === 'PALLET_DAILY'
               ? { palletDailyRate: this.palletDailyRate }
-              : { areaPyeong: this.areaPyeong, areaRate: this.areaRate }),
+              : { areaPyeong: this.areaPyeong, areaRate: this.areaRate, areaBillingMode: this.areaBillingMode }),
             startDate: this.startDate,
           },
         } as any);

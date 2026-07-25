@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
 
 describe('buildDailyStock', () => {
@@ -71,5 +72,57 @@ describe('calcStorageFeeArea', () => {
   });
   it('yearly: divided by 12', () => {
     expect(calcStorageFeeArea('120', '12000', 'AREA_YEARLY', 2026, 7).amount).toBe('120000');
+  });
+
+  describe('DAILY_PRORATED billing mode', () => {
+    // 2026-07 has 31 days. Monthly gross = 100 * 10000 = 1,000,000.
+    it('contract starts mid-month: prorates from start date to month end', () => {
+      const r = calcStorageFeeArea(
+        '100', '10000', 'AREA_MONTHLY', 2026, 7, 'DAILY_PRORATED',
+        new Date('2026-07-16'), null,
+      );
+      // 7/16 ~ 7/31 inclusive = 16 days
+      expect(r.detail.coveredDays).toBe(16);
+      expect(r.detail.daysInMonth).toBe(31);
+      expect(r.amount).toBe(new Prisma.Decimal(1000000).mul(16).div(31).toFixed(0));
+    });
+
+    it('contract ends mid-month: prorates from month start to end date', () => {
+      const r = calcStorageFeeArea(
+        '100', '10000', 'AREA_MONTHLY', 2026, 7, 'DAILY_PRORATED',
+        new Date('2026-06-01'), new Date('2026-07-10'),
+      );
+      // 7/1 ~ 7/10 inclusive = 10 days
+      expect(r.detail.coveredDays).toBe(10);
+      expect(r.amount).toBe(new Prisma.Decimal(1000000).mul(10).div(31).toFixed(0));
+    });
+
+    it('contract covers the full month: same as FULL_MONTH', () => {
+      const r = calcStorageFeeArea(
+        '100', '10000', 'AREA_MONTHLY', 2026, 7, 'DAILY_PRORATED',
+        new Date('2026-01-01'), null,
+      );
+      expect(r.detail.coveredDays).toBe(31);
+      expect(r.amount).toBe('1000000');
+    });
+
+    it('no overlap with the target month: amount is 0', () => {
+      const r = calcStorageFeeArea(
+        '100', '10000', 'AREA_MONTHLY', 2026, 7, 'DAILY_PRORATED',
+        new Date('2026-08-01'), null,
+      );
+      expect(r.detail.coveredDays).toBe(0);
+      expect(r.amount).toBe('0');
+    });
+
+    it('AREA_YEARLY proration applies to the post-÷12 monthly amount', () => {
+      // monthly = 120*12000/12 = 120000; contract active 7/1~7/15 (15 days)/31
+      const r = calcStorageFeeArea(
+        '120', '12000', 'AREA_YEARLY', 2026, 7, 'DAILY_PRORATED',
+        new Date('2026-07-01'), new Date('2026-07-15'),
+      );
+      expect(r.detail.coveredDays).toBe(15);
+      expect(r.amount).toBe(new Prisma.Decimal(120000).mul(15).div(31).toFixed(0));
+    });
   });
 });

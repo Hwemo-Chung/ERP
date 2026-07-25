@@ -74,6 +74,33 @@ describe('PartnersService', () => {
     );
   });
 
+  it('persists areaBillingMode on the storage contract when provided', async () => {
+    prismaMock.partner.findFirst.mockResolvedValue(null);
+    prismaMock.partner.create.mockResolvedValue({ id: 'p1', code: 'P-0001' });
+    await service.create({
+      ...baseDto,
+      storageContract: {
+        contractType: 'AREA_MONTHLY',
+        areaPyeong: '100',
+        areaRate: '10000',
+        areaBillingMode: 'DAILY_PRORATED',
+        startDate: '2026-07-01',
+      },
+    });
+    expect(prismaMock.storageContract.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ areaBillingMode: 'DAILY_PRORATED' }) }),
+    );
+  });
+
+  it('leaves areaBillingMode undefined (DB default FULL_MONTH applies) when not provided', async () => {
+    prismaMock.partner.findFirst.mockResolvedValue(null);
+    prismaMock.partner.create.mockResolvedValue({ id: 'p1', code: 'P-0001' });
+    await service.create(baseDto);
+    expect(prismaMock.storageContract.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ areaBillingMode: undefined }) }),
+    );
+  });
+
   it('keeps provided excel code as-is', async () => {
     prismaMock.partner.findFirst.mockResolvedValue(null);
     prismaMock.partner.findUnique.mockResolvedValue(null);

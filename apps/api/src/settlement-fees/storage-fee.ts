@@ -41,11 +41,16 @@ export interface PalletDailyDetail {
   formula: string;
 }
 
+export type AreaBillingMode = 'FULL_MONTH' | 'DAILY_PRORATED';
+
 export interface AreaFeeDetail {
   contractType: 'AREA_MONTHLY' | 'AREA_YEARLY';
   areaPyeong: string;
   areaRate: string;
   period: string;
+  areaBillingMode: AreaBillingMode;
+  coveredDays?: number;
+  daysInMonth?: number;
   formula: string;
 }
 
@@ -86,19 +91,59 @@ export function calcStorageFeePalletDaily(
   };
 }
 
+/** UTC 기준 [year, month] 월의 일수. monthRange(settlement-fees.service.ts)와 동일한
+ * Date.UTC 규약 — @db.Date 컬럼은 Prisma에서 UTC 자정으로 돌아오므로 local Date를 쓰면
+ * KST 등 UTC+ 타임존 서버에서 하루씩 밀린다. */
+function daysInMonthUTC(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/** 계약 기간 [startDate, endDate ?? ∞]와 대상 월의 겹치는 일수 (endDate는 포함). */
+function coveredDaysInMonth(year: number, month: number, startDate: Date, endDate: Date | null): number {
+  const monthStart = Date.UTC(year, month - 1, 1);
+  const monthEnd = Date.UTC(year, month, 1); // exclusive
+  const contractStart = startDate.getTime();
+  const contractEnd = endDate ? endDate.getTime() + 24 * 60 * 60 * 1000 : Infinity; // endDate inclusive → exclusive boundary is next day
+  const overlapStart = Math.max(monthStart, contractStart);
+  const overlapEnd = Math.min(monthEnd, contractEnd);
+  const coveredMs = Math.max(0, overlapEnd - overlapStart);
+  return Math.round(coveredMs / (24 * 60 * 60 * 1000));
+}
+
 export function calcStorageFeeArea(
   areaPyeong: string, areaRate: string,
   contractType: 'AREA_MONTHLY' | 'AREA_YEARLY', year: number, month: number,
+  billingMode: AreaBillingMode = 'FULL_MONTH',
+  startDate?: Date, endDate?: Date | null,
 ): { amount: string; detail: AreaFeeDetail } {
   const gross = new Prisma.Decimal(areaPyeong).mul(new Prisma.Decimal(areaRate));
-  const amount = contractType === 'AREA_YEARLY' ? gross.div(12) : gross;
+  const monthlyAmount = contractType === 'AREA_YEARLY' ? gross.div(12) : gross;
+  const period = `${year}-${String(month).padStart(2, '0')}`;
+  const baseFormula = contractType === 'AREA_YEARLY'
+    ? `${areaPyeong}평 × ${areaRate} ÷ 12 (년임대 월할)`
+    : `${areaPyeong}평 × ${areaRate}`;
+
+  if (billingMode === 'DAILY_PRORATED' && startDate) {
+    const daysInMonth = daysInMonthUTC(year, month);
+    const coveredDays = coveredDaysInMonth(year, month, startDate, endDate ?? null);
+    const amount = monthlyAmount.mul(coveredDays).div(daysInMonth);
+    return {
+      amount: amount.toFixed(0),
+      detail: {
+        contractType, areaPyeong, areaRate, period,
+        areaBillingMode: 'DAILY_PRORATED',
+        coveredDays, daysInMonth,
+        formula: `(${baseFormula}) × ${coveredDays}/${daysInMonth}일`,
+      },
+    };
+  }
+
   return {
-    amount: amount.toFixed(0),
+    amount: monthlyAmount.toFixed(0),
     detail: {
-      contractType, areaPyeong, areaRate, period: `${year}-${String(month).padStart(2, '0')}`,
-      formula: contractType === 'AREA_YEARLY'
-        ? `${areaPyeong}평 × ${areaRate} ÷ 12 (년임대 월할)`
-        : `${areaPyeong}평 × ${areaRate}`,
+      contractType, areaPyeong, areaRate, period,
+      areaBillingMode: 'FULL_MONTH',
+      formula: baseFormula,
     },
   };
 }

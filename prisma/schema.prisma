@@ -585,6 +585,11 @@ enum StorageContractType {
   AREA_YEARLY
 }
 
+enum AreaBillingMode {
+  FULL_MONTH
+  DAILY_PRORATED
+}
+
 enum TransactionType {
   INBOUND
   OUTBOUND
@@ -660,6 +665,7 @@ model StorageContract {
   palletDailyRate Decimal?            @map("pallet_daily_rate") @db.Decimal(14, 2)
   areaPyeong      Decimal?            @map("area_pyeong") @db.Decimal(10, 2)
   areaRate        Decimal?            @map("area_rate") @db.Decimal(14, 2)
+  areaBillingMode AreaBillingMode     @default(FULL_MONTH) @map("area_billing_mode")
   startDate       DateTime            @map("start_date") @db.Date
   endDate         DateTime?           @map("end_date") @db.Date
   isActive        Boolean             @default(true) @map("is_active")

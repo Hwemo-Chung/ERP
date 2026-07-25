@@ -54,6 +54,7 @@ export class PartnersService {
           palletDailyRate: dto.storageContract.palletDailyRate,
           areaPyeong: dto.storageContract.areaPyeong,
           areaRate: dto.storageContract.areaRate,
+          areaBillingMode: dto.storageContract.areaBillingMode,
           startDate: new Date(dto.storageContract.startDate),
           endDate: dto.storageContract.endDate ? new Date(dto.storageContract.endDate) : null,
         },
@@ -114,7 +115,10 @@ export class PartnersService {
   async update(id: string, dto: UpdatePartnerDto, actorId: string) {
     const existing = await this.prisma.partner.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException({ code: 'E4104', message: 'partner not found' });
-    const { businessRegistrationNo, ...rest } = dto;
+    // areaBillingMode is a StorageContract column, not a Partner column — validated on the DTO
+    // (see update-partner.dto.ts) but there's no contract-update endpoint yet, so strip it here
+    // rather than forwarding it into partner.update (which would throw on an unknown field).
+    const { businessRegistrationNo, areaBillingMode: _areaBillingMode, ...rest } = dto;
     const brn = businessRegistrationNo ? normalizeBrn(businessRegistrationNo) : undefined;
     if (brn) {
       if (!validateBusinessRegistrationNo(brn)) {

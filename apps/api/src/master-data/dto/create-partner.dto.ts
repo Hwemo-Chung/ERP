@@ -9,13 +9,14 @@ import {
   IsDefined,
   MaxLength,
 } from 'class-validator';
-import { StorageContractType } from '@prisma/client';
+import { StorageContractType, AreaBillingMode } from '@prisma/client';
 
 export class StorageContractDto {
   @IsEnum(StorageContractType) contractType!: StorageContractType;
   @IsOptional() @IsNumberString() palletDailyRate?: string;
   @IsOptional() @IsNumberString() areaPyeong?: string;
   @IsOptional() @IsNumberString() areaRate?: string;
+  @IsOptional() @IsEnum(AreaBillingMode) areaBillingMode?: AreaBillingMode; // 면적 계약(AREA_*)에만 의미, default FULL_MONTH
   @IsDateString() startDate!: string;
   @IsOptional() @IsDateString() endDate?: string;
 }
