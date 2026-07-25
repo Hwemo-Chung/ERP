@@ -63,11 +63,17 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user info' })
   @ApiResponse({ status: 200, description: 'Current user info' })
   getMe(@CurrentUser() user: JwtPayload) {
+    // ponytail: partnerId added to close the divergence from UserInfoDto (login/refresh
+    // already return it). fullName/locale are deliberately still omitted here — this
+    // endpoint reads straight off the JWT (no DB round-trip), and those two fields
+    // aren't in JwtPayload at all; adding them would mean a DB read this endpoint has
+    // never done, which is out of scope for "include partnerId."
     return {
       id: user.sub,
       username: user.username,
       roles: user.roles,
       branchCode: user.branchCode,
+      partnerId: user.partnerId,
     };
   }
 }

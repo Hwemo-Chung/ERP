@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role, TransactionType, TransactionSource } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -310,6 +310,44 @@ async function main() {
     });
   }
   console.log(`✅ Created ${partnerCoordAccounts.length} partner coordinator accounts (partner-a, partner-b / password: test1234)`);
+
+  // Minimal warehouse-transaction chain for partner-a — without at least one real row,
+  // e2e/specs/partner-portal/partner-isolation.spec.ts's "sees only own transactions"
+  // test passes vacuously (its assertion loop never runs against an empty result set).
+  // Idempotent upserts, same pattern as the rest of this file.
+  const partnerAUser = await prisma.user.findUniqueOrThrow({ where: { username: 'partner-a' } });
+  const isolationCategory = await prisma.category.upsert({
+    where: { code: 'E2E-CAT' },
+    update: {},
+    create: { code: 'E2E-CAT', name: 'E2E 격리 테스트 카테고리', depth: 1 },
+  });
+  const isolationProduct = await prisma.product.upsert({
+    where: { code: 'E2E-PROD-A' },
+    update: { partnerId: partners[1].id },
+    create: {
+      code: 'E2E-PROD-A',
+      name: 'E2E 격리 테스트 품목 (partner-a)',
+      categoryId: isolationCategory.id,
+      partnerId: partners[1].id,
+      unitPrice: 1000,
+      costPrice: 500,
+    },
+  });
+  await prisma.warehouseTransaction.upsert({
+    where: { id: 'e2e-partner-a-outbound-001' },
+    update: {},
+    create: {
+      id: 'e2e-partner-a-outbound-001',
+      type: TransactionType.OUTBOUND,
+      partnerId: partners[1].id,
+      productId: isolationProduct.id,
+      quantity: 5,
+      transactionDate: new Date(),
+      source: TransactionSource.PWA,
+      createdBy: partnerAUser.id,
+    },
+  });
+  console.log('✅ Created partner-a isolation e2e fixture (1 category, 1 product, 1 outbound transaction)');
 
   // Create 50 Installers with Korean names
   const installers = [];

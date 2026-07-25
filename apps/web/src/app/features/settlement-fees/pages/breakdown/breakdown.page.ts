@@ -1,6 +1,6 @@
 // apps/web/src/app/features/settlement-fees/pages/breakdown/breakdown.page.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonNote,
   IonBackButton, IonButtons,
@@ -22,7 +22,7 @@ const RATE_SOURCE_LABEL: Record<TransportFeeDetail['rateSource'], string> = {
     IonBackButton, IonButtons],
   template: `
     <ion-header><ion-toolbar>
-      <ion-buttons slot="start"><ion-back-button defaultHref="/settlement-fees" /></ion-buttons>
+      <ion-buttons slot="start"><ion-back-button [defaultHref]="backHref" /></ion-buttons>
       <ion-title>정산 상세</ion-title>
     </ion-toolbar></ion-header>
     <ion-content class="ion-padding">
@@ -130,10 +130,21 @@ const RATE_SOURCE_LABEL: Record<TransportFeeDetail['rateSource'], string> = {
 })
 export class BreakdownPage implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private settlementFees = inject(SettlementFeesService);
 
   record = signal<SettlementRecordRow | null>(null);
   error = signal('');
+
+  // This component is reused under two route trees (/settlement-fees/breakdown/:id for
+  // HQ_ADMIN, /portal/breakdown/:id for PARTNER_COORDINATOR — see
+  // partner-portal.routes.ts). ion-back-button prefers the actual in-app navigation
+  // stack over defaultHref, but defaultHref is still what fires on a direct deep link /
+  // page reload with no stack — a hardcoded "/settlement-fees" there would dead-end a
+  // PARTNER_COORDINATOR at an HQ_ADMIN-only route (roleGuard redirects them away).
+  // Deriving it from the current URL prefix (rather than an injected role check) keeps
+  // this generic to whichever route tree the page was actually entered from.
+  backHref = this.router.url.startsWith('/portal') ? '/portal/my-statement' : '/settlement-fees';
 
   async ngOnInit() {
     const transactionId = this.route.snapshot.paramMap.get('transactionId')!;

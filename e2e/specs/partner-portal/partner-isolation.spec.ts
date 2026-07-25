@@ -18,7 +18,10 @@
  * This sandbox has neither Postgres nor the Nest server running, so these tests were
  * NOT executed live here — `test.skip(!process.env.E2E_LIVE, ...)` below skips (not
  * fails) the whole describe block by default, so this file is inert in any
- * environment/CI run that doesn't opt in. Verified instead via:
+ * environment/CI run that doesn't opt in. `E2E_LIVE=1` is not wired into any CI/pipeline
+ * config as part of this task (out of scope) — whoever adds this suite to a real
+ * pipeline must set that env var on the job that boots the live seeded stack. Verified
+ * instead via:
  *   - `npx playwright test --list` (this file parses and is collected correctly)
  *   - `tsc --noEmit` type-check against the real DTOs/response shapes, traced from
  *     apps/api/src source (transactions.controller.ts, settlement-fees.controller.ts,
@@ -80,6 +83,12 @@ test.describe('Partner data isolation (Task 17 — Task 13 review coverage gap)'
     // wraps again — so the row array is body.data.data, not body.data.
     const body = await res.json();
     const rows = body.data.data as Array<{ partnerId: string }>;
+    // Precondition: prisma/seed.ts seeds exactly one OUTBOUND WarehouseTransaction for
+    // partner-a (id 'e2e-partner-a-outbound-001', via a minimal Category/Product/
+    // WarehouseTransaction chain) specifically so this assertion isn't vacuous — without
+    // it, the loop below would run zero times against an empty array and "pass" without
+    // ever checking anything.
+    expect(rows.length).toBeGreaterThan(0);
     // transactions.controller.ts findAll(): PARTNER_COORDINATOR's scope.partnerId
     // (forced from the JWT) takes priority over any partnerId query param
     // ("강제 스코프 우선"), so every returned row must belong to partner A, never B —
