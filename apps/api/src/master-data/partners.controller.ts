@@ -8,6 +8,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PartnersService } from './partners.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
+import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { GetPartnersDto } from './dto/get-partners.dto';
 
 @ApiTags('MasterData')
 @Controller('master-data/partners')
@@ -25,7 +27,7 @@ export class PartnersController {
 
   @Get()
   @ApiOperation({ summary: 'List partners' })
-  findAll(@Query() q: { search?: string; page?: number; pageSize?: number }) {
+  findAll(@Query() q: GetPartnersDto) {
     return this.service.findAll(q);
   }
 
@@ -33,7 +35,7 @@ export class PartnersController {
   @ApiOperation({ summary: 'Update partner' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: Partial<CreatePartnerDto>,
+    @Body() dto: UpdatePartnerDto,
     @CurrentUser() user: JwtPayload,
   ) {
     return this.service.update(id, dto, user.sub);

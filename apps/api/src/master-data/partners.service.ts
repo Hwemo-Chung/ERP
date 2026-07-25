@@ -5,6 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 // @angular/core and fail to transform under this app's plain ts-jest (CJS) config.
 import { validateBusinessRegistrationNo, normalizeBrn } from '@erp/shared/utils';
 import { CreatePartnerDto, StorageContractDto } from './dto/create-partner.dto';
+import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { GetPartnersDto } from './dto/get-partners.dto';
 
 @Injectable()
 export class PartnersService {
@@ -14,17 +16,17 @@ export class PartnersService {
     const brn = dto.businessRegistrationNo ? normalizeBrn(dto.businessRegistrationNo) : null;
     if (brn) {
       if (!validateBusinessRegistrationNo(brn)) {
-        throw new BadRequestException('E4101: invalid business registration number');
+        throw new BadRequestException({ code: 'E4101', message: 'invalid business registration number' });
       }
       const dup = await this.prisma.partner.findFirst({ where: { businessRegistrationNo: brn } });
-      if (dup) throw new ConflictException('E4102: duplicate business registration number');
+      if (dup) throw new ConflictException({ code: 'E4102', message: 'duplicate business registration number' });
     }
     this.assertContractComplete(dto.storageContract);
 
     const code = dto.code ?? (await this.nextPartnerCode());
     if (dto.code) {
       const codeDup = await this.prisma.partner.findUnique({ where: { code: dto.code } });
-      if (codeDup) throw new ConflictException('E4102: duplicate partner code');
+      if (codeDup) throw new ConflictException({ code: 'E4102', message: 'duplicate partner code' });
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -60,10 +62,16 @@ export class PartnersService {
 
   private assertContractComplete(c: StorageContractDto) {
     if (c.contractType === 'PALLET_DAILY' && !c.palletDailyRate) {
-      throw new BadRequestException('E4103: palletDailyRate required for PALLET_DAILY contract');
+      throw new BadRequestException({
+        code: 'E4103',
+        message: 'palletDailyRate required for PALLET_DAILY contract',
+      });
     }
     if ((c.contractType === 'AREA_MONTHLY' || c.contractType === 'AREA_YEARLY') && (!c.areaPyeong || !c.areaRate)) {
-      throw new BadRequestException('E4103: areaPyeong and areaRate required for AREA contract');
+      throw new BadRequestException({
+        code: 'E4103',
+        message: 'areaPyeong and areaRate required for AREA contract',
+      });
     }
   }
 
@@ -76,7 +84,7 @@ export class PartnersService {
     return `P-${String(n).padStart(4, '0')}`;
   }
 
-  async findAll(query: { search?: string; page?: number; pageSize?: number }) {
+  async findAll(query: GetPartnersDto) {
     const page = query.page ?? 1;
     const pageSize = Math.min(query.pageSize ?? 20, 100);
     const where = query.search
@@ -95,13 +103,19 @@ export class PartnersService {
     return { data, totalCount };
   }
 
-  async update(id: string, dto: Partial<CreatePartnerDto>, actorId: string) {
+  async update(id: string, dto: UpdatePartnerDto, actorId: string) {
     const existing = await this.prisma.partner.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException('E4104: partner not found');
-    const { storageContract: _storageContract, code: _code, businessRegistrationNo, ...rest } = dto;
+    if (!existing) throw new NotFoundException({ code: 'E4104', message: 'partner not found' });
+    const { businessRegistrationNo, ...rest } = dto;
     const brn = businessRegistrationNo ? normalizeBrn(businessRegistrationNo) : undefined;
-    if (brn && !validateBusinessRegistrationNo(brn)) {
-      throw new BadRequestException('E4101: invalid business registration number');
+    if (brn) {
+      if (!validateBusinessRegistrationNo(brn)) {
+        throw new BadRequestException({ code: 'E4101', message: 'invalid business registration number' });
+      }
+      const dup = await this.prisma.partner.findFirst({
+        where: { businessRegistrationNo: brn, NOT: { id } },
+      });
+      if (dup) throw new ConflictException({ code: 'E4102', message: 'duplicate business registration number' });
     }
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.partner.update({
@@ -113,7 +127,8 @@ export class PartnersService {
           tableName: 'partners',
           recordId: updated.id,
           action: 'UPDATE',
-          diff: { before: existing, after: updated },
+          // matches order-mutation.service.ts's logUpdateAudit shape exactly
+          diff: JSON.parse(JSON.stringify({ previous: existing, current: updated, changes: dto })),
           actor: actorId,
         },
       });
