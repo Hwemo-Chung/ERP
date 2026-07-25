@@ -1,7 +1,7 @@
 // apps/web/src/app/features/master-data/pages/partner-list/partner-list.page.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonList, IonItem,
   IonLabel, IonNote, IonFab, IonFabButton, IonIcon, IonBackButton, IonButtons,
@@ -24,14 +24,10 @@ import { MasterDataService, PartnerRow } from '../../services/master-data.servic
       <ion-searchbar [(ngModel)]="search" (ionInput)="load()" placeholder="거래처명/코드 검색" />
       <ion-list>
         @for (p of partners(); track p.id) {
-          <ion-item button (click)="selected.set(selected() === p.id ? null : p.id)">
+          <ion-item button (click)="edit(p)">
             <ion-label>
               <h2>{{ p.name }} <ion-note>{{ p.code }}</ion-note></h2>
-              @if (selected() === p.id) {
-                <p>사업자번호: {{ p.businessRegistrationNo || '-' }}</p>
-                <p>담당자: {{ p.contactName || '-' }} / {{ p.phone || '-' }}</p>
-                <p>주소: {{ p.address || '-' }}</p>
-              }
+              <p>{{ p.contactName || '-' }} / {{ p.phone || '-' }}</p>
             </ion-label>
           </ion-item>
         } @empty {
@@ -48,10 +44,10 @@ import { MasterDataService, PartnerRow } from '../../services/master-data.servic
 })
 export class PartnerListPage implements OnInit {
   private api = inject(MasterDataService);
+  private router = inject(Router);
 
   search = '';
   partners = signal<PartnerRow[]>([]);
-  selected = signal<string | null>(null);
 
   constructor() {
     addIcons({ addOutline });
@@ -64,5 +60,9 @@ export class PartnerListPage implements OnInit {
   async load() {
     const res = await this.api.getPartners({ search: this.search || undefined, page: 1 });
     this.partners.set(res.data);
+  }
+
+  edit(p: PartnerRow) {
+    this.router.navigate(['/master-data/partners', p.id], { state: { partner: p } });
   }
 }

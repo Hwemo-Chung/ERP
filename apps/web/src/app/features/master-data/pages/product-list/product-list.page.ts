@@ -1,7 +1,7 @@
 // apps/web/src/app/features/master-data/pages/product-list/product-list.page.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonSelect, IonSelectOption,
   IonList, IonItem, IonLabel, IonNote, IonFab, IonFabButton, IonIcon, IonBackButton, IonButtons,
@@ -33,7 +33,7 @@ import { MasterDataService, ProductRow, PartnerRow } from '../../services/master
       </ion-item>
       <ion-list>
         @for (item of products(); track item.id) {
-          <ion-item>
+          <ion-item button (click)="edit(item)">
             <ion-label>
               <h2>{{ item.name }} <ion-note>{{ item.code }}</ion-note></h2>
               <p>단가: {{ item.unitPrice }} / 원가: {{ item.costPrice }}</p>
@@ -53,6 +53,7 @@ import { MasterDataService, ProductRow, PartnerRow } from '../../services/master
 })
 export class ProductListPage implements OnInit {
   private api = inject(MasterDataService);
+  private router = inject(Router);
 
   search = '';
   partnerId?: string;
@@ -76,5 +77,9 @@ export class ProductListPage implements OnInit {
       page: 1,
     });
     this.products.set(res.data);
+  }
+
+  edit(p: ProductRow) {
+    this.router.navigate(['/master-data/products', p.id], { state: { product: p } });
   }
 }

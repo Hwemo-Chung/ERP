@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonHeader, IonToolbar, IonTitle, IonIcon, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline } from 'ionicons/icons';
+import { walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline } from 'ionicons/icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -80,6 +80,19 @@ import { AuthService } from '../../../../core/services/auth.service';
             </div>
             <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
           </a>
+
+          @if (isHqAdmin()) {
+            <a class="menu-card" [routerLink]="['/master-data']">
+              <div class="card-icon secondary">
+                <ion-icon name="layers-outline"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>마스터데이터</h3>
+                <p>거래처 / 품목 / 카테고리 / 단가표 / 엑셀 이관</p>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+            </a>
+          }
         </div>
       </div>
 
@@ -279,8 +292,13 @@ export class SettingsMenuPage {
   /** 다국어 번역 서비스 */
   private readonly translateService = inject(TranslateService);
 
-  constructor() { 
-    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline }); 
+  constructor() {
+    addIcons({ walletOutline, notificationsOutline, chevronForwardOutline, logOutOutline, personOutline, settingsOutline, optionsOutline, fingerPrintOutline, layersOutline });
+  }
+
+  /** 마스터데이터 메뉴 노출 여부 (HQ_ADMIN 전용) */
+  isHqAdmin() {
+    return this.authService.hasAnyRole(['HQ_ADMIN']);
   }
 
   /**

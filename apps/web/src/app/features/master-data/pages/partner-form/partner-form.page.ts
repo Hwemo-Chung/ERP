@@ -1,12 +1,13 @@
 // apps/web/src/app/features/master-data/pages/partner-form/partner-form.page.ts
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonSelect,
   IonSelectOption, IonButton, IonList, IonNote, IonBackButton, IonButtons,
 } from '@ionic/angular/standalone';
-import { MasterDataService, StorageContractRow } from '../../services/master-data.service';
+import { MasterDataService, PartnerRow, StorageContractRow } from '../../services/master-data.service';
 
 @Component({
   selector: 'app-partner-form',
@@ -16,46 +17,63 @@ import { MasterDataService, StorageContractRow } from '../../services/master-dat
   template: `
     <ion-header><ion-toolbar>
       <ion-buttons slot="start"><ion-back-button defaultHref="/master-data/partners" /></ion-buttons>
-      <ion-title>거래처 등록</ion-title>
+      <ion-title>{{ editingId ? '거래처 수정' : '거래처 등록' }}</ion-title>
     </ion-toolbar></ion-header>
     <ion-content class="ion-padding">
-      <ion-list>
-        <ion-item><ion-input label="거래처명 *" [(ngModel)]="name" /></ion-item>
-        <ion-item><ion-input label="거래처코드 (비우면 자동채번)" [(ngModel)]="code" /></ion-item>
-        <ion-item>
-          <ion-input label="사업자등록번호" placeholder="000-00-00000" [(ngModel)]="brn" />
-        </ion-item>
-        <ion-item><ion-input label="대표자" [(ngModel)]="representativeName" /></ion-item>
-        <ion-item><ion-input label="업태" [(ngModel)]="businessType" /></ion-item>
-        <ion-item><ion-input label="종목" [(ngModel)]="businessCategory" /></ion-item>
-        <ion-item><ion-input label="주소" [(ngModel)]="address" /></ion-item>
-        <ion-item><ion-input label="담당자" [(ngModel)]="contactName" /></ion-item>
-        <ion-item><ion-input label="연락처" [(ngModel)]="phone" /></ion-item>
-        <ion-item><ion-input label="건당 기본 운송요율" type="number" [(ngModel)]="defaultTransportRate" /></ion-item>
+      @if (editingId && !loaded()) {
+        <ion-note>{{ error() || '불러오는 중...' }}</ion-note>
+      } @else {
+        <ion-list>
+          <ion-item><ion-input label="거래처명 *" [(ngModel)]="name" /></ion-item>
+          @if (editingId) {
+            <ion-item><ion-note>거래처코드: {{ code || '-' }} (수정 불가)</ion-note></ion-item>
+          } @else {
+            <ion-item><ion-input label="거래처코드 (비우면 자동채번)" [(ngModel)]="code" /></ion-item>
+          }
+          <ion-item>
+            <ion-input label="사업자등록번호" placeholder="000-00-00000" [(ngModel)]="brn" />
+          </ion-item>
+          <ion-item><ion-input label="대표자" [(ngModel)]="representativeName" /></ion-item>
+          <ion-item><ion-input label="업태" [(ngModel)]="businessType" /></ion-item>
+          <ion-item><ion-input label="종목" [(ngModel)]="businessCategory" /></ion-item>
+          <ion-item><ion-input label="주소" [(ngModel)]="address" /></ion-item>
+          <ion-item><ion-input label="담당자" [(ngModel)]="contactName" /></ion-item>
+          <ion-item><ion-input label="연락처" [(ngModel)]="phone" /></ion-item>
+          <ion-item><ion-input label="건당 기본 운송요율" type="number" [(ngModel)]="defaultTransportRate" /></ion-item>
 
-        <ion-item>
-          <ion-select label="보관료 방식 *" [(ngModel)]="contractType" interface="popover">
-            <ion-select-option value="PALLET_DAILY">파렛트 × 일수 단가</ion-select-option>
-            <ion-select-option value="AREA_MONTHLY">면적 월임대</ion-select-option>
-            <ion-select-option value="AREA_YEARLY">면적 년임대</ion-select-option>
-          </ion-select>
-        </ion-item>
-        @if (contractType === 'PALLET_DAILY') {
-          <ion-item><ion-input label="파렛트 1일당 단가 *" type="number" [(ngModel)]="palletDailyRate" /></ion-item>
-        } @else {
-          <ion-item><ion-input label="계약 면적(평) *" type="number" [(ngModel)]="areaPyeong" /></ion-item>
-          <ion-item><ion-input label="평당 단가 *" type="number" [(ngModel)]="areaRate" /></ion-item>
-        }
-        <ion-item><ion-input label="계약 시작일 *" type="date" [(ngModel)]="startDate" /></ion-item>
-      </ion-list>
-      @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
-      <ion-button expand="block" (click)="save()" [disabled]="saving()">저장</ion-button>
+          @if (!editingId) {
+            <ion-item>
+              <ion-select label="보관료 방식 *" [(ngModel)]="contractType" interface="popover">
+                <ion-select-option value="PALLET_DAILY">파렛트 × 일수 단가</ion-select-option>
+                <ion-select-option value="AREA_MONTHLY">면적 월임대</ion-select-option>
+                <ion-select-option value="AREA_YEARLY">면적 년임대</ion-select-option>
+              </ion-select>
+            </ion-item>
+            @if (contractType === 'PALLET_DAILY') {
+              <ion-item><ion-input label="파렛트 1일당 단가 *" type="number" [(ngModel)]="palletDailyRate" /></ion-item>
+            } @else {
+              <ion-item><ion-input label="계약 면적(평) *" type="number" [(ngModel)]="areaPyeong" /></ion-item>
+              <ion-item><ion-input label="평당 단가 *" type="number" [(ngModel)]="areaRate" /></ion-item>
+            }
+            <ion-item><ion-input label="계약 시작일 *" type="date" [(ngModel)]="startDate" /></ion-item>
+          } @else {
+            <ion-note class="ion-padding-start">보관계약은 이 화면에서 변경할 수 없습니다.</ion-note>
+          }
+        </ion-list>
+        @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
+        <ion-button expand="block" (click)="save()" [disabled]="saving()">저장</ion-button>
+      }
     </ion-content>
   `,
 })
-export class PartnerFormPage {
+export class PartnerFormPage implements OnInit {
   private api = inject(MasterDataService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
+
+  editingId = this.route.snapshot.paramMap.get('id');
+  loaded = signal(false);
 
   name = ''; code = ''; brn = ''; representativeName = ''; businessType = '';
   businessCategory = ''; address = ''; contactName = ''; phone = '';
@@ -66,29 +84,70 @@ export class PartnerFormPage {
   saving = signal(false);
   error = signal('');
 
+  ngOnInit() {
+    if (!this.editingId) return;
+    // ponytail: no GET /master-data/partners/:id endpoint exists yet — the list page
+    // passes the full row via router state. Direct URL access / page reload has no
+    // fallback fetch (would need a list scan with no id filter in GetPartnersDto);
+    // surface an error and let the admin go back to the list instead of faking data.
+    const partner = (this.location.getState() as { partner?: PartnerRow } | null)?.partner;
+    if (!partner) {
+      this.error.set('거래처 정보를 불러올 수 없습니다. 목록에서 다시 선택해주세요.');
+      return;
+    }
+    this.name = partner.name;
+    this.code = partner.code;
+    this.brn = partner.businessRegistrationNo ?? '';
+    this.representativeName = partner.representativeName ?? '';
+    this.businessType = partner.businessType ?? '';
+    this.businessCategory = partner.businessCategory ?? '';
+    this.address = partner.address ?? '';
+    this.contactName = partner.contactName ?? '';
+    this.phone = partner.phone ?? '';
+    this.defaultTransportRate = partner.defaultTransportRate ?? '';
+    this.loaded.set(true);
+  }
+
   async save() {
     this.error.set('');
-    if (!this.name || !this.startDate) { this.error.set('필수 항목을 입력하세요.'); return; }
-    if (this.contractType === 'PALLET_DAILY' && !this.palletDailyRate) { this.error.set('파렛트 단가는 필수입니다.'); return; }
-    if (this.contractType !== 'PALLET_DAILY' && (!this.areaPyeong || !this.areaRate)) { this.error.set('면적과 단가는 필수입니다.'); return; }
+    if (!this.name) { this.error.set('필수 항목을 입력하세요.'); return; }
+    if (!this.editingId) {
+      if (!this.startDate) { this.error.set('필수 항목을 입력하세요.'); return; }
+      if (this.contractType === 'PALLET_DAILY' && !this.palletDailyRate) { this.error.set('파렛트 단가는 필수입니다.'); return; }
+      if (this.contractType !== 'PALLET_DAILY' && (!this.areaPyeong || !this.areaRate)) { this.error.set('면적과 단가는 필수입니다.'); return; }
+    }
     this.saving.set(true);
     try {
-      await this.api.createPartner({
-        name: this.name,
-        ...(this.code ? { code: this.code } : {}),
-        ...(this.brn ? { businessRegistrationNo: this.brn } : {}),
-        representativeName: this.representativeName, businessType: this.businessType,
-        businessCategory: this.businessCategory, address: this.address,
-        contactName: this.contactName, phone: this.phone,
-        ...(this.defaultTransportRate ? { defaultTransportRate: this.defaultTransportRate } : {}),
-        storageContract: {
-          contractType: this.contractType,
-          ...(this.contractType === 'PALLET_DAILY'
-            ? { palletDailyRate: this.palletDailyRate }
-            : { areaPyeong: this.areaPyeong, areaRate: this.areaRate }),
-          startDate: this.startDate,
-        },
-      } as any);
+      if (this.editingId) {
+        await this.api.updatePartner(this.editingId, {
+          name: this.name,
+          businessRegistrationNo: this.brn || undefined,
+          representativeName: this.representativeName,
+          businessType: this.businessType,
+          businessCategory: this.businessCategory,
+          address: this.address,
+          contactName: this.contactName,
+          phone: this.phone,
+          defaultTransportRate: this.defaultTransportRate || undefined,
+        });
+      } else {
+        await this.api.createPartner({
+          name: this.name,
+          ...(this.code ? { code: this.code } : {}),
+          ...(this.brn ? { businessRegistrationNo: this.brn } : {}),
+          representativeName: this.representativeName, businessType: this.businessType,
+          businessCategory: this.businessCategory, address: this.address,
+          contactName: this.contactName, phone: this.phone,
+          ...(this.defaultTransportRate ? { defaultTransportRate: this.defaultTransportRate } : {}),
+          storageContract: {
+            contractType: this.contractType,
+            ...(this.contractType === 'PALLET_DAILY'
+              ? { palletDailyRate: this.palletDailyRate }
+              : { areaPyeong: this.areaPyeong, areaRate: this.areaRate }),
+            startDate: this.startDate,
+          },
+        } as any);
+      }
       this.router.navigate(['/master-data/partners']);
     } catch (e: any) {
       this.error.set(e?.error?.message ?? '저장 실패');

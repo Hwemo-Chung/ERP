@@ -43,6 +43,18 @@ describe('MasterDataService', () => {
     await promise;
   });
 
+  it('patches partner without code or storageContract in the body', async () => {
+    const dto = { name: '수정됨', phone: '010-1111-2222' };
+    const promise = service.updatePartner('p1', dto);
+    const req = http.expectOne(r => r.method === 'PATCH' && r.url.includes('/master-data/partners/p1'));
+    expect(req.request.body).toEqual(dto);
+    expect(req.request.body.code).toBeUndefined();
+    expect(req.request.body.storageContract).toBeUndefined();
+    req.flush({ id: 'p1', code: 'P-0001', name: '수정됨' });
+    const result = await promise;
+    expect(result.name).toBe('수정됨');
+  });
+
   it('commits partner import batch with defaultStorageContract merged into body', async () => {
     const batch = { defaultStorageContract: { contractType: 'PALLET_DAILY' as const, palletDailyRate: '1500', startDate: '2026-07-01' } };
     const promise = service.importCommit('partners', [{ name: 'A' }], batch);
