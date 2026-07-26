@@ -731,16 +731,22 @@ model StorageContract {
 }
 
 model WarehouseTransaction {
-  id              String            @id @default(uuid())
-  type            TransactionType
-  partnerId       String            @map("partner_id")
-  productId       String            @map("product_id")
-  quantity        Int
-  transactionDate DateTime          @map("transaction_date")
-  vehicleRateId   String?           @map("vehicle_rate_id")
-  source          TransactionSource @default(PWA)
-  createdBy       String            @map("created_by")
-  createdAt       DateTime          @default(now()) @map("created_at")
+  id                  String            @id @default(uuid())
+  type                TransactionType
+  partnerId           String            @map("partner_id")
+  productId           String            @map("product_id")
+  quantity            Int
+  transactionDate     DateTime          @map("transaction_date")
+  vehicleRateId       String?           @map("vehicle_rate_id")
+  source              TransactionSource @default(PWA)
+  createdBy           String            @map("created_by")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  // P0-2: running balance scoped to (partnerId, productId), SLE `qty_after_transaction` pattern
+  // (docs/prd/2026-07-26-erp-benchmark-prd.md §3 P0-2). NOT NULL, no DB default in the final
+  // state — every row must have this computed explicitly by TransactionsService.create() or the
+  // backfill migration; see that migration for why the column is *temporarily* created with a
+  // DEFAULT during rollout.
+  qtyAfterTransaction Int               @map("qty_after_transaction")
 
   partner           Partner            @relation(fields: [partnerId], references: [id])
   product           Product            @relation(fields: [productId], references: [id])
@@ -749,6 +755,9 @@ model WarehouseTransaction {
 
   @@index([partnerId, transactionDate])
   @@index([productId, transactionDate])
+  // P0-2: latest-balance-per-(partner,product) lookup — openingStock() now does a single
+  // DISTINCT ON scan against this index instead of a full history scan.
+  @@index([partnerId, productId, transactionDate])
   @@map("warehouse_transactions")
 }
 
