@@ -345,6 +345,7 @@ async function main() {
       transactionDate: new Date(),
       source: TransactionSource.PWA,
       createdBy: partnerAUser.id,
+      qtyAfterTransaction: -5, // P0-2: sole row for this (partner, product) — OUTBOUND 5 from a 0 base
     },
   });
   console.log('✅ Created partner-a isolation e2e fixture (1 category, 1 product, 1 outbound transaction)');

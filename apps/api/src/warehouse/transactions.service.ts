@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role, TransactionSource } from '@prisma/client';
@@ -46,17 +47,76 @@ export class TransactionsService {
       });
     }
 
-    return this.prisma.warehouseTransaction.create({
-      data: {
-        type: dto.type,
-        partnerId: dto.partnerId,
-        productId: dto.productId,
-        quantity: dto.quantity,
-        transactionDate: txDate,
-        vehicleRateId: dto.vehicleRateId,
-        source,
-        createdBy: userId,
-      },
+    // P0-2: running balance (qtyAfterTransaction), scoped to (partnerId, productId) —
+    // docs/prd/2026-07-26-erp-benchmark-prd.md §3 P0-2. The id is pre-generated (rather than
+    // left to the DB/Prisma default) so it can be used as the same-date tiebreaker in the
+    // ordering key `(transactionDate, id)`, matching the backfill migration's
+    // `ORDER BY transaction_date, id` window function exactly — see that migration for why.
+    const id = randomUUID();
+    const delta = dto.type === 'INBOUND' ? dto.quantity : -dto.quantity;
+
+    return this.prisma.$transaction(async (tx) => {
+      const prev = await tx.warehouseTransaction.findFirst({
+        where: {
+          partnerId: dto.partnerId,
+          productId: dto.productId,
+          OR: [{ transactionDate: { lt: txDate } }, { transactionDate: txDate, id: { lt: id } }],
+        },
+        orderBy: [{ transactionDate: 'desc' }, { id: 'desc' }],
+        select: { qtyAfterTransaction: true },
+      });
+      const qtyAfterTransaction = (prev?.qtyAfterTransaction ?? 0) + delta;
+
+      const created = await tx.warehouseTransaction.create({
+        data: {
+          id,
+          type: dto.type,
+          partnerId: dto.partnerId,
+          productId: dto.productId,
+          quantity: dto.quantity,
+          transactionDate: txDate,
+          vehicleRateId: dto.vehicleRateId,
+          source,
+          createdBy: userId,
+          qtyAfterTransaction,
+        },
+      });
+
+      // Retroactive insert: any row already stored strictly after this one (same ordering key)
+      // has a stale running balance and must be recomputed forward from here — PRD §3 P0-2
+      // "소급 입력 처리". Same-day ties are broken by `id` for consistency with the lookup above.
+      const laterRows = await tx.warehouseTransaction.findMany({
+        where: {
+          partnerId: dto.partnerId,
+          productId: dto.productId,
+          OR: [{ transactionDate: { gt: txDate } }, { transactionDate: txDate, id: { gt: id } }],
+        },
+        orderBy: [{ transactionDate: 'asc' }, { id: 'asc' }],
+        select: { id: true, type: true, quantity: true },
+      });
+
+      if (laterRows.length > 0) {
+        let running = qtyAfterTransaction;
+        for (const row of laterRows) {
+          running += row.type === 'INBOUND' ? row.quantity : -row.quantity;
+          await tx.warehouseTransaction.update({
+            where: { id: row.id },
+            data: { qtyAfterTransaction: running },
+          });
+        }
+        // P0-3 pattern reused: one audit entry per retroactive recalculation, not one per row.
+        await tx.auditLog.create({
+          data: {
+            tableName: 'warehouse_transactions',
+            recordId: created.id,
+            action: 'RETROACTIVE_QTY_RECALC',
+            diff: { affectedRowCount: laterRows.length, insertedTransactionDate: txDate.toISOString() },
+            actor: userId,
+          },
+        });
+      }
+
+      return created;
     });
   }
 
