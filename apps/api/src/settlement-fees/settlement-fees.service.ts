@@ -5,6 +5,7 @@ import { RatesService } from '../master-data/rates.service';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from '../warehouse/constants';
 import { calcTransportFee } from './transport-fee';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
+import { resolveRateAt, RateHistoryRow } from './rate-resolution';
 
 interface CalcError {
   transactionId?: string;
@@ -52,6 +53,30 @@ export class SettlementFeesService {
       },
     });
 
+    // P0-1: 거래일 기준 요율 조회. 계산 시점(마감 실행 시각)의 "현재값"이 아니라 각 거래의
+    // transactionDate 시점에 유효했던 요율을 조회해야, 마감을 언제 실행하든 결과가 동일하다.
+    // 월 전체에 필요한 scope id만 모아 히스토리를 한 번에 벌크 조회(N+1 방지)하고, 이후
+    // per-transaction 조회는 이 Map에서만 수행한다 — 트랜잭션 개수만큼 DB 왕복하지 않는다.
+    const outboundTxs = txs.filter((t) => t.type === 'OUTBOUND');
+    const productIds = [...new Set(outboundTxs.map((t) => t.productId))];
+    const partnerIdsForRate = [...new Set(outboundTxs.map((t) => t.partnerId))];
+    const vehicleRateIds = [...new Set(outboundTxs.map((t) => t.vehicleRateId).filter((id): id is string => !!id))];
+
+    const [productHistoryRows, partnerHistoryRows, vehicleHistoryRows] = await Promise.all([
+      productIds.length
+        ? this.prisma.productTransportRateHistory.findMany({ where: { productId: { in: productIds } } })
+        : Promise.resolve([]),
+      partnerIdsForRate.length
+        ? this.prisma.partnerTransportRateHistory.findMany({ where: { partnerId: { in: partnerIdsForRate } } })
+        : Promise.resolve([]),
+      vehicleRateIds.length
+        ? this.prisma.vehicleRateHistory.findMany({ where: { rateCardId: { in: vehicleRateIds } } })
+        : Promise.resolve([]),
+    ]);
+    const productHistoryMap = this.groupHistory(productHistoryRows, (r) => r.productId);
+    const partnerHistoryMap = this.groupHistory(partnerHistoryRows, (r) => r.partnerId);
+    const vehicleHistoryMap = this.groupHistory(vehicleHistoryRows, (r) => r.rateCardId);
+
     const records: Prisma.SettlementRecordCreateManyInput[] = [];
     const results: { partnerId: string; transportTotal: string; storageTotal: string; errors: CalcError[] }[] = [];
 
@@ -63,14 +88,24 @@ export class SettlementFeesService {
       // 운송료: 출고 건당
       for (const tx of partnerTxs.filter((t) => t.type === 'OUTBOUND')) {
         try {
-          const fee = calcTransportFee(
-            {
-              productRate: tx.product.transportRate?.toString() ?? null,
-              partnerDefaultRate: tx.partner.defaultTransportRate?.toString() ?? null,
-              vehicleRate: tx.vehicleRate?.rate?.toString() ?? null,
-            },
-            vehicleRateMode,
-          );
+          // Fallback rule: 히스토리에 거래일을 커버하는 행이 없으면(백필 시작일보다 이전 거래 등)
+          // 현재값 캐시 컬럼으로 폴백한다 — 기존 데이터가 계속 동작하도록 하는 안전망. 둘 다
+          // 없으면 기존 E4108 경로(calcTransportFee 내부)로 그대로 떨어진다.
+          const productRate =
+            resolveRateAt(productHistoryMap.get(tx.productId) ?? [], tx.transactionDate) ??
+            tx.product.transportRate?.toString() ??
+            null;
+          const partnerDefaultRate =
+            resolveRateAt(partnerHistoryMap.get(tx.partnerId) ?? [], tx.transactionDate) ??
+            tx.partner.defaultTransportRate?.toString() ??
+            null;
+          const vehicleRate = tx.vehicleRateId
+            ? (resolveRateAt(vehicleHistoryMap.get(tx.vehicleRateId) ?? [], tx.transactionDate) ??
+              tx.vehicleRate?.rate?.toString() ??
+              null)
+            : null;
+
+          const fee = calcTransportFee({ productRate, partnerDefaultRate, vehicleRate }, vehicleRateMode);
           transportTotal = transportTotal.add(fee.amount);
           records.push({
             transactionId: tx.id,
@@ -168,6 +203,21 @@ export class SettlementFeesService {
       });
     }
     return { results, records, start, end };
+  }
+
+  /** scope id(productId/partnerId/rateCardId)별 히스토리 행 목록으로 그룹핑. Decimal → string 변환 포함. */
+  private groupHistory<T extends { rate: Prisma.Decimal; effectiveFrom: Date; effectiveTo: Date | null }>(
+    rows: T[],
+    keyOf: (row: T) => string,
+  ): Map<string, RateHistoryRow[]> {
+    const map = new Map<string, RateHistoryRow[]>();
+    for (const row of rows) {
+      const key = keyOf(row);
+      const list = map.get(key) ?? [];
+      list.push({ rate: row.rate.toString(), effectiveFrom: row.effectiveFrom, effectiveTo: row.effectiveTo });
+      map.set(key, list);
+    }
+    return map;
   }
 
   /** 전월 이월 재고: 해당 월 이전 입고합 − 출고합 (품목별). 당월 거래가 없던 품목도 포함되도록

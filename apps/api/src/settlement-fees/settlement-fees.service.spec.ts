@@ -11,6 +11,9 @@ const prismaMock: any = {
   storageContract: { findMany: jest.fn() },
   settlementRecord: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
   settlementPeriod: { upsert: jest.fn() },
+  productTransportRateHistory: { findMany: jest.fn() },
+  partnerTransportRateHistory: { findMany: jest.fn() },
+  vehicleRateHistory: { findMany: jest.fn() },
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 const ratesMock = {
@@ -47,6 +50,9 @@ describe('SettlementFeesService', () => {
     ]);
     prismaMock.warehouseTransaction.aggregate.mockResolvedValue({ _sum: { quantity: null } });
     prismaMock.product.findMany.mockResolvedValue([{ id: 'prod1', maxUnitsPerPallet: 100, palletThreshold: null }]);
+    prismaMock.productTransportRateHistory.findMany.mockResolvedValue([]);
+    prismaMock.partnerTransportRateHistory.findMany.mockResolvedValue([]);
+    prismaMock.vehicleRateHistory.findMany.mockResolvedValue([]);
   });
 
   it('collects E4108 errors for transactions without any rate', async () => {
@@ -110,5 +116,69 @@ describe('SettlementFeesService', () => {
     await expect(
       service.getStatement('OTHER', '2026-07', { partnerId: 'p1' }),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  describe('P0-1 거래일 기준 요율 조회 (settlement-p0-report-P01.md 핵심 테스트)', () => {
+    // 월중 요율 인상 시나리오: 7/1 ~ 7/14 구요율(5000), 7/15부터 신요율(8000).
+    const midMonthHistory = [
+      { productId: 'prod1', rate: '5000', effectiveFrom: new Date('2026-01-01'), effectiveTo: new Date('2026-07-15') },
+      { productId: 'prod1', rate: '8000', effectiveFrom: new Date('2026-07-15'), effectiveTo: null },
+    ];
+
+    it('applies the old rate before the change and the new rate after it — same month, split by transactionDate', async () => {
+      prismaMock.productTransportRateHistory.findMany.mockResolvedValue(midMonthHistory);
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        txFixture({ id: 't-before', transactionDate: new Date('2026-07-10') }),
+        txFixture({ id: 't-after', transactionDate: new Date('2026-07-20') }),
+      ]);
+      const r = await service.previewMonth('2026-07');
+      expect(r.partners[0].transportTotal).toBe('13000'); // 5000 (old) + 8000 (new)
+    });
+
+    it('closing produces the identical result whether a later-dated history row already exists or not (no retroactive application)', async () => {
+      // Scenario A: close BEFORE the rate change row exists — only the old rate is in the DB yet.
+      prismaMock.productTransportRateHistory.findMany.mockResolvedValueOnce([
+        { productId: 'prod1', rate: '5000', effectiveFrom: new Date('2026-01-01'), effectiveTo: null },
+      ]);
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        txFixture({ id: 't-before', transactionDate: new Date('2026-07-10') }),
+      ]);
+      const early = await service.previewMonth('2026-07');
+
+      // Scenario B: close AFTER the rate change row has been inserted (mid-month change closed
+      // the old segment and opened the new one) — same transactionDate must resolve identically.
+      prismaMock.productTransportRateHistory.findMany.mockResolvedValueOnce(midMonthHistory);
+      const late = await service.previewMonth('2026-07');
+
+      expect(early.partners[0].transportTotal).toBe(late.partners[0].transportTotal);
+      expect(early.partners[0].transportTotal).toBe('5000');
+    });
+
+    it('falls back to the current cache column when history has no row covering the transaction date', async () => {
+      // History exists for a different, disjoint window — the fixture's transactionDate
+      // (2026-07-10) isn't covered by it, so resolution must fall back to product.transportRate.
+      prismaMock.productTransportRateHistory.findMany.mockResolvedValue([
+        { productId: 'prod1', rate: '9999', effectiveFrom: new Date('2020-01-01'), effectiveTo: new Date('2020-06-01') },
+      ]);
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]); // product.transportRate cache = '5000'
+      const r = await service.previewMonth('2026-07');
+      expect(r.partners[0].transportTotal).toBe('5000');
+    });
+
+    it('queries history bulk-scoped to only the product/partner/vehicle ids present in the month (no N+1)', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        txFixture({ productId: 'prod1', partnerId: 'p1' }),
+      ]);
+      await service.previewMonth('2026-07');
+      expect(prismaMock.productTransportRateHistory.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.productTransportRateHistory.findMany).toHaveBeenCalledWith({
+        where: { productId: { in: ['prod1'] } },
+      });
+      expect(prismaMock.partnerTransportRateHistory.findMany).toHaveBeenCalledWith({
+        where: { partnerId: { in: ['p1'] } },
+      });
+      // no vehicle rate on this fixture — must not query with an empty `in` array
+      expect(prismaMock.vehicleRateHistory.findMany).not.toHaveBeenCalled();
+    });
   });
 });
