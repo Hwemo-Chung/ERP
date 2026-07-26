@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
-import { validateBusinessRegistrationNo } from '@erp/shared/utils';
+import { validateBusinessRegistrationNo } from '../common/business-registration';
 import { PartnersService } from './partners.service';
 import { ProductsService } from './products.service';
 import { CategoriesService } from './categories.service';

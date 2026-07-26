@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 // ponytail: import from the `/utils` subpath, not the `@erp/shared` root barrel — the root
 // re-exports Angular-only interceptors (packages/shared/src/interceptors) which pull in
 // @angular/core and fail to transform under this app's plain ts-jest (CJS) config.
-import { validateBusinessRegistrationNo, normalizeBrn } from '@erp/shared/utils';
+import { validateBusinessRegistrationNo, normalizeBrn } from '../common/business-registration';
 import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreatePartnerDto, StorageContractDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';

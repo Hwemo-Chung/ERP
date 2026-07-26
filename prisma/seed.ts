@@ -190,6 +190,28 @@ async function main() {
   });
   console.log(`✅ Created test user: 0001 (password: test)`);
 
+  // Create warehouse staff user (입출고 실적 입력 담당 — 단가/원가/요율 비노출 역할)
+  const warehousePassword = await argon2.hash('warehouse123!');
+  const warehouseUser = await prisma.user.upsert({
+    where: { username: 'warehouse' },
+    update: {},
+    create: {
+      username: 'warehouse',
+      passwordHash: warehousePassword,
+      fullName: '창고 담당자',
+      email: 'warehouse@erp-logistics.com',
+      locale: 'ko',
+      branchId: branches[0].id,
+      isActive: true,
+    },
+  });
+  await prisma.userRole.upsert({
+    where: { userId_role: { userId: warehouseUser.id, role: Role.WAREHOUSE_STAFF } },
+    update: {},
+    create: { userId: warehouseUser.id, role: Role.WAREHOUSE_STAFF },
+  });
+  console.log(`✅ Created warehouse staff user: warehouse (password: warehouse123!)`);
+
   // Create waste codes
   const wasteCodes = [
     { code: 'P01', descriptionKo: '에어컨 실외기', descriptionEn: 'AC Outdoor Unit' },

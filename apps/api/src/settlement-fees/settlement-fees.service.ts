@@ -7,7 +7,7 @@ import { calcTransportFee } from './transport-fee';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
 import { resolveRateAt, RateHistoryRow } from './rate-resolution';
 
-interface CalcError {
+export interface CalcError {
   transactionId?: string;
   code: string;
   message: string;

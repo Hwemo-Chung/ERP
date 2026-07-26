@@ -289,6 +289,7 @@ export class MetadataService implements OnModuleInit {
       [Role.BRANCH_MANAGER]: 'Branch Manager',
       [Role.PARTNER_COORDINATOR]: 'Partner Coordinator',
       [Role.INSTALLER]: 'Installer',
+      [Role.WAREHOUSE_STAFF]: 'Warehouse Staff',
     };
     return labels[role] || role;
   }
@@ -305,6 +306,9 @@ export class MetadataService implements OnModuleInit {
       [Role.BRANCH_MANAGER]: ['users:read', 'orders:branch', 'reports:branch', 'export:branch'],
       [Role.PARTNER_COORDINATOR]: ['orders:partner', 'orders:assign', 'installers:manage'],
       [Role.INSTALLER]: ['orders:own', 'orders:update_status', 'waste:capture'],
+      // 창고 담당자: 입출고 실적 입력 + 마스터 조회. 단가/원가/요율은 응답에서 제거된다
+      // (apps/api/src/common/staff-price-visibility.util.ts).
+      [Role.WAREHOUSE_STAFF]: ['warehouse:transactions', 'master-data:read'],
     };
     return permissions[role] || [];
   }
