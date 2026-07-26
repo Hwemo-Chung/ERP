@@ -55,6 +55,39 @@ describe('MasterDataService', () => {
     expect(result.name).toBe('수정됨');
   });
 
+  it('posts rate card create with optional rateEffectiveFrom', async () => {
+    const dto = { vehicleType: '트럭', rate: '50000', rateEffectiveFrom: '2026-07-01' };
+    const promise = service.createRateCard(dto);
+    const req = http.expectOne(r => r.method === 'POST' && r.url.includes('/master-data/rate-cards'));
+    expect(req.request.body.rateEffectiveFrom).toBe('2026-07-01');
+    req.flush({ id: 'r1', ...dto });
+    await promise;
+  });
+
+  it('fetches rate card history', async () => {
+    const promise = service.getRateCardHistory('r1');
+    const req = http.expectOne(r => r.method === 'GET' && r.url.includes('/master-data/rate-cards/r1/rate-history'));
+    req.flush([{ id: 'h1', rate: '50000', effectiveFrom: '2026-07-01', effectiveTo: null }]);
+    const result = await promise;
+    expect(result[0].rate).toBe('50000');
+  });
+
+  it('fetches product rate history', async () => {
+    const promise = service.getProductRateHistory('prod1');
+    const req = http.expectOne(r => r.method === 'GET' && r.url.includes('/master-data/products/prod1/rate-history'));
+    req.flush([{ id: 'h1', rate: '5000', effectiveFrom: '2026-07-01', effectiveTo: null }]);
+    const result = await promise;
+    expect(result[0].rate).toBe('5000');
+  });
+
+  it('fetches partner rate history', async () => {
+    const promise = service.getPartnerRateHistory('p1');
+    const req = http.expectOne(r => r.method === 'GET' && r.url.includes('/master-data/partners/p1/rate-history'));
+    req.flush([{ id: 'h1', rate: '3000', effectiveFrom: '2026-07-01', effectiveTo: null }]);
+    const result = await promise;
+    expect(result[0].rate).toBe('3000');
+  });
+
   it('commits partner import batch with defaultStorageContract merged into body', async () => {
     const batch = { defaultStorageContract: { contractType: 'PALLET_DAILY' as const, palletDailyRate: '1500', startDate: '2026-07-01' } };
     const promise = service.importCommit('partners', [{ name: 'A' }], batch);

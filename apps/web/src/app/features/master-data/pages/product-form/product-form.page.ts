@@ -5,9 +5,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonSelect,
-  IonSelectOption, IonButton, IonList, IonNote, IonBackButton, IonButtons,
+  IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons,
 } from '@ionic/angular/standalone';
-import { MasterDataService, CategoryNode, PartnerRow, ProductRow } from '../../services/master-data.service';
+import { MasterDataService, CategoryNode, PartnerRow, ProductRow, RateHistoryRow } from '../../services/master-data.service';
 
 interface FlatCategory { id: string; label: string; }
 
@@ -22,7 +22,7 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
   selector: 'app-product-form',
   standalone: true,
   imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput,
-    IonSelect, IonSelectOption, IonButton, IonList, IonNote, IonBackButton, IonButtons],
+    IonSelect, IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons],
   template: `
     <ion-header><ion-toolbar>
       <ion-buttons slot="start"><ion-back-button defaultHref="/master-data/products" /></ion-buttons>
@@ -56,6 +56,7 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
           <ion-item><ion-input label="단가 *" type="number" [(ngModel)]="unitPrice" /></ion-item>
           <ion-item><ion-input label="원가 *" type="number" [(ngModel)]="costPrice" /></ion-item>
           <ion-item><ion-input label="건당 운송요율" type="number" [(ngModel)]="transportRate" /></ion-item>
+          <ion-item><ion-input label="적용 시작일" type="date" [(ngModel)]="rateEffectiveFrom" /></ion-item>
           <ion-item>
             <ion-input label="파렛트당 최대 적재수" type="number" [(ngModel)]="maxUnitsPerPallet" />
           </ion-item>
@@ -63,6 +64,16 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
             <ion-input label="파렛트 적재 기준(%)" type="number" placeholder="미입력 시 전역 70%" [(ngModel)]="palletThreshold" />
           </ion-item>
         </ion-list>
+        @if (editingId && rateHistory().length > 0) {
+          <ion-list>
+            <ion-item lines="none"><ion-label><h3>운송요율 이력</h3></ion-label></ion-item>
+            @for (h of rateHistory(); track h.id) {
+              <ion-item lines="none">
+                <ion-label>{{ h.effectiveFrom }} ~ {{ h.effectiveTo || '현재' }} : {{ h.rate }}</ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        }
         @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
         <ion-button expand="block" (click)="save()" [disabled]="saving()">저장</ion-button>
       }
@@ -79,11 +90,12 @@ export class ProductFormPage implements OnInit {
   loaded = signal(false);
 
   name = ''; code = ''; categoryId = ''; partnerId = '';
-  unitPrice = ''; costPrice = ''; transportRate = '';
+  unitPrice = ''; costPrice = ''; transportRate = ''; rateEffectiveFrom = '';
   maxUnitsPerPallet = ''; palletThreshold = '';
 
   flatCategories = signal<FlatCategory[]>([]);
   partners = signal<PartnerRow[]>([]);
+  rateHistory = signal<RateHistoryRow[]>([]);
   saving = signal(false);
   error = signal('');
 
@@ -113,6 +125,7 @@ export class ProductFormPage implements OnInit {
     this.maxUnitsPerPallet = product.maxUnitsPerPallet != null ? String(product.maxUnitsPerPallet) : '';
     this.palletThreshold = product.palletThreshold ?? '';
     this.loaded.set(true);
+    this.rateHistory.set(await this.api.getProductRateHistory(this.editingId));
   }
 
   async save() {
@@ -130,6 +143,7 @@ export class ProductFormPage implements OnInit {
         unitPrice: this.unitPrice,
         costPrice: this.costPrice,
         ...(this.transportRate ? { transportRate: this.transportRate } : {}),
+        ...(this.rateEffectiveFrom ? { rateEffectiveFrom: this.rateEffectiveFrom } : {}),
         ...(this.maxUnitsPerPallet ? { maxUnitsPerPallet: Number(this.maxUnitsPerPallet) } : {}),
         ...(this.palletThreshold ? { palletThreshold: this.palletThreshold } : {}),
       };

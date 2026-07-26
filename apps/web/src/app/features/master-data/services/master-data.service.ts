@@ -31,6 +31,10 @@ export interface RateCardRow {
   id: string; vehicleType: string; tonnage?: string;
   containerSize?: string; specialEquipment?: string; rate: string;
 }
+// P0-1: 요율 히스토리 한 행 — effectiveTo가 null이면 아직 현재 유효한 요율.
+export interface RateHistoryRow {
+  id: string; rate: string; effectiveFrom: string; effectiveTo: string | null;
+}
 export interface ImportInvalidRow {
   rowIndex: number; errors: string[]; raw: object;
 }
@@ -65,21 +69,29 @@ export class MasterDataService {
   getPartners(q: { search?: string; page?: number; pageSize?: number }): Promise<Paged<PartnerRow>> {
     return firstValueFrom(this.http.get<Paged<PartnerRow>>(`${this.base}/partners`, { params: toParams(q) }));
   }
-  createPartner(dto: Omit<PartnerRow, 'id'> & { storageContract: StorageContractRow }): Promise<PartnerRow> {
+  createPartner(
+    dto: Omit<PartnerRow, 'id'> & { storageContract: StorageContractRow; rateEffectiveFrom?: string },
+  ): Promise<PartnerRow> {
     return firstValueFrom(this.http.post<PartnerRow>(`${this.base}/partners`, dto));
   }
-  updatePartner(id: string, dto: Partial<PartnerRow>): Promise<PartnerRow> {
+  updatePartner(id: string, dto: Partial<PartnerRow> & { rateEffectiveFrom?: string }): Promise<PartnerRow> {
     return firstValueFrom(this.http.patch<PartnerRow>(`${this.base}/partners/${id}`, dto));
+  }
+  getPartnerRateHistory(id: string): Promise<RateHistoryRow[]> {
+    return firstValueFrom(this.http.get<RateHistoryRow[]>(`${this.base}/partners/${id}/rate-history`));
   }
 
   getProducts(q: { partnerId?: string; search?: string; page?: number }): Promise<Paged<ProductRow>> {
     return firstValueFrom(this.http.get<Paged<ProductRow>>(`${this.base}/products`, { params: toParams(q) }));
   }
-  createProduct(dto: Omit<ProductRow, 'id'>): Promise<ProductRow> {
+  createProduct(dto: Omit<ProductRow, 'id'> & { rateEffectiveFrom?: string }): Promise<ProductRow> {
     return firstValueFrom(this.http.post<ProductRow>(`${this.base}/products`, dto));
   }
-  updateProduct(id: string, dto: Partial<ProductRow>): Promise<ProductRow> {
+  updateProduct(id: string, dto: Partial<ProductRow> & { rateEffectiveFrom?: string }): Promise<ProductRow> {
     return firstValueFrom(this.http.patch<ProductRow>(`${this.base}/products/${id}`, dto));
+  }
+  getProductRateHistory(id: string): Promise<RateHistoryRow[]> {
+    return firstValueFrom(this.http.get<RateHistoryRow[]>(`${this.base}/products/${id}/rate-history`));
   }
 
   getCategoryTree(): Promise<CategoryNode[]> {
@@ -98,14 +110,17 @@ export class MasterDataService {
   getRateCards(): Promise<RateCardRow[]> {
     return firstValueFrom(this.http.get<RateCardRow[]>(`${this.base}/rate-cards`));
   }
-  createRateCard(dto: Omit<RateCardRow, 'id'>): Promise<RateCardRow> {
+  createRateCard(dto: Omit<RateCardRow, 'id'> & { rateEffectiveFrom?: string }): Promise<RateCardRow> {
     return firstValueFrom(this.http.post<RateCardRow>(`${this.base}/rate-cards`, dto));
   }
-  updateRateCard(id: string, dto: Partial<RateCardRow>): Promise<RateCardRow> {
+  updateRateCard(id: string, dto: Partial<RateCardRow> & { rateEffectiveFrom?: string }): Promise<RateCardRow> {
     return firstValueFrom(this.http.patch<RateCardRow>(`${this.base}/rate-cards/${id}`, dto));
   }
   deactivateRateCard(id: string): Promise<RateCardRow> {
     return firstValueFrom(this.http.patch<RateCardRow>(`${this.base}/rate-cards/${id}/deactivate`, {}));
+  }
+  getRateCardHistory(id: string): Promise<RateHistoryRow[]> {
+    return firstValueFrom(this.http.get<RateHistoryRow[]>(`${this.base}/rate-cards/${id}/rate-history`));
   }
 
   getPalletThreshold(): Promise<{ value: number }> {

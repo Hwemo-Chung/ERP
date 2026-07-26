@@ -7,7 +7,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { createOutline, closeCircleOutline } from 'ionicons/icons';
-import { MasterDataService, RateCardRow } from '../../services/master-data.service';
+import { MasterDataService, RateCardRow, RateHistoryRow } from '../../services/master-data.service';
 
 @Component({
   selector: 'app-rate-cards',
@@ -42,6 +42,7 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
             <ion-item><ion-input label="컨테이너 규격" [(ngModel)]="editContainerSize" /></ion-item>
             <ion-item><ion-input label="특장 사양" [(ngModel)]="editSpecialEquipment" /></ion-item>
             <ion-item><ion-input label="단가" type="number" [(ngModel)]="editRate" /></ion-item>
+            <ion-item><ion-input label="적용 시작일" type="date" [(ngModel)]="editRateEffectiveFrom" /></ion-item>
             <ion-item>
               <ion-button fill="clear" (click)="saveEdit(r.id)">저장</ion-button>
               <ion-button fill="clear" color="medium" (click)="editingId.set(null)">취소</ion-button>
@@ -52,6 +53,7 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
                 <h2>{{ r.vehicleType }} {{ r.tonnage ? '(' + r.tonnage + 't)' : '' }}</h2>
                 <p>{{ r.containerSize || '-' }} / {{ r.specialEquipment || '-' }} / 단가: {{ r.rate }}</p>
               </ion-label>
+              <ion-button fill="clear" size="small" (click)="toggleHistory(r.id)">이력</ion-button>
               <ion-button fill="clear" size="small" (click)="startEdit(r)">
                 <ion-icon slot="icon-only" name="create-outline" />
               </ion-button>
@@ -59,6 +61,17 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
                 <ion-icon slot="icon-only" name="close-circle-outline" />
               </ion-button>
             </ion-item>
+            @if (historyOpenId() === r.id) {
+              <ion-item lines="none">
+                <ion-label>
+                  @for (h of history(); track h.id) {
+                    <p>{{ h.effectiveFrom }} ~ {{ h.effectiveTo || '현재' }} : {{ h.rate }}</p>
+                  } @empty {
+                    <p>이력이 없습니다.</p>
+                  }
+                </ion-label>
+              </ion-item>
+            }
           }
         } @empty {
           <ion-item><ion-label>등록된 단가표가 없습니다.</ion-label></ion-item>
@@ -71,6 +84,7 @@ import { MasterDataService, RateCardRow } from '../../services/master-data.servi
         <ion-item><ion-input label="컨테이너 규격" [(ngModel)]="containerSize" /></ion-item>
         <ion-item><ion-input label="특장 사양" [(ngModel)]="specialEquipment" /></ion-item>
         <ion-item><ion-input label="단가 *" type="number" [(ngModel)]="rate" /></ion-item>
+        <ion-item><ion-input label="적용 시작일" type="date" [(ngModel)]="rateEffectiveFrom" /></ion-item>
       </ion-list>
       @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
       <ion-button expand="block" (click)="save()" [disabled]="saving()">추가</ion-button>
@@ -85,10 +99,14 @@ export class RateCardsPage implements OnInit {
   saving = signal(false);
   error = signal('');
 
-  vehicleType = ''; tonnage = ''; containerSize = ''; specialEquipment = ''; rate = '';
+  vehicleType = ''; tonnage = ''; containerSize = ''; specialEquipment = ''; rate = ''; rateEffectiveFrom = '';
 
   editingId = signal<string | null>(null);
-  editVehicleType = ''; editTonnage = ''; editContainerSize = ''; editSpecialEquipment = ''; editRate = '';
+  editVehicleType = ''; editTonnage = ''; editContainerSize = ''; editSpecialEquipment = '';
+  editRate = ''; editRateEffectiveFrom = '';
+
+  historyOpenId = signal<string | null>(null);
+  history = signal<RateHistoryRow[]>([]);
 
   palletThreshold = '';
   savingThreshold = signal(false);
@@ -144,6 +162,7 @@ export class RateCardsPage implements OnInit {
     this.editContainerSize = r.containerSize ?? '';
     this.editSpecialEquipment = r.specialEquipment ?? '';
     this.editRate = r.rate;
+    this.editRateEffectiveFrom = '';
   }
 
   async saveEdit(id: string) {
@@ -153,9 +172,19 @@ export class RateCardsPage implements OnInit {
       containerSize: this.editContainerSize || undefined,
       specialEquipment: this.editSpecialEquipment || undefined,
       rate: this.editRate,
+      ...(this.editRateEffectiveFrom ? { rateEffectiveFrom: this.editRateEffectiveFrom } : {}),
     });
     this.editingId.set(null);
     await this.load();
+  }
+
+  async toggleHistory(id: string) {
+    if (this.historyOpenId() === id) {
+      this.historyOpenId.set(null);
+      return;
+    }
+    this.history.set(await this.api.getRateCardHistory(id));
+    this.historyOpenId.set(id);
   }
 
   async deactivate(id: string) {
@@ -188,9 +217,10 @@ export class RateCardsPage implements OnInit {
         ...(this.containerSize ? { containerSize: this.containerSize } : {}),
         ...(this.specialEquipment ? { specialEquipment: this.specialEquipment } : {}),
         rate: this.rate,
+        ...(this.rateEffectiveFrom ? { rateEffectiveFrom: this.rateEffectiveFrom } : {}),
       });
       this.vehicleType = ''; this.tonnage = ''; this.containerSize = '';
-      this.specialEquipment = ''; this.rate = '';
+      this.specialEquipment = ''; this.rate = ''; this.rateEffectiveFrom = '';
       await this.load();
     } catch (e: any) {
       this.error.set(e?.error?.message ?? '저장 실패');

@@ -5,15 +5,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonSelect,
-  IonSelectOption, IonButton, IonList, IonNote, IonBackButton, IonButtons,
+  IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons,
 } from '@ionic/angular/standalone';
-import { MasterDataService, PartnerRow, StorageContractRow } from '../../services/master-data.service';
+import { MasterDataService, PartnerRow, StorageContractRow, RateHistoryRow } from '../../services/master-data.service';
 
 @Component({
   selector: 'app-partner-form',
   standalone: true,
   imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput,
-    IonSelect, IonSelectOption, IonButton, IonList, IonNote, IonBackButton, IonButtons],
+    IonSelect, IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons],
   template: `
     <ion-header><ion-toolbar>
       <ion-buttons slot="start"><ion-back-button defaultHref="/master-data/partners" /></ion-buttons>
@@ -40,6 +40,7 @@ import { MasterDataService, PartnerRow, StorageContractRow } from '../../service
           <ion-item><ion-input label="담당자" [(ngModel)]="contactName" /></ion-item>
           <ion-item><ion-input label="연락처" [(ngModel)]="phone" /></ion-item>
           <ion-item><ion-input label="건당 기본 운송요율" type="number" [(ngModel)]="defaultTransportRate" /></ion-item>
+          <ion-item><ion-input label="적용 시작일" type="date" [(ngModel)]="rateEffectiveFrom" /></ion-item>
 
           @if (!editingId) {
             <ion-item>
@@ -66,6 +67,16 @@ import { MasterDataService, PartnerRow, StorageContractRow } from '../../service
             <ion-note class="ion-padding-start">보관계약은 이 화면에서 변경할 수 없습니다.</ion-note>
           }
         </ion-list>
+        @if (editingId && rateHistory().length > 0) {
+          <ion-list>
+            <ion-item lines="none"><ion-label><h3>기본 운송요율 이력</h3></ion-label></ion-item>
+            @for (h of rateHistory(); track h.id) {
+              <ion-item lines="none">
+                <ion-label>{{ h.effectiveFrom }} ~ {{ h.effectiveTo || '현재' }} : {{ h.rate }}</ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        }
         @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
         <ion-button expand="block" (click)="save()" [disabled]="saving()">저장</ion-button>
       }
@@ -83,15 +94,16 @@ export class PartnerFormPage implements OnInit {
 
   name = ''; code = ''; brn = ''; representativeName = ''; businessType = '';
   businessCategory = ''; address = ''; contactName = ''; phone = '';
-  defaultTransportRate = '';
+  defaultTransportRate = ''; rateEffectiveFrom = '';
   contractType: StorageContractRow['contractType'] = 'PALLET_DAILY';
   palletDailyRate = ''; areaPyeong = ''; areaRate = ''; startDate = '';
   areaBillingMode: NonNullable<StorageContractRow['areaBillingMode']> = 'FULL_MONTH';
 
+  rateHistory = signal<RateHistoryRow[]>([]);
   saving = signal(false);
   error = signal('');
 
-  ngOnInit() {
+  async ngOnInit() {
     if (!this.editingId) return;
     // ponytail: no GET /master-data/partners/:id endpoint exists yet — the list page
     // passes the full row via router state. Direct URL access / page reload has no
@@ -113,6 +125,7 @@ export class PartnerFormPage implements OnInit {
     this.phone = partner.phone ?? '';
     this.defaultTransportRate = partner.defaultTransportRate ?? '';
     this.loaded.set(true);
+    this.rateHistory.set(await this.api.getPartnerRateHistory(this.editingId));
   }
 
   async save() {
@@ -136,6 +149,7 @@ export class PartnerFormPage implements OnInit {
           contactName: this.contactName,
           phone: this.phone,
           defaultTransportRate: this.defaultTransportRate || undefined,
+          ...(this.rateEffectiveFrom ? { rateEffectiveFrom: this.rateEffectiveFrom } : {}),
         });
       } else {
         await this.api.createPartner({
@@ -146,6 +160,7 @@ export class PartnerFormPage implements OnInit {
           businessCategory: this.businessCategory, address: this.address,
           contactName: this.contactName, phone: this.phone,
           ...(this.defaultTransportRate ? { defaultTransportRate: this.defaultTransportRate } : {}),
+          ...(this.rateEffectiveFrom ? { rateEffectiveFrom: this.rateEffectiveFrom } : {}),
           storageContract: {
             contractType: this.contractType,
             ...(this.contractType === 'PALLET_DAILY'
