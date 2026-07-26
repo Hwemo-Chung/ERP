@@ -220,19 +220,19 @@ export class SettlementFeesService {
     return map;
   }
 
-  /** 전월 이월 재고: 해당 월 이전 입고합 − 출고합 (품목별). 당월 거래가 없던 품목도 포함되도록
-   * partner의 전체 이전 거래를 한 번에 조회 (mock에 groupBy가 없어 findMany로 직접 집계). */
+  /** 전월 이월 재고: 품목별 최신 누적 잔고 1행 조회 (P0-2, docs/prd/2026-07-26-erp-benchmark-prd.md
+   * §3 P0-2). 과거엔 partner의 전체 이전 거래를 스캔해 러닝합을 계산했으나, 이제 각 행에
+   * qtyAfterTransaction이 저장되어 있으므로 품목별 "월초 이전 가장 최근 1행"만 읽으면 된다.
+   * DISTINCT ON은 Prisma 쿼리 빌더에 없어 $queryRaw 사용 — 파라미터는 태그드 템플릿으로 바인딩되어
+   * SQL 문자열에 값이 직접 삽입되지 않는다(injection 안전). */
   private async openingStock(partnerId: string, before: Date): Promise<Map<string, number>> {
-    const prior = await this.prisma.warehouseTransaction.findMany({
-      where: { partnerId, transactionDate: { lt: before } },
-      select: { productId: true, type: true, quantity: true },
-    });
-    const map = new Map<string, number>();
-    for (const t of prior) {
-      const delta = t.type === 'INBOUND' ? t.quantity : -t.quantity;
-      map.set(t.productId, (map.get(t.productId) ?? 0) + delta);
-    }
-    return map;
+    const rows = await this.prisma.$queryRaw<{ productId: string; qtyAfterTransaction: number }[]>`
+      SELECT DISTINCT ON (product_id) product_id AS "productId", qty_after_transaction AS "qtyAfterTransaction"
+      FROM warehouse_transactions
+      WHERE partner_id = ${partnerId} AND transaction_date < ${before}
+      ORDER BY product_id, transaction_date DESC, id DESC
+    `;
+    return new Map(rows.map((r) => [r.productId, r.qtyAfterTransaction]));
   }
 
   async previewMonth(yearMonth: string) {

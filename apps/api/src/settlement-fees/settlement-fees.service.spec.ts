@@ -52,6 +52,7 @@ const prismaMock: any = {
   partnerTransportRateHistory: { findMany: jest.fn() },
   vehicleRateHistory: { findMany: jest.fn() },
   auditLog: { create: jest.fn() },
+  $queryRaw: jest.fn(),
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 const ratesMock = {
@@ -93,6 +94,7 @@ describe('SettlementFeesService', () => {
     prismaMock.productTransportRateHistory.findMany.mockResolvedValue([]);
     prismaMock.partnerTransportRateHistory.findMany.mockResolvedValue([]);
     prismaMock.vehicleRateHistory.findMany.mockResolvedValue([]);
+    prismaMock.$queryRaw.mockResolvedValue([]); // P0-2: openingStock() default — no prior balance
   });
 
   it('collects E4108 errors for transactions without any rate', async () => {
@@ -224,6 +226,38 @@ describe('SettlementFeesService', () => {
       });
       // no vehicle rate on this fixture — must not query with an empty `in` array
       expect(prismaMock.vehicleRateHistory.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P0-2 openingStock — 누적 잔고 조회 (settlement-p0-report-P02.md 핵심 테스트)', () => {
+    it('returns the latest pre-month balance per product; products with no prior rows are absent from the map', async () => {
+      prismaMock.$queryRaw.mockResolvedValue([
+        { productId: 'prod1', qtyAfterTransaction: 42 },
+        { productId: 'prod2', qtyAfterTransaction: -5 },
+      ]);
+      const map = await (service as any).openingStock('p1', new Date('2026-07-01T00:00:00Z'));
+      expect(map.get('prod1')).toBe(42);
+      expect(map.get('prod2')).toBe(-5);
+      expect(map.has('prod3')).toBe(false);
+    });
+
+    it('calls $queryRaw with bound parameters, not string-interpolated SQL (injection safety)', async () => {
+      prismaMock.$queryRaw.mockResolvedValue([]);
+      const hostilePartnerId = "p1'; DROP TABLE warehouse_transactions; --";
+      await (service as any).openingStock(hostilePartnerId, new Date('2026-07-01T00:00:00Z'));
+      const [sqlParts, partnerArg] = prismaMock.$queryRaw.mock.calls[0];
+      expect(Array.isArray(sqlParts)).toBe(true); // tagged-template strings array, not a built string
+      expect(sqlParts.some((s: string) => s.includes('DROP TABLE'))).toBe(false);
+      expect(partnerArg).toBe(hostilePartnerId); // value passed as a separate bound parameter
+    });
+
+    it('full computeMonth run with a nonzero opening balance still produces correct, unchanged-shape settlement totals (regression)', async () => {
+      prismaMock.$queryRaw.mockResolvedValue([{ productId: 'prod1', qtyAfterTransaction: 0 }]);
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
+      await service.closeMonth('2026-07', 'u1');
+      const rows = prismaMock.settlementRecord.createMany.mock.calls.at(-1)![0].data;
+      expect(rows.find((r: any) => r.feeType === 'TRANSPORT').amount).toBe('5000');
+      expect(rows.find((r: any) => r.feeType === 'STORAGE')).toBeDefined();
     });
   });
 
