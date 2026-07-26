@@ -181,6 +181,7 @@ model Partner {
   storageContracts  StorageContract[]
   transactions      WarehouseTransaction[]
   settlementRecords SettlementRecord[]
+  rateHistory       PartnerTransportRateHistory[]
 
   @@map("partners")
 }
@@ -639,6 +640,7 @@ model Product {
   category     Category               @relation(fields: [categoryId], references: [id])
   partner      Partner                @relation(fields: [partnerId], references: [id])
   transactions WarehouseTransaction[]
+  rateHistory  ProductTransportRateHistory[]
 
   @@index([partnerId])
   @@map("products")
@@ -654,8 +656,60 @@ model TransportRateCard {
   isActive         Boolean  @default(true) @map("is_active")
 
   transactions WarehouseTransaction[]
+  rateHistory  VehicleRateHistory[]
 
   @@map("transport_rate_cards")
+}
+
+// ============================================
+// TRANSPORT RATE HISTORY (P0-1 — 거래일 기준 요율 조회)
+// ============================================
+// Three scope-specific tables (type safety over one polymorphic table, per
+// docs/benchmarking/deep/B-erpnext-dolibarr.md §3). effectiveTo IS NULL = still current.
+// The single columns on Product/Partner/TransportRateCard stay as a "current value cache"
+// (backward compat + O(1) read) — these tables are the source of truth for date-scoped lookups.
+// No-overlap is enforced at the DB layer via an EXCLUDE constraint (see migration SQL), not here.
+
+model ProductTransportRateHistory {
+  id            String    @id @default(uuid())
+  productId     String    @map("product_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId, effectiveFrom, effectiveTo])
+  @@map("product_transport_rate_histories")
+}
+
+model PartnerTransportRateHistory {
+  id            String    @id @default(uuid())
+  partnerId     String    @map("partner_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@index([partnerId, effectiveFrom, effectiveTo])
+  @@map("partner_transport_rate_histories")
+}
+
+model VehicleRateHistory {
+  id            String    @id @default(uuid())
+  rateCardId    String    @map("rate_card_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  rateCard TransportRateCard @relation(fields: [rateCardId], references: [id])
+
+  @@index([rateCardId, effectiveFrom, effectiveTo])
+  @@map("vehicle_rate_histories")
 }
 
 model StorageContract {
