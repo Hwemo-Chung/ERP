@@ -14,7 +14,7 @@ const prismaMock = {
     count: jest.fn(),
   },
   storageContract: { create: jest.fn() },
-  partnerTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn() },
+  partnerTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
   auditLog: { create: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -188,6 +188,24 @@ describe('PartnersService', () => {
         where: { id: 'p1' },
         data: { defaultTransportRate: '4000' },
       });
+    });
+
+    it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
+      prismaMock.partner.findUnique.mockResolvedValue({ id: 'p1', defaultTransportRate: '3000' });
+      prismaMock.partner.update.mockResolvedValue({ id: 'p1', defaultTransportRate: '4000' });
+      prismaMock.partnerTransportRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+
+      await expect(
+        service.update('p1', { defaultTransportRate: '4000', rateEffectiveFrom: '2026-07-01' }, 'user1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.partnerTransportRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.partnerTransportRateHistory.create).not.toHaveBeenCalled();
+
+      try {
+        await service.update('p1', { defaultTransportRate: '4000', rateEffectiveFrom: '2026-07-01' }, 'user1');
+      } catch (e: any) {
+        expect(e.response?.code).toBe('E4113');
+      }
     });
 
     it('update leaves rate history untouched when defaultTransportRate is not part of the patch', async () => {

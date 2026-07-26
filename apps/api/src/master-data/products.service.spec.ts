@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 const prismaMock = {
   product: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), findMany: jest.fn(), count: jest.fn() },
   auditLog: { create: jest.fn() },
-  productTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn() },
+  productTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
   $transaction: jest.fn(),
 };
 // ponytail: matches partners.service.spec.ts's $transaction mock — fn receives the same prismaMock as tx.
@@ -131,6 +131,24 @@ describe('ProductsService', () => {
         where: { id: 'prod1' },
         data: { transportRate: '8000' },
       });
+    });
+
+    it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
+      prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', transportRate: '5000' });
+      prismaMock.product.update.mockResolvedValue({ id: 'prod1', transportRate: '8000' });
+      prismaMock.productTransportRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+
+      await expect(
+        service.update('prod1', { transportRate: '8000', rateEffectiveFrom: '2026-07-01' }, 'user1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.productTransportRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.productTransportRateHistory.create).not.toHaveBeenCalled();
+
+      try {
+        await service.update('prod1', { transportRate: '8000', rateEffectiveFrom: '2026-07-01' }, 'user1');
+      } catch (e: any) {
+        expect(e.response?.code).toBe('E4113');
+      }
     });
 
     it('update leaves rate history untouched when transportRate is not part of the patch', async () => {

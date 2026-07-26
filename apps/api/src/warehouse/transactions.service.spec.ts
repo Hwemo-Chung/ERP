@@ -92,6 +92,7 @@ const prismaMock: any = {
   product: { findUnique: jest.fn((args: any) => Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] })) },
   settlementPeriod: { findFirst: jest.fn() },
   auditLog: { create: jest.fn() },
+  $executeRaw: jest.fn().mockResolvedValue(1),
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 
@@ -116,6 +117,7 @@ describe('TransactionsService', () => {
       Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] }),
     );
     prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
+    prismaMock.$executeRaw.mockResolvedValue(1);
 
     const module = await Test.createTestingModule({
       providers: [TransactionsService, { provide: PrismaService, useValue: prismaMock }],
@@ -197,6 +199,14 @@ describe('TransactionsService', () => {
   });
 
   describe('P0-2 거래 누적 잔고 (qtyAfterTransaction, settlement-p0-report-P02.md 핵심 테스트)', () => {
+    it('raises the $transaction timeout past the 5s default for the retroactive-recalc loop (I-2)', async () => {
+      await service.create(dto, 'u1');
+      expect(prismaMock.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 60_000, maxWait: 10_000 }),
+      );
+    });
+
     it('computes correct cumulative balance across sequential inserts for the same (partner, product)', async () => {
       const t1 = await service.create({ ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
       expect((t1 as any).qtyAfterTransaction).toBe(100);
@@ -224,6 +234,20 @@ describe('TransactionsService', () => {
     it('allows OUTBOUND to drive the balance negative (no new guard) — negative stock recorded as-is', async () => {
       const t = await service.create({ ...dto, type: 'OUTBOUND', quantity: 15, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
       expect((t as any).qtyAfterTransaction).toBe(-15);
+    });
+
+    it('takes the (partnerId, productId) advisory lock as the first statement, before the previous-balance lookup (I-1)', async () => {
+      await service.create({ ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+
+      expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+      const [, keyArg] = prismaMock.$executeRaw.mock.calls[0];
+      expect(keyArg).toBe('p1:prod1'); // keyed on partnerId + ':' + productId
+
+      // Real call-order assertion (not a hand-rolled counter) — jest tracks a single global
+      // invocation sequence across every mock function.
+      const lockOrder = prismaMock.$executeRaw.mock.invocationCallOrder[0];
+      const findFirstOrder = prismaMock.warehouseTransaction.findFirst.mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(findFirstOrder);
     });
 
     it('retroactively recomputes all later rows when inserting a transaction dated before them, and writes exactly one AuditLog entry', async () => {

@@ -5,6 +5,7 @@ import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { GetProductsDto } from './dto/get-products.dto';
+import { assertRateEffectiveFromAdvances } from '../common/rate-effective-from.util';
 
 // P0-1: "적용 시작일" 미입력 시 오늘 날짜(로컬, 자정 기준)를 기본값으로 쓴다. rates.service.ts와
 // 동일한 헬퍼 — 세 스코프(rate card/product/partner) 각각에서 중복 정의(작고 독립적이라 공유
@@ -84,6 +85,8 @@ export class ProductsService {
         // 요율 변경: 히스토리의 열린 행을 새 적용시작일로 닫고 새 행을 연다 (캐시 컬럼은 위
         // product.update가 이미 같은 트랜잭션에서 갱신했다).
         const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
+        const openRow = await tx.productTransportRateHistory.findFirst({ where: { productId: id, effectiveTo: null } });
+        assertRateEffectiveFromAdvances(openRow?.effectiveFrom, effectiveFrom);
         await tx.productTransportRateHistory.updateMany({
           where: { productId: id, effectiveTo: null },
           data: { effectiveTo: effectiveFrom },

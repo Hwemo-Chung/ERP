@@ -9,6 +9,7 @@ import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreatePartnerDto, StorageContractDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { GetPartnersDto } from './dto/get-partners.dto';
+import { assertRateEffectiveFromAdvances } from '../common/rate-effective-from.util';
 
 // P0-1: "적용 시작일" 미입력 시 오늘 날짜(로컬, 자정 기준)를 기본값으로 쓴다 — rates.service.ts /
 // products.service.ts와 동일한 헬퍼, 세 스코프에 독립적으로 둔다(공유 모듈 비용이 더 큼).
@@ -152,6 +153,8 @@ export class PartnersService {
         // 요율 변경: 히스토리의 열린 행을 새 적용시작일로 닫고 새 행을 연다 (캐시 컬럼은 위
         // partner.update가 이미 같은 트랜잭션에서 갱신했다).
         const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
+        const openRow = await tx.partnerTransportRateHistory.findFirst({ where: { partnerId: id, effectiveTo: null } });
+        assertRateEffectiveFromAdvances(openRow?.effectiveFrom, effectiveFrom);
         await tx.partnerTransportRateHistory.updateMany({
           where: { partnerId: id, effectiveTo: null },
           data: { effectiveTo: effectiveFrom },

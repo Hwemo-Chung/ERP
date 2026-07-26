@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { isStaffOnly } from '../common/staff-price-visibility.util';
+import { assertRateEffectiveFromAdvances } from '../common/rate-effective-from.util';
 
 export const PALLET_THRESHOLD_KEY = 'pallet_threshold_default';
 export const VEHICLE_RATE_MODE_KEY = 'vehicle_rate_mode';
@@ -68,6 +69,8 @@ export class RatesService {
     // 캐시 컬럼(TransportRateCard.rate)도 같은 트랜잭션에서 갱신 — 둘이 어긋나면 안 된다.
     const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
     return this.prisma.$transaction(async (tx) => {
+      const openRow = await tx.vehicleRateHistory.findFirst({ where: { rateCardId: id, effectiveTo: null } });
+      assertRateEffectiveFromAdvances(openRow?.effectiveFrom, effectiveFrom);
       await tx.vehicleRateHistory.updateMany({
         where: { rateCardId: id, effectiveTo: null },
         data: { effectiveTo: effectiveFrom },

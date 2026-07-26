@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { RatesService } from './rates.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 const prismaMock: any = {
   transportRateCard: { create: jest.fn(), findMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
   systemSetting: { findUnique: jest.fn(), upsert: jest.fn() },
-  vehicleRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn() },
+  vehicleRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 
@@ -118,6 +118,24 @@ describe('RatesService', () => {
         where: { id: 'r1' },
         data: { rate: '60000' },
       });
+    });
+
+    it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
+      prismaMock.transportRateCard.findUnique.mockResolvedValue({ id: 'r1', rate: '50000' });
+      prismaMock.transportRateCard.update.mockResolvedValue({ id: 'r1', rate: '60000' });
+      prismaMock.vehicleRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+
+      await expect(
+        service.updateRateCard('r1', { rate: '60000', rateEffectiveFrom: '2026-07-01' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.vehicleRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.vehicleRateHistory.create).not.toHaveBeenCalled();
+
+      try {
+        await service.updateRateCard('r1', { rate: '60000', rateEffectiveFrom: '2026-07-01' });
+      } catch (e: any) {
+        expect(e.response?.code).toBe('E4113');
+      }
     });
 
     it('updateRateCard skips history writes entirely when rate is not part of the patch', async () => {
