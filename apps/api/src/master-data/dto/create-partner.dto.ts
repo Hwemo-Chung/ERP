@@ -33,6 +33,8 @@ export class CreatePartnerDto {
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() email?: string;
   @IsOptional() @IsNumberString() defaultTransportRate?: string;
+  // P0-1: 요율 히스토리 행의 effectiveFrom. 미입력 시 서비스에서 오늘 날짜로 기본값 처리.
+  @IsOptional() @IsDateString() rateEffectiveFrom?: string;
   @IsDefined() @ValidateNested() @Type(() => StorageContractDto)
   storageContract!: StorageContractDto;
 }

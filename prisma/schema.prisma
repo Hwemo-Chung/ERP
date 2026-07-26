@@ -181,6 +181,7 @@ model Partner {
   storageContracts  StorageContract[]
   transactions      WarehouseTransaction[]
   settlementRecords SettlementRecord[]
+  rateHistory       PartnerTransportRateHistory[]
 
   @@map("partners")
 }
@@ -636,9 +637,10 @@ model Product {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  category     Category               @relation(fields: [categoryId], references: [id])
-  partner      Partner                @relation(fields: [partnerId], references: [id])
+  category     Category                      @relation(fields: [categoryId], references: [id])
+  partner      Partner                       @relation(fields: [partnerId], references: [id])
   transactions WarehouseTransaction[]
+  rateHistory  ProductTransportRateHistory[]
 
   @@index([partnerId])
   @@map("products")
@@ -654,8 +656,60 @@ model TransportRateCard {
   isActive         Boolean  @default(true) @map("is_active")
 
   transactions WarehouseTransaction[]
+  rateHistory  VehicleRateHistory[]
 
   @@map("transport_rate_cards")
+}
+
+// ============================================
+// TRANSPORT RATE HISTORY (P0-1 — 거래일 기준 요율 조회)
+// ============================================
+// Three scope-specific tables (type safety over one polymorphic table, per
+// docs/benchmarking/deep/B-erpnext-dolibarr.md §3). effectiveTo IS NULL = still current.
+// The single columns on Product/Partner/TransportRateCard stay as a "current value cache"
+// (backward compat + O(1) read) — these tables are the source of truth for date-scoped lookups.
+// No-overlap is enforced at the DB layer via an EXCLUDE constraint (see migration SQL), not here.
+
+model ProductTransportRateHistory {
+  id            String    @id @default(uuid())
+  productId     String    @map("product_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId, effectiveFrom, effectiveTo])
+  @@map("product_transport_rate_histories")
+}
+
+model PartnerTransportRateHistory {
+  id            String    @id @default(uuid())
+  partnerId     String    @map("partner_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@index([partnerId, effectiveFrom, effectiveTo])
+  @@map("partner_transport_rate_histories")
+}
+
+model VehicleRateHistory {
+  id            String    @id @default(uuid())
+  rateCardId    String    @map("rate_card_id")
+  rate          Decimal   @db.Decimal(14, 2)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  rateCard TransportRateCard @relation(fields: [rateCardId], references: [id])
+
+  @@index([rateCardId, effectiveFrom, effectiveTo])
+  @@map("vehicle_rate_histories")
 }
 
 model StorageContract {
@@ -677,16 +731,22 @@ model StorageContract {
 }
 
 model WarehouseTransaction {
-  id              String            @id @default(uuid())
-  type            TransactionType
-  partnerId       String            @map("partner_id")
-  productId       String            @map("product_id")
-  quantity        Int
-  transactionDate DateTime          @map("transaction_date")
-  vehicleRateId   String?           @map("vehicle_rate_id")
-  source          TransactionSource @default(PWA)
-  createdBy       String            @map("created_by")
-  createdAt       DateTime          @default(now()) @map("created_at")
+  id                  String            @id @default(uuid())
+  type                TransactionType
+  partnerId           String            @map("partner_id")
+  productId           String            @map("product_id")
+  quantity            Int
+  transactionDate     DateTime          @map("transaction_date")
+  vehicleRateId       String?           @map("vehicle_rate_id")
+  source              TransactionSource @default(PWA)
+  createdBy           String            @map("created_by")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  // P0-2: running balance scoped to (partnerId, productId), SLE `qty_after_transaction` pattern
+  // (docs/prd/2026-07-26-erp-benchmark-prd.md §3 P0-2). NOT NULL, no DB default in the final
+  // state — every row must have this computed explicitly by TransactionsService.create() or the
+  // backfill migration; see that migration for why the column is *temporarily* created with a
+  // DEFAULT during rollout.
+  qtyAfterTransaction Int               @map("qty_after_transaction")
 
   partner           Partner            @relation(fields: [partnerId], references: [id])
   product           Product            @relation(fields: [productId], references: [id])
@@ -695,23 +755,30 @@ model WarehouseTransaction {
 
   @@index([partnerId, transactionDate])
   @@index([productId, transactionDate])
+  // P0-2: latest-balance-per-(partner,product) lookup — openingStock() now does a single
+  // DISTINCT ON scan against this index instead of a full history scan.
+  @@index([partnerId, productId, transactionDate])
   @@map("warehouse_transactions")
 }
 
 model SettlementRecord {
-  id                String   @id @default(uuid())
-  transactionId     String?  @map("transaction_id")
-  partnerId         String   @map("partner_id")
-  periodYearMonth   String   @map("period_year_month") @db.VarChar(7) // "2026-07"
-  feeType           FeeType  @map("fee_type")
-  amount            Decimal  @db.Decimal(14, 2)
-  calculationDetail Json     @map("calculation_detail")
-  createdAt         DateTime @default(now()) @map("created_at")
+  id                String    @id @default(uuid())
+  transactionId     String?   @map("transaction_id")
+  partnerId         String    @map("partner_id")
+  periodYearMonth   String    @map("period_year_month") @db.VarChar(7) // "2026-07"
+  feeType           FeeType   @map("fee_type")
+  amount            Decimal   @db.Decimal(14, 2)
+  calculationDetail Json      @map("calculation_detail")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  supersededAt      DateTime? @map("superseded_at") // P0-3: null = live record; set on re-close instead of deleteMany
 
   transaction WarehouseTransaction? @relation(fields: [transactionId], references: [id])
   partner     Partner               @relation(fields: [partnerId], references: [id])
 
   @@index([partnerId, periodYearMonth])
+  // P0-3: every reader filters `supersededAt: null` — this index keeps that the fast path
+  // instead of falling back to the (partnerId, periodYearMonth) index + a filter scan.
+  @@index([partnerId, periodYearMonth, supersededAt])
   @@map("settlement_records")
 }
 

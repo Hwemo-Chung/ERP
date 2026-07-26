@@ -5,10 +5,95 @@ import { TransactionsService } from './transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
 
-const prismaMock = {
-  warehouseTransaction: { create: jest.fn(), findMany: jest.fn(), count: jest.fn() },
-  product: { findUnique: jest.fn() },
+// P0-2: a real (in-memory) fake store for warehouse_transactions, not a plain jest.fn() stub.
+// The insert path's correctness hinges on the `(transactionDate, id)` ordering key used for both
+// "find the previous balance" and "find later rows to recompute" — a stub that ignores `where`
+// would happily return the wrong row and make a sequential/retroactive-insert test pass by
+// accident. This fake actually filters by the OR/lt/gt shape the service sends, and sorts by the
+// requested orderBy, so a wrong ordering key in the service surfaces as a real assertion failure.
+let store: any[] = [];
+
+function matchesClause(row: any, clause: Record<string, any>): boolean {
+  return Object.entries(clause).every(([key, val]) => {
+    const rowVal = row[key];
+    if (val && typeof val === 'object' && !(val instanceof Date)) {
+      // relational comparison on two Dates coerces via valueOf (timestamp) per spec — works
+      // directly, no manual .getTime() needed.
+      if ('lt' in val) return rowVal < val.lt;
+      if ('gt' in val) return rowVal > val.gt;
+      return true;
+    }
+    if (val instanceof Date && rowVal instanceof Date) return rowVal.getTime() === val.getTime();
+    return rowVal === val;
+  });
+}
+
+function matchesWhere(row: any, where: Record<string, any> = {}): boolean {
+  if (where.partnerId !== undefined && row.partnerId !== where.partnerId) return false;
+  if (where.productId !== undefined && row.productId !== where.productId) return false;
+  if (where.OR) return where.OR.some((clause: any) => matchesClause(row, clause));
+  return true;
+}
+
+function sortByOrderBy(orderBy: { [k: string]: 'asc' | 'desc' }[] = []) {
+  return (a: any, b: any) => {
+    for (const ob of orderBy) {
+      const [key, dir] = Object.entries(ob)[0];
+      let av = a[key];
+      let bv = b[key];
+      if (av instanceof Date) av = av.getTime();
+      if (bv instanceof Date) bv = bv.getTime();
+      if (av < bv) return dir === 'asc' ? -1 : 1;
+      if (av > bv) return dir === 'asc' ? 1 : -1;
+    }
+    return 0;
+  };
+}
+
+function pick(row: any, select: Record<string, boolean>) {
+  const out: any = {};
+  for (const k of Object.keys(select)) out[k] = row[k];
+  return out;
+}
+
+// productId -> owning partnerId, used by the product.findUnique fake to satisfy/violate the
+// E4106 (product-partner mismatch) guard consistently across tests.
+const productPartnerMap: Record<string, string> = { prod1: 'p1', prod2: 'p1', prod3: 'p2' };
+
+function fakeCreate(args: any) {
+  const row = { ...args.data };
+  store.push(row);
+  return Promise.resolve(row);
+}
+function fakeFindFirst(args: any) {
+  const matched = store.filter((r) => matchesWhere(r, args.where)).sort(sortByOrderBy(args.orderBy));
+  const top = matched[0];
+  if (!top) return Promise.resolve(null);
+  return Promise.resolve(args.select ? pick(top, args.select) : top);
+}
+function fakeFindMany(args: any) {
+  const matched = store.filter((r) => matchesWhere(r, args?.where ?? {})).sort(sortByOrderBy(args?.orderBy));
+  return Promise.resolve(args?.select ? matched.map((r) => pick(r, args.select)) : matched);
+}
+function fakeUpdate(args: any) {
+  const row = store.find((r) => r.id === args.where.id);
+  Object.assign(row, args.data);
+  return Promise.resolve(row);
+}
+
+const prismaMock: any = {
+  warehouseTransaction: {
+    create: jest.fn(fakeCreate),
+    findFirst: jest.fn(fakeFindFirst),
+    findMany: jest.fn(fakeFindMany),
+    update: jest.fn(fakeUpdate),
+    count: jest.fn(),
+  },
+  product: { findUnique: jest.fn((args: any) => Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] })) },
   settlementPeriod: { findFirst: jest.fn() },
+  auditLog: { create: jest.fn() },
+  $executeRaw: jest.fn().mockResolvedValue(1),
+  $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 
 const dto = {
@@ -20,6 +105,20 @@ describe('TransactionsService', () => {
   let service: TransactionsService;
   beforeEach(async () => {
     jest.clearAllMocks();
+    store = [];
+    // Reset every fake back to its default implementation regardless of what a previous test's
+    // `.mockResolvedValue(...)` override left behind — jest.clearAllMocks() clears call history
+    // but not a previously-installed implementation.
+    prismaMock.warehouseTransaction.create.mockImplementation(fakeCreate);
+    prismaMock.warehouseTransaction.findFirst.mockImplementation(fakeFindFirst);
+    prismaMock.warehouseTransaction.findMany.mockImplementation(fakeFindMany);
+    prismaMock.warehouseTransaction.update.mockImplementation(fakeUpdate);
+    prismaMock.product.findUnique.mockImplementation((args: any) =>
+      Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] }),
+    );
+    prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
+    prismaMock.$executeRaw.mockResolvedValue(1);
+
     const module = await Test.createTestingModule({
       providers: [TransactionsService, { provide: PrismaService, useValue: prismaMock }],
     }).compile();
@@ -37,10 +136,12 @@ describe('TransactionsService', () => {
       expect(error).toBeInstanceOf(BadRequestException);
       expect(error.response?.code).toBe('E4106');
     }
+    // guard order: E4106 must short-circuit before the lock check or any write.
+    expect(prismaMock.settlementPeriod.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.warehouseTransaction.create).not.toHaveBeenCalled();
   });
 
   it('rejects transaction in LOCKED period (E2002)', async () => {
-    prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', partnerId: 'p1' });
     prismaMock.settlementPeriod.findFirst.mockResolvedValue({ status: 'LOCKED' });
     await expect(service.create(dto, 'u1')).rejects.toThrow(ConflictException);
 
@@ -61,6 +162,8 @@ describe('TransactionsService', () => {
         }),
       }),
     );
+    // guard order: E2002 must short-circuit before any balance lookup/write.
+    expect(prismaMock.warehouseTransaction.create).not.toHaveBeenCalled();
   });
 
   it('blocks a transaction on the last day of a locked month (exclusive periodEnd boundary)', async () => {
@@ -68,7 +171,6 @@ describe('TransactionsService', () => {
     // see settlement-fees.service.ts monthRange). `gt` must still find the LOCKED row for a
     // tx timestamped anywhere on July 31st, including with a nonzero time-of-day.
     const lastDayDto = { ...dto, transactionDate: '2026-07-31T23:00:00Z' };
-    prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', partnerId: 'p1' });
     prismaMock.settlementPeriod.findFirst.mockResolvedValue({ status: 'LOCKED' });
     await expect(service.create(lastDayDto, 'u1')).rejects.toThrow(ConflictException);
   });
@@ -79,10 +181,9 @@ describe('TransactionsService', () => {
     // `gte`) is what's forwarded to Prisma; the actual boundary comparison is DB behavior,
     // not something a fully-mocked unit test can exercise.
     const nextMonthDto = { ...dto, transactionDate: '2026-08-01T00:00:00Z' };
-    prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', partnerId: 'p1' });
     prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
-    prismaMock.warehouseTransaction.create.mockResolvedValue({ id: 't2' });
-    await expect(service.create(nextMonthDto, 'u1')).resolves.toEqual({ id: 't2' });
+    const created = await service.create(nextMonthDto, 'u1');
+    expect(created).toMatchObject({ partnerId: 'p1', productId: 'prod1', quantity: 10, type: 'OUTBOUND' });
     expect(prismaMock.settlementPeriod.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ periodEnd: { gt: new Date(nextMonthDto.transactionDate) } }),
@@ -91,13 +192,86 @@ describe('TransactionsService', () => {
   });
 
   it('creates transaction with source PWA and creator', async () => {
-    prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', partnerId: 'p1' });
-    prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
-    prismaMock.warehouseTransaction.create.mockResolvedValue({ id: 't1' });
     await service.create(dto, 'u1');
     expect(prismaMock.warehouseTransaction.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ source: 'PWA', createdBy: 'u1' }) }),
     );
+  });
+
+  describe('P0-2 거래 누적 잔고 (qtyAfterTransaction, settlement-p0-report-P02.md 핵심 테스트)', () => {
+    it('raises the $transaction timeout past the 5s default for the retroactive-recalc loop (I-2)', async () => {
+      await service.create(dto, 'u1');
+      expect(prismaMock.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 60_000, maxWait: 10_000 }),
+      );
+    });
+
+    it('computes correct cumulative balance across sequential inserts for the same (partner, product)', async () => {
+      const t1 = await service.create({ ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      expect((t1 as any).qtyAfterTransaction).toBe(100);
+
+      const t2 = await service.create({ ...dto, type: 'OUTBOUND', quantity: 30, transactionDate: '2026-07-02T00:00:00Z' }, 'u1');
+      expect((t2 as any).qtyAfterTransaction).toBe(70);
+
+      const t3 = await service.create({ ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-03T00:00:00Z' }, 'u1');
+      expect((t3 as any).qtyAfterTransaction).toBe(75);
+    });
+
+    it('keeps an independent running total for a different product of the same partner', async () => {
+      await service.create({ ...dto, productId: 'prod1', type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      const other = await service.create({ ...dto, productId: 'prod2', type: 'INBOUND', quantity: 9, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      expect((other as any).qtyAfterTransaction).toBe(9); // unaffected by prod1's 100
+    });
+
+    it('keeps an independent running total for a different partner', async () => {
+      const forP1 = await service.create({ ...dto, partnerId: 'p1', productId: 'prod1', type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      const forP2 = await service.create({ ...dto, partnerId: 'p2', productId: 'prod3', type: 'INBOUND', quantity: 9, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      expect((forP1 as any).qtyAfterTransaction).toBe(100);
+      expect((forP2 as any).qtyAfterTransaction).toBe(9);
+    });
+
+    it('allows OUTBOUND to drive the balance negative (no new guard) — negative stock recorded as-is', async () => {
+      const t = await service.create({ ...dto, type: 'OUTBOUND', quantity: 15, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      expect((t as any).qtyAfterTransaction).toBe(-15);
+    });
+
+    it('takes the (partnerId, productId) advisory lock as the first statement, before the previous-balance lookup (I-1)', async () => {
+      await service.create({ ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+
+      expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+      const [, keyArg] = prismaMock.$executeRaw.mock.calls[0];
+      expect(keyArg).toBe('p1:prod1'); // keyed on partnerId + ':' + productId
+
+      // Real call-order assertion (not a hand-rolled counter) — jest tracks a single global
+      // invocation sequence across every mock function.
+      const lockOrder = prismaMock.$executeRaw.mock.invocationCallOrder[0];
+      const findFirstOrder = prismaMock.warehouseTransaction.findFirst.mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(findFirstOrder);
+    });
+
+    it('retroactively recomputes all later rows when inserting a transaction dated before them, and writes exactly one AuditLog entry', async () => {
+      await service.create({ ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-10T00:00:00Z' }, 'u1'); // balance 100
+      await service.create({ ...dto, type: 'OUTBOUND', quantity: 20, transactionDate: '2026-07-15T00:00:00Z' }, 'u1'); // balance 80
+      await service.create({ ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-20T00:00:00Z' }, 'u1'); // balance 90
+      expect(prismaMock.auditLog.create).not.toHaveBeenCalled(); // no later rows existed yet for any of these
+
+      const retro = await service.create({ ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-12T00:00:00Z' }, 'u1');
+      // prior balance immediately before 07-12 is the 07-10 row's balance (100) -> 100 + 5 = 105
+      expect((retro as any).qtyAfterTransaction).toBe(105);
+
+      const byDate = (d: string) => store.find((r) => r.transactionDate.toISOString().startsWith(d));
+      expect(byDate('2026-07-15')!.qtyAfterTransaction).toBe(85); // 105 - 20
+      expect(byDate('2026-07-20')!.qtyAfterTransaction).toBe(95); // 85 + 10
+      expect(byDate('2026-07-10')!.qtyAfterTransaction).toBe(100); // unaffected, still before the retro insert
+
+      expect(prismaMock.auditLog.create).toHaveBeenCalledTimes(1);
+      const call = prismaMock.auditLog.create.mock.calls[0][0];
+      expect(call.data.tableName).toBe('warehouse_transactions');
+      expect(call.data.action).toBe('RETROACTIVE_QTY_RECALC');
+      expect(call.data.actor).toBe('u1');
+      expect(call.data.diff).toMatchObject({ affectedRowCount: 2 });
+    });
   });
 
   it('scopes findAll to forced partnerId', async () => {

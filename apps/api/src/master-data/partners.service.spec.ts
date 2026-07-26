@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PartnersService } from './partners.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,6 +14,8 @@ const prismaMock = {
     count: jest.fn(),
   },
   storageContract: { create: jest.fn() },
+  partnerTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+  auditLog: { create: jest.fn() },
   $transaction: jest.fn(),
 };
 // ponytail: split from object-literal initializer — TS strict mode (noImplicitAny) can't
@@ -150,6 +152,82 @@ describe('PartnersService', () => {
     it('defaults to unfiltered when no roles are passed', async () => {
       const r = await service.findAll({});
       expect(r.data[0]).toHaveProperty('defaultTransportRate', '3000');
+    });
+  });
+
+  describe('P0-1 요율 히스토리 쓰기 경로', () => {
+    it('create opens an initial history row when defaultTransportRate is set', async () => {
+      prismaMock.partner.findFirst.mockResolvedValue(null);
+      prismaMock.partner.create.mockResolvedValue({ id: 'p1', code: 'P-0001' });
+      await service.create({ ...baseDto, defaultTransportRate: '3000', rateEffectiveFrom: '2026-07-01' });
+      expect(prismaMock.partnerTransportRateHistory.create).toHaveBeenCalledWith({
+        data: { partnerId: 'p1', rate: '3000', effectiveFrom: new Date('2026-07-01'), effectiveTo: null },
+      });
+    });
+
+    it('create does not touch history when no defaultTransportRate is given', async () => {
+      prismaMock.partner.findFirst.mockResolvedValue(null);
+      prismaMock.partner.create.mockResolvedValue({ id: 'p1', code: 'P-0001' });
+      await service.create(baseDto);
+      expect(prismaMock.partnerTransportRateHistory.create).not.toHaveBeenCalled();
+    });
+
+    it('update closes the previously-open history row and opens a new one when defaultTransportRate changes', async () => {
+      prismaMock.partner.findUnique.mockResolvedValue({ id: 'p1', defaultTransportRate: '3000' });
+      prismaMock.partner.update.mockResolvedValue({ id: 'p1', defaultTransportRate: '4000' });
+      await service.update('p1', { defaultTransportRate: '4000', rateEffectiveFrom: '2026-07-15' }, 'user1');
+
+      expect(prismaMock.partnerTransportRateHistory.updateMany).toHaveBeenCalledWith({
+        where: { partnerId: 'p1', effectiveTo: null },
+        data: { effectiveTo: new Date('2026-07-15') },
+      });
+      expect(prismaMock.partnerTransportRateHistory.create).toHaveBeenCalledWith({
+        data: { partnerId: 'p1', rate: '4000', effectiveFrom: new Date('2026-07-15'), effectiveTo: null },
+      });
+      expect(prismaMock.partner.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { defaultTransportRate: '4000' },
+      });
+    });
+
+    it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
+      prismaMock.partner.findUnique.mockResolvedValue({ id: 'p1', defaultTransportRate: '3000' });
+      prismaMock.partner.update.mockResolvedValue({ id: 'p1', defaultTransportRate: '4000' });
+      prismaMock.partnerTransportRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+
+      await expect(
+        service.update('p1', { defaultTransportRate: '4000', rateEffectiveFrom: '2026-07-01' }, 'user1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.partnerTransportRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.partnerTransportRateHistory.create).not.toHaveBeenCalled();
+
+      try {
+        await service.update('p1', { defaultTransportRate: '4000', rateEffectiveFrom: '2026-07-01' }, 'user1');
+      } catch (e: any) {
+        expect(e.response?.code).toBe('E4113');
+      }
+    });
+
+    it('update leaves rate history untouched when defaultTransportRate is not part of the patch', async () => {
+      prismaMock.partner.findUnique.mockResolvedValue({ id: 'p1', name: 'A' });
+      prismaMock.partner.update.mockResolvedValue({ id: 'p1', name: 'B' });
+      await service.update('p1', { name: 'B' }, 'user1');
+      expect(prismaMock.partnerTransportRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.partnerTransportRateHistory.create).not.toHaveBeenCalled();
+    });
+
+    it('getRateHistory 404s on unknown partner, otherwise lists ordered by effectiveFrom desc', async () => {
+      prismaMock.partner.findUnique.mockResolvedValue(null);
+      await expect(service.getRateHistory('missing')).rejects.toThrow(NotFoundException);
+
+      prismaMock.partner.findUnique.mockResolvedValue({ id: 'p1' });
+      prismaMock.partnerTransportRateHistory.findMany.mockResolvedValue([{ rate: '4000' }]);
+      const history = await service.getRateHistory('p1');
+      expect(prismaMock.partnerTransportRateHistory.findMany).toHaveBeenCalledWith({
+        where: { partnerId: 'p1' },
+        orderBy: { effectiveFrom: 'desc' },
+      });
+      expect(history).toEqual([{ rate: '4000' }]);
     });
   });
 });

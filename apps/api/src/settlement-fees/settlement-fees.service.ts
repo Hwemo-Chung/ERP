@@ -5,6 +5,7 @@ import { RatesService } from '../master-data/rates.service';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from '../warehouse/constants';
 import { calcTransportFee } from './transport-fee';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
+import { resolveRateAt, RateHistoryRow } from './rate-resolution';
 
 interface CalcError {
   transactionId?: string;
@@ -52,6 +53,30 @@ export class SettlementFeesService {
       },
     });
 
+    // P0-1: 거래일 기준 요율 조회. 계산 시점(마감 실행 시각)의 "현재값"이 아니라 각 거래의
+    // transactionDate 시점에 유효했던 요율을 조회해야, 마감을 언제 실행하든 결과가 동일하다.
+    // 월 전체에 필요한 scope id만 모아 히스토리를 한 번에 벌크 조회(N+1 방지)하고, 이후
+    // per-transaction 조회는 이 Map에서만 수행한다 — 트랜잭션 개수만큼 DB 왕복하지 않는다.
+    const outboundTxs = txs.filter((t) => t.type === 'OUTBOUND');
+    const productIds = [...new Set(outboundTxs.map((t) => t.productId))];
+    const partnerIdsForRate = [...new Set(outboundTxs.map((t) => t.partnerId))];
+    const vehicleRateIds = [...new Set(outboundTxs.map((t) => t.vehicleRateId).filter((id): id is string => !!id))];
+
+    const [productHistoryRows, partnerHistoryRows, vehicleHistoryRows] = await Promise.all([
+      productIds.length
+        ? this.prisma.productTransportRateHistory.findMany({ where: { productId: { in: productIds } } })
+        : Promise.resolve([]),
+      partnerIdsForRate.length
+        ? this.prisma.partnerTransportRateHistory.findMany({ where: { partnerId: { in: partnerIdsForRate } } })
+        : Promise.resolve([]),
+      vehicleRateIds.length
+        ? this.prisma.vehicleRateHistory.findMany({ where: { rateCardId: { in: vehicleRateIds } } })
+        : Promise.resolve([]),
+    ]);
+    const productHistoryMap = this.groupHistory(productHistoryRows, (r) => r.productId);
+    const partnerHistoryMap = this.groupHistory(partnerHistoryRows, (r) => r.partnerId);
+    const vehicleHistoryMap = this.groupHistory(vehicleHistoryRows, (r) => r.rateCardId);
+
     const records: Prisma.SettlementRecordCreateManyInput[] = [];
     const results: { partnerId: string; transportTotal: string; storageTotal: string; errors: CalcError[] }[] = [];
 
@@ -63,14 +88,24 @@ export class SettlementFeesService {
       // 운송료: 출고 건당
       for (const tx of partnerTxs.filter((t) => t.type === 'OUTBOUND')) {
         try {
-          const fee = calcTransportFee(
-            {
-              productRate: tx.product.transportRate?.toString() ?? null,
-              partnerDefaultRate: tx.partner.defaultTransportRate?.toString() ?? null,
-              vehicleRate: tx.vehicleRate?.rate?.toString() ?? null,
-            },
-            vehicleRateMode,
-          );
+          // Fallback rule: 히스토리에 거래일을 커버하는 행이 없으면(백필 시작일보다 이전 거래 등)
+          // 현재값 캐시 컬럼으로 폴백한다 — 기존 데이터가 계속 동작하도록 하는 안전망. 둘 다
+          // 없으면 기존 E4108 경로(calcTransportFee 내부)로 그대로 떨어진다.
+          const productRate =
+            resolveRateAt(productHistoryMap.get(tx.productId) ?? [], tx.transactionDate) ??
+            tx.product.transportRate?.toString() ??
+            null;
+          const partnerDefaultRate =
+            resolveRateAt(partnerHistoryMap.get(tx.partnerId) ?? [], tx.transactionDate) ??
+            tx.partner.defaultTransportRate?.toString() ??
+            null;
+          const vehicleRate = tx.vehicleRateId
+            ? (resolveRateAt(vehicleHistoryMap.get(tx.vehicleRateId) ?? [], tx.transactionDate) ??
+              tx.vehicleRate?.rate?.toString() ??
+              null)
+            : null;
+
+          const fee = calcTransportFee({ productRate, partnerDefaultRate, vehicleRate }, vehicleRateMode);
           transportTotal = transportTotal.add(fee.amount);
           records.push({
             transactionId: tx.id,
@@ -170,19 +205,34 @@ export class SettlementFeesService {
     return { results, records, start, end };
   }
 
-  /** 전월 이월 재고: 해당 월 이전 입고합 − 출고합 (품목별). 당월 거래가 없던 품목도 포함되도록
-   * partner의 전체 이전 거래를 한 번에 조회 (mock에 groupBy가 없어 findMany로 직접 집계). */
-  private async openingStock(partnerId: string, before: Date): Promise<Map<string, number>> {
-    const prior = await this.prisma.warehouseTransaction.findMany({
-      where: { partnerId, transactionDate: { lt: before } },
-      select: { productId: true, type: true, quantity: true },
-    });
-    const map = new Map<string, number>();
-    for (const t of prior) {
-      const delta = t.type === 'INBOUND' ? t.quantity : -t.quantity;
-      map.set(t.productId, (map.get(t.productId) ?? 0) + delta);
+  /** scope id(productId/partnerId/rateCardId)별 히스토리 행 목록으로 그룹핑. Decimal → string 변환 포함. */
+  private groupHistory<T extends { rate: Prisma.Decimal; effectiveFrom: Date; effectiveTo: Date | null }>(
+    rows: T[],
+    keyOf: (row: T) => string,
+  ): Map<string, RateHistoryRow[]> {
+    const map = new Map<string, RateHistoryRow[]>();
+    for (const row of rows) {
+      const key = keyOf(row);
+      const list = map.get(key) ?? [];
+      list.push({ rate: row.rate.toString(), effectiveFrom: row.effectiveFrom, effectiveTo: row.effectiveTo });
+      map.set(key, list);
     }
     return map;
+  }
+
+  /** 전월 이월 재고: 품목별 최신 누적 잔고 1행 조회 (P0-2, docs/prd/2026-07-26-erp-benchmark-prd.md
+   * §3 P0-2). 과거엔 partner의 전체 이전 거래를 스캔해 러닝합을 계산했으나, 이제 각 행에
+   * qtyAfterTransaction이 저장되어 있으므로 품목별 "월초 이전 가장 최근 1행"만 읽으면 된다.
+   * DISTINCT ON은 Prisma 쿼리 빌더에 없어 $queryRaw 사용 — 파라미터는 태그드 템플릿으로 바인딩되어
+   * SQL 문자열에 값이 직접 삽입되지 않는다(injection 안전). */
+  private async openingStock(partnerId: string, before: Date): Promise<Map<string, number>> {
+    const rows = await this.prisma.$queryRaw<{ productId: string; qtyAfterTransaction: number }[]>`
+      SELECT DISTINCT ON (product_id) product_id AS "productId", qty_after_transaction AS "qtyAfterTransaction"
+      FROM warehouse_transactions
+      WHERE partner_id = ${partnerId} AND transaction_date < ${before}
+      ORDER BY product_id, transaction_date DESC, id DESC
+    `;
+    return new Map(rows.map((r) => [r.productId, r.qtyAfterTransaction]));
   }
 
   async previewMonth(yearMonth: string) {
@@ -202,7 +252,24 @@ export class SettlementFeesService {
     }
     await this.prisma.$transaction(
       async (tx) => {
-        await tx.settlementRecord.deleteMany({ where: { periodYearMonth: yearMonth } });
+        // P0-3: previous total must be read BEFORE marking supersededAt, or the sum would be
+        // computed over rows already flagged (still correct data, but wrong sequencing intent —
+        // read the "before" state while it's still the live state).
+        const priorLiveRecords = await tx.settlementRecord.findMany({
+          where: { periodYearMonth: yearMonth, supersededAt: null },
+          select: { amount: true },
+        });
+        const previousGrandTotal = priorLiveRecords.reduce(
+          (acc, r) => acc.add(r.amount),
+          new Prisma.Decimal(0),
+        );
+
+        // Re-close: mark prior live records superseded instead of deleteMany — preserves the
+        // audit trail for billing disputes (PRD §2.3 / P0-3).
+        const { count: supersededCount } = await tx.settlementRecord.updateMany({
+          where: { periodYearMonth: yearMonth, supersededAt: null },
+          data: { supersededAt: new Date() },
+        });
         await tx.settlementRecord.createMany({ data: records });
         await tx.settlementPeriod.upsert({
           where: { branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start } },
@@ -216,6 +283,30 @@ export class SettlementFeesService {
           },
           update: { status: 'LOCKED', lockedBy: userId, lockedAt: new Date() },
         });
+
+        if (supersededCount > 0) {
+          // `records` is built by this method (line ~115/176 above) and always sets `amount` to
+          // a string (calcTransportFee/calcStorageFeePalletDaily/calcStorageFeeArea all return
+          // `{ amount: string }`) — narrower than the general CreateManyInput union type.
+          const newGrandTotal = records.reduce(
+            (acc, r) => acc.add(new Prisma.Decimal(r.amount as string)),
+            new Prisma.Decimal(0),
+          );
+          await tx.auditLog.create({
+            data: {
+              tableName: 'settlement_records',
+              recordId: yearMonth,
+              action: 'SETTLEMENT_RECLOSE',
+              diff: {
+                yearMonth,
+                supersededCount,
+                previousGrandTotal: previousGrandTotal.toFixed(0),
+                newGrandTotal: newGrandTotal.toFixed(0),
+              },
+              actor: userId,
+            },
+          });
+        }
       },
       // ponytail: 120s ceiling — Prisma's default interactive-tx timeout (5s) can't finish
       // deleteMany+createMany+upsert at spec scale (~30만 SettlementRecord/월). Raise further
@@ -227,7 +318,7 @@ export class SettlementFeesService {
 
   async getBreakdown(transactionId: string, scope: { partnerId?: string }) {
     const record = await this.prisma.settlementRecord.findFirst({
-      where: { transactionId },
+      where: { transactionId, supersededAt: null },
       include: { transaction: { include: { product: true } } },
     });
     if (record && scope.partnerId && record.partnerId !== scope.partnerId) {
@@ -241,7 +332,7 @@ export class SettlementFeesService {
       throw new ForbiddenException({ code: 'E4110', message: 'E4110: access denied to other partner data' });
     }
     const records = await this.prisma.settlementRecord.findMany({
-      where: { partnerId, periodYearMonth: yearMonth },
+      where: { partnerId, periodYearMonth: yearMonth, supersededAt: null },
       include: { transaction: { include: { product: { select: { code: true, name: true } } } } },
     });
     const transport = records.filter((r) => r.feeType === 'TRANSPORT');

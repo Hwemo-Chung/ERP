@@ -9,6 +9,14 @@ import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreatePartnerDto, StorageContractDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { GetPartnersDto } from './dto/get-partners.dto';
+import { assertRateEffectiveFromAdvances } from '../common/rate-effective-from.util';
+
+// P0-1: "적용 시작일" 미입력 시 오늘 날짜(로컬, 자정 기준)를 기본값으로 쓴다 — rates.service.ts /
+// products.service.ts와 동일한 헬퍼, 세 스코프에 독립적으로 둔다(공유 모듈 비용이 더 큼).
+function todayDateOnly(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+}
 
 @Injectable()
 export class PartnersService {
@@ -59,6 +67,12 @@ export class PartnersService {
           endDate: dto.storageContract.endDate ? new Date(dto.storageContract.endDate) : null,
         },
       });
+      if (dto.defaultTransportRate != null) {
+        const effectiveFrom = dto.rateEffectiveFrom ? new Date(dto.rateEffectiveFrom) : todayDateOnly();
+        await tx.partnerTransportRateHistory.create({
+          data: { partnerId: partner.id, rate: dto.defaultTransportRate, effectiveFrom, effectiveTo: null },
+        });
+      }
       return partner;
     });
   }
@@ -118,7 +132,8 @@ export class PartnersService {
     // areaBillingMode is a StorageContract column, not a Partner column — validated on the DTO
     // (see update-partner.dto.ts) but there's no contract-update endpoint yet, so strip it here
     // rather than forwarding it into partner.update (which would throw on an unknown field).
-    const { businessRegistrationNo, areaBillingMode: _areaBillingMode, ...rest } = dto;
+    // rateEffectiveFrom likewise isn't a Partner column — it only drives the history write below.
+    const { businessRegistrationNo, areaBillingMode: _areaBillingMode, rateEffectiveFrom, ...rest } = dto;
     const brn = businessRegistrationNo ? normalizeBrn(businessRegistrationNo) : undefined;
     if (brn) {
       if (!validateBusinessRegistrationNo(brn)) {
@@ -134,6 +149,20 @@ export class PartnersService {
         where: { id },
         data: { ...rest, ...(brn ? { businessRegistrationNo: brn } : {}) },
       });
+      if (rest.defaultTransportRate !== undefined) {
+        // 요율 변경: 히스토리의 열린 행을 새 적용시작일로 닫고 새 행을 연다 (캐시 컬럼은 위
+        // partner.update가 이미 같은 트랜잭션에서 갱신했다).
+        const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
+        const openRow = await tx.partnerTransportRateHistory.findFirst({ where: { partnerId: id, effectiveTo: null } });
+        assertRateEffectiveFromAdvances(openRow?.effectiveFrom, effectiveFrom);
+        await tx.partnerTransportRateHistory.updateMany({
+          where: { partnerId: id, effectiveTo: null },
+          data: { effectiveTo: effectiveFrom },
+        });
+        await tx.partnerTransportRateHistory.create({
+          data: { partnerId: id, rate: rest.defaultTransportRate, effectiveFrom, effectiveTo: null },
+        });
+      }
       await tx.auditLog.create({
         data: {
           tableName: 'partners',
@@ -145,6 +174,15 @@ export class PartnersService {
         },
       });
       return updated;
+    });
+  }
+
+  async getRateHistory(id: string) {
+    const existing = await this.prisma.partner.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException({ code: 'E4104', message: 'partner not found' });
+    return this.prisma.partnerTransportRateHistory.findMany({
+      where: { partnerId: id },
+      orderBy: { effectiveFrom: 'desc' },
     });
   }
 }

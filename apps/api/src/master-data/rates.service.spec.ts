@@ -1,12 +1,14 @@
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { RatesService } from './rates.service';
 import { PrismaService } from '../prisma/prisma.service';
 
-const prismaMock = {
+const prismaMock: any = {
   transportRateCard: { create: jest.fn(), findMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
   systemSetting: { findUnique: jest.fn(), upsert: jest.fn() },
+  vehicleRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+  $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 
 describe('RatesService', () => {
@@ -84,6 +86,83 @@ describe('RatesService', () => {
     it('keeps rate when the caller carries both roles', async () => {
       const r = await service.listRateCards([Role.HQ_ADMIN, Role.WAREHOUSE_STAFF]);
       expect(r[0]).toHaveProperty('rate', '50000');
+    });
+  });
+
+  describe('P0-1 요율 히스토리 쓰기 경로', () => {
+    it('createRateCard opens an initial history row alongside the cache row, in one transaction', async () => {
+      prismaMock.transportRateCard.create.mockResolvedValue({ id: 'r1', rate: '50000' });
+      await service.createRateCard({ vehicleType: '트럭', rate: '50000', rateEffectiveFrom: '2026-07-01' });
+      expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(prismaMock.transportRateCard.create).toHaveBeenCalledWith({
+        data: { vehicleType: '트럭', rate: '50000' },
+      });
+      expect(prismaMock.vehicleRateHistory.create).toHaveBeenCalledWith({
+        data: { rateCardId: 'r1', rate: '50000', effectiveFrom: new Date('2026-07-01'), effectiveTo: null },
+      });
+    });
+
+    it('updateRateCard closes the previously-open history row and opens a new one when rate changes', async () => {
+      prismaMock.transportRateCard.findUnique.mockResolvedValue({ id: 'r1', rate: '50000' });
+      prismaMock.transportRateCard.update.mockResolvedValue({ id: 'r1', rate: '60000' });
+      await service.updateRateCard('r1', { rate: '60000', rateEffectiveFrom: '2026-07-15' });
+
+      expect(prismaMock.vehicleRateHistory.updateMany).toHaveBeenCalledWith({
+        where: { rateCardId: 'r1', effectiveTo: null },
+        data: { effectiveTo: new Date('2026-07-15') },
+      });
+      expect(prismaMock.vehicleRateHistory.create).toHaveBeenCalledWith({
+        data: { rateCardId: 'r1', rate: '60000', effectiveFrom: new Date('2026-07-15'), effectiveTo: null },
+      });
+      expect(prismaMock.transportRateCard.update).toHaveBeenCalledWith({
+        where: { id: 'r1' },
+        data: { rate: '60000' },
+      });
+    });
+
+    it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
+      prismaMock.transportRateCard.findUnique.mockResolvedValue({ id: 'r1', rate: '50000' });
+      prismaMock.transportRateCard.update.mockResolvedValue({ id: 'r1', rate: '60000' });
+      prismaMock.vehicleRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+
+      await expect(
+        service.updateRateCard('r1', { rate: '60000', rateEffectiveFrom: '2026-07-01' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prismaMock.vehicleRateHistory.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.vehicleRateHistory.create).not.toHaveBeenCalled();
+
+      try {
+        await service.updateRateCard('r1', { rate: '60000', rateEffectiveFrom: '2026-07-01' });
+      } catch (e: any) {
+        expect(e.response?.code).toBe('E4113');
+      }
+    });
+
+    it('updateRateCard skips history writes entirely when rate is not part of the patch', async () => {
+      prismaMock.transportRateCard.findUnique.mockResolvedValue({ id: 'r1', rate: '50000' });
+      prismaMock.transportRateCard.update.mockResolvedValue({ id: 'r1', vehicleType: '중형트럭' });
+      await service.updateRateCard('r1', { vehicleType: '중형트럭' });
+
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+      expect(prismaMock.vehicleRateHistory.create).not.toHaveBeenCalled();
+      expect(prismaMock.transportRateCard.update).toHaveBeenCalledWith({
+        where: { id: 'r1' },
+        data: { vehicleType: '중형트럭' },
+      });
+    });
+
+    it('getRateHistory returns history ordered by effectiveFrom desc, 404s on unknown card', async () => {
+      prismaMock.transportRateCard.findUnique.mockResolvedValue({ id: 'r1' });
+      prismaMock.vehicleRateHistory.findMany.mockResolvedValue([{ rate: '60000' }]);
+      const history = await service.getRateHistory('r1');
+      expect(prismaMock.vehicleRateHistory.findMany).toHaveBeenCalledWith({
+        where: { rateCardId: 'r1' },
+        orderBy: { effectiveFrom: 'desc' },
+      });
+      expect(history).toEqual([{ rate: '60000' }]);
+
+      prismaMock.transportRateCard.findUnique.mockResolvedValue(null);
+      await expect(service.getRateHistory('missing')).rejects.toThrow(NotFoundException);
     });
   });
 });
