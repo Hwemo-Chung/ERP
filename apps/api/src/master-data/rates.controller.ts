@@ -45,6 +45,12 @@ export class RatesController {
     return this.service.deactivateRateCard(id);
   }
 
+  @Get('rate-cards/:id/rate-history')
+  @ApiOperation({ summary: 'List rate history for a transport rate card (HQ_ADMIN only, class-level @Roles above)' })
+  getRateHistory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.getRateHistory(id);
+  }
+
   @Get('settings/pallet-threshold')
   @ApiOperation({ summary: 'Get pallet threshold default (%)' })
   async getPalletThreshold() {

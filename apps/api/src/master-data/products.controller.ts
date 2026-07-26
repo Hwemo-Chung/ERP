@@ -41,4 +41,10 @@ export class ProductsController {
   ) {
     return this.service.update(id, dto, user.sub);
   }
+
+  @Get(':id/rate-history')
+  @ApiOperation({ summary: 'List transport rate history for a product (HQ_ADMIN only, class-level @Roles above)' })
+  getRateHistory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.getRateHistory(id);
+  }
 }
