@@ -4,16 +4,54 @@ import { SettlementFeesService } from './settlement-fees.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RatesService } from '../master-data/rates.service';
 
+// P0-3: a real (in-memory) fake store for settlement_records, not a plain jest.fn() stub.
+// A stub that ignores its `where` argument would happily return superseded rows and make a
+// "no double counting" test pass even if the service forgot the `supersededAt: null` filter —
+// exactly the highest-risk bug this task calls out. This fake actually applies `where`, so a
+// missing filter in the service surfaces as a real assertion failure (doubled totals).
+let settlementRecordStore: any[] = [];
+let settlementRecordIdSeq = 0;
+
+function matchesWhere(record: any, where: any = {}): boolean {
+  if (where.periodYearMonth !== undefined && record.periodYearMonth !== where.periodYearMonth) return false;
+  if (where.partnerId !== undefined && record.partnerId !== where.partnerId) return false;
+  if (where.transactionId !== undefined && record.transactionId !== where.transactionId) return false;
+  if ('supersededAt' in where && where.supersededAt === null && record.supersededAt !== null) return false;
+  return true;
+}
+
 const prismaMock: any = {
   warehouseTransaction: { findMany: jest.fn(), aggregate: jest.fn() },
   partner: { findMany: jest.fn() },
   product: { findMany: jest.fn() },
   storageContract: { findMany: jest.fn() },
-  settlementRecord: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+  settlementRecord: {
+    deleteMany: jest.fn(),
+    updateMany: jest.fn((args: any) => {
+      const matched = settlementRecordStore.filter((r) => matchesWhere(r, args.where));
+      matched.forEach((r) => Object.assign(r, args.data));
+      return Promise.resolve({ count: matched.length });
+    }),
+    createMany: jest.fn((args: any) => {
+      const rows = args.data.map((d: any) => ({
+        id: `sr-${settlementRecordIdSeq++}`,
+        supersededAt: null,
+        createdAt: new Date(),
+        ...d,
+      }));
+      settlementRecordStore.push(...rows);
+      return Promise.resolve({ count: rows.length });
+    }),
+    findMany: jest.fn((args: any) => Promise.resolve(settlementRecordStore.filter((r) => matchesWhere(r, args?.where)))),
+    findFirst: jest.fn((args: any) =>
+      Promise.resolve(settlementRecordStore.find((r) => matchesWhere(r, args?.where)) ?? null),
+    ),
+  },
   settlementPeriod: { upsert: jest.fn() },
   productTransportRateHistory: { findMany: jest.fn() },
   partnerTransportRateHistory: { findMany: jest.fn() },
   vehicleRateHistory: { findMany: jest.fn() },
+  auditLog: { create: jest.fn() },
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 const ratesMock = {
@@ -36,6 +74,8 @@ describe('SettlementFeesService', () => {
   let service: SettlementFeesService;
   beforeEach(async () => {
     jest.clearAllMocks();
+    settlementRecordStore = [];
+    settlementRecordIdSeq = 0;
     const module = await Test.createTestingModule({
       providers: [
         SettlementFeesService,
@@ -70,10 +110,15 @@ describe('SettlementFeesService', () => {
     await expect(service.closeMonth('2026-07', 'u1')).rejects.toThrow(/E4109/);
   });
 
-  it('closeMonth snapshots records and locks period', async () => {
+  it('closeMonth snapshots records (no delete) and locks period', async () => {
     prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
     await service.closeMonth('2026-07', 'u1');
-    expect(prismaMock.settlementRecord.deleteMany).toHaveBeenCalledWith({ where: { periodYearMonth: '2026-07' } });
+    // P0-3: re-close preserves history — deleteMany must never be called.
+    expect(prismaMock.settlementRecord.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.settlementRecord.updateMany).toHaveBeenCalledWith({
+      where: { periodYearMonth: '2026-07', supersededAt: null },
+      data: { supersededAt: expect.any(Date) },
+    });
     expect(prismaMock.settlementRecord.createMany).toHaveBeenCalled();
     const rows = prismaMock.settlementRecord.createMany.mock.calls[0][0].data;
     expect(rows.find((r: any) => r.feeType === 'TRANSPORT').amount).toBe('5000');
@@ -179,6 +224,75 @@ describe('SettlementFeesService', () => {
       });
       // no vehicle rate on this fixture — must not query with an empty `in` array
       expect(prismaMock.vehicleRateHistory.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('P0-3 정산 재마감 버저닝 + 감사 추적 (settlement-p0-report-P03.md 핵심 테스트)', () => {
+    it('first close writes no AuditLog (nothing superseded)', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
+      await service.closeMonth('2026-07', 'u1');
+      expect(prismaMock.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('re-closing the same month supersedes the old records, keeps them (not deleted), and getStatement returns ONLY the new totals — not doubled', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
+
+      await service.closeMonth('2026-07', 'u1');
+      const statementAfterFirstClose = await service.getStatement('p1', '2026-07');
+      const firstCloseLiveCount = settlementRecordStore.filter((r) => r.supersededAt === null).length;
+      expect(firstCloseLiveCount).toBe(2); // 1 TRANSPORT + 1 STORAGE record
+
+      await service.closeMonth('2026-07', 'u1');
+      const statementAfterSecondClose = await service.getStatement('p1', '2026-07');
+
+      // Same input twice -> same total each time, but if the reader forgot `supersededAt: null`
+      // this would come back doubled (first-close + second-close rows both counted).
+      expect(statementAfterSecondClose.grandTotal).toBe(statementAfterFirstClose.grandTotal);
+
+      const allRowsForMonth = settlementRecordStore.filter((r) => r.periodYearMonth === '2026-07');
+      expect(allRowsForMonth).toHaveLength(4); // 2 (first close) + 2 (second close), none deleted
+      expect(allRowsForMonth.filter((r) => r.supersededAt === null)).toHaveLength(2); // only 2nd close live
+      expect(allRowsForMonth.filter((r) => r.supersededAt !== null)).toHaveLength(2); // 1st close preserved
+    });
+
+    it('getBreakdown returns the live record, not a superseded one, after a rate-correcting re-close', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]); // transportRate '5000'
+      await service.closeMonth('2026-07', 'u1');
+
+      // Second close recalculates with a corrected rate for the same transaction (t1).
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        txFixture({ product: { transportRate: '9000', maxUnitsPerPallet: 100, palletThreshold: null } }),
+      ]);
+      await service.closeMonth('2026-07', 'u1');
+
+      const breakdown = await service.getBreakdown('t1', {});
+      expect(breakdown?.supersededAt).toBeNull();
+      expect(breakdown?.amount).toBe('9000');
+    });
+
+    it('writes exactly one AuditLog on re-close with previous -> new grand totals and the superseded count', async () => {
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([txFixture()]);
+      await service.closeMonth('2026-07', 'u1');
+      const firstTotal = (await service.getStatement('p1', '2026-07')).grandTotal;
+
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        txFixture({ product: { transportRate: '9000', maxUnitsPerPallet: 100, palletThreshold: null } }),
+      ]);
+      await service.closeMonth('2026-07', 'u1');
+      const secondTotal = (await service.getStatement('p1', '2026-07')).grandTotal;
+
+      expect(prismaMock.auditLog.create).toHaveBeenCalledTimes(1);
+      const call = prismaMock.auditLog.create.mock.calls[0][0];
+      expect(call.data.tableName).toBe('settlement_records');
+      expect(call.data.action).toBe('SETTLEMENT_RECLOSE');
+      expect(call.data.actor).toBe('u1');
+      expect(call.data.diff).toMatchObject({
+        yearMonth: '2026-07',
+        supersededCount: 2,
+        previousGrandTotal: firstTotal,
+        newGrandTotal: secondTotal,
+      });
+      expect(firstTotal).not.toBe(secondTotal); // sanity: the rate correction actually changed the total
     });
   });
 });

@@ -252,7 +252,24 @@ export class SettlementFeesService {
     }
     await this.prisma.$transaction(
       async (tx) => {
-        await tx.settlementRecord.deleteMany({ where: { periodYearMonth: yearMonth } });
+        // P0-3: previous total must be read BEFORE marking supersededAt, or the sum would be
+        // computed over rows already flagged (still correct data, but wrong sequencing intent —
+        // read the "before" state while it's still the live state).
+        const priorLiveRecords = await tx.settlementRecord.findMany({
+          where: { periodYearMonth: yearMonth, supersededAt: null },
+          select: { amount: true },
+        });
+        const previousGrandTotal = priorLiveRecords.reduce(
+          (acc, r) => acc.add(r.amount),
+          new Prisma.Decimal(0),
+        );
+
+        // Re-close: mark prior live records superseded instead of deleteMany — preserves the
+        // audit trail for billing disputes (PRD §2.3 / P0-3).
+        const { count: supersededCount } = await tx.settlementRecord.updateMany({
+          where: { periodYearMonth: yearMonth, supersededAt: null },
+          data: { supersededAt: new Date() },
+        });
         await tx.settlementRecord.createMany({ data: records });
         await tx.settlementPeriod.upsert({
           where: { branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start } },
@@ -266,6 +283,30 @@ export class SettlementFeesService {
           },
           update: { status: 'LOCKED', lockedBy: userId, lockedAt: new Date() },
         });
+
+        if (supersededCount > 0) {
+          // `records` is built by this method (line ~115/176 above) and always sets `amount` to
+          // a string (calcTransportFee/calcStorageFeePalletDaily/calcStorageFeeArea all return
+          // `{ amount: string }`) — narrower than the general CreateManyInput union type.
+          const newGrandTotal = records.reduce(
+            (acc, r) => acc.add(new Prisma.Decimal(r.amount as string)),
+            new Prisma.Decimal(0),
+          );
+          await tx.auditLog.create({
+            data: {
+              tableName: 'settlement_records',
+              recordId: yearMonth,
+              action: 'SETTLEMENT_RECLOSE',
+              diff: {
+                yearMonth,
+                supersededCount,
+                previousGrandTotal: previousGrandTotal.toFixed(0),
+                newGrandTotal: newGrandTotal.toFixed(0),
+              },
+              actor: userId,
+            },
+          });
+        }
       },
       // ponytail: 120s ceiling — Prisma's default interactive-tx timeout (5s) can't finish
       // deleteMany+createMany+upsert at spec scale (~30만 SettlementRecord/월). Raise further
@@ -277,7 +318,7 @@ export class SettlementFeesService {
 
   async getBreakdown(transactionId: string, scope: { partnerId?: string }) {
     const record = await this.prisma.settlementRecord.findFirst({
-      where: { transactionId },
+      where: { transactionId, supersededAt: null },
       include: { transaction: { include: { product: true } } },
     });
     if (record && scope.partnerId && record.partnerId !== scope.partnerId) {
@@ -291,7 +332,7 @@ export class SettlementFeesService {
       throw new ForbiddenException({ code: 'E4110', message: 'E4110: access denied to other partner data' });
     }
     const records = await this.prisma.settlementRecord.findMany({
-      where: { partnerId, periodYearMonth: yearMonth },
+      where: { partnerId, periodYearMonth: yearMonth, supersededAt: null },
       include: { transaction: { include: { product: { select: { code: true, name: true } } } } },
     });
     const transport = records.filter((r) => r.feeType === 'TRANSPORT');
