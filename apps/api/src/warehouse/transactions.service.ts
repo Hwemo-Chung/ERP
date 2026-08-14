@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role, TransactionSource } from '@prisma/client';
+import { Prisma, Role, TransactionSource } from '@prisma/client';
 import { isStaffOnly } from '../common/staff-price-visibility.util';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { GetTransactionsDto } from './dto/get-transactions.dto';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface TransactionScope {
   partnerId?: string;
@@ -13,7 +14,10 @@ export interface TransactionScope {
 
 @Injectable()
 export class TransactionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async create(dto: CreateTransactionDto, userId: string, source: TransactionSource = 'PWA') {
     const product = await this.prisma.product.findUnique({ where: { id: dto.productId } });
@@ -53,9 +57,10 @@ export class TransactionsService {
     // ordering key `(transactionDate, id)`, matching the backfill migration's
     // `ORDER BY transaction_date, id` window function exactly — see that migration for why.
     const id = randomUUID();
-    const delta = dto.type === 'INBOUND' ? dto.quantity : -dto.quantity;
+    const delta =
+      dto.type === 'INBOUND' || dto.type === 'ADJUSTMENT_IN' ? dto.quantity : -dto.quantity;
 
-    return this.prisma.$transaction(
+    const created = await this.prisma.$transaction(
       async (tx) => {
         // Review fix I-1 (settlement-p0-review.md): under READ COMMITTED, two concurrent
         // create() calls for the SAME (partnerId, productId) can both read the same "previous
@@ -90,6 +95,8 @@ export class TransactionsService {
             source,
             createdBy: userId,
             qtyAfterTransaction,
+            adjustmentReason: dto.adjustmentReason,
+            adjustmentNote: dto.adjustmentNote,
           },
         });
 
@@ -109,7 +116,8 @@ export class TransactionsService {
         if (laterRows.length > 0) {
           let running = qtyAfterTransaction;
           for (const row of laterRows) {
-            running += row.type === 'INBOUND' ? row.quantity : -row.quantity;
+            running +=
+              row.type === 'INBOUND' || row.type === 'ADJUSTMENT_IN' ? row.quantity : -row.quantity;
             await tx.warehouseTransaction.update({
               where: { id: row.id },
               data: { qtyAfterTransaction: running },
@@ -121,7 +129,10 @@ export class TransactionsService {
               tableName: 'warehouse_transactions',
               recordId: created.id,
               action: 'RETROACTIVE_QTY_RECALC',
-              diff: { affectedRowCount: laterRows.length, insertedTransactionDate: txDate.toISOString() },
+              diff: {
+                affectedRowCount: laterRows.length,
+                insertedTransactionDate: txDate.toISOString(),
+              },
               actor: userId,
             },
           });
@@ -138,6 +149,62 @@ export class TransactionsService {
       // UPDATE (window function, like the backfill migration) if retroactive inserts routinely
       // affect enough rows to approach this ceiling.
       { timeout: 60_000, maxWait: 10_000 },
+    );
+    const latest = await this.prisma.warehouseTransaction.findFirst({
+      where: { partnerId: dto.partnerId, productId: dto.productId },
+      orderBy: [{ transactionDate: 'desc' }, { id: 'desc' }],
+      select: { qtyAfterTransaction: true },
+    });
+    await this.notifyInventoryThreshold(
+      product,
+      latest?.qtyAfterTransaction ?? created.qtyAfterTransaction,
+      userId,
+    );
+    return created;
+  }
+
+  private async notifyInventoryThreshold(
+    product: {
+      id: string;
+      code: string;
+      name: string;
+      minQuantity: number | null;
+      reorderQuantity: number | null;
+      maxQuantity: number | null;
+    },
+    quantity: number,
+    actorId: string,
+  ): Promise<void> {
+    const level =
+      quantity < (product.minQuantity ?? Number.NEGATIVE_INFINITY)
+        ? 'MIN'
+        : quantity <= (product.reorderQuantity ?? Number.NEGATIVE_INFINITY)
+          ? 'REORDER'
+          : quantity > (product.maxQuantity ?? Number.POSITIVE_INFINITY)
+            ? 'MAX'
+            : null;
+    if (!level) return;
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+    const admins = await this.prisma.userRole.findMany({
+      where: { role: 'HQ_ADMIN' },
+      select: { userId: true },
+    });
+    await Promise.all(
+      admins.map(({ userId }) =>
+        this.notifications.createNotification({
+          userId,
+          category: 'inventory_threshold',
+          dedupeKey: `inventory:${product.id}:${day}:${userId}`,
+          payload: {
+            productId: product.id,
+            productCode: product.code,
+            productName: product.name,
+            quantity,
+            level,
+            actorId,
+          },
+        }),
+      ),
     );
   }
 
@@ -173,6 +240,24 @@ export class TransactionsService {
       ? rows.map((t) => (t.vehicleRate ? { ...t, vehicleRate: stripRate(t.vehicleRate) } : t))
       : rows;
     return { data, totalCount };
+  }
+
+  async adjustmentSummary(scope: TransactionScope) {
+    const rows = await this.prisma.warehouseTransaction.groupBy({
+      by: ['adjustmentReason'],
+      where: {
+        type: { in: ['ADJUSTMENT_IN', 'ADJUSTMENT_OUT'] },
+        adjustmentReason: { not: null },
+        ...(scope.partnerId ? { partnerId: scope.partnerId } : {}),
+      },
+      _count: true,
+      _sum: { quantity: true },
+    });
+    return rows.map((row) => ({
+      reason: row.adjustmentReason,
+      count: row._count,
+      quantity: row._sum?.quantity ?? 0,
+    }));
   }
 }
 

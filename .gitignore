@@ -135,6 +135,7 @@ lerna-debug.log*
 # ==========================================
 coverage/
 .nyc_output/
+.playwright-cli/
 *.lcov
 .coverage
 htmlcov/

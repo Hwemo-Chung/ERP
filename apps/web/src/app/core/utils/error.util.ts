@@ -51,7 +51,11 @@ export function isHttpError(value: unknown): value is { status: number; message?
  * Extract error message from unknown error type
  * Safe to use in catch blocks
  */
-export function getErrorMessage(error: unknown): string {
+export function getErrorMessage(error: unknown, fallback = 'An unknown error occurred'): string {
+  if (typeof error === 'object' && error !== null && 'error' in error) {
+    const body = (error as { error: unknown }).error;
+    if (hasMessage(body)) return body.message;
+  }
   if (isError(error)) {
     return error.message;
   }
@@ -61,7 +65,7 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }
-  return 'An unknown error occurred';
+  return fallback;
 }
 
 /**

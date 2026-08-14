@@ -86,6 +86,14 @@ export interface StatementResponse {
   storage: { total: string; records: SettlementRecordRow[] };
   grandTotal: string;
 }
+export interface SettlementInvoiceRow {
+  id: string;
+  invoiceNo: string;
+  status: 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
+  subtotalAmount: string;
+  vatAmount: string;
+  totalAmount: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SettlementFeesService {
@@ -101,18 +109,57 @@ export class SettlementFeesService {
   }
 
   getBreakdown(transactionId: string): Promise<SettlementRecordRow | null> {
-    return firstValueFrom(this.http.get<SettlementRecordRow | null>(`${this.base}/breakdown/${transactionId}`));
+    return firstValueFrom(
+      this.http.get<SettlementRecordRow | null>(`${this.base}/breakdown/${transactionId}`),
+    );
   }
 
   getStatement(partnerId: string, yearMonth: string): Promise<StatementResponse> {
     return firstValueFrom(
-      this.http.get<StatementResponse>(`${this.base}/statement`, { params: { partnerId, yearMonth } }),
+      this.http.get<StatementResponse>(`${this.base}/statement`, {
+        params: { partnerId, yearMonth },
+      }),
     );
+  }
+
+  getInvoice(partnerId: string, yearMonth: string): Promise<SettlementInvoiceRow | null> {
+    return firstValueFrom(
+      this.http.get<SettlementInvoiceRow | null>(`${this.base}/invoice`, {
+        params: { partnerId, yearMonth },
+      }),
+    );
+  }
+
+  changeInvoiceStatus(
+    id: string,
+    status: 'ISSUED' | 'PAID' | 'CANCELLED',
+    cancelReason?: string,
+  ): Promise<SettlementInvoiceRow> {
+    return firstValueFrom(
+      this.http.post<SettlementInvoiceRow>(`${this.base}/invoice/${id}/status`, {
+        status,
+        ...(cancelReason ? { cancelReason } : {}),
+      }),
+    );
+  }
+
+  downloadInvoice(id: string): void {
+    this.http.get(`${this.base}/invoice/${id}/pdf`, { responseType: 'blob' }).subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `settlement-invoice-${id}.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    });
   }
 
   downloadStatement(partnerId: string, yearMonth: string): void {
     this.http
-      .get(`${this.base}/statement/download`, { params: { partnerId, yearMonth }, responseType: 'blob' })
+      .get(`${this.base}/statement/download`, {
+        params: { partnerId, yearMonth },
+        responseType: 'blob',
+      })
       .subscribe((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

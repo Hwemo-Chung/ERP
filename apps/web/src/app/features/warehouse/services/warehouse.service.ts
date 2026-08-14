@@ -11,7 +11,7 @@ import { environment } from '../../../../environments/environment';
 // backend controller returns and consume it directly.
 export interface TransactionRow {
   id: string;
-  type: 'INBOUND' | 'OUTBOUND';
+  type: TransactionType;
   partnerId: string;
   productId: string;
   quantity: number;
@@ -22,13 +22,32 @@ export interface TransactionRow {
 }
 
 export interface CreateTransactionDto {
-  type: 'INBOUND' | 'OUTBOUND';
+  type: TransactionType;
   partnerId: string;
   productId: string;
   quantity: number;
   transactionDate: string;
   vehicleRateId?: string;
+  adjustmentReason?: AdjustmentReason;
+  adjustmentNote?: string;
 }
+
+export type TransactionType = 'INBOUND' | 'OUTBOUND' | 'ADJUSTMENT_IN' | 'ADJUSTMENT_OUT';
+export type AdjustmentReason = 'STOCKTAKE_DIFF' | 'DAMAGE' | 'DISPOSAL' | 'OTHER';
+export type BarcodeResult =
+  | {
+      readonly type: 'PRODUCT';
+      readonly entity: {
+        readonly id: string;
+        readonly partnerId: string;
+        readonly code: string;
+        readonly name: string;
+      };
+    }
+  | {
+      readonly type: 'PARTNER';
+      readonly entity: { readonly id: string; readonly code: string; readonly name: string };
+    };
 
 export interface ImportInvalidRow {
   rowIndex: number;
@@ -50,7 +69,9 @@ type Paged<T> = { data: T[]; totalCount: number };
 // { params } serializes `undefined` as the literal string "undefined" otherwise.
 function toParams(q: Record<string, unknown>): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(q).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)]),
+    Object.entries(q)
+      .filter(([, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => [k, String(v)]),
   );
 }
 
@@ -63,9 +84,19 @@ export class WarehouseService {
     return firstValueFrom(this.http.post<TransactionRow>(this.base, dto));
   }
 
+  scanBarcode(barcode: string): Promise<BarcodeResult> {
+    return firstValueFrom(
+      this.http.post<BarcodeResult>(`${environment.apiUrl}/warehouse/barcode/scan`, { barcode }),
+    );
+  }
+
   getTransactions(q: {
-    partnerId?: string; productId?: string; dateFrom?: string; dateTo?: string;
-    page?: number; pageSize?: number;
+    partnerId?: string;
+    productId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    pageSize?: number;
   }): Promise<Paged<TransactionRow>> {
     return firstValueFrom(this.http.get<Paged<TransactionRow>>(this.base, { params: toParams(q) }));
   }
@@ -78,7 +109,9 @@ export class WarehouseService {
   }
 
   importCommit(rows: object[]): Promise<ImportCommitResult> {
-    return firstValueFrom(this.http.post<ImportCommitResult>(`${this.base}/import/commit`, { rows }));
+    return firstValueFrom(
+      this.http.post<ImportCommitResult>(`${this.base}/import/commit`, { rows }),
+    );
   }
 
   // ponytail: blob-download mirrors SettlementFeesService.downloadStatement's pattern

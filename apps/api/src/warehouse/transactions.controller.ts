@@ -65,15 +65,31 @@ export class TransactionsController {
     return this.service.findAll(q, {}, user.roles);
   }
 
+  @Get('adjustments/summary')
+  @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF, Role.PARTNER_COORDINATOR)
+  adjustmentSummary(@CurrentUser() user: JwtPayload) {
+    if (user.roles.includes(Role.PARTNER_COORDINATOR)) {
+      if (!user.partnerId) throw new ForbiddenException('error.insufficient_permissions');
+      return this.service.adjustmentSummary({ partnerId: user.partnerId });
+    }
+    return this.service.adjustmentSummary({});
+  }
+
   @Post('import/parse')
   @Roles(Role.HQ_ADMIN, Role.WAREHOUSE_STAFF)
   @ApiOperation({ summary: 'Parse an uploaded warehouse-transaction xlsx into valid/invalid rows' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' }, mapping: { type: 'string' } } },
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' }, mapping: { type: 'string' } },
+    },
   })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_XLSX_SIZE_BYTES } }))
-  async importParse(@UploadedFile() file: Express.Multer.File, @Body('mapping') mappingRaw: string) {
+  async importParse(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('mapping') mappingRaw: string,
+  ) {
     assertXlsxFile(file);
     const mapping = parseImportMapping(mappingRaw);
     return parseXlsxOrBadRequest(() => this.importService.parse(file.buffer, mapping));
@@ -104,7 +120,11 @@ export class TransactionsController {
     if (!partnerId) {
       throw new BadRequestException({ code: 'E4001', message: 'partnerId is required' });
     }
-    const buffer = await this.statementExport.buildShipmentListXlsx(partnerId, q.dateFrom, q.dateTo);
+    const buffer = await this.statementExport.buildShipmentListXlsx(
+      partnerId,
+      q.dateFrom,
+      q.dateTo,
+    );
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="shipment-list-${partnerId}.xlsx"`,

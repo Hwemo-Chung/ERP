@@ -3,15 +3,30 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonNote,
-  IonButton, IonBackButton, IonButtons, IonDatetime,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonNote,
+  IonButton,
+  IonBackButton,
+  IonButtons,
+  IonInput,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../../../core/services/auth.service';
-import { SettlementFeesService, StatementResponse } from '../../../settlement-fees/services/settlement-fees.service';
+import { getErrorMessage } from '../../../../core/utils/error.util';
+import {
+  SettlementFeesService,
+  SettlementInvoiceRow,
+  StatementResponse,
+} from '../../../settlement-fees/services/settlement-fees.service';
 
 function currentYearMonthIso(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 // ponytail: no partner select (unlike settlement-fees/pages/statement.page.ts) — the
@@ -21,62 +36,150 @@ function currentYearMonthIso(): string {
 @Component({
   selector: 'app-my-statement',
   standalone: true,
-  imports: [FormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonList,
-    IonItem, IonLabel, IonNote, IonButton, IonBackButton, IonButtons, IonDatetime],
+  imports: [
+    FormsModule,
+    RouterLink,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonNote,
+    IonButton,
+    IonBackButton,
+    IonButtons,
+    IonInput,
+  ],
   template: `
-    <ion-header><ion-toolbar>
-      <ion-buttons slot="start"><ion-back-button defaultHref="/portal" /></ion-buttons>
-      <ion-title>내 정산서</ion-title>
-    </ion-toolbar></ion-header>
-    <ion-content class="ion-padding">
-      @if (!partnerId) {
-        <ion-note color="danger">거래처 정보가 없습니다. 관리자에게 문의하세요.</ion-note>
-      } @else {
-        <ion-list>
-          <ion-item>
-            <ion-datetime presentation="month-year" [(ngModel)]="monthValue" (ionChange)="onMonthChange()" />
-          </ion-item>
-        </ion-list>
-        <ion-button expand="block" [disabled]="loading()" (click)="load()">조회</ion-button>
-
-        @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
-
-        @if (statement(); as s) {
-          <ion-list>
-            <ion-item lines="none"><ion-label><h2>운송료 ({{ s.transport.count }}건 / {{ s.transport.total }})</h2></ion-label></ion-item>
-            @for (rec of s.transport.records; track rec.id) {
-              <ion-item [routerLink]="rec.transactionId ? ['/portal/breakdown', rec.transactionId] : null">
-                <ion-label>
-                  <h3>{{ rec.transaction?.product?.name ?? rec.transactionId }}</h3>
-                  <p>{{ rec.transaction?.transactionDate?.slice(0, 10) }}</p>
-                </ion-label>
-                <ion-note slot="end">{{ rec.amount }}</ion-note>
-              </ion-item>
-            } @empty {
-              <ion-item><ion-label>운송 건이 없습니다.</ion-label></ion-item>
-            }
-          </ion-list>
-
-          <ion-list>
-            <ion-item lines="none"><ion-label><h2>보관료 ({{ s.storage.total }})</h2></ion-label></ion-item>
-          </ion-list>
-
+    <ion-header
+      ><ion-toolbar>
+        <ion-buttons slot="start"><ion-back-button defaultHref="/portal" /></ion-buttons>
+        <ion-title>내 정산서</ion-title>
+      </ion-toolbar></ion-header
+    >
+    <ion-content class="ion-padding"
+      ><div class="work-surface">
+        @if (!partnerId) {
+          <ion-note color="danger" role="alert"
+            >거래처 정보가 없습니다. 관리자에게 문의하세요.</ion-note
+          >
+        } @else {
           <ion-list>
             <ion-item>
-              <ion-label><h2>총계</h2></ion-label>
-              <ion-note slot="end">{{ s.grandTotal }}</ion-note>
+              <ion-input
+                label="정산월"
+                type="month"
+                [(ngModel)]="monthValue"
+                (ionChange)="onMonthChange()"
+              />
             </ion-item>
           </ion-list>
+          <ion-button expand="block" [disabled]="loading()" (click)="load()">조회</ion-button>
 
-          <ion-button expand="block" fill="outline" (click)="download()">정산서 다운로드</ion-button>
+          @if (error()) {
+            <ion-note color="danger" role="alert">{{ error() }}</ion-note>
+          }
+
+          @if (statement(); as s) {
+            @if (invoice(); as inv) {
+              <ion-list
+                ><ion-item
+                  ><ion-label
+                    ><h2>{{ inv.invoiceNo }}</h2>
+                    <p class="invoice-meta">{{ invoiceStatusLabel(inv.status) }}</p>
+                    <p class="invoice-meta">
+                      공급가 {{ formatMoney(inv.subtotalAmount) }} · 부가세
+                      {{ formatMoney(inv.vatAmount) }}
+                    </p></ion-label
+                  ><ion-note class="financial" slot="end"
+                    >{{ formatMoney(inv.totalAmount) }}원</ion-note
+                  ></ion-item
+                ></ion-list
+              >
+              <ion-button expand="block" (click)="settlementFees.downloadInvoice(inv.id)"
+                >청구서 PDF</ion-button
+              >
+            }
+            <ion-list>
+              <ion-item lines="none"
+                  ><ion-label
+                  ><h2>
+                    운송료 ({{ s.transport.count }}건 / {{ formatMoney(s.transport.total) }})
+                  </h2></ion-label
+                ></ion-item
+              >
+              @for (rec of s.transport.records; track rec.id) {
+                <ion-item
+                  [routerLink]="rec.transactionId ? ['/portal/breakdown', rec.transactionId] : null"
+                >
+                  <ion-label>
+                    <h3>{{ rec.transaction?.product?.name ?? rec.transactionId }}</h3>
+                    <p>{{ rec.transaction?.transactionDate?.slice(0, 10) }}</p>
+                  </ion-label>
+                  <ion-note class="financial" slot="end">{{ formatMoney(rec.amount) }}</ion-note>
+                </ion-item>
+              } @empty {
+                <ion-item><ion-label>운송 건이 없습니다.</ion-label></ion-item>
+              }
+            </ion-list>
+
+            <ion-list>
+              <ion-item lines="none"
+                  ><ion-label
+                  ><h2>보관료 ({{ formatMoney(s.storage.total) }})</h2></ion-label
+                ></ion-item
+              >
+            </ion-list>
+
+            <ion-list>
+              <ion-item>
+                <ion-label><h2>공급가</h2></ion-label>
+                <ion-note class="financial" slot="end">{{ formatMoney(s.grandTotal) }}</ion-note>
+              </ion-item>
+              @if (invoice(); as inv) {
+                <ion-item
+                  ><ion-label>부가세(10%)</ion-label
+                  ><ion-note class="financial" slot="end">{{
+                    formatMoney(inv.vatAmount)
+                  }}</ion-note></ion-item
+                >
+                <ion-item
+                  ><ion-label><h2>총액</h2></ion-label
+                  ><ion-note class="financial" slot="end">{{
+                    formatMoney(inv.totalAmount)
+                  }}</ion-note></ion-item
+                >
+              }
+            </ion-list>
+
+            <ion-button expand="block" fill="outline" (click)="download()"
+              >정산서 다운로드</ion-button
+            >
+          }
         }
-      }
-    </ion-content>
+      </div></ion-content
+    >
   `,
+  styles: [
+    `
+      .work-surface {
+        max-width: 960px;
+        margin-inline: auto;
+      }
+      .financial {
+        color: var(--ion-text-color);
+      }
+      .invoice-meta {
+        color: var(--gray-500);
+      }
+    `,
+  ],
 })
 export class MyStatementPage implements OnInit {
   private auth = inject(AuthService);
-  private settlementFees = inject(SettlementFeesService);
+  readonly settlementFees = inject(SettlementFeesService);
 
   // ponytail: read in ngOnInit (not a field initializer) — authGuard awaits
   // authService.initialize() before this route activates, so user() is already
@@ -85,6 +188,7 @@ export class MyStatementPage implements OnInit {
   partnerId?: string;
 
   statement = signal<StatementResponse | null>(null);
+  invoice = signal<SettlementInvoiceRow | null>(null);
   loading = signal(false);
   error = signal('');
 
@@ -105,9 +209,14 @@ export class MyStatementPage implements OnInit {
     this.error.set('');
     this.loading.set(true);
     try {
-      this.statement.set(await this.settlementFees.getStatement(this.partnerId, this.yearMonth));
-    } catch (e: any) {
-      this.error.set(e?.error?.message ?? '조회 실패');
+      const [statement, invoice] = await Promise.all([
+        this.settlementFees.getStatement(this.partnerId, this.yearMonth),
+        this.settlementFees.getInvoice(this.partnerId, this.yearMonth),
+      ]);
+      this.statement.set(statement);
+      this.invoice.set(invoice);
+    } catch (error: unknown) {
+      this.error.set(getErrorMessage(error, '조회 실패'));
     } finally {
       this.loading.set(false);
     }
@@ -116,5 +225,12 @@ export class MyStatementPage implements OnInit {
   download() {
     if (!this.partnerId) return;
     this.settlementFees.downloadStatement(this.partnerId, this.yearMonth);
+  }
+
+  formatMoney(value: string): string {
+    return Number(value).toLocaleString('ko-KR');
+  }
+  invoiceStatusLabel(status: SettlementInvoiceRow['status']): string {
+    return { DRAFT: '작성중', ISSUED: '발행', PAID: '입금완료', CANCELLED: '취소' }[status];
   }
 }

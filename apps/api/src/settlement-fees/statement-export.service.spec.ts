@@ -5,7 +5,10 @@ import { SettlementFeesService } from './settlement-fees.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const settlementFeesMock = { getStatement: jest.fn() };
-const prismaMock = { warehouseTransaction: { findMany: jest.fn() } };
+const prismaMock = {
+  warehouseTransaction: { findMany: jest.fn() },
+  settlementInvoice: { findUnique: jest.fn() },
+};
 
 describe('StatementExportService', () => {
   let service: StatementExportService;
@@ -57,6 +60,12 @@ describe('StatementExportService', () => {
       },
       grandTotal: '15000',
     });
+    prismaMock.settlementInvoice.findUnique.mockResolvedValue({
+      status: 'ISSUED',
+      subtotalAmount: { toFixed: () => '15000' },
+      vatAmount: { toFixed: () => '1500' },
+      totalAmount: { toFixed: () => '16500' },
+    });
 
     const buf = await service.buildStatementXlsx('p1', '2026-07', {});
 
@@ -67,6 +76,8 @@ describe('StatementExportService', () => {
     expect(wb.getWorksheet('보관료')!.rowCount).toBe(2);
     const summaryRows = wb.getWorksheet('합계')!;
     expect(summaryRows.getRow(4).getCell(3).value).toBe('15000');
+    expect(summaryRows.getRow(5).getCell(3).value).toBe('1500');
+    expect(summaryRows.getRow(6).getCell(3).value).toBe('16500');
     expect(settlementFeesMock.getStatement).toHaveBeenCalledWith('p1', '2026-07', {});
   });
 
@@ -86,7 +97,9 @@ describe('StatementExportService', () => {
     expect(wb.worksheets).toHaveLength(1);
     expect(wb.getWorksheet('출고명세서')!.rowCount).toBe(2); // header + 1 row
     expect(prismaMock.warehouseTransaction.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ type: 'OUTBOUND', partnerId: 'p1' }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({ type: 'OUTBOUND', partnerId: 'p1' }),
+      }),
     );
   });
 });

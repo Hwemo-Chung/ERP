@@ -1,13 +1,21 @@
 import { Prisma } from '@prisma/client';
 import { calcPallets } from './pallet';
 
-type Tx = { productId: string; type: 'INBOUND' | 'OUTBOUND'; quantity: number; transactionDate: Date };
+type Tx = {
+  productId: string;
+  type: 'INBOUND' | 'OUTBOUND' | 'ADJUSTMENT_IN' | 'ADJUSTMENT_OUT';
+  quantity: number;
+  transactionDate: Date;
+};
 
 export function buildDailyStock(
-  transactions: Tx[], openingStock: Map<string, number>, year: number, month: number,
+  transactions: Tx[],
+  openingStock: Map<string, number>,
+  year: number,
+  month: number,
 ): Map<string, number[]> {
   const daysInMonth = new Date(year, month, 0).getDate();
-  const productIds = new Set([...openingStock.keys(), ...transactions.map(t => t.productId)]);
+  const productIds = new Set([...openingStock.keys(), ...transactions.map((t) => t.productId)]);
   const result = new Map<string, number[]>();
 
   for (const pid of productIds) {
@@ -15,9 +23,14 @@ export function buildDailyStock(
     for (const tx of transactions) {
       if (tx.productId !== pid) continue;
       // ponytail: guard against transactions outside [year, month] — caller-supplied data isn't pre-filtered
-      if (tx.transactionDate.getUTCFullYear() !== year || tx.transactionDate.getUTCMonth() + 1 !== month) continue;
+      if (
+        tx.transactionDate.getUTCFullYear() !== year ||
+        tx.transactionDate.getUTCMonth() + 1 !== month
+      )
+        continue;
       const day = tx.transactionDate.getUTCDate() - 1;
-      deltaByDay[day] += tx.type === 'INBOUND' ? tx.quantity : -tx.quantity;
+      deltaByDay[day] +=
+        tx.type === 'INBOUND' || tx.type === 'ADJUSTMENT_IN' ? tx.quantity : -tx.quantity;
     }
     const days: number[] = [];
     let running = openingStock.get(pid) ?? 0;
@@ -68,7 +81,10 @@ export function calcStorageFeePalletDaily(
 
   for (const [pid, days] of dailyStock) {
     const p = products.get(pid);
-    if (!p?.maxUnitsPerPallet) { skippedProducts.push(pid); continue; }
+    if (!p?.maxUnitsPerPallet) {
+      skippedProducts.push(pid);
+      continue;
+    }
     const threshold = p.palletThreshold ?? globalThresholdPct;
     let palletDays = 0;
     let hasNegativeDay = false;
@@ -84,7 +100,11 @@ export function calcStorageFeePalletDaily(
   return {
     amount: rate.mul(totalPalletDays).toFixed(0),
     detail: {
-      contractType: 'PALLET_DAILY', palletDailyRate, totalPalletDays, perProduct, skippedProducts,
+      contractType: 'PALLET_DAILY',
+      palletDailyRate,
+      totalPalletDays,
+      perProduct,
+      skippedProducts,
       negativeStockProducts,
       formula: `${totalPalletDays} 파렛트일 × ${palletDailyRate}`,
     },
@@ -99,7 +119,12 @@ function daysInMonthUTC(year: number, month: number): number {
 }
 
 /** 계약 기간 [startDate, endDate ?? ∞]와 대상 월의 겹치는 일수 (endDate는 포함). */
-function coveredDaysInMonth(year: number, month: number, startDate: Date, endDate: Date | null): number {
+function coveredDaysInMonth(
+  year: number,
+  month: number,
+  startDate: Date,
+  endDate: Date | null,
+): number {
   const monthStart = Date.UTC(year, month - 1, 1);
   const monthEnd = Date.UTC(year, month, 1); // exclusive
   const contractStart = startDate.getTime();
@@ -111,17 +136,22 @@ function coveredDaysInMonth(year: number, month: number, startDate: Date, endDat
 }
 
 export function calcStorageFeeArea(
-  areaPyeong: string, areaRate: string,
-  contractType: 'AREA_MONTHLY' | 'AREA_YEARLY', year: number, month: number,
+  areaPyeong: string,
+  areaRate: string,
+  contractType: 'AREA_MONTHLY' | 'AREA_YEARLY',
+  year: number,
+  month: number,
   billingMode: AreaBillingMode = 'FULL_MONTH',
-  startDate?: Date, endDate?: Date | null,
+  startDate?: Date,
+  endDate?: Date | null,
 ): { amount: string; detail: AreaFeeDetail } {
   const gross = new Prisma.Decimal(areaPyeong).mul(new Prisma.Decimal(areaRate));
   const monthlyAmount = contractType === 'AREA_YEARLY' ? gross.div(12) : gross;
   const period = `${year}-${String(month).padStart(2, '0')}`;
-  const baseFormula = contractType === 'AREA_YEARLY'
-    ? `${areaPyeong}평 × ${areaRate} ÷ 12 (년임대 월할)`
-    : `${areaPyeong}평 × ${areaRate}`;
+  const baseFormula =
+    contractType === 'AREA_YEARLY'
+      ? `${areaPyeong}평 × ${areaRate} ÷ 12 (년임대 월할)`
+      : `${areaPyeong}평 × ${areaRate}`;
 
   if (billingMode === 'DAILY_PRORATED' && startDate) {
     const daysInMonth = daysInMonthUTC(year, month);
@@ -130,9 +160,13 @@ export function calcStorageFeeArea(
     return {
       amount: amount.toFixed(0),
       detail: {
-        contractType, areaPyeong, areaRate, period,
+        contractType,
+        areaPyeong,
+        areaRate,
+        period,
         areaBillingMode: 'DAILY_PRORATED',
-        coveredDays, daysInMonth,
+        coveredDays,
+        daysInMonth,
         formula: `(${baseFormula}) × ${coveredDays}/${daysInMonth}일`,
       },
     };
@@ -141,7 +175,10 @@ export function calcStorageFeeArea(
   return {
     amount: monthlyAmount.toFixed(0),
     detail: {
-      contractType, areaPyeong, areaRate, period,
+      contractType,
+      areaPyeong,
+      areaRate,
+      period,
       areaBillingMode: 'FULL_MONTH',
       formula: baseFormula,
     },

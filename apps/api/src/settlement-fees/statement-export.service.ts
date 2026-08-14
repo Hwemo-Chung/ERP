@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as ExcelJS from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettlementFeesService } from './settlement-fees.service';
@@ -19,6 +20,22 @@ export class StatementExportService {
     scope: { partnerId?: string } = {},
   ): Promise<Buffer> {
     const statement = await this.settlementFees.getStatement(partnerId, yearMonth, scope);
+    const invoice = await this.prisma.settlementInvoice.findUnique({
+      where: { partnerId_periodYearMonth: { partnerId, periodYearMonth: yearMonth } },
+      select: { status: true, subtotalAmount: true, vatAmount: true, totalAmount: true },
+    });
+    const subtotal =
+      invoice?.status === 'CANCELLED'
+        ? new Prisma.Decimal(0)
+        : (invoice?.subtotalAmount ?? new Prisma.Decimal(statement.grandTotal));
+    const vat =
+      invoice?.status === 'CANCELLED'
+        ? new Prisma.Decimal(0)
+        : (invoice?.vatAmount ?? subtotal.mul('0.10'));
+    const total =
+      invoice?.status === 'CANCELLED'
+        ? new Prisma.Decimal(0)
+        : (invoice?.totalAmount ?? subtotal.add(vat));
     const wb = new ExcelJS.Workbook();
 
     const transportSheet = wb.addWorksheet('운송료');
@@ -40,8 +57,10 @@ export class StatementExportService {
     storageSheet.addRow(['계약유형', '수량(파렛트일/면적)', '단가', '금액', '산식']);
     for (const r of statement.storage.records) {
       const detail = r.calculationDetail as unknown as PalletDailyDetail | AreaFeeDetail;
-      const qty = detail.contractType === 'PALLET_DAILY' ? detail.totalPalletDays : detail.areaPyeong;
-      const rate = detail.contractType === 'PALLET_DAILY' ? detail.palletDailyRate : detail.areaRate;
+      const qty =
+        detail.contractType === 'PALLET_DAILY' ? detail.totalPalletDays : detail.areaPyeong;
+      const rate =
+        detail.contractType === 'PALLET_DAILY' ? detail.palletDailyRate : detail.areaRate;
       storageSheet.addRow([detail.contractType, qty, rate, r.amount.toString(), detail.formula]);
     }
 
@@ -49,7 +68,9 @@ export class StatementExportService {
     summarySheet.addRow(['구분', '건수', '금액']);
     summarySheet.addRow(['운송료', statement.transport.count, statement.transport.total]);
     summarySheet.addRow(['보관료', statement.storage.records.length, statement.storage.total]);
-    summarySheet.addRow(['합계', '', statement.grandTotal]);
+    summarySheet.addRow(['공급가', '', subtotal.toFixed(0)]);
+    summarySheet.addRow(['부가세(10%)', '', vat.toFixed(0)]);
+    summarySheet.addRow(['총액', '', total.toFixed(0)]);
 
     return Buffer.from(await wb.xlsx.writeBuffer());
   }
@@ -61,7 +82,11 @@ export class StatementExportService {
    * findAll의 200건 페이지 캡도 우회해 전체 내보내기가 잘리지 않도록 한다(reports.service.ts와 동일하게
    * export 경로는 prisma 직접 조회가 기존 관례).
    */
-  async buildShipmentListXlsx(partnerId: string, dateFrom?: string, dateTo?: string): Promise<Buffer> {
+  async buildShipmentListXlsx(
+    partnerId: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<Buffer> {
     const rows = await this.prisma.warehouseTransaction.findMany({
       where: {
         type: 'OUTBOUND',
@@ -83,7 +108,12 @@ export class StatementExportService {
     const sheet = wb.addWorksheet('출고명세서');
     sheet.addRow(['일자', '품목코드', '품목명', '수량']);
     for (const t of rows) {
-      sheet.addRow([t.transactionDate.toISOString().slice(0, 10), t.product.code, t.product.name, t.quantity]);
+      sheet.addRow([
+        t.transactionDate.toISOString().slice(0, 10),
+        t.product.code,
+        t.product.name,
+        t.quantity,
+      ]);
     }
     return Buffer.from(await wb.xlsx.writeBuffer());
   }

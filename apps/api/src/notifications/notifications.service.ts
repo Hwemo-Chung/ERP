@@ -188,15 +188,28 @@ export class NotificationsService {
     orderId?: string;
     category: string;
     payload: Record<string, unknown>;
+    dedupeKey?: string;
   }) {
-    const notification = await this.prisma.notification.create({
-      data: {
-        userId: data.userId,
-        orderId: data.orderId,
-        category: data.category,
-        payload: JSON.parse(JSON.stringify(data.payload)),
-      },
-    });
+    let notification: Notification;
+    try {
+      notification = await this.prisma.notification.create({
+        data: {
+          userId: data.userId,
+          orderId: data.orderId,
+          category: data.category,
+          dedupeKey: data.dedupeKey,
+          payload: JSON.parse(JSON.stringify(data.payload)),
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        data.dedupeKey
+      )
+        return this.prisma.notification.findUniqueOrThrow({ where: { dedupeKey: data.dedupeKey } });
+      throw error;
+    }
 
     // Queue push notification for async processing
     await this.queuePushNotification({

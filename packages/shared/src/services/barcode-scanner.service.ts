@@ -8,6 +8,14 @@ export interface ScanResult {
   format?: string;
 }
 
+export interface ScanPrompt {
+  header?: string;
+  message?: string;
+  placeholder?: string;
+  minlength?: number;
+  maxlength?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BarcodeScannerService {
   private readonly platform = inject(Platform);
@@ -37,7 +45,9 @@ export class BarcodeScannerService {
   }
 
   async isAvailable(): Promise<boolean> {
-    return false;
+    if (!this.isNativePlatform()) return false;
+    const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+    return (await BarcodeScanner.isSupported()).supported;
   }
 
   isNativePlatform(): boolean {
@@ -45,35 +55,55 @@ export class BarcodeScannerService {
   }
 
   async requestPermission(): Promise<boolean> {
-    return true;
+    const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+    return (await BarcodeScanner.requestPermissions()).camera === 'granted';
   }
 
-  async scan(): Promise<ScanResult> {
+  async scan(prompt?: ScanPrompt): Promise<ScanResult> {
     if (this._isScanning()) {
       return { hasContent: false, content: '' };
     }
-    return this.showManualInputDialog();
+    this._isScanning.set(true);
+    try {
+      if (await this.isAvailable()) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        const result = await BarcodeScanner.scan();
+        const barcode = result.barcodes[0];
+        if (barcode) {
+          const scan = { hasContent: true, content: barcode.rawValue, format: barcode.format };
+          this._lastResult.set(scan);
+          return scan;
+        }
+      }
+      return this.showManualInputDialog(prompt);
+    } catch {
+      return this.showManualInputDialog(prompt);
+    } finally {
+      this._isScanning.set(false);
+    }
   }
 
   async stopScan(): Promise<void> {
     this._isScanning.set(false);
   }
 
-  async showManualInputDialog(): Promise<ScanResult> {
+  async showManualInputDialog(prompt?: ScanPrompt): Promise<ScanResult> {
     return new Promise<ScanResult>(async (resolve) => {
       const alert = await this.alertCtrl.create({
-        header: this.t('BARCODE.INPUT_HEADER'),
-        message: this.isNativePlatform()
-          ? this.t('BARCODE.INPUT_MESSAGE_NATIVE')
-          : this.t('BARCODE.INPUT_MESSAGE_WEB'),
+        header: prompt?.header ?? this.t('BARCODE.INPUT_HEADER'),
+        message:
+          prompt?.message ??
+          (this.isNativePlatform()
+            ? this.t('BARCODE.INPUT_MESSAGE_NATIVE')
+            : this.t('BARCODE.INPUT_MESSAGE_WEB')),
         inputs: [
           {
             name: 'serial',
             type: 'text',
-            placeholder: this.t('BARCODE.PLACEHOLDER'),
+            placeholder: prompt?.placeholder ?? this.t('BARCODE.PLACEHOLDER'),
             attributes: {
-              maxlength: 20,
-              minlength: 10,
+              maxlength: prompt?.maxlength ?? 20,
+              minlength: prompt?.minlength ?? 10,
               autocapitalize: 'characters',
             },
           },

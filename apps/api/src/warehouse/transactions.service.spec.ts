@@ -4,6 +4,7 @@ import { Role } from '@prisma/client';
 import { TransactionsService } from './transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // P0-2: a real (in-memory) fake store for warehouse_transactions, not a plain jest.fn() stub.
 // The insert path's correctness hinges on the `(transactionDate, id)` ordering key used for both
@@ -12,6 +13,7 @@ import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from './constants';
 // accident. This fake actually filters by the OR/lt/gt shape the service sends, and sorts by the
 // requested orderBy, so a wrong ordering key in the service surfaces as a real assertion failure.
 let store: any[] = [];
+const createNotification = jest.fn();
 
 function matchesClause(row: any, clause: Record<string, any>): boolean {
   return Object.entries(clause).every(([key, val]) => {
@@ -66,13 +68,17 @@ function fakeCreate(args: any) {
   return Promise.resolve(row);
 }
 function fakeFindFirst(args: any) {
-  const matched = store.filter((r) => matchesWhere(r, args.where)).sort(sortByOrderBy(args.orderBy));
+  const matched = store
+    .filter((r) => matchesWhere(r, args.where))
+    .sort(sortByOrderBy(args.orderBy));
   const top = matched[0];
   if (!top) return Promise.resolve(null);
   return Promise.resolve(args.select ? pick(top, args.select) : top);
 }
 function fakeFindMany(args: any) {
-  const matched = store.filter((r) => matchesWhere(r, args?.where ?? {})).sort(sortByOrderBy(args?.orderBy));
+  const matched = store
+    .filter((r) => matchesWhere(r, args?.where ?? {}))
+    .sort(sortByOrderBy(args?.orderBy));
   return Promise.resolve(args?.select ? matched.map((r) => pick(r, args.select)) : matched);
 }
 function fakeUpdate(args: any) {
@@ -89,16 +95,33 @@ const prismaMock: any = {
     update: jest.fn(fakeUpdate),
     count: jest.fn(),
   },
-  product: { findUnique: jest.fn((args: any) => Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] })) },
+  product: {
+    findUnique: jest.fn((args: any) =>
+      Promise.resolve({
+        id: args.where.id,
+        code: 'I-00001',
+        name: '품목',
+        partnerId: productPartnerMap[args.where.id],
+        minQuantity: null,
+        reorderQuantity: null,
+        maxQuantity: null,
+      }),
+    ),
+  },
   settlementPeriod: { findFirst: jest.fn() },
   auditLog: { create: jest.fn() },
+  notification: { findMany: jest.fn().mockResolvedValue([]) },
+  userRole: { findMany: jest.fn().mockResolvedValue([]) },
   $executeRaw: jest.fn().mockResolvedValue(1),
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
 };
 
 const dto = {
-  type: 'OUTBOUND' as const, partnerId: 'p1', productId: 'prod1',
-  quantity: 10, transactionDate: '2026-07-20T09:00:00Z',
+  type: 'OUTBOUND' as const,
+  partnerId: 'p1',
+  productId: 'prod1',
+  quantity: 10,
+  transactionDate: '2026-07-20T09:00:00Z',
 };
 
 describe('TransactionsService', () => {
@@ -114,13 +137,25 @@ describe('TransactionsService', () => {
     prismaMock.warehouseTransaction.findMany.mockImplementation(fakeFindMany);
     prismaMock.warehouseTransaction.update.mockImplementation(fakeUpdate);
     prismaMock.product.findUnique.mockImplementation((args: any) =>
-      Promise.resolve({ id: args.where.id, partnerId: productPartnerMap[args.where.id] }),
+      Promise.resolve({
+        id: args.where.id,
+        code: 'I-00001',
+        name: '품목',
+        partnerId: productPartnerMap[args.where.id],
+        minQuantity: null,
+        reorderQuantity: null,
+        maxQuantity: null,
+      }),
     );
     prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
     prismaMock.$executeRaw.mockResolvedValue(1);
 
     const module = await Test.createTestingModule({
-      providers: [TransactionsService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        TransactionsService,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: NotificationsService, useValue: { createNotification } },
+      ],
     }).compile();
     service = module.get(TransactionsService);
   });
@@ -183,10 +218,17 @@ describe('TransactionsService', () => {
     const nextMonthDto = { ...dto, transactionDate: '2026-08-01T00:00:00Z' };
     prismaMock.settlementPeriod.findFirst.mockResolvedValue(null);
     const created = await service.create(nextMonthDto, 'u1');
-    expect(created).toMatchObject({ partnerId: 'p1', productId: 'prod1', quantity: 10, type: 'OUTBOUND' });
+    expect(created).toMatchObject({
+      partnerId: 'p1',
+      productId: 'prod1',
+      quantity: 10,
+      type: 'OUTBOUND',
+    });
     expect(prismaMock.settlementPeriod.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ periodEnd: { gt: new Date(nextMonthDto.transactionDate) } }),
+        where: expect.objectContaining({
+          periodEnd: { gt: new Date(nextMonthDto.transactionDate) },
+        }),
       }),
     );
   });
@@ -194,7 +236,46 @@ describe('TransactionsService', () => {
   it('creates transaction with source PWA and creator', async () => {
     await service.create(dto, 'u1');
     expect(prismaMock.warehouseTransaction.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ source: 'PWA', createdBy: 'u1' }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ source: 'PWA', createdBy: 'u1' }),
+      }),
+    );
+  });
+
+  it('applies adjustment direction to the running balance and persists its reason', async () => {
+    const created = await service.create(
+      {
+        ...dto,
+        type: 'ADJUSTMENT_IN',
+        quantity: 7,
+        adjustmentReason: 'STOCKTAKE_DIFF',
+      },
+      'u1',
+    );
+    expect(created).toMatchObject({ qtyAfterTransaction: 7, adjustmentReason: 'STOCKTAKE_DIFF' });
+  });
+
+  it('notifies each HQ admin once with a stable daily dedupe key when the balance breaches reorder quantity', async () => {
+    prismaMock.product.findUnique.mockResolvedValue({
+      id: 'prod1',
+      code: 'I-00001',
+      name: '품목',
+      partnerId: 'p1',
+      minQuantity: 5,
+      reorderQuantity: 10,
+      maxQuantity: 100,
+    });
+    prismaMock.userRole.findMany.mockResolvedValue([{ userId: 'admin-1' }]);
+
+    await service.create({ ...dto, type: 'INBOUND', quantity: 8 }, 'u1');
+
+    expect(createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'admin-1',
+        category: 'inventory_threshold',
+        dedupeKey: expect.stringMatching(/^inventory:prod1:\d{4}-\d{2}-\d{2}:admin-1$/),
+        payload: expect.objectContaining({ level: 'REORDER', quantity: 8 }),
+      }),
     );
   });
 
@@ -208,36 +289,89 @@ describe('TransactionsService', () => {
     });
 
     it('computes correct cumulative balance across sequential inserts for the same (partner, product)', async () => {
-      const t1 = await service.create({ ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      const t1 = await service.create(
+        { ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' },
+        'u1',
+      );
       expect((t1 as any).qtyAfterTransaction).toBe(100);
 
-      const t2 = await service.create({ ...dto, type: 'OUTBOUND', quantity: 30, transactionDate: '2026-07-02T00:00:00Z' }, 'u1');
+      const t2 = await service.create(
+        { ...dto, type: 'OUTBOUND', quantity: 30, transactionDate: '2026-07-02T00:00:00Z' },
+        'u1',
+      );
       expect((t2 as any).qtyAfterTransaction).toBe(70);
 
-      const t3 = await service.create({ ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-03T00:00:00Z' }, 'u1');
+      const t3 = await service.create(
+        { ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-03T00:00:00Z' },
+        'u1',
+      );
       expect((t3 as any).qtyAfterTransaction).toBe(75);
     });
 
     it('keeps an independent running total for a different product of the same partner', async () => {
-      await service.create({ ...dto, productId: 'prod1', type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
-      const other = await service.create({ ...dto, productId: 'prod2', type: 'INBOUND', quantity: 9, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      await service.create(
+        {
+          ...dto,
+          productId: 'prod1',
+          type: 'INBOUND',
+          quantity: 100,
+          transactionDate: '2026-07-01T00:00:00Z',
+        },
+        'u1',
+      );
+      const other = await service.create(
+        {
+          ...dto,
+          productId: 'prod2',
+          type: 'INBOUND',
+          quantity: 9,
+          transactionDate: '2026-07-01T00:00:00Z',
+        },
+        'u1',
+      );
       expect((other as any).qtyAfterTransaction).toBe(9); // unaffected by prod1's 100
     });
 
     it('keeps an independent running total for a different partner', async () => {
-      const forP1 = await service.create({ ...dto, partnerId: 'p1', productId: 'prod1', type: 'INBOUND', quantity: 100, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
-      const forP2 = await service.create({ ...dto, partnerId: 'p2', productId: 'prod3', type: 'INBOUND', quantity: 9, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      const forP1 = await service.create(
+        {
+          ...dto,
+          partnerId: 'p1',
+          productId: 'prod1',
+          type: 'INBOUND',
+          quantity: 100,
+          transactionDate: '2026-07-01T00:00:00Z',
+        },
+        'u1',
+      );
+      const forP2 = await service.create(
+        {
+          ...dto,
+          partnerId: 'p2',
+          productId: 'prod3',
+          type: 'INBOUND',
+          quantity: 9,
+          transactionDate: '2026-07-01T00:00:00Z',
+        },
+        'u1',
+      );
       expect((forP1 as any).qtyAfterTransaction).toBe(100);
       expect((forP2 as any).qtyAfterTransaction).toBe(9);
     });
 
     it('allows OUTBOUND to drive the balance negative (no new guard) — negative stock recorded as-is', async () => {
-      const t = await service.create({ ...dto, type: 'OUTBOUND', quantity: 15, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      const t = await service.create(
+        { ...dto, type: 'OUTBOUND', quantity: 15, transactionDate: '2026-07-01T00:00:00Z' },
+        'u1',
+      );
       expect((t as any).qtyAfterTransaction).toBe(-15);
     });
 
     it('takes the (partnerId, productId) advisory lock as the first statement, before the previous-balance lookup (I-1)', async () => {
-      await service.create({ ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-01T00:00:00Z' }, 'u1');
+      await service.create(
+        { ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-01T00:00:00Z' },
+        'u1',
+      );
 
       expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
       const [, keyArg] = prismaMock.$executeRaw.mock.calls[0];
@@ -251,16 +385,29 @@ describe('TransactionsService', () => {
     });
 
     it('retroactively recomputes all later rows when inserting a transaction dated before them, and writes exactly one AuditLog entry', async () => {
-      await service.create({ ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-10T00:00:00Z' }, 'u1'); // balance 100
-      await service.create({ ...dto, type: 'OUTBOUND', quantity: 20, transactionDate: '2026-07-15T00:00:00Z' }, 'u1'); // balance 80
-      await service.create({ ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-20T00:00:00Z' }, 'u1'); // balance 90
+      await service.create(
+        { ...dto, type: 'INBOUND', quantity: 100, transactionDate: '2026-07-10T00:00:00Z' },
+        'u1',
+      ); // balance 100
+      await service.create(
+        { ...dto, type: 'OUTBOUND', quantity: 20, transactionDate: '2026-07-15T00:00:00Z' },
+        'u1',
+      ); // balance 80
+      await service.create(
+        { ...dto, type: 'INBOUND', quantity: 10, transactionDate: '2026-07-20T00:00:00Z' },
+        'u1',
+      ); // balance 90
       expect(prismaMock.auditLog.create).not.toHaveBeenCalled(); // no later rows existed yet for any of these
 
-      const retro = await service.create({ ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-12T00:00:00Z' }, 'u1');
+      const retro = await service.create(
+        { ...dto, type: 'INBOUND', quantity: 5, transactionDate: '2026-07-12T00:00:00Z' },
+        'u1',
+      );
       // prior balance immediately before 07-12 is the 07-10 row's balance (100) -> 100 + 5 = 105
       expect((retro as any).qtyAfterTransaction).toBe(105);
 
-      const byDate = (d: string) => store.find((r) => r.transactionDate.toISOString().startsWith(d));
+      const byDate = (d: string) =>
+        store.find((r) => r.transactionDate.toISOString().startsWith(d));
       expect(byDate('2026-07-15')!.qtyAfterTransaction).toBe(85); // 105 - 20
       expect(byDate('2026-07-20')!.qtyAfterTransaction).toBe(95); // 85 + 10
       expect(byDate('2026-07-10')!.qtyAfterTransaction).toBe(100); // unaffected, still before the retro insert
@@ -285,8 +432,16 @@ describe('TransactionsService', () => {
 
   describe('findAll — F1 role-aware projection (spec §2: no 요율 for staff)', () => {
     const row = {
-      id: 't1', partnerId: 'p1',
-      vehicleRate: { id: 'r1', vehicleType: '트럭', tonnage: '5', containerSize: null, specialEquipment: null, rate: '50000' },
+      id: 't1',
+      partnerId: 'p1',
+      vehicleRate: {
+        id: 'r1',
+        vehicleType: '트럭',
+        tonnage: '5',
+        containerSize: null,
+        specialEquipment: null,
+        rate: '50000',
+      },
     };
 
     beforeEach(() => {
@@ -306,7 +461,9 @@ describe('TransactionsService', () => {
     });
 
     it('does not choke when vehicleRate is null', async () => {
-      prismaMock.warehouseTransaction.findMany.mockResolvedValue([{ id: 't2', partnerId: 'p1', vehicleRate: null }]);
+      prismaMock.warehouseTransaction.findMany.mockResolvedValue([
+        { id: 't2', partnerId: 'p1', vehicleRate: null },
+      ]);
       const r = await service.findAll({}, {}, [Role.WAREHOUSE_STAFF]);
       expect(r.data[0].vehicleRate).toBeNull();
     });

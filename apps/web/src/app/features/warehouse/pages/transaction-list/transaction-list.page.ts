@@ -2,52 +2,105 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonSelect,
-  IonSelectOption, IonList, IonLabel, IonNote, IonBackButton, IonButtons,
-  IonInfiniteScroll, IonInfiniteScrollContent, InfiniteScrollCustomEvent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonItem,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonList,
+  IonLabel,
+  IonNote,
+  IonBackButton,
+  IonButtons,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  InfiniteScrollCustomEvent,
 } from '@ionic/angular/standalone';
 import { MasterDataService, PartnerRow } from '../../../master-data/services/master-data.service';
 import { WarehouseService, TransactionRow } from '../../services/warehouse.service';
+
+const TYPE_LABEL: Record<TransactionRow['type'], string> = {
+  INBOUND: '입고',
+  OUTBOUND: '출고',
+  ADJUSTMENT_IN: '조정+',
+  ADJUSTMENT_OUT: '조정-',
+};
 
 const PAGE_SIZE = 50;
 
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
-  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput,
-    IonSelect, IonSelectOption, IonList, IonLabel, IonNote, IonBackButton, IonButtons,
-    IonInfiniteScroll, IonInfiniteScrollContent],
+  imports: [
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonItem,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonList,
+    IonLabel,
+    IonNote,
+    IonBackButton,
+    IonButtons,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+  ],
   template: `
-    <ion-header><ion-toolbar>
-      <ion-buttons slot="start"><ion-back-button defaultHref="/tabs" /></ion-buttons>
-      <ion-title>실적 목록</ion-title>
-    </ion-toolbar></ion-header>
+    <ion-header
+      ><ion-toolbar>
+        <ion-buttons slot="start"><ion-back-button defaultHref="/tabs" /></ion-buttons>
+        <ion-title>실적 목록</ion-title>
+      </ion-toolbar></ion-header
+    >
     <ion-content>
       <ion-list>
         <ion-item>
-          <ion-select label="거래처" [(ngModel)]="partnerId" (ionChange)="reload()" interface="popover">
+          <ion-select
+            label="거래처"
+            [(ngModel)]="partnerId"
+            (ionChange)="reload()"
+            interface="popover"
+          >
             <ion-select-option [value]="undefined">전체</ion-select-option>
             @for (p of partners(); track p.id) {
               <ion-select-option [value]="p.id">{{ p.name }}</ion-select-option>
             }
           </ion-select>
         </ion-item>
-        <ion-item><ion-input label="시작일" type="date" [(ngModel)]="dateFrom" (ionChange)="reload()" /></ion-item>
-        <ion-item><ion-input label="종료일" type="date" [(ngModel)]="dateTo" (ionChange)="reload()" /></ion-item>
+        <ion-item
+          ><ion-input label="시작일" type="date" [(ngModel)]="dateFrom" (ionChange)="reload()"
+        /></ion-item>
+        <ion-item
+          ><ion-input label="종료일" type="date" [(ngModel)]="dateTo" (ionChange)="reload()"
+        /></ion-item>
       </ion-list>
       <ion-list>
         @for (t of transactions(); track t.id) {
           <ion-item>
             <ion-label>
-              <h2>{{ t.product?.name ?? t.productId }} <ion-note>{{ t.product?.code }}</ion-note></h2>
-              <p>{{ t.type === 'INBOUND' ? '입고' : '출고' }} · 수량 {{ t.quantity }} · {{ t.transactionDate.slice(0, 10) }}</p>
+              <h2>
+                {{ t.product?.name ?? t.productId }} <ion-note>{{ t.product?.code }}</ion-note>
+              </h2>
+              <p>
+                {{ typeLabel(t.type) }} · 수량 {{ t.quantity }} ·
+                {{ t.transactionDate.slice(0, 10) }}
+              </p>
             </ion-label>
           </ion-item>
         } @empty {
           <ion-item><ion-label>조회된 실적이 없습니다.</ion-label></ion-item>
         }
       </ion-list>
-      @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
+      @if (error()) {
+        <ion-note color="danger">{{ error() }}</ion-note>
+      }
       @if (hasMore()) {
         <ion-infinite-scroll (ionInfinite)="loadMore($event)">
           <ion-infinite-scroll-content></ion-infinite-scroll-content>
@@ -110,5 +163,9 @@ export class TransactionListPage implements OnInit {
       page,
       pageSize: PAGE_SIZE,
     });
+  }
+
+  typeLabel(type: TransactionRow['type']): string {
+    return TYPE_LABEL[type];
   }
 }

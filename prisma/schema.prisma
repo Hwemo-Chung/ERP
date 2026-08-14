@@ -110,21 +110,22 @@ model User {
   roles   UserRole[]
 
   // Reverse relations
-  orderStatusChanges  OrderStatusHistory[]
-  appointmentChanges  Appointment[]
-  splitOrders         SplitOrder[]
-  serialNumbers       SerialNumber[]
-  notifications       Notification[]
-  exports             Export[]
-  auditLogs           AuditLog[]
-  offlineSyncQueue    OfflineSyncQueue[]
-  attachments         Attachment[]
-  settlementLocks     SettlementPeriod[]         @relation("LockedBy")
-  settlementUnlocks   SettlementPeriod[]         @relation("UnlockedBy")
-  notificationSubs    NotificationSubscription[]
-  orderEventsCreated  OrderEvent[]               @relation("OrderEventCreatedBy")
-  cancellationRecords CancellationRecord[]       @relation("CancellationRecordCancelledBy")
-  returnRecords       CancellationRecord[]       @relation("CancellationRecordReturnedBy")
+  orderStatusChanges       OrderStatusHistory[]
+  appointmentChanges       Appointment[]
+  splitOrders              SplitOrder[]
+  serialNumbers            SerialNumber[]
+  notifications            Notification[]
+  exports                  Export[]
+  auditLogs                AuditLog[]
+  offlineSyncQueue         OfflineSyncQueue[]
+  attachments              Attachment[]
+  settlementLocks          SettlementPeriod[]         @relation("LockedBy")
+  settlementUnlocks        SettlementPeriod[]         @relation("UnlockedBy")
+  issuedSettlementInvoices SettlementInvoice[]
+  notificationSubs         NotificationSubscription[]
+  orderEventsCreated       OrderEvent[]               @relation("OrderEventCreatedBy")
+  cancellationRecords      CancellationRecord[]       @relation("CancellationRecordCancelledBy")
+  returnRecords            CancellationRecord[]       @relation("CancellationRecordReturnedBy")
 
   @@map("users")
 }
@@ -174,14 +175,15 @@ model Partner {
   createdAt              DateTime @default(now()) @map("created_at")
 
   // Relations
-  users             User[]
-  installers        Installer[]
-  orders            Order[]
-  products          Product[]
-  storageContracts  StorageContract[]
-  transactions      WarehouseTransaction[]
-  settlementRecords SettlementRecord[]
-  rateHistory       PartnerTransportRateHistory[]
+  users              User[]
+  installers         Installer[]
+  orders             Order[]
+  products           Product[]
+  storageContracts   StorageContract[]
+  transactions       WarehouseTransaction[]
+  settlementRecords  SettlementRecord[]
+  settlementInvoices SettlementInvoice[]
+  rateHistory        PartnerTransportRateHistory[]
 
   @@map("partners")
 }
@@ -415,6 +417,7 @@ model Notification {
   status    NotificationStatus @default(UNREAD)
   createdAt DateTime           @default(now()) @map("created_at")
   readAt    DateTime?          @map("read_at")
+  dedupeKey String?            @unique @map("dedupe_key") @db.VarChar(160)
 
   // Relations
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -594,6 +597,15 @@ enum AreaBillingMode {
 enum TransactionType {
   INBOUND
   OUTBOUND
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+}
+
+enum AdjustmentReason {
+  STOCKTAKE_DIFF
+  DAMAGE
+  DISPOSAL
+  OTHER
 }
 
 enum TransactionSource {
@@ -604,6 +616,13 @@ enum TransactionSource {
 enum FeeType {
   TRANSPORT
   STORAGE
+}
+
+enum SettlementInvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
 }
 
 model Category {
@@ -633,6 +652,9 @@ model Product {
   transportRate     Decimal? @map("transport_rate") @db.Decimal(14, 2)
   palletThreshold   Decimal? @map("pallet_threshold") @db.Decimal(5, 2) // % override
   maxUnitsPerPallet Int?     @map("max_units_per_pallet")
+  minQuantity       Int?     @map("min_quantity")
+  reorderQuantity   Int?     @map("reorder_quantity")
+  maxQuantity       Int?     @map("max_quantity")
   isActive          Boolean  @default(true) @map("is_active")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -747,6 +769,8 @@ model WarehouseTransaction {
   // backfill migration; see that migration for why the column is *temporarily* created with a
   // DEFAULT during rollout.
   qtyAfterTransaction Int               @map("qty_after_transaction")
+  adjustmentReason    AdjustmentReason? @map("adjustment_reason")
+  adjustmentNote      String?           @map("adjustment_note") @db.VarChar(300)
 
   partner           Partner            @relation(fields: [partnerId], references: [id])
   product           Product            @relation(fields: [productId], references: [id])
@@ -771,15 +795,43 @@ model SettlementRecord {
   calculationDetail Json      @map("calculation_detail")
   createdAt         DateTime  @default(now()) @map("created_at")
   supersededAt      DateTime? @map("superseded_at") // P0-3: null = live record; set on re-close instead of deleteMany
+  invoiceId         String?   @map("invoice_id")
 
   transaction WarehouseTransaction? @relation(fields: [transactionId], references: [id])
   partner     Partner               @relation(fields: [partnerId], references: [id])
+  invoice     SettlementInvoice?    @relation(fields: [invoiceId], references: [id])
 
   @@index([partnerId, periodYearMonth])
   // P0-3: every reader filters `supersededAt: null` — this index keeps that the fast path
   // instead of falling back to the (partnerId, periodYearMonth) index + a filter scan.
   @@index([partnerId, periodYearMonth, supersededAt])
   @@map("settlement_records")
+}
+
+model SettlementInvoice {
+  id              String                  @id @default(uuid())
+  invoiceNo       String                  @unique @map("invoice_no") @db.VarChar(30)
+  partnerId       String                  @map("partner_id")
+  periodYearMonth String                  @map("period_year_month") @db.VarChar(7)
+  status          SettlementInvoiceStatus @default(DRAFT)
+  subtotalAmount  Decimal                 @map("subtotal_amount") @db.Decimal(14, 2)
+  vatAmount       Decimal                 @map("vat_amount") @db.Decimal(14, 2)
+  totalAmount     Decimal                 @map("total_amount") @db.Decimal(14, 2)
+  issuedAt        DateTime?               @map("issued_at")
+  issuedBy        String?                 @map("issued_by")
+  paidAt          DateTime?               @map("paid_at")
+  cancelledAt     DateTime?               @map("cancelled_at")
+  cancelReason    String?                 @map("cancel_reason") @db.VarChar(300)
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @updatedAt @map("updated_at")
+
+  partner Partner            @relation(fields: [partnerId], references: [id])
+  issuer  User?              @relation(fields: [issuedBy], references: [id])
+  records SettlementRecord[]
+
+  @@unique([partnerId, periodYearMonth])
+  @@index([status, periodYearMonth])
+  @@map("settlement_invoices")
 }
 
 model SystemSetting {

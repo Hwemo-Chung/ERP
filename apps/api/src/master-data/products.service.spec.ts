@@ -5,15 +5,35 @@ import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const prismaMock = {
-  product: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+  product: {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
   auditLog: { create: jest.fn() },
-  productTransportRateHistory: { create: jest.fn(), updateMany: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+  productTransportRateHistory: {
+    create: jest.fn(),
+    updateMany: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+  },
   $transaction: jest.fn(),
 };
 // ponytail: matches partners.service.spec.ts's $transaction mock — fn receives the same prismaMock as tx.
-prismaMock.$transaction.mockImplementation((fn: (tx: typeof prismaMock) => unknown) => fn(prismaMock));
+prismaMock.$transaction.mockImplementation((fn: (tx: typeof prismaMock) => unknown) =>
+  fn(prismaMock),
+);
 
-const dto = { name: '냉장고 RF85', categoryId: 'c1', partnerId: 'p1', unitPrice: '1200000', costPrice: '900000' };
+const dto = {
+  name: '냉장고 RF85',
+  categoryId: 'c1',
+  partnerId: 'p1',
+  unitPrice: '1200000',
+  costPrice: '900000',
+};
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -48,6 +68,12 @@ describe('ProductsService', () => {
     await expect(service.create({ ...dto, code: 'EX-001' })).rejects.toThrow(ConflictException);
   });
 
+  it('rejects inventory thresholds that are not ordered min <= reorder <= max', async () => {
+    await expect(
+      service.create({ ...dto, minQuantity: 20, reorderQuantity: 10, maxQuantity: 30 }),
+    ).rejects.toThrow(ConflictException);
+  });
+
   it('records an AuditLog entry on update', async () => {
     const existing = { id: 'prod1', name: '냉장고 RF85', unitPrice: '1200000' };
     const updated = { id: 'prod1', name: '냉장고 RF90', unitPrice: '1200000' };
@@ -56,19 +82,33 @@ describe('ProductsService', () => {
     await service.update('prod1', { name: '냉장고 RF90' }, 'user1');
     expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ tableName: 'products', recordId: 'prod1', action: 'UPDATE', actor: 'user1' }),
+        data: expect.objectContaining({
+          tableName: 'products',
+          recordId: 'prod1',
+          action: 'UPDATE',
+          actor: 'user1',
+        }),
       }),
     );
   });
 
   it('throws NotFoundException when updating a missing product', async () => {
     prismaMock.product.findUnique.mockResolvedValue(null);
-    await expect(service.update('missing', { name: 'x' }, 'user1')).rejects.toThrow(NotFoundException);
+    await expect(service.update('missing', { name: 'x' }, 'user1')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   describe('findAll — F1 role-aware projection (spec §2: no 단가/원가/요율 for staff)', () => {
     const rows = [
-      { id: 'prod1', code: 'I-00001', name: '냉장고', unitPrice: '1200000', costPrice: '900000', transportRate: '5000' },
+      {
+        id: 'prod1',
+        code: 'I-00001',
+        name: '냉장고',
+        unitPrice: '1200000',
+        costPrice: '900000',
+        transportRate: '5000',
+      },
     ];
 
     beforeEach(() => {
@@ -86,7 +126,11 @@ describe('ProductsService', () => {
 
     it('keeps unitPrice/costPrice/transportRate for HQ_ADMIN', async () => {
       const r = await service.findAll({}, [Role.HQ_ADMIN]);
-      expect(r.data[0]).toMatchObject({ unitPrice: '1200000', costPrice: '900000', transportRate: '5000' });
+      expect(r.data[0]).toMatchObject({
+        unitPrice: '1200000',
+        costPrice: '900000',
+        transportRate: '5000',
+      });
     });
 
     it('keeps fields when the caller carries both roles', async () => {
@@ -101,7 +145,12 @@ describe('ProductsService', () => {
       prismaMock.product.create.mockResolvedValue({ id: 'prod1', transportRate: '5000' });
       await service.create({ ...dto, transportRate: '5000', rateEffectiveFrom: '2026-07-01' });
       expect(prismaMock.productTransportRateHistory.create).toHaveBeenCalledWith({
-        data: { productId: 'prod1', rate: '5000', effectiveFrom: new Date('2026-07-01'), effectiveTo: null },
+        data: {
+          productId: 'prod1',
+          rate: '5000',
+          effectiveFrom: new Date('2026-07-01'),
+          effectiveTo: null,
+        },
       });
     });
 
@@ -117,14 +166,23 @@ describe('ProductsService', () => {
       const updated = { id: 'prod1', name: '냉장고 RF85', transportRate: '8000' };
       prismaMock.product.findUnique.mockResolvedValue(existing);
       prismaMock.product.update.mockResolvedValue(updated);
-      await service.update('prod1', { transportRate: '8000', rateEffectiveFrom: '2026-07-15' }, 'user1');
+      await service.update(
+        'prod1',
+        { transportRate: '8000', rateEffectiveFrom: '2026-07-15' },
+        'user1',
+      );
 
       expect(prismaMock.productTransportRateHistory.updateMany).toHaveBeenCalledWith({
         where: { productId: 'prod1', effectiveTo: null },
         data: { effectiveTo: new Date('2026-07-15') },
       });
       expect(prismaMock.productTransportRateHistory.create).toHaveBeenCalledWith({
-        data: { productId: 'prod1', rate: '8000', effectiveFrom: new Date('2026-07-15'), effectiveTo: null },
+        data: {
+          productId: 'prod1',
+          rate: '8000',
+          effectiveFrom: new Date('2026-07-15'),
+          effectiveTo: null,
+        },
       });
       // rateEffectiveFrom must not leak into the Product row write
       expect(prismaMock.product.update).toHaveBeenCalledWith({
@@ -136,16 +194,26 @@ describe('ProductsService', () => {
     it('rejects (E4113) a rateEffectiveFrom at-or-before the currently open history row instead of a raw DB 500 (I-3)', async () => {
       prismaMock.product.findUnique.mockResolvedValue({ id: 'prod1', transportRate: '5000' });
       prismaMock.product.update.mockResolvedValue({ id: 'prod1', transportRate: '8000' });
-      prismaMock.productTransportRateHistory.findFirst.mockResolvedValue({ effectiveFrom: new Date('2026-07-15') });
+      prismaMock.productTransportRateHistory.findFirst.mockResolvedValue({
+        effectiveFrom: new Date('2026-07-15'),
+      });
 
       await expect(
-        service.update('prod1', { transportRate: '8000', rateEffectiveFrom: '2026-07-01' }, 'user1'),
+        service.update(
+          'prod1',
+          { transportRate: '8000', rateEffectiveFrom: '2026-07-01' },
+          'user1',
+        ),
       ).rejects.toThrow(BadRequestException);
       expect(prismaMock.productTransportRateHistory.updateMany).not.toHaveBeenCalled();
       expect(prismaMock.productTransportRateHistory.create).not.toHaveBeenCalled();
 
       try {
-        await service.update('prod1', { transportRate: '8000', rateEffectiveFrom: '2026-07-01' }, 'user1');
+        await service.update(
+          'prod1',
+          { transportRate: '8000', rateEffectiveFrom: '2026-07-01' },
+          'user1',
+        );
       } catch (e: any) {
         expect(e.response?.code).toBe('E4113');
       }

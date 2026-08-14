@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RatesService } from '../master-data/rates.service';
@@ -6,6 +11,7 @@ import { WAREHOUSE_SETTLEMENT_BRANCH_ID } from '../warehouse/constants';
 import { calcTransportFee } from './transport-fee';
 import { buildDailyStock, calcStorageFeePalletDaily, calcStorageFeeArea } from './storage-fee';
 import { resolveRateAt, RateHistoryRow } from './rate-resolution';
+import { SettlementInvoiceService } from './settlement-invoice.service';
 
 export interface CalcError {
   transactionId?: string;
@@ -18,6 +24,7 @@ export class SettlementFeesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rates: RatesService,
+    private readonly invoices: SettlementInvoiceService,
   ) {}
 
   private monthRange(yearMonth: string) {
@@ -47,7 +54,9 @@ export class SettlementFeesService {
     const txs = await this.prisma.warehouseTransaction.findMany({
       where: { transactionDate: { gte: start, lt: end } },
       include: {
-        product: { select: { id: true, transportRate: true, maxUnitsPerPallet: true, palletThreshold: true } },
+        product: {
+          select: { id: true, transportRate: true, maxUnitsPerPallet: true, palletThreshold: true },
+        },
         partner: { select: { defaultTransportRate: true } },
         vehicleRate: { select: { rate: true } },
       },
@@ -60,14 +69,20 @@ export class SettlementFeesService {
     const outboundTxs = txs.filter((t) => t.type === 'OUTBOUND');
     const productIds = [...new Set(outboundTxs.map((t) => t.productId))];
     const partnerIdsForRate = [...new Set(outboundTxs.map((t) => t.partnerId))];
-    const vehicleRateIds = [...new Set(outboundTxs.map((t) => t.vehicleRateId).filter((id): id is string => !!id))];
+    const vehicleRateIds = [
+      ...new Set(outboundTxs.map((t) => t.vehicleRateId).filter((id): id is string => !!id)),
+    ];
 
     const [productHistoryRows, partnerHistoryRows, vehicleHistoryRows] = await Promise.all([
       productIds.length
-        ? this.prisma.productTransportRateHistory.findMany({ where: { productId: { in: productIds } } })
+        ? this.prisma.productTransportRateHistory.findMany({
+            where: { productId: { in: productIds } },
+          })
         : Promise.resolve([]),
       partnerIdsForRate.length
-        ? this.prisma.partnerTransportRateHistory.findMany({ where: { partnerId: { in: partnerIdsForRate } } })
+        ? this.prisma.partnerTransportRateHistory.findMany({
+            where: { partnerId: { in: partnerIdsForRate } },
+          })
         : Promise.resolve([]),
       vehicleRateIds.length
         ? this.prisma.vehicleRateHistory.findMany({ where: { rateCardId: { in: vehicleRateIds } } })
@@ -78,7 +93,12 @@ export class SettlementFeesService {
     const vehicleHistoryMap = this.groupHistory(vehicleHistoryRows, (r) => r.rateCardId);
 
     const records: Prisma.SettlementRecordCreateManyInput[] = [];
-    const results: { partnerId: string; transportTotal: string; storageTotal: string; errors: CalcError[] }[] = [];
+    const results: {
+      partnerId: string;
+      transportTotal: string;
+      storageTotal: string;
+      errors: CalcError[];
+    }[] = [];
 
     for (const partner of partners) {
       const partnerTxs = txs.filter((t) => t.partnerId === partner.id);
@@ -105,7 +125,10 @@ export class SettlementFeesService {
               null)
             : null;
 
-          const fee = calcTransportFee({ productRate, partnerDefaultRate, vehicleRate }, vehicleRateMode);
+          const fee = calcTransportFee(
+            { productRate, partnerDefaultRate, vehicleRate },
+            vehicleRateMode,
+          );
           transportTotal = transportTotal.add(fee.amount);
           records.push({
             transactionId: tx.id,
@@ -139,7 +162,9 @@ export class SettlementFeesService {
             m,
           );
           const productIds = [...dailyStock.keys()];
-          const products = await this.prisma.product.findMany({ where: { id: { in: productIds } } });
+          const products = await this.prisma.product.findMany({
+            where: { id: { in: productIds } },
+          });
           storage = calcStorageFeePalletDaily(
             dailyStock,
             new Map(
@@ -206,15 +231,18 @@ export class SettlementFeesService {
   }
 
   /** scope id(productId/partnerId/rateCardId)별 히스토리 행 목록으로 그룹핑. Decimal → string 변환 포함. */
-  private groupHistory<T extends { rate: Prisma.Decimal; effectiveFrom: Date; effectiveTo: Date | null }>(
-    rows: T[],
-    keyOf: (row: T) => string,
-  ): Map<string, RateHistoryRow[]> {
+  private groupHistory<
+    T extends { rate: Prisma.Decimal; effectiveFrom: Date; effectiveTo: Date | null },
+  >(rows: T[], keyOf: (row: T) => string): Map<string, RateHistoryRow[]> {
     const map = new Map<string, RateHistoryRow[]>();
     for (const row of rows) {
       const key = keyOf(row);
       const list = map.get(key) ?? [];
-      list.push({ rate: row.rate.toString(), effectiveFrom: row.effectiveFrom, effectiveTo: row.effectiveTo });
+      list.push({
+        rate: row.rate.toString(),
+        effectiveFrom: row.effectiveFrom,
+        effectiveTo: row.effectiveTo,
+      });
       map.set(key, list);
     }
     return map;
@@ -271,8 +299,11 @@ export class SettlementFeesService {
           data: { supersededAt: new Date() },
         });
         await tx.settlementRecord.createMany({ data: records });
+        await this.invoices.createDrafts(tx, yearMonth, results);
         await tx.settlementPeriod.upsert({
-          where: { branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start } },
+          where: {
+            branchId_periodStart: { branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID, periodStart: start },
+          },
           create: {
             branchId: WAREHOUSE_SETTLEMENT_BRANCH_ID,
             periodStart: start,
@@ -322,19 +353,38 @@ export class SettlementFeesService {
       include: { transaction: { include: { product: true } } },
     });
     if (record && scope.partnerId && record.partnerId !== scope.partnerId) {
-      throw new ForbiddenException({ code: 'E4110', message: 'E4110: access denied to other partner data' });
+      throw new ForbiddenException({
+        code: 'E4110',
+        message: 'E4110: access denied to other partner data',
+      });
     }
     return record;
   }
 
   async getStatement(partnerId: string, yearMonth: string, scope: { partnerId?: string } = {}) {
     if (scope.partnerId && scope.partnerId !== partnerId) {
-      throw new ForbiddenException({ code: 'E4110', message: 'E4110: access denied to other partner data' });
+      throw new ForbiddenException({
+        code: 'E4110',
+        message: 'E4110: access denied to other partner data',
+      });
     }
-    const records = await this.prisma.settlementRecord.findMany({
-      where: { partnerId, periodYearMonth: yearMonth, supersededAt: null },
-      include: { transaction: { include: { product: { select: { code: true, name: true } } } } },
+    const invoice = await this.prisma.settlementInvoice.findUnique({
+      where: { partnerId_periodYearMonth: { partnerId, periodYearMonth: yearMonth } },
+      select: { status: true },
     });
+    if (scope.partnerId) {
+      if (!invoice || !['ISSUED', 'PAID'].includes(invoice.status))
+        throw new NotFoundException({ code: 'E4120', message: 'issued invoice not found' });
+    }
+    const records =
+      invoice?.status === 'CANCELLED'
+        ? []
+        : await this.prisma.settlementRecord.findMany({
+            where: { partnerId, periodYearMonth: yearMonth, supersededAt: null },
+            include: {
+              transaction: { include: { product: { select: { code: true, name: true } } } },
+            },
+          });
     const transport = records.filter((r) => r.feeType === 'TRANSPORT');
     const storage = records.filter((r) => r.feeType === 'STORAGE');
     const sum = (rs: typeof records) => rs.reduce((a, r) => a.add(r.amount), new Prisma.Decimal(0));

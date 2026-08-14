@@ -4,12 +4,33 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonSelect,
-  IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonItem,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonButton,
+  IonList,
+  IonLabel,
+  IonNote,
+  IonBackButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
-import { MasterDataService, CategoryNode, PartnerRow, ProductRow, RateHistoryRow } from '../../services/master-data.service';
+import {
+  MasterDataService,
+  CategoryNode,
+  PartnerRow,
+  ProductRow,
+  RateHistoryRow,
+} from '../../services/master-data.service';
 
-interface FlatCategory { id: string; label: string; }
+interface FlatCategory {
+  id: string;
+  label: string;
+}
 
 function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
   return nodes.flatMap((n) => [
@@ -21,13 +42,32 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput,
-    IonSelect, IonSelectOption, IonButton, IonList, IonLabel, IonNote, IonBackButton, IonButtons],
+  imports: [
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonItem,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonButton,
+    IonList,
+    IonLabel,
+    IonNote,
+    IonBackButton,
+    IonButtons,
+  ],
   template: `
-    <ion-header><ion-toolbar>
-      <ion-buttons slot="start"><ion-back-button defaultHref="/master-data/products" /></ion-buttons>
-      <ion-title>{{ editingId ? '품목 수정' : '품목 등록' }}</ion-title>
-    </ion-toolbar></ion-header>
+    <ion-header
+      ><ion-toolbar>
+        <ion-buttons slot="start"
+          ><ion-back-button defaultHref="/master-data/products"
+        /></ion-buttons>
+        <ion-title>{{ editingId ? '품목 수정' : '품목 등록' }}</ion-title>
+      </ion-toolbar></ion-header
+    >
     <ion-content class="ion-padding">
       @if (editingId && !loaded()) {
         <ion-note>{{ error() || '불러오는 중...' }}</ion-note>
@@ -35,7 +75,9 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
         <ion-list>
           <ion-item><ion-input label="품목명 *" [(ngModel)]="name" /></ion-item>
           @if (editingId) {
-            <ion-item><ion-note>품목코드: {{ code || '-' }} (수정 불가)</ion-note></ion-item>
+            <ion-item
+              ><ion-note>품목코드: {{ code || '-' }} (수정 불가)</ion-note></ion-item
+            >
           } @else {
             <ion-item><ion-input label="품목코드 (비우면 자동채번)" [(ngModel)]="code" /></ion-item>
           }
@@ -55,26 +97,50 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): FlatCategory[] {
           </ion-item>
           <ion-item><ion-input label="단가 *" type="number" [(ngModel)]="unitPrice" /></ion-item>
           <ion-item><ion-input label="원가 *" type="number" [(ngModel)]="costPrice" /></ion-item>
-          <ion-item><ion-input label="건당 운송요율" type="number" [(ngModel)]="transportRate" /></ion-item>
-          <ion-item><ion-input label="적용 시작일" type="date" [(ngModel)]="rateEffectiveFrom" /></ion-item>
+          <ion-item
+            ><ion-input label="건당 운송요율" type="number" [(ngModel)]="transportRate"
+          /></ion-item>
+          <ion-item
+            ><ion-input label="적용 시작일" type="date" [(ngModel)]="rateEffectiveFrom"
+          /></ion-item>
           <ion-item>
             <ion-input label="파렛트당 최대 적재수" type="number" [(ngModel)]="maxUnitsPerPallet" />
           </ion-item>
           <ion-item>
-            <ion-input label="파렛트 적재 기준(%)" type="number" placeholder="미입력 시 전역 70%" [(ngModel)]="palletThreshold" />
+            <ion-input
+              label="파렛트 적재 기준(%)"
+              type="number"
+              placeholder="미입력 시 전역 70%"
+              [(ngModel)]="palletThreshold"
+            />
           </ion-item>
+          <ion-item
+            ><ion-input label="안전재고 하한" type="number" min="0" [(ngModel)]="minQuantity"
+          /></ion-item>
+          <ion-item
+            ><ion-input label="재주문점" type="number" min="0" [(ngModel)]="reorderQuantity"
+          /></ion-item>
+          <ion-item
+            ><ion-input label="재고 상한" type="number" min="0" [(ngModel)]="maxQuantity"
+          /></ion-item>
         </ion-list>
         @if (editingId && rateHistory().length > 0) {
           <ion-list>
-            <ion-item lines="none"><ion-label><h3>운송요율 이력</h3></ion-label></ion-item>
+            <ion-item lines="none"
+              ><ion-label><h3>운송요율 이력</h3></ion-label></ion-item
+            >
             @for (h of rateHistory(); track h.id) {
               <ion-item lines="none">
-                <ion-label>{{ h.effectiveFrom }} ~ {{ h.effectiveTo || '현재' }} : {{ h.rate }}</ion-label>
+                <ion-label
+                  >{{ h.effectiveFrom }} ~ {{ h.effectiveTo || '현재' }} : {{ h.rate }}</ion-label
+                >
               </ion-item>
             }
           </ion-list>
         }
-        @if (error()) { <ion-note color="danger">{{ error() }}</ion-note> }
+        @if (error()) {
+          <ion-note color="danger">{{ error() }}</ion-note>
+        }
         <ion-button expand="block" (click)="save()" [disabled]="saving()">저장</ion-button>
       }
     </ion-content>
@@ -89,9 +155,19 @@ export class ProductFormPage implements OnInit {
   editingId = this.route.snapshot.paramMap.get('id');
   loaded = signal(false);
 
-  name = ''; code = ''; categoryId = ''; partnerId = '';
-  unitPrice = ''; costPrice = ''; transportRate = ''; rateEffectiveFrom = '';
-  maxUnitsPerPallet = ''; palletThreshold = '';
+  name = '';
+  code = '';
+  categoryId = '';
+  partnerId = '';
+  unitPrice = '';
+  costPrice = '';
+  transportRate = '';
+  rateEffectiveFrom = '';
+  maxUnitsPerPallet = '';
+  palletThreshold = '';
+  minQuantity = '';
+  reorderQuantity = '';
+  maxQuantity = '';
 
   flatCategories = signal<FlatCategory[]>([]);
   partners = signal<PartnerRow[]>([]);
@@ -122,8 +198,12 @@ export class ProductFormPage implements OnInit {
     this.unitPrice = product.unitPrice;
     this.costPrice = product.costPrice;
     this.transportRate = product.transportRate ?? '';
-    this.maxUnitsPerPallet = product.maxUnitsPerPallet != null ? String(product.maxUnitsPerPallet) : '';
+    this.maxUnitsPerPallet =
+      product.maxUnitsPerPallet != null ? String(product.maxUnitsPerPallet) : '';
     this.palletThreshold = product.palletThreshold ?? '';
+    this.minQuantity = product.minQuantity != null ? String(product.minQuantity) : '';
+    this.reorderQuantity = product.reorderQuantity != null ? String(product.reorderQuantity) : '';
+    this.maxQuantity = product.maxQuantity != null ? String(product.maxQuantity) : '';
     this.loaded.set(true);
     this.rateHistory.set(await this.api.getProductRateHistory(this.editingId));
   }
@@ -146,6 +226,9 @@ export class ProductFormPage implements OnInit {
         ...(this.rateEffectiveFrom ? { rateEffectiveFrom: this.rateEffectiveFrom } : {}),
         ...(this.maxUnitsPerPallet ? { maxUnitsPerPallet: Number(this.maxUnitsPerPallet) } : {}),
         ...(this.palletThreshold ? { palletThreshold: this.palletThreshold } : {}),
+        ...(this.minQuantity ? { minQuantity: Number(this.minQuantity) } : {}),
+        ...(this.reorderQuantity ? { reorderQuantity: Number(this.reorderQuantity) } : {}),
+        ...(this.maxQuantity ? { maxQuantity: Number(this.maxQuantity) } : {}),
       };
       if (this.editingId) {
         await this.api.updateProduct(this.editingId, dto);

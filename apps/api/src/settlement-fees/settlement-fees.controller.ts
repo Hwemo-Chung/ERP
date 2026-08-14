@@ -7,7 +7,6 @@ import {
   Post,
   Query,
   Res,
-  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -22,6 +21,8 @@ import { SettlementFeesService } from './settlement-fees.service';
 import { StatementExportService } from './statement-export.service';
 import { YearMonthDto } from './dto/year-month.dto';
 import { GetStatementDto } from './dto/get-statement.dto';
+import { UpdateInvoiceStatusDto } from './dto/update-invoice-status.dto';
+import { SettlementInvoiceService } from './settlement-invoice.service';
 
 @ApiTags('SettlementFees')
 @ApiBearerAuth()
@@ -31,16 +32,52 @@ export class SettlementFeesController {
   constructor(
     private readonly service: SettlementFeesService,
     private readonly statementExport: StatementExportService,
+    private readonly invoices: SettlementInvoiceService,
   ) {}
 
   private scopeFor(user: JwtPayload): { partnerId?: string } {
     if (user.roles.includes(Role.PARTNER_COORDINATOR)) {
       if (!user.partnerId) {
-        throw new ForbiddenException({ code: 'E4110', message: 'E4110: access denied to other partner data' });
+        throw new ForbiddenException({
+          code: 'E4110',
+          message: 'E4110: access denied to other partner data',
+        });
       }
       return { partnerId: user.partnerId };
     }
     return {};
+  }
+
+  @Get('invoice')
+  @Roles(Role.HQ_ADMIN, Role.PARTNER_COORDINATOR)
+  invoice(@Query() q: GetStatementDto, @CurrentUser() user: JwtPayload) {
+    return this.invoices.find(q.partnerId, q.yearMonth, this.scopeFor(user).partnerId);
+  }
+
+  @Post('invoice/:id/status')
+  @Roles(Role.HQ_ADMIN)
+  invoiceStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateInvoiceStatusDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.invoices.changeStatus(id, dto.status, user.sub, dto.cancelReason);
+  }
+
+  @Get('invoice/:id/pdf')
+  @Roles(Role.HQ_ADMIN, Role.PARTNER_COORDINATOR)
+  async invoicePdf(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.invoices.pdf(id, this.scopeFor(user).partnerId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="settlement-invoice-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.send(buffer);
   }
 
   @Post('preview')
@@ -72,14 +109,18 @@ export class SettlementFeesController {
   async downloadStatement(
     @Query() q: GetStatementDto,
     @CurrentUser() user: JwtPayload,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    const buffer = await this.statementExport.buildStatementXlsx(q.partnerId, q.yearMonth, this.scopeFor(user));
+    @Res() res: Response,
+  ): Promise<void> {
+    const buffer = await this.statementExport.buildStatementXlsx(
+      q.partnerId,
+      q.yearMonth,
+      this.scopeFor(user),
+    );
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="statement-${q.partnerId}-${q.yearMonth}.xlsx"`,
       'Content-Length': buffer.length,
     });
-    return new StreamableFile(buffer);
+    res.send(buffer);
   }
 }

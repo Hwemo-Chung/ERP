@@ -20,6 +20,7 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateProductDto) {
+    this.assertInventoryThresholds(dto);
     let code = dto.code;
     if (code) {
       const dup = await this.prisma.product.findUnique({ where: { code } });
@@ -33,7 +34,12 @@ export class ProductsService {
       if (product.transportRate != null) {
         const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
         await tx.productTransportRateHistory.create({
-          data: { productId: product.id, rate: product.transportRate, effectiveFrom, effectiveTo: null },
+          data: {
+            productId: product.id,
+            rate: product.transportRate,
+            effectiveFrom,
+            effectiveTo: null,
+          },
         });
       }
       return product;
@@ -55,7 +61,9 @@ export class ProductsService {
     const where = {
       ...(query.partnerId ? { partnerId: query.partnerId } : {}),
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      ...(query.search ? { OR: [{ name: { contains: query.search } }, { code: { contains: query.search } }] } : {}),
+      ...(query.search
+        ? { OR: [{ name: { contains: query.search } }, { code: { contains: query.search } }] }
+        : {}),
     };
     const [rows, totalCount] = await Promise.all([
       this.prisma.product.findMany({
@@ -70,7 +78,14 @@ export class ProductsService {
     // spec §2: WAREHOUSE_STAFF (without HQ_ADMIN) must not receive 단가/원가/요율 — the
     // entry-screen dropdown this feeds only needs id/code/name.
     const data = isStaffOnly(callerRoles)
-      ? rows.map(({ unitPrice: _unitPrice, costPrice: _costPrice, transportRate: _transportRate, ...rest }) => rest)
+      ? rows.map(
+          ({
+            unitPrice: _unitPrice,
+            costPrice: _costPrice,
+            transportRate: _transportRate,
+            ...rest
+          }) => rest,
+        )
       : rows;
     return { data, totalCount };
   }
@@ -78,6 +93,7 @@ export class ProductsService {
   async update(id: string, dto: UpdateProductDto, actorId: string) {
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException({ code: 'E4104', message: 'product not found' });
+    this.assertInventoryThresholds({ ...existing, ...dto });
     const { rateEffectiveFrom, ...rest } = dto;
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.product.update({ where: { id }, data: rest });
@@ -85,7 +101,9 @@ export class ProductsService {
         // 요율 변경: 히스토리의 열린 행을 새 적용시작일로 닫고 새 행을 연다 (캐시 컬럼은 위
         // product.update가 이미 같은 트랜잭션에서 갱신했다).
         const effectiveFrom = rateEffectiveFrom ? new Date(rateEffectiveFrom) : todayDateOnly();
-        const openRow = await tx.productTransportRateHistory.findFirst({ where: { productId: id, effectiveTo: null } });
+        const openRow = await tx.productTransportRateHistory.findFirst({
+          where: { productId: id, effectiveTo: null },
+        });
         assertRateEffectiveFromAdvances(openRow?.effectiveFrom, effectiveFrom);
         await tx.productTransportRateHistory.updateMany({
           where: { productId: id, effectiveTo: null },
@@ -107,6 +125,25 @@ export class ProductsService {
       });
       return updated;
     });
+  }
+
+  private assertInventoryThresholds(values: {
+    minQuantity?: number | null;
+    reorderQuantity?: number | null;
+    maxQuantity?: number | null;
+  }): void {
+    const min = values.minQuantity;
+    const reorder = values.reorderQuantity;
+    const max = values.maxQuantity;
+    if (
+      (min != null && reorder != null && min > reorder) ||
+      (reorder != null && max != null && reorder > max)
+    ) {
+      throw new ConflictException({
+        code: 'E4114',
+        message: 'inventory thresholds must satisfy min <= reorder <= max',
+      });
+    }
   }
 
   async getRateHistory(id: string) {
